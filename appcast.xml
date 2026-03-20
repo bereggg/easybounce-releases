@@ -6,14 +6,23 @@
     <description>EasyBounce Updates</description>
     <language>en</language>
     <item>
+      <title>EasyBounce 1.0.1</title>
+      <sparkle:releaseNotesLink>https://github.com/bereggg/easybounce-releases/releases/tag/v1.0.1</sparkle:releaseNotesLink>
+      <pubDate>Thu, 20 Mar 2026 15:00:00 +0000</pubDate>
+      <enclosure
+        url="https://github.com/bereggg/easybounce-releases/releases/download/v1.0.1/EasyBounce_v1.0.1.dmg"
+        sparkle:version="1.0.1"
+        sparkle:shortVersionString="1.0.1"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>EasyBounce 1.0.0</title>
-      <sparkle:releaseNotesLink>https://github.com/bereggg/easybounce-releases/releases/tag/v1.0.0</sparkle:releaseNotesLink>
       <pubDate>Thu, 20 Mar 2026 11:00:00 +0000</pubDate>
       <enclosure
         url="https://github.com/bereggg/easybounce-releases/releases/download/v1.0.0/EasyBounce_v1.0.dmg"
         sparkle:version="1.0.0"
         sparkle:shortVersionString="1.0.0"
-        length="109088020"
         type="application/octet-stream"
       />
     </item>
