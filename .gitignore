@@ -1,0 +1,25 @@
+# Build output
+dist/
+
+# Dependencies
+node_modules/
+
+# macOS junk
+.DS_Store
+Icon?
+
+# Electron
+*.asar
+
+# Keys (sensitive)
+issued_keys.json
+issued_keys_details.json
+keys_pool.json
+keys_pool_hashed.json
+keys_tracking.json
+
+# Misc
+*.log
+.claude/worktrees/
+dist/
+node_modules/

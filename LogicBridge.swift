@@ -1,0 +1,3104 @@
+import Foundation
+import ApplicationServices
+import AppKit
+
+func axVal(_ e: AXUIElement, _ a: String) -> CFTypeRef? {
+    var v: CFTypeRef?; AXUIElementCopyAttributeValue(e, a as CFString, &v); return v
+}
+
+func axKids(_ e: AXUIElement) -> [AXUIElement] {
+    (axVal(e, kAXChildrenAttribute) as? [AXUIElement]) ?? []
+}
+func axRole(_ e: AXUIElement) -> String { (axVal(e, kAXRoleAttribute) as? String) ?? "" }
+func axTitle(_ e: AXUIElement) -> String {
+    if let s = axVal(e, kAXTitleAttribute) as? String, !s.isEmpty { return s }
+    if let s = axVal(e, kAXDescriptionAttribute) as? String, !s.isEmpty { return s }
+    if let s = axVal(e, kAXValueAttribute) as? String, !s.isEmpty { return s }
+    return ""
+}
+func axPress(_ e: AXUIElement) { AXUIElementPerformAction(e, kAXPressAction as CFString) }
+func axIntValue(_ e: AXUIElement) -> Int {
+    if let v = axVal(e, kAXValueAttribute) {
+        if let i = v as? Int      { return i }
+        if let b = v as? Bool     { return b ? 1 : 0 }
+        if let n = v as? NSNumber { return n.intValue }
+        // Logic Pro solo/mute buttons (AXSwitch) return "on" / "off" strings
+        if let s = v as? String {
+            if s == "on" || s == "1" || s == "true" { return 1 }
+            return Int(s) ?? 0
+        }
+    }
+    if let v = axVal(e, kAXSelectedAttribute) {
+        if let b = v as? Bool     { return b ? 1 : 0 }
+        if let n = v as? NSNumber { return n.intValue }
+    }
+    return 0
+}
+
+// ── Intel detection: increase timeouts on x86_64 ──
+#if arch(x86_64)
+let kTimingMultiplier: Double = 1.5  // Intel Macs need ~50% more time
+#else
+let kTimingMultiplier: Double = 1.0  // Apple Silicon — normal timing
+#endif
+
+func tsleep(_ base: Double) { Thread.sleep(forTimeInterval: base * kTimingMultiplier) }
+
+// ── AppleScript via osascript (avoids registering LogicBridge as separate TCC entity) ──
+@discardableResult
+func runScript(_ src: String) -> String {
+    let p = Process()
+    p.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+    p.arguments = ["-e", src]
+    let pipe = Pipe()
+    p.standardOutput = pipe
+    p.standardError = Pipe()
+    try? p.run(); p.waitUntilExit()
+    return String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+}
+
+// ── Mouse safety: clamp coordinates to screen bounds ──
+func clampToScreen(_ pt: CGPoint) -> CGPoint {
+    guard let screen = NSScreen.main else { return pt }
+    let f = screen.frame
+    let x = min(max(pt.x, f.origin.x + 5), f.origin.x + f.width - 5)
+    let y = min(max(pt.y, 25), f.origin.y + f.height - 5) // 25 = below menu bar
+    return CGPoint(x: x, y: y)
+}
+
+// Clamp to Logic's own window bounds (more restrictive)
+func clampToLogicWindow(_ pt: CGPoint, _ logic: AXUIElement) -> CGPoint {
+    guard let wins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement],
+          let win = wins.first else { return clampToScreen(pt) }
+    var posRef: CFTypeRef?; var szRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(win, kAXPositionAttribute as CFString, &posRef)
+    AXUIElementCopyAttributeValue(win, kAXSizeAttribute as CFString, &szRef)
+    var pos = CGPoint.zero; var sz = CGSize.zero
+    if let pv = posRef { AXValueGetValue(pv as! AXValue, .cgPoint, &pos) }
+    if let sv = szRef  { AXValueGetValue(sv as! AXValue, .cgSize,  &sz) }
+    if sz.width < 100 || sz.height < 100 { return clampToScreen(pt) }
+    let x = min(max(pt.x, pos.x + 5), pos.x + sz.width - 5)
+    let y = min(max(pt.y, pos.y + 5), pos.y + sz.height - 5)
+    return CGPoint(x: x, y: y)
+}
+
+// ── Track Tree helpers ──
+
+private let kOpenQuotes = CharacterSet(charactersIn: "\"\u{201C}\u{2018}")
+private let kCloseQuotes = CharacterSet(charactersIn: "\"\u{201D}\u{2019}")
+
+struct TrackInfo {
+    let num: Int
+    let name: String
+    let muted: Bool
+    let hasTriangle: Bool
+}
+
+func parseTrackDesc(_ desc: String) -> (num: Int, name: String, muted: Bool)? {
+    guard desc.hasPrefix("Track ") else { return nil }
+    let rest = desc.dropFirst(6)
+    guard let sp = rest.firstIndex(of: " "),
+          let num = Int(String(rest[..<sp])) else { return nil }
+    var name = String(rest[rest.index(after: sp)...])
+    if let ci = name.firstIndex(of: ",") { name = String(name[..<ci]) }
+    name = name.trimmingCharacters(in: kOpenQuotes.union(kCloseQuotes))
+               .trimmingCharacters(in: .whitespaces)
+    guard !name.isEmpty else { return nil }
+    let muted = desc.contains(", mute")
+    return (num, name, muted)
+}
+
+func findTracksHeader(_ logicApp: AXUIElement) -> AXUIElement? {
+    let wins = (axVal(logicApp, kAXWindowsAttribute) as? [AXUIElement]) ?? axKids(logicApp)
+    func dfs(_ el: AXUIElement, _ depth: Int) -> AXUIElement? {
+        if depth > 10 { return nil }
+        if axRole(el) == "AXScrollArea" {
+            for kid in axKids(el) {
+                if (axVal(kid, kAXDescriptionAttribute) as? String) == "Tracks contents" { return kid }
+            }
+        }
+        for kid in axKids(el) { if let r = dfs(kid, depth + 1) { return r } }
+        return nil
+    }
+    for win in wins { if let r = dfs(win, 0) { return r } }
+    return nil
+}
+
+// Detect disclosure triangle — AXDisclosureTriangle on M1/newer Logic,
+// or bare AXButton (no title, no desc) on Intel Logic Pro X 10.7
+func isDisclosureTriangle(_ el: AXUIElement) -> Bool {
+    let role = axRole(el)
+    if role == "AXDisclosureTriangle" { return true }
+    if role == "AXButton" {
+        let desc = (axVal(el, kAXDescriptionAttribute) as? String) ?? ""
+        let title = (axVal(el, kAXTitleAttribute) as? String) ?? ""
+        if desc.isEmpty && title.isEmpty { return true }
+    }
+    return false
+}
+
+func readTrackInfos(_ header: AXUIElement) -> [TrackInfo] {
+    axKids(header).compactMap { item -> TrackInfo? in
+        let desc = (axVal(item, kAXDescriptionAttribute) as? String) ?? ""
+        guard let t = parseTrackDesc(desc) else { return nil }
+        let hasTri = axKids(item).contains { isDisclosureTriangle($0) }
+        return TrackInfo(num: t.num, name: t.name, muted: t.muted, hasTriangle: hasTri)
+    }
+}
+
+// Read which track numbers have disclosure triangles from the header GROUP element
+// (triangles are in "Tracks header", not "Tracks contents")
+func readTriangleNums(_ headerGroup: AXUIElement) -> Set<Int> {
+    var result = Set<Int>()
+    for item in axKids(headerGroup) {
+        let desc = (axVal(item, kAXDescriptionAttribute) as? String) ?? ""
+        guard desc.hasPrefix("Track "), let t = parseTrackDesc(desc) else { continue }
+        if axKids(item).contains(where: { isDisclosureTriangle($0) }) {
+            result.insert(t.num)
+        }
+    }
+    return result
+}
+
+// Send key event directly to Logic Pro process (no focus needed)
+func sendKeyToLogic(_ pid: pid_t, keyCode: CGKeyCode, flags: CGEventFlags = []) {
+    let src = CGEventSource(stateID: .hidSystemState)
+    guard let dn = CGEvent(keyboardEventSource: src, virtualKey: keyCode, keyDown: true),
+          let up = CGEvent(keyboardEventSource: src, virtualKey: keyCode, keyDown: false) else { return }
+    dn.flags = flags
+    up.flags = []
+    dn.postToPid(pid)
+    Thread.sleep(forTimeInterval: 0.05)
+    up.postToPid(pid)
+}
+
+// Click AX button without moving mouse
+func axClickDirect(_ e: AXUIElement) {
+    AXUIElementPerformAction(e, kAXPressAction as CFString)
+}
+
+// Type text directly into Logic process
+func typeTextToLogic(_ pid: pid_t, _ text: String) {
+    for char in text.unicodeScalars {
+        let src = CGEventSource(stateID: .hidSystemState)
+        guard let dn = CGEvent(keyboardEventSource: src, virtualKey: 0, keyDown: true),
+              let up = CGEvent(keyboardEventSource: src, virtualKey: 0, keyDown: false) else { continue }
+        dn.keyboardSetUnicodeString(stringLength: 1, unicodeString: [UniChar(char.value)])
+        up.keyboardSetUnicodeString(stringLength: 1, unicodeString: [UniChar(char.value)])
+        dn.postToPid(pid)
+        Thread.sleep(forTimeInterval: 0.02)
+        up.postToPid(pid)
+    }
+}
+
+func findAll(_ e: AXUIElement, role: String, title: String? = nil, depth: Int = 20) -> [AXUIElement] {
+    if depth == 0 { return [] }
+    var results: [AXUIElement] = []
+    if axRole(e) == role && (title == nil || axTitle(e) == title) { results.append(e) }
+    for c in axKids(e) { results += findAll(c, role: role, title: title, depth: depth-1) }
+    return results
+}
+
+// Mixer filter modes:
+// Mode 1 (dropdown): AXMenuButton — default Logic Pro mixer
+// Mode 2 (inline):   AXGroup with AXCheckBox children — after Forte! or certain Logic configs
+enum MixerMode {
+    case dropdown(AXUIElement)   // Mode 1: click to open menu
+    case inline_(AXUIElement)    // Mode 2: direct checkboxes, no menu needed
+}
+
+func findMixerFilterControl(_ logicApp: AXUIElement) -> MixerMode? {
+    let filterKeywords: Set<String> = ["All", "Audio", "Inst", "Aux", "Bus", "Input", "Output", "Master", "MIDI",
+                                       "Software Instrument", "External Instrument"]
+
+    // Search recursively for filter control inside a mixer element
+    func searchInMixer(_ mixer: AXUIElement) -> MixerMode? {
+        func search(_ el: AXUIElement, depth: Int) -> MixerMode? {
+            if depth == 0 { return nil }
+            let role = axRole(el)
+            if role == "AXMenuButton" {
+                // Filter button title = currently selected filter (e.g. "All", "Audio")
+                // Options/View/Edit buttons have their own names — won't match filterKeywords
+                let title = (axVal(el, kAXTitleAttribute) as? String) ?? ""
+                if filterKeywords.contains(title) { return .dropdown(el) }
+            } else if role == "AXGroup" {
+                let cbs = axKids(el).filter { axRole($0) == "AXCheckBox" }
+                let labels = cbs.map { cb -> String in
+                    let t = (axVal(cb, kAXTitleAttribute) as? String) ?? ""
+                    return t.isEmpty ? ((axVal(cb, kAXDescriptionAttribute) as? String) ?? "") : t
+                }
+                if labels.contains(where: { filterKeywords.contains($0) }) { return .inline_(el) }
+            }
+            for child in axKids(el) {
+                if let found = search(child, depth: depth - 1) { return found }
+            }
+            return nil
+        }
+        return search(mixer, depth: 5)
+    }
+
+    guard let windows = axVal(logicApp, kAXWindowsAttribute) as? [AXUIElement] else { return nil }
+    for win in windows {
+        // Method 1: via AXLayoutArea "Mixer" (same as scanChannels)
+        let layouts = findAll(win, role: "AXLayoutArea", title: "Mixer")
+        if let mixerLayout = layouts.max(by: { axKids($0).count < axKids($1).count }) {
+            if let found = searchInMixer(mixerLayout) { return found }
+        }
+        // Method 2: fallback — AXGroup with description "Mixer"
+        let groups = findAll(win, role: "AXGroup", depth: 6)
+        for g in groups where (axVal(g, kAXDescriptionAttribute) as? String) == "Mixer" {
+            if let found = searchInMixer(g) { return found }
+        }
+    }
+    return nil
+}
+
+// Backward-compat wrapper
+func findMixerMenuButton(_ logicApp: AXUIElement) -> AXUIElement? {
+    if case .dropdown(let mb) = findMixerFilterControl(logicApp) { return mb }
+    return nil
+}
+
+// Open mixer filter menu and collect all item states. Closes menu with Escape.
+func readMixerFilterStates(_ mb: AXUIElement) -> [String: Bool]? {
+    axPress(mb)
+    Thread.sleep(forTimeInterval: 0.35)
+    guard let m = axKids(mb).first(where: { axRole($0) == "AXMenu" }) else {
+        var pid: pid_t = 0; AXUIElementGetPid(mb, &pid)
+        let src = CGEventSource(stateID: .hidSystemState)
+        if let dn = CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: true),
+           let up = CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: false) {
+            dn.postToPid(pid); up.postToPid(pid)
+        }
+        return nil
+    }
+    var filters: [String: Bool] = [:]
+    for item in axKids(m) {
+        let title = (axVal(item, kAXTitleAttribute) as? String) ?? ""
+        guard !title.isEmpty else { continue }
+        let mark = axVal(item, "AXMenuItemMarkChar") as? String
+        filters[title] = (mark == "✓")
+    }
+    // Close menu
+    var pid: pid_t = 0; AXUIElementGetPid(mb, &pid)
+    let src = CGEventSource(stateID: .hidSystemState)
+    if let dn = CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: true),
+       let up = CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: false) {
+        dn.postToPid(pid); up.postToPid(pid)
+    }
+    Thread.sleep(forTimeInterval: 0.1)
+    return filters
+}
+
+func activateLogic() {
+    let task = Process()
+    task.launchPath = "/usr/bin/osascript"
+    task.arguments = ["-e", "tell application id \"com.apple.logic10\" to activate"]
+    task.launch()
+    task.waitUntilExit()
+    Thread.sleep(forTimeInterval: 1.0)
+}
+
+func getLogicPid() -> pid_t {
+    if let app = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.logic10").first {
+        return app.processIdentifier
+    }
+    return 0
+}
+
+struct Channel {
+    let name: String
+    let index: Int
+    let muteBtn: AXUIElement
+    let soloBtn: AXUIElement
+    let isBus: Bool
+    let hasMonitoring: Bool
+    let hasRecord: Bool
+    let hasBnc: Bool
+}
+
+func scanChannels(_ logicApp: AXUIElement) -> [Channel] {
+    var wins: CFTypeRef?
+    AXUIElementCopyAttributeValue(logicApp, kAXWindowsAttribute as CFString, &wins)
+    guard let windows = wins as? [AXUIElement] else { return [] }
+
+    for win in windows {
+        let allLayouts = findAll(win, role: "AXLayoutArea", title: "Mixer")
+        guard let mixerLayout = allLayouts.max(by: { axKids($0).count < axKids($1).count }) else { continue }
+        
+        let items = axKids(mixerLayout).filter { axRole($0) == "AXLayoutItem" }
+        guard items.count > 1 else { continue }
+        
+        var channels: [Channel] = []
+        var nameCounts: [String: Int] = [:]
+
+        for item in items {
+            let kids = axKids(item)
+            // Single pass through kids - collect all needed elements at once
+            var nameField: AXUIElement? = nil
+            var muteBtn: AXUIElement? = nil
+            var soloBtn: AXUIElement? = nil
+            var hasMonitoring = false
+            var hasRecord = false
+
+            var hasBnc = false
+            for kid in kids {
+                let role = axRole(kid)
+                let title = axTitle(kid)
+                if role == "AXTextField" && title == "name" { nameField = kid }
+                else if role == "AXButton" {
+                    switch title {
+                    case "mute": muteBtn = kid
+                    case "solo": soloBtn = kid
+                    case "Bnc": soloBtn = kid; hasBnc = true
+                    case "monitoring": hasMonitoring = true
+                    case "record": hasRecord = true
+                    default: break
+                    }
+                }
+            }
+
+            guard let nf = nameField, let mb = muteBtn, let sb = soloBtn else { continue }
+
+            var nameVal: CFTypeRef?
+            AXUIElementCopyAttributeValue(nf, kAXValueAttribute as CFString, &nameVal)
+            var name = (nameVal as? String) ?? ""
+            guard !name.isEmpty else { continue }
+            // Allow duplicate names — append suffix to make unique
+            let count = (nameCounts[name] ?? 0) + 1
+            nameCounts[name] = count
+            if count > 1 { name = "\(name) (\(count))" }
+
+            let isBus = !hasMonitoring && !hasRecord
+            channels.append(Channel(name: name, index: channels.count,
+                                    muteBtn: mb, soloBtn: sb, isBus: isBus,
+                                    hasMonitoring: hasMonitoring, hasRecord: hasRecord,
+                                    hasBnc: hasBnc))
+        }
+        if !channels.isEmpty { return channels }
+    }
+    return []
+}
+
+func findLogic() -> AXUIElement? {
+    let apps = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.logic10")
+    if let a = apps.first { return AXUIElementCreateApplication(a.processIdentifier) }
+    for a in NSWorkspace.shared.runningApplications where a.localizedName == "Logic Pro" {
+        return AXUIElementCreateApplication(a.processIdentifier)
+    }
+    return nil
+}
+
+func jsonOut(_ obj: Any) {
+    if let data = try? JSONSerialization.data(withJSONObject: obj, options: .prettyPrinted),
+       let str = String(data: data, encoding: .utf8) { print(str) }
+}
+
+let args = CommandLine.arguments
+guard args.count >= 2 else {
+    fputs("Usage: LogicBridge scan|soloIndex <n>|unsoloIndex <n>|muteIndex <n>|unmuteIndex <n>|unsoloAll|unmuteAll|bounce\n", stderr)
+    exit(1)
+}
+guard let logic = findLogic() else { jsonOut(["error": "Logic Pro is not running"]); exit(1) }
+
+// Detect actual process name (Logic Pro vs Logic Pro X)
+var _logicPid: pid_t = 0; AXUIElementGetPid(logic, &_logicPid)
+let logicAppName = NSRunningApplication(processIdentifier: _logicPid)?.localizedName ?? "Logic Pro"
+
+let cmd = args[1]
+
+// ── Find a toolbar checkbox by its title or description ─────────────────────────────────────────
+func findCheckboxByLabel(_ el: AXUIElement, label: String, depth: Int = 0) -> AXUIElement? {
+    if depth > 6 { return nil }
+    if axRole(el) == "AXCheckBox" {
+        let t = axVal(el, kAXTitleAttribute) as? String ?? ""
+        let d = axVal(el, kAXDescriptionAttribute) as? String ?? ""
+        if t == label || d == label { return el }
+    }
+    for child in axKids(el) {
+        if let f = findCheckboxByLabel(child, label: label, depth: depth + 1) { return f }
+    }
+    return nil
+}
+
+// ── Click first visible track in Arrange to select it (so Inspector shows its MASTER output) ────
+func clickFirstArrangeTrack(_ logicApp: AXUIElement) -> Bool {
+    guard let header = findTracksHeader(logicApp) else { return false }
+    let screenH = NSScreen.main?.frame.height ?? 2000
+    for item in axKids(header) {
+        let desc = axVal(item, kAXDescriptionAttribute) as? String ?? ""
+        guard desc.hasPrefix("Track ") else { continue }
+        var posRef: CFTypeRef?; var szRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(item, kAXPositionAttribute as CFString, &posRef)
+        AXUIElementCopyAttributeValue(item, kAXSizeAttribute as CFString, &szRef)
+        var pt = CGPoint.zero; var sz = CGSize.zero
+        if let pv = posRef { AXValueGetValue(pv as! AXValue, .cgPoint, &pt) }
+        if let sv = szRef { AXValueGetValue(sv as! AXValue, .cgSize, &sz) }
+        guard pt.y > 50 && pt.y < screenH - 50 else { continue }
+        let cursor = CGPoint(x: pt.x + sz.width / 2, y: pt.y + sz.height / 2)
+        let src = CGEventSource(stateID: .hidSystemState)
+        if let dn = CGEvent(mouseEventSource: src, mouseType: .leftMouseDown, mouseCursorPosition: cursor, mouseButton: .left),
+           let up = CGEvent(mouseEventSource: src, mouseType: .leftMouseUp, mouseCursorPosition: cursor, mouseButton: .left) {
+            dn.post(tap: .cghidEventTap)
+            Thread.sleep(forTimeInterval: 0.05)
+            up.post(tap: .cghidEventTap)
+            return true
+        }
+    }
+    return false
+}
+
+// ── Inspector MASTER: read from Arrange window Inspector (no scroll needed) ────────────────────
+/// Finds the MASTER AXLayoutItem in Logic's Inspector panel (Arrange window).
+/// Inspector always shows the selected track + its output (MASTER), so no Mixer scroll needed.
+func findInspectorMaster(_ logic: AXUIElement) -> AXUIElement? {
+    guard let wins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement] else { return nil }
+    for win in wins {
+        for kid in axKids(win) {
+            guard axRole(kid) == "AXGroup",
+                  (axVal(kid, kAXDescriptionAttribute) as? String ?? "") == "Inspector" else { continue }
+            for list in axKids(kid) {
+                guard axRole(list) == "AXList" else { continue }
+                for section in axKids(list) {
+                    for la in axKids(section) {
+                        guard axRole(la) == "AXLayoutArea",
+                              (axVal(la, kAXDescriptionAttribute) as? String ?? "") == "Mixer" else { continue }
+                        for item in axKids(la) {
+                            guard axRole(item) == "AXLayoutItem" else { continue }
+                            let hasBounce = axKids(item).contains {
+                                axRole($0) == "AXButton" &&
+                                (axVal($0, kAXDescriptionAttribute) as? String ?? "") == "bounce"
+                            }
+                            if hasBounce { return item }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return nil
+}
+
+/// Returns sorted plugin groups (top→bottom) with bypass state from a MASTER AXLayoutItem
+func pluginsFromMasterItem(_ masterItem: AXUIElement) -> [[String: Any]] {
+    let groups = axKids(masterItem).filter { kid -> Bool in
+        guard axRole(kid) == "AXGroup" else { return false }
+        let name = axVal(kid, kAXDescriptionAttribute) as? String ?? ""
+        guard !name.isEmpty else { return false }
+        return axKids(kid).contains { axRole($0) == "AXCheckBox" && (axVal($0, kAXDescriptionAttribute) as? String ?? "") == "bypass" }
+    }
+    let sorted = groups.sorted {
+        var p1: CFTypeRef?; AXUIElementCopyAttributeValue($0, kAXPositionAttribute as CFString, &p1)
+        var p2: CFTypeRef?; AXUIElementCopyAttributeValue($1, kAXPositionAttribute as CFString, &p2)
+        var pt1 = CGPoint.zero; var pt2 = CGPoint.zero
+        if let av = p1 { AXValueGetValue(av as! AXValue, .cgPoint, &pt1) }
+        if let av = p2 { AXValueGetValue(av as! AXValue, .cgPoint, &pt2) }
+        return pt1.y < pt2.y
+    }
+    return sorted.map { g in
+        let name = axVal(g, kAXDescriptionAttribute) as? String ?? ""
+        let bypassEl = axKids(g).first { axRole($0) == "AXCheckBox" && (axVal($0, kAXDescriptionAttribute) as? String ?? "") == "bypass" }
+        let val = bypassEl.map { axIntValue($0) } ?? 0
+        return ["name": name, "active": val == 0]
+    }
+}
+
+// ── Find Stereo Out in Mixer (reliable — tries multiple names + rightmost fallback) ──────────
+// Quick find Stereo Out — no scrolling, just check existing AX items (fast for toggle operations)
+func findStereoOutQuick(_ logicApp: AXUIElement) -> AXUIElement? {
+    guard let wins = axVal(logicApp, kAXWindowsAttribute) as? [AXUIElement] else { return nil }
+    var mixer: AXUIElement? = nil
+    for w in wins {
+        if let found = findAll(w, role: "AXLayoutArea", depth: 10).first(where: {
+            (axVal($0, kAXDescriptionAttribute) as? String ?? "").contains("Mixer")
+        }) { mixer = found; break }
+    }
+    guard let mixer = mixer else { return nil }
+    let items = findAll(mixer, role: "AXLayoutItem", depth: 3)
+    // Try by AXDescription
+    if let ch = items.first(where: {
+        let desc = (axVal($0, kAXDescriptionAttribute) as? String ?? "").uppercased()
+        return desc == "MASTER" || desc == "STEREO OUT"
+    }) { return ch }
+    // Try by channel name text field
+    let stereoOutNames = ["Stereo Out", "Stereo Output", "Output", "Output 1-2", "Master"]
+    for item in items {
+        if let nf = axKids(item).first(where: { axRole($0) == "AXTextField" && axTitle($0) == "name" }) {
+            var nameVal: CFTypeRef?
+            AXUIElementCopyAttributeValue(nf, kAXValueAttribute as CFString, &nameVal)
+            let name = (nameVal as? String ?? "").trimmingCharacters(in: .whitespaces)
+            if stereoOutNames.contains(where: { name.localizedCaseInsensitiveCompare($0) == .orderedSame }) {
+                return item
+            }
+        }
+    }
+    return nil
+}
+
+// Full find with scroll — used for scanMasterPlugins when we need to guarantee finding it
+func findStereoOutInMixer(_ logicApp: AXUIElement) -> AXUIElement? {
+    // Try quick find first (no scroll)
+    if let quick = findStereoOutQuick(logicApp) { return quick }
+    // Fall back to scroll + search
+    guard let wins = axVal(logicApp, kAXWindowsAttribute) as? [AXUIElement] else { return nil }
+    var mixer: AXUIElement? = nil
+    for w in wins {
+        if let found = findAll(w, role: "AXLayoutArea", depth: 10).first(where: {
+            (axVal($0, kAXDescriptionAttribute) as? String ?? "").contains("Mixer")
+        }) { mixer = found; break }
+    }
+    guard let mixer = mixer else { return nil }
+
+    // Scroll to rightmost to reveal Stereo Out
+    var parentRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(mixer, kAXParentAttribute as CFString, &parentRef)
+    if let scrollArea = parentRef as! AXUIElement? {
+        var hBar: CFTypeRef?
+        AXUIElementCopyAttributeValue(scrollArea, kAXHorizontalScrollBarAttribute as CFString, &hBar)
+        if let bar = hBar as! AXUIElement? {
+            AXUIElementSetAttributeValue(bar, kAXValueAttribute as CFString, 1.0 as CFTypeRef)
+        }
+        var vBar: CFTypeRef?
+        AXUIElementCopyAttributeValue(scrollArea, kAXVerticalScrollBarAttribute as CFString, &vBar)
+        if let bar = vBar as! AXUIElement? {
+            AXUIElementSetAttributeValue(bar, kAXValueAttribute as CFString, 0.0 as CFTypeRef)
+        }
+    }
+    Thread.sleep(forTimeInterval: 0.3)
+
+    let items = findAll(mixer, role: "AXLayoutItem", depth: 3)
+
+    // Try by AXDescription
+    if let ch = items.first(where: {
+        let desc = (axVal($0, kAXDescriptionAttribute) as? String ?? "").uppercased()
+        return desc == "MASTER" || desc == "STEREO OUT"
+    }) { return ch }
+
+    // Try by channel name text field
+    let stereoOutNames = ["Stereo Out", "Stereo Output", "Output", "Output 1-2", "Master"]
+    for item in items {
+        if let nf = axKids(item).first(where: { axRole($0) == "AXTextField" && axTitle($0) == "name" }) {
+            var nameVal: CFTypeRef?
+            AXUIElementCopyAttributeValue(nf, kAXValueAttribute as CFString, &nameVal)
+            let name = (nameVal as? String ?? "").trimmingCharacters(in: .whitespaces)
+            if stereoOutNames.contains(where: { name.localizedCaseInsensitiveCompare($0) == .orderedSame }) {
+                return item
+            }
+        }
+    }
+
+    // Fallback: rightmost channel (Stereo Out is always last)
+    return items.max(by: {
+        var p1: CFTypeRef?; AXUIElementCopyAttributeValue($0, kAXPositionAttribute as CFString, &p1)
+        var p2: CFTypeRef?; AXUIElementCopyAttributeValue($1, kAXPositionAttribute as CFString, &p2)
+        var pt1 = CGPoint.zero; var pt2 = CGPoint.zero
+        if let av = p1 { AXValueGetValue(av as! AXValue, .cgPoint, &pt1) }
+        if let av = p2 { AXValueGetValue(av as! AXValue, .cgPoint, &pt2) }
+        return pt1.x < pt2.x
+    })
+}
+
+// ── Mixer helpers: find AXLayoutArea + named channel, resize+scroll for plugin reading ─────────
+func findMixerAndChannel(_ logicApp: AXUIElement, channelName: String) -> (mixer: AXUIElement, channel: AXUIElement)? {
+    var winsRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(logicApp, kAXWindowsAttribute as CFString, &winsRef)
+    guard let wins = winsRef as? [AXUIElement], !wins.isEmpty else { return nil }
+    var mixer: AXUIElement? = nil
+    for w in wins {
+        if let found = findAll(w, role: "AXLayoutArea", depth: 10).first(where: {
+            (axVal($0, kAXDescriptionAttribute) as? String ?? "").contains("Mixer")
+        }) { mixer = found; break }
+    }
+    guard let mixer = mixer else { return nil }
+    guard let channel = findAll(mixer, role: "AXLayoutItem", depth: 3).first(where: {
+        (axVal($0, kAXDescriptionAttribute) as? String ?? "").uppercased() == channelName.uppercased()
+    }) else { return nil }
+    return (mixer, channel)
+}
+
+func prepareMixerForPluginRead(_ mixer: AXUIElement, _ channel: AXUIElement) {
+    // 1. Walk up to find mixer window — only resize if standalone Mixer window (not Logic main window)
+    var walkEl: AXUIElement? = mixer
+    for _ in 0..<8 {
+        guard let el = walkEl else { break }
+        if axRole(el) == "AXWindow" {
+            // Check current window size: Logic main window is tall (>600px); standalone mixer is smaller
+            var szRef: CFTypeRef?
+            AXUIElementCopyAttributeValue(el, kAXSizeAttribute as CFString, &szRef)
+            var sz = CGSize.zero
+            if let av = szRef as! AXValue? { AXValueGetValue(av, .cgSize, &sz) }
+            let isStandaloneMixer = sz.height < 550  // main Logic window is typically 700px+
+            if isStandaloneMixer {
+                var newSize = CGSize(width: 1100, height: 420)
+                if let av = AXValueCreate(.cgSize, &newSize) {
+                    AXUIElementSetAttributeValue(el, kAXSizeAttribute as CFString, av)
+                }
+                Thread.sleep(forTimeInterval: 0.15)
+            }
+            break
+        }
+        var p: CFTypeRef?
+        AXUIElementCopyAttributeValue(el, kAXParentAttribute as CFString, &p)
+        walkEl = p.map { $0 as! AXUIElement }
+    }
+    // 2. Scroll: horizontal=rightmost(1.0), vertical=topmost(0.0) — show MASTER and inserts
+    var parentRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(mixer, kAXParentAttribute as CFString, &parentRef)
+    if let scrollArea = parentRef as! AXUIElement? {
+        var hBar: CFTypeRef?
+        AXUIElementCopyAttributeValue(scrollArea, kAXHorizontalScrollBarAttribute as CFString, &hBar)
+        if let bar = hBar as! AXUIElement? {
+            AXUIElementSetAttributeValue(bar, kAXValueAttribute as CFString, 1.0 as CFTypeRef)
+        }
+        var vBar: CFTypeRef?
+        AXUIElementCopyAttributeValue(scrollArea, kAXVerticalScrollBarAttribute as CFString, &vBar)
+        if let bar = vBar as! AXUIElement? {
+            AXUIElementSetAttributeValue(bar, kAXValueAttribute as CFString, 0.0 as CFTypeRef)
+        }
+    }
+    // 3. Scroll MASTER into view and select (without AXPress — avoids side effects in Logic)
+    AXUIElementPerformAction(channel, "AXScrollToVisible" as CFString)
+    Thread.sleep(forTimeInterval: 0.2)
+    AXUIElementSetAttributeValue(channel, kAXSelectedAttribute as CFString, kCFBooleanTrue)
+    tsleep(0.6)  // Wait for Logic to render plugin names in AX
+}
+
+switch cmd {
+
+case "status":
+    // Read-only snapshot — never modifies anything
+    var info: [String: Any] = [:]
+    // Logic running?
+    let logicApps = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.logic10")
+    info["logicRunning"] = !logicApps.isEmpty
+    guard !logicApps.isEmpty else { jsonOut(info); break }
+    // Frontmost app
+    info["frontmost"] = NSWorkspace.shared.frontmostApplication?.localizedName ?? "unknown"
+    // Windows accessible?
+    let wins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement] ?? []
+    info["windowCount"] = wins.count
+    guard let win = wins.first else { info["note"] = "no window (fullscreen/other space)"; jsonOut(info); break }
+    // Window title & size
+    info["windowTitle"] = axVal(win, kAXTitleAttribute) as? String ?? ""
+    var wSzRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(win, kAXSizeAttribute as CFString, &wSzRef)
+    var wSz = CGSize.zero
+    if let sv = wSzRef { AXValueGetValue(sv as! AXValue, .cgSize, &wSz) }
+    info["windowSize"] = "\(Int(wSz.width))x\(Int(wSz.height))"
+    // Mixer height
+    func stFindMixer(_ el: AXUIElement, _ d: Int) -> AXUIElement? {
+        if d > 3 { return nil }
+        if axRole(el) == "AXGroup" && (axVal(el, kAXDescriptionAttribute) as? String) == "Mixer" {
+            var szR: CFTypeRef?; AXUIElementCopyAttributeValue(el, kAXSizeAttribute as CFString, &szR)
+            var s = CGSize.zero; if let sv = szR { AXValueGetValue(sv as! AXValue, .cgSize, &s) }
+            if s.height > 100 { return el }
+        }
+        for kid in axKids(el) { if let f = stFindMixer(kid, d+1) { return f } }
+        return nil
+    }
+    if let mg = stFindMixer(win, 0) {
+        var szR: CFTypeRef?; AXUIElementCopyAttributeValue(mg, kAXSizeAttribute as CFString, &szR)
+        var s = CGSize.zero; if let sv = szR { AXValueGetValue(sv as! AXValue, .cgSize, &s) }
+        info["mixerHeight"] = Int(s.height)
+        info["mixerOpen"] = true
+    } else {
+        info["mixerOpen"] = false
+        info["mixerHeight"] = 0
+    }
+    // Inspector width
+    for kid in axKids(win) {
+        if (axVal(kid, kAXDescriptionAttribute) as? String) == "Inspector" {
+            var szR: CFTypeRef?; AXUIElementCopyAttributeValue(kid, kAXSizeAttribute as CFString, &szR)
+            var s = CGSize.zero; if let sv = szR { AXValueGetValue(sv as! AXValue, .cgSize, &s) }
+            info["inspectorWidth"] = Int(s.width)
+            break
+        }
+    }
+    // Fullscreen?
+    var fsRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(win, "AXFullScreen" as CFString, &fsRef)
+    info["fullscreen"] = (fsRef as? Bool) == true
+    jsonOut(info)
+
+case "scan":
+    let channels = scanChannels(logic)
+    jsonOut(["channels": channels.map { ["name": $0.name, "index": $0.index, "isBus": $0.isBus, "hasMonitoring": $0.hasMonitoring, "hasRecord": $0.hasRecord, "isMuted": axIntValue($0.muteBtn) == 1, "hasBnc": $0.hasBnc] }])
+
+case "soloIndex":
+    guard args.count >= 3, let idx = Int(args[2]) else { jsonOut(["error": "index required"]); exit(1) }
+    let ch = scanChannels(logic)
+    guard idx < ch.count else { jsonOut(["error": "index out of range, total: \(ch.count)"]); exit(1) }
+    axPress(ch[idx].soloBtn)
+    jsonOut(["ok": true, "action": "solo", "channel": ch[idx].name])
+
+case "unsoloIndex":
+    guard args.count >= 3, let idx = Int(args[2]) else { jsonOut(["error": "index required"]); exit(1) }
+    let ch = scanChannels(logic)
+    guard idx < ch.count else { jsonOut(["error": "index out of range, total: \(ch.count)"]); exit(1) }
+    axPress(ch[idx].soloBtn)
+    jsonOut(["ok": true, "action": "unsolo", "channel": ch[idx].name])
+
+case "muteIndex":
+    guard args.count >= 3, let idx = Int(args[2]) else { jsonOut(["error": "index required"]); exit(1) }
+    let ch = scanChannels(logic)
+    guard idx < ch.count else { jsonOut(["error": "index out of range, total: \(ch.count)"]); exit(1) }
+    axPress(ch[idx].muteBtn)
+    jsonOut(["ok": true, "action": "mute", "channel": ch[idx].name])
+
+case "unmuteIndex":
+    guard args.count >= 3, let idx = Int(args[2]) else { jsonOut(["error": "index required"]); exit(1) }
+    let ch = scanChannels(logic)
+    guard idx < ch.count else { jsonOut(["error": "index out of range, total: \(ch.count)"]); exit(1) }
+    axPress(ch[idx].muteBtn)
+    jsonOut(["ok": true, "action": "unmute", "channel": ch[idx].name])
+
+case "readStates":
+    // Read solo/mute state via Tracks header AXDescription — reliable for all channel types
+    var rsSoloed: [String] = []
+    var rsMuted: [String] = []
+    if let header = findTracksHeader(logic) {
+        for item in axKids(header) {
+            let desc = (axVal(item, kAXDescriptionAttribute) as? String) ?? ""
+            guard let t = parseTrackDesc(desc) else { continue }
+            if desc.contains(", solo") { rsSoloed.append(t.name) }
+            if desc.contains(", mute") { rsMuted.append(t.name) }
+        }
+    }
+    jsonOut(["ok": true, "soloed": rsSoloed, "muted": rsMuted])
+
+case "resetMutes":
+    // Option+click on first mute button = unmute ALL channels in Logic
+    // This resets mixer to a known state before mix bouncing
+    let rmCh = scanChannels(logic)
+    guard let firstMute = rmCh.first?.muteBtn else {
+        jsonOut(["error": "no channels found"])
+        exit(1)
+    }
+    // Get position of the mute button
+    var rmPos = CGPoint.zero
+    var rmSz = CGSize.zero
+    if let pRef = axVal(firstMute, kAXPositionAttribute) {
+        AXValueGetValue(pRef as! AXValue, .cgPoint, &rmPos)
+    }
+    if let sRef = axVal(firstMute, kAXSizeAttribute) {
+        AXValueGetValue(sRef as! AXValue, .cgSize, &rmSz)
+    }
+    let clickPt = clampToScreen(CGPoint(x: rmPos.x + rmSz.width/2, y: rmPos.y + rmSz.height/2))
+    // Option+click = unmute all
+    let flagsDown = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true)
+    flagsDown?.flags = .maskAlternate
+    flagsDown?.post(tap: .cghidEventTap)
+    Thread.sleep(forTimeInterval: 0.05)
+    let mDown = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: clickPt, mouseButton: .left)
+    mDown?.flags = .maskAlternate
+    mDown?.post(tap: .cghidEventTap)
+    Thread.sleep(forTimeInterval: 0.05)
+    let mUp = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: clickPt, mouseButton: .left)
+    mUp?.flags = .maskAlternate
+    mUp?.post(tap: .cghidEventTap)
+    Thread.sleep(forTimeInterval: 0.05)
+    let flagsUp = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: false)
+    flagsUp?.flags = []
+    flagsUp?.post(tap: .cghidEventTap)
+    Thread.sleep(forTimeInterval: 0.3)
+    jsonOut(["ok": true, "action": "resetMutes"])
+
+case "unsoloAll":
+    // AXValue unreliable — JS must track and call unsoloByName for each soloed channel
+    // This is kept as a no-op for compatibility
+    jsonOut(["ok": true, "action": "unsoloAll", "cleared": 0, "note": "use unsoloByName instead"])
+
+case "unmuteAll":
+    // AXValue unreliable — JS must track and call unmuteMany for each muted channel
+    jsonOut(["ok": true, "action": "unmuteAll", "cleared": 0, "note": "use unmuteMany instead"])
+
+case "bounce":
+    let bounceScript = """
+tell application id "com.apple.logic10" to activate
+delay 0.8
+tell application "System Events"
+  tell process "\(logicAppName)"
+    keystroke "b" using command down
+  end tell
+end tell
+"""
+    let btask = Process()
+    btask.launchPath = "/usr/bin/osascript"
+    btask.arguments = ["-e", bounceScript]
+    btask.launch()
+    btask.waitUntilExit()
+    jsonOut(["ok": true, "action": "bounce"])
+
+case "muteByName":
+    guard args.count >= 3 else { jsonOut(["error": "name required"]); exit(1) }
+    let targetName = args[2...].joined(separator: " ")
+    let ch = scanChannels(logic)
+    guard let found = ch.first(where: { $0.name == targetName }) else {
+        jsonOut(["error": "channel not found: \(targetName)"]); exit(1)
+    }
+    axPress(found.muteBtn)
+    jsonOut(["ok": true, "action": "mute", "channel": found.name])
+
+case "unmuteByName":
+    guard args.count >= 3 else { jsonOut(["error": "name required"]); exit(1) }
+    let targetName = args[2...].joined(separator: " ")
+    let ch = scanChannels(logic)
+    guard let found = ch.first(where: { $0.name == targetName }) else {
+        jsonOut(["error": "channel not found: \(targetName)"]); exit(1)
+    }
+    axPress(found.muteBtn)
+    jsonOut(["ok": true, "action": "unmute", "channel": found.name])
+
+case "soloByName":
+    guard args.count >= 3 else { jsonOut(["error": "name required"]); exit(1) }
+    let targetName = args[2...].joined(separator: " ")
+    var chSolo = scanChannels(logic)
+    if chSolo.first(where: { $0.name == targetName }) == nil {
+        activateLogic()
+        Thread.sleep(forTimeInterval: 0.35)
+        chSolo = scanChannels(logic)
+    }
+    guard let foundSolo = chSolo.first(where: { $0.name == targetName }) else {
+        jsonOut(["error": "channel not found: \(targetName)"]); exit(1)
+    }
+    // AXValue is unreliable for Logic's solo buttons — always press
+    axPress(foundSolo.soloBtn)
+    jsonOut(["ok": true, "action": "solo", "channel": foundSolo.name])
+
+case "unsoloByName":
+    guard args.count >= 3 else { jsonOut(["error": "name required"]); exit(1) }
+    let targetName = args[2...].joined(separator: " ")
+    var chUnsolo = scanChannels(logic)
+    if chUnsolo.first(where: { $0.name == targetName }) == nil {
+        activateLogic()
+        Thread.sleep(forTimeInterval: 0.35)
+        chUnsolo = scanChannels(logic)
+    }
+    if let foundUnsolo = chUnsolo.first(where: { $0.name == targetName }) {
+        // AXValue is unreliable — always press to toggle off
+        axPress(foundUnsolo.soloBtn)
+        jsonOut(["ok": true, "action": "unsolo", "channel": foundUnsolo.name])
+    } else {
+        jsonOut(["ok": true, "action": "unsolo-skip-not-found", "channel": targetName])
+    }
+
+case "muteMany":
+    // Scan ONCE, try to detect already-muted state (best effort — AXValue may be unreliable)
+    guard args.count >= 3 else { jsonOut(["error": "names required"]); exit(1) }
+    let names = args[2].split(separator: "|").map(String.init)
+    let ch = scanChannels(logic)
+    var muted: [String] = []
+    var alreadyMuted: [String] = []
+    var notFound: [String] = []
+    for name in names {
+        if let found = ch.first(where: { $0.name == name }) {
+            let currentVal = axIntValue(found.muteBtn)
+            if currentVal == 1 {
+                // AX says already muted — don't toggle (would unmute!)
+                alreadyMuted.append(name)
+            } else {
+                axPress(found.muteBtn)
+                muted.append(name)
+            }
+        } else {
+            notFound.append(name)
+        }
+    }
+    jsonOut(["ok": true, "action": "muteMany", "muted": muted, "alreadyMuted": alreadyMuted, "notFound": notFound])
+
+case "unmuteMany":
+    // Scan ONCE, press mute on all specified channels to toggle off
+    // AXValue is unreliable — JS tracks which channels need unmuting
+    guard args.count >= 3 else { jsonOut(["error": "names required"]); exit(1) }
+    let names = args[2].split(separator: "|").map(String.init)
+    let ch = scanChannels(logic)
+    var unmuted: [String] = []
+    for name in names {
+        if let found = ch.first(where: { $0.name == name }) {
+            axPress(found.muteBtn)
+            unmuted.append(name)
+        }
+    }
+    jsonOut(["ok": true, "action": "unmuteMany", "unmuted": unmuted])
+
+case "metronome":
+    var wins: CFTypeRef?
+    AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &wins)
+    guard let windows = wins as? [AXUIElement], let win = windows.first else {
+        jsonOut(["on": false, "error": "no window"]); break
+    }
+    // Search all elements for AXCheckBox with title "Metronome Click"
+    func findMetronome(_ el: AXUIElement, depth: Int = 0) -> AXUIElement? {
+        if depth > 30 { return nil }
+        if axRole(el) == "AXCheckBox" {
+            var titleVal: CFTypeRef?
+            AXUIElementCopyAttributeValue(el, kAXTitleAttribute as CFString, &titleVal)
+            if let t = titleVal as? String, t == "Metronome Click" { return el }
+        }
+        for child in axKids(el) {
+            if let found = findMetronome(child, depth: depth + 1) { return found }
+        }
+        return nil
+    }
+    if let metro = findMetronome(win) {
+        let val = axIntValue(metro)
+        jsonOut(["on": val == 1, "found": true])
+    } else {
+        jsonOut(["on": false, "found": false])
+    }
+
+case "metronomeToggle":
+    var wins2: CFTypeRef?
+    AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &wins2)
+    guard let windows2 = wins2 as? [AXUIElement], let win2 = windows2.first else {
+        jsonOut(["ok": false, "error": "no window"]); break
+    }
+    func findMetronome2(_ el: AXUIElement, depth: Int = 0) -> AXUIElement? {
+        if depth > 30 { return nil }
+        if axRole(el) == "AXCheckBox" {
+            var titleVal: CFTypeRef?
+            AXUIElementCopyAttributeValue(el, kAXTitleAttribute as CFString, &titleVal)
+            if let t = titleVal as? String, t == "Metronome Click" { return el }
+        }
+        for child in axKids(el) {
+            if let found = findMetronome2(child, depth: depth + 1) { return found }
+        }
+        return nil
+    }
+    if let metro = findMetronome2(win2) {
+        axPress(metro)
+        Thread.sleep(forTimeInterval: 0.1)
+        let newVal = axIntValue(metro)
+        jsonOut(["ok": true, "on": newVal == 1])
+    } else {
+        jsonOut(["ok": false, "error": "not found"])
+    }
+
+case "maximizeLogic":
+    // Exit fullscreen (if active), then resize to fill visible screen
+    guard let screen = NSScreen.main else { jsonOut(["ok": false, "error": "no screen"]); break }
+    let visFrame  = screen.visibleFrame
+    let mlScreenH = screen.frame.height
+    let axY       = mlScreenH - visFrame.origin.y - visFrame.height
+    let targetOrigin = CGPoint(x: visFrame.origin.x, y: axY)
+    let targetSize   = CGSize(width: visFrame.width, height: visFrame.height)
+
+    // Helper: get Logic's main window via AX windows list (nil = fullscreen or no window)
+    func getLogicWindowList() -> AXUIElement? {
+        guard let wins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement], !wins.isEmpty else { return nil }
+        return wins.first(where: { (axVal($0, kAXTitleAttribute) as? String ?? "").contains("Tracks") }) ?? wins.first
+    }
+
+    // Debug: count windows AX sees
+    let mlWinCount = (axVal(logic, kAXWindowsAttribute) as? [AXUIElement])?.count ?? 0
+
+    // 1. kAXWindowsAttribute empty → could be fullscreen OR brief Space-transition gap
+    var exitedFs = false
+    if getLogicWindowList() == nil {
+        // Activate first and wait 0.8s — if still no window then it's truly fullscreen
+        runScript("tell application id \"com.apple.logic10\" to activate")
+        tsleep(0.8)
+        if getLogicWindowList() == nil {
+        exitedFs = true
+        let fsScript = """
+        tell application id "com.apple.logic10" to activate
+        delay 0.2
+        tell application "System Events"
+            keystroke "f" using {control down, command down}
+        end tell
+        delay 0.6
+        tell application id "com.apple.logic10" to activate
+        """
+        runScript(fsScript)
+        // Wait for window to appear after fullscreen exit (up to 3s)
+        var fsWaited = 0
+        while getLogicWindowList() == nil && fsWaited < 8 {
+            Thread.sleep(forTimeInterval: 0.3)
+            fsWaited += 1
+        }
+        // Resize to fill screen via AX (targets Tracks window, not front)
+        if let fsWin = getLogicWindowList() {
+            var fsNewPos = targetOrigin; var fsNewSz = targetSize
+            if let p = AXValueCreate(.cgPoint, &fsNewPos) { AXUIElementSetAttributeValue(fsWin, kAXPositionAttribute as CFString, p) }
+            if let s = AXValueCreate(.cgSize, &fsNewSz) { AXUIElementSetAttributeValue(fsWin, kAXSizeAttribute as CFString, s) }
+            Thread.sleep(forTimeInterval: 0.2)
+        }
+        Thread.sleep(forTimeInterval: 0.3)
+        if getLogicWindowList() == nil {
+            jsonOut(["ok": true, "exitedFullscreen": true, "resized": true,
+                     "width": Int(targetSize.width), "height": Int(targetSize.height),
+                     "axWindowCount": mlWinCount]); break
+        }
+        } // end inner if getLogicWindowList() == nil (truly fullscreen)
+    }
+
+    // 2. Get window via AX
+    guard let mlW = getLogicWindowList() else {
+        jsonOut(["ok": false, "error": "no window"]); break
+    }
+
+    // 2b. Check if window is in native fullscreen even though AX can see it (we're on its Space)
+    var mlFsRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(mlW, "AXFullScreen" as CFString, &mlFsRef)
+    if (mlFsRef as? Bool) == true {
+        // Fullscreen detected on current Space — exit it
+        exitedFs = true
+        let fsScript2 = """
+        tell application id "com.apple.logic10" to activate
+        delay 0.3
+        tell application "System Events"
+            keystroke "f" using {control down, command down}
+        end tell
+        """
+        runScript(fsScript2)
+        tsleep(2.5)
+        // Resize via AX — target Tracks window specifically
+        if let fs2Win = getLogicWindowList() {
+            var fs2Pos = targetOrigin; var fs2Sz = targetSize
+            if let p = AXValueCreate(.cgPoint, &fs2Pos) { AXUIElementSetAttributeValue(fs2Win, kAXPositionAttribute as CFString, p) }
+            if let s = AXValueCreate(.cgSize, &fs2Sz) { AXUIElementSetAttributeValue(fs2Win, kAXSizeAttribute as CFString, s) }
+        }
+        Thread.sleep(forTimeInterval: 0.3)
+        jsonOut(["ok": true, "exitedFullscreen": true, "resized": true,
+                 "width": Int(targetSize.width), "height": Int(targetSize.height), "axWindowCount": mlWinCount]); break
+    }
+
+    // 3. Un-minimize if needed
+    var mlMinRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(mlW, kAXMinimizedAttribute as CFString, &mlMinRef)
+    if let isMin = mlMinRef as? Bool, isMin {
+        AXUIElementSetAttributeValue(mlW, kAXMinimizedAttribute as CFString, kCFBooleanFalse)
+        Thread.sleep(forTimeInterval: 0.4)
+    }
+
+    // 4. Read current position/size
+    var mlPosRef: CFTypeRef?; var mlSzRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(mlW, kAXPositionAttribute as CFString, &mlPosRef)
+    AXUIElementCopyAttributeValue(mlW, kAXSizeAttribute as CFString, &mlSzRef)
+    var currentPos = CGPoint.zero; var currentSz = CGSize.zero
+    if let pv = mlPosRef { AXValueGetValue(pv as! AXValue, .cgPoint, &currentPos) }
+    if let sv = mlSzRef  { AXValueGetValue(sv as! AXValue, .cgSize,  &currentSz) }
+
+    // 5. Resize Logic Tracks window to full screen via AX (targets correct window, not front)
+    var axNewPos = targetOrigin
+    var axNewSz  = targetSize
+    if let posVal = AXValueCreate(.cgPoint, &axNewPos) {
+        AXUIElementSetAttributeValue(mlW, kAXPositionAttribute as CFString, posVal)
+    }
+    if let szVal = AXValueCreate(.cgSize, &axNewSz) {
+        AXUIElementSetAttributeValue(mlW, kAXSizeAttribute as CFString, szVal)
+    }
+    Thread.sleep(forTimeInterval: 0.2)
+    jsonOut(["ok": true,
+             "width": Int(targetSize.width), "height": Int(targetSize.height),
+             "resized": true,
+             "axWindowCount": mlWinCount,
+             "exitedFullscreen": exitedFs])
+
+case "checkInspector":
+    // After scan-tree: if inspector is closed (snapped) — reopen it. If open — do nothing.
+    // Activate Logic first — AX can't see windows if Logic isn't frontmost
+    runScript("tell application id \"com.apple.logic10\" to activate")
+    Thread.sleep(forTimeInterval: 0.3)
+    guard let ciWins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement],
+          let ciWin = ciWins.first(where: { (axVal($0, kAXTitleAttribute) as? String ?? "").contains("Tracks") }) ?? ciWins.first else {
+        jsonOut(["ok": false, "error": "no window"]); break
+    }
+    func ciFind(_ el: AXUIElement, depth: Int = 0) -> AXUIElement? {
+        if depth > 6 { return nil }
+        if axRole(el) == "AXGroup" && (axVal(el, kAXDescriptionAttribute) as? String ?? "") == "Inspector" { return el }
+        for child in axKids(el) { if let f = ciFind(child, depth: depth + 1) { return f } }
+        return nil
+    }
+    let ciInsp = ciFind(ciWin)
+    var ciWidth: CGFloat = -1
+    if let insp = ciInsp {
+        var ciSzRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(insp, kAXSizeAttribute as CFString, &ciSzRef)
+        var ciSz = CGSize.zero
+        if let v = ciSzRef { AXValueGetValue(v as! AXValue, .cgSize, &ciSz) }
+        ciWidth = ciSz.width
+    }
+    let ciNeedsOpen = ciInsp == nil || ciWidth < 10
+    if ciNeedsOpen {
+        // Use CGEvent postToPid — reliable on both Intel and Apple Silicon
+        // (System Events keystroke fails silently on Intel when process name mismatches)
+        var ciPid: pid_t = 0; AXUIElementGetPid(logic, &ciPid)
+        let ciKeySrc = CGEventSource(stateID: .hidSystemState)
+        CGEvent(keyboardEventSource: ciKeySrc, virtualKey: 34, keyDown: true)?.postToPid(ciPid)
+        CGEvent(keyboardEventSource: ciKeySrc, virtualKey: 34, keyDown: false)?.postToPid(ciPid)
+        Thread.sleep(forTimeInterval: 0.5)
+        // Verify inspector actually opened
+        let ciVerify = ciFind(ciWin)
+        var ciVerifyW: CGFloat = -1
+        if let v = ciVerify {
+            var vRef: CFTypeRef?
+            AXUIElementCopyAttributeValue(v, kAXSizeAttribute as CFString, &vRef)
+            var vSz = CGSize.zero
+            if let r = vRef { AXValueGetValue(r as! AXValue, .cgSize, &vSz) }
+            ciVerifyW = vSz.width
+        }
+        jsonOut(["ok": true, "action": "opened", "verified": ciVerify != nil && ciVerifyW > 10, "width": Int(ciVerifyW)])
+    } else {
+        jsonOut(["ok": true, "action": "ok", "width": Int(ciWidth)])
+    }
+
+case "minimizeInspector":
+    // Activate Logic first — same as running from terminal
+    runScript("tell application id \"com.apple.logic10\" to activate")
+    Thread.sleep(forTimeInterval: 0.4)
+    guard let miWins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement],
+          let miWin = miWins.first(where: { (axVal($0, kAXTitleAttribute) as? String ?? "").contains("Tracks") }) ?? miWins.first else {
+        jsonOut(["ok": false, "error": "no window"]); break
+    }
+    // Read window position + size FIRST so we can click inside Logic's window area
+    var miWinPosRef0: CFTypeRef?; var miWinSzRef0: CFTypeRef?
+    AXUIElementCopyAttributeValue(miWin, kAXPositionAttribute as CFString, &miWinPosRef0)
+    AXUIElementCopyAttributeValue(miWin, kAXSizeAttribute as CFString, &miWinSzRef0)
+    var miWinPos0 = CGPoint.zero; var miWinSz0 = CGSize.zero
+    if let v = miWinPosRef0 { AXValueGetValue(v as! AXValue, .cgPoint, &miWinPos0) }
+    if let v = miWinSzRef0  { AXValueGetValue(v as! AXValue, .cgSize,  &miWinSz0) }
+    // Save current mouse position — restore it after drag
+    let miOrigMousePos = CGEvent(source: nil).map { _ in NSEvent.mouseLocation } ?? NSPoint.zero
+    let miOrigMouse = CGPoint(x: miOrigMousePos.x, y: NSScreen.main.map { $0.frame.height - miOrigMousePos.y } ?? miOrigMousePos.y)
+
+    let miSafeSrc = CGEventSource(stateID: .hidSystemState)
+    Thread.sleep(forTimeInterval: 0.1)
+    // Find Inspector group — recursive search (it may not be a direct child)
+    func findInspectorGroup(_ el: AXUIElement, depth: Int = 0) -> AXUIElement? {
+        if depth > 6 { return nil }
+        if axRole(el) == "AXGroup" && (axVal(el, kAXDescriptionAttribute) as? String ?? "") == "Inspector" { return el }
+        for child in axKids(el) { if let f = findInspectorGroup(child, depth: depth + 1) { return f } }
+        return nil
+    }
+    // If inspector not found, try pressing 'I' to open it
+    var miInsp = findInspectorGroup(miWin)
+    if miInsp == nil {
+        // Press 'I' key to toggle inspector open — send directly to Logic (not focused app)
+        var miPid0: pid_t = 0; AXUIElementGetPid(logic, &miPid0)
+        let iSrc0 = CGEventSource(stateID: .hidSystemState)
+        CGEvent(keyboardEventSource: iSrc0, virtualKey: 34, keyDown: true)?.postToPid(miPid0)
+        CGEvent(keyboardEventSource: iSrc0, virtualKey: 34, keyDown: false)?.postToPid(miPid0)
+        Thread.sleep(forTimeInterval: 0.5)
+        miInsp = findInspectorGroup(miWin)
+    }
+    guard let miInsp = miInsp else {
+        jsonOut(["ok": false, "error": "inspector not found"]); break
+    }
+    // Read Inspector's OWN size and position (more accurate than window position)
+    var miSzRef: CFTypeRef?; var miInspPosRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(miInsp, kAXSizeAttribute as CFString, &miSzRef)
+    AXUIElementCopyAttributeValue(miInsp, kAXPositionAttribute as CFString, &miInspPosRef)
+    var miSz = CGSize.zero; var miInspPos = CGPoint.zero
+    if let v = miSzRef     { AXValueGetValue(v as! AXValue, .cgSize,  &miSz) }
+    if let v = miInspPosRef { AXValueGetValue(v as! AXValue, .cgPoint, &miInspPos) }
+    let currentW = miSz.width
+
+    // Dynamically read minimum Inspector width from AXSplitter (replaces hardcoded 164)
+    func miiFindSplitter(_ el: AXUIElement, depth: Int = 0) -> AXUIElement? {
+        if depth > 3 { return nil }
+        for child in axKids(el) {
+            if axRole(child) == "AXSplitter" { return child }
+            if let f = miiFindSplitter(child, depth: depth + 1) { return f }
+        }
+        return nil
+    }
+    var targetW: CGFloat = 160  // safe fallback
+    if let splitter = miiFindSplitter(miWin) {
+        var minRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(splitter, kAXMinValueAttribute as CFString, &minRef)
+        let reported: CGFloat
+        if let m = minRef as? Double      { reported = CGFloat(m) }
+        else if let m = minRef as? CGFloat { reported = m }
+        else                              { reported = 0 }
+        if reported >= 50 { targetW = reported + 8 }  // +8px safety buffer
+    }
+
+    if currentW <= targetW + 5 {
+        jsonOut(["ok": true, "from": Int(currentW), "to": Int(currentW), "action": "already-minimal"]); break
+    }
+    // Drag right edge of Inspector using inspector's own coordinates
+    let dragFromX = miInspPos.x + currentW
+    let dragToX   = miInspPos.x + targetW
+    // Clamp dragY to inspector bounds (avoid going outside Logic window)
+    let dragY     = min(miInspPos.y + min(400, miSz.height * 0.5), miWinPos0.y + miWinSz0.height - 50)
+    let miSrc = CGEventSource(stateID: .hidSystemState)
+    CGEvent(mouseEventSource: miSrc, mouseType: .leftMouseDown,
+            mouseCursorPosition: CGPoint(x: dragFromX, y: dragY), mouseButton: .left)?.post(tap: .cghidEventTap)
+    Thread.sleep(forTimeInterval: 0.08)
+    var curX = dragFromX
+    while curX > dragToX + 1 {
+        curX = max(curX - 3, dragToX)  // never overshoot
+        CGEvent(mouseEventSource: miSrc, mouseType: .leftMouseDragged,
+                mouseCursorPosition: CGPoint(x: curX, y: dragY), mouseButton: .left)?.post(tap: .cghidEventTap)
+        Thread.sleep(forTimeInterval: 0.008)
+    }
+    CGEvent(mouseEventSource: miSrc, mouseType: .leftMouseUp,
+            mouseCursorPosition: CGPoint(x: dragToX, y: dragY), mouseButton: .left)?.post(tap: .cghidEventTap)
+    // Restore mouse to original position
+    CGEvent(mouseEventSource: miSrc, mouseType: .mouseMoved,
+            mouseCursorPosition: miOrigMouse, mouseButton: .left)?.post(tap: .cghidEventTap)
+    Thread.sleep(forTimeInterval: 0.15)
+
+    // Report final width (checkInspector will handle reopening if snap closed it)
+    var checkSzRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(miInsp, kAXSizeAttribute as CFString, &checkSzRef)
+    var checkSz = CGSize.zero
+    if let v = checkSzRef { AXValueGetValue(v as! AXValue, .cgSize, &checkSz) }
+    jsonOut(["ok": true, "from": Int(currentW), "to": Int(checkSz.width), "action": checkSz.width < 10 ? "snapped" : "drag"])
+
+
+case "openMixer":
+    // Activate Logic first if its window isn't accessible (different Space)
+    var omWins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement]
+    if omWins == nil || omWins!.isEmpty {
+        runScript("tell application id \"com.apple.logic10\" to activate")
+        Thread.sleep(forTimeInterval: 0.4)
+        omWins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement]
+    }
+    // Prefer the Tracks window (not a floating Mixer or dialog)
+    let win = omWins?.first(where: { (axVal($0, kAXTitleAttribute) as? String ?? "").contains("Tracks") })
+           ?? omWins?.first
+    guard let win = win else {
+        jsonOut(["ok": false, "error": "no window"]); break
+    }
+    // Find Mixer checkbox by title attribute
+    func findCheckbox(_ el: AXUIElement, titleVal: String, depth: Int = 0) -> AXUIElement? {
+        if depth > 5 { return nil }
+        if axRole(el) == "AXCheckBox" {
+            var t: CFTypeRef?
+            AXUIElementCopyAttributeValue(el, kAXTitleAttribute as CFString, &t)
+            if let s = t as? String, s == titleVal { return el }
+            // Also check description
+            var d: CFTypeRef?
+            AXUIElementCopyAttributeValue(el, kAXDescriptionAttribute as CFString, &d)
+            if let s = d as? String, s == titleVal { return el }
+        }
+        for child in axKids(el) {
+            if let found = findCheckbox(child, titleVal: titleVal, depth: depth + 1) { return found }
+        }
+        return nil
+    }
+    // Helper: check if mixer is already in inline Mode2
+    func mixerIsInline(_ w: AXUIElement) -> Bool {
+        for g in axKids(w) {
+            for sub in axKids(g) {
+                if (axVal(sub, kAXDescriptionAttribute) as? String) == "Mixer" {
+                    for child in axKids(sub) {
+                        if axRole(child) == "AXGroup" {
+                            let cbs = axKids(child).filter { axRole($0) == "AXCheckBox" }
+                            if cbs.contains(where: { (axVal($0, kAXDescriptionAttribute) as? String) == "Audio" }) {
+                                return true
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false
+    }
+    // Close Library panel if open — it sits left of Inspector, takes horizontal space
+    if let library = findCheckbox(win, titleVal: "Library") {
+        if axIntValue(library) == 1 {
+            axPress(library)
+            Thread.sleep(forTimeInterval: 0.15)
+        }
+    }
+    // Close right-side panels + Quick Help that can obscure mixer
+    for panelName in ["Quick Help", "Browsers", "List Editors", "Note Pads", "Loop Browser"] {
+        if let panel = findCheckbox(win, titleVal: panelName) {
+            if axIntValue(panel) == 1 {
+                axPress(panel)
+                Thread.sleep(forTimeInterval: 0.15)
+            }
+        }
+    }
+    // Collapse Inspector sections (Region, Track) via osascript — only if open
+    runScript("""
+tell application "System Events"
+  tell process "\(logicAppName)"
+    set w to first window
+    repeat with g in (every group of w)
+      if description of g is "Inspector" then
+        set lst to first list of g
+        set i to 0
+        repeat with section in (every group of lst)
+          set i to i + 1
+          if i < 4 then
+            repeat with el in (every UI element of section)
+              if description of el is "disclosure triangle" then
+                if value of el is 1 then perform action "AXPress" of el
+                exit repeat
+              end if
+            end repeat
+          end if
+        end repeat
+        exit repeat
+      end if
+    end repeat
+  end tell
+end tell
+""")
+
+    if let mixer = findCheckbox(win, titleVal: "Mixer") {
+        let val = axIntValue(mixer)
+        if val == 0 {
+            axPress(mixer)
+            Thread.sleep(forTimeInterval: 0.45)
+        } else {
+            Thread.sleep(forTimeInterval: 0.1)
+        }
+        // Step 1: shrink Inspector to minimum width so mixer gets more horizontal room.
+        // When the mixer area is wide enough, Logic switches from dropdown (Mode1) to
+        // inline checkboxes (Mode2) — no menu needed, no focus steal.
+        func shrinkInspector() -> Bool {
+            // Search direct children and one level deep for the first AXSplitter
+            func findFirstSplitter(_ el: AXUIElement, depth: Int = 0) -> AXUIElement? {
+                if depth > 2 { return nil }
+                for child in axKids(el) {
+                    if axRole(child) == "AXSplitter" { return child }
+                    if let found = findFirstSplitter(child, depth: depth + 1) { return found }
+                }
+                return nil
+            }
+            guard let splitter = findFirstSplitter(win) else { return false }
+            // Use Logic's own reported minimum; if absent or tiny, use 220px
+            // (220px keeps the Inspector channel-strip visible but compact)
+            var minRef: CFTypeRef?
+            AXUIElementCopyAttributeValue(splitter, kAXMinValueAttribute as CFString, &minRef)
+            let reported: Double
+            if let m = minRef as? Double { reported = m }
+            else if let m = minRef as? CGFloat { reported = Double(m) }
+            else { reported = 0 }
+            let targetVal: Double = reported >= 50 ? reported : 220.0
+            let err = AXUIElementSetAttributeValue(splitter, kAXValueAttribute as CFString, targetVal as CFTypeRef)
+            return err == AXError.success
+        }
+
+        if !mixerIsInline(win) {
+            let shrank = shrinkInspector()
+            if shrank { Thread.sleep(forTimeInterval: 0.3) }
+        }
+
+        // NOTE: Previously this block closed Inspector when mixer couldn't reach
+        // inline mode. Removed because Inspector is required for scanMasterPlugins.
+        // On small screens (e.g. Intel 13") mixer stays in dropdown mode — that's OK.
+        // Click "All" radio button
+        func findAllRadioBtn(_ el: AXUIElement, depth: Int = 0) -> AXUIElement? {
+            if depth > 8 { return nil }
+            if axRole(el) == "AXRadioButton" {
+                let desc = (axVal(el, kAXDescriptionAttribute) as? String) ?? ""
+                let title = (axVal(el, kAXTitleAttribute) as? String) ?? ""
+                if desc == "All" || title == "All" { return el }
+            }
+            for child in axKids(el) {
+                if let found = findAllRadioBtn(child, depth: depth + 1) { return found }
+            }
+            return nil
+        }
+        if let allBtn = findAllRadioBtn(win) {
+            axPress(allBtn)
+            Thread.sleep(forTimeInterval: 0.2)
+        }
+        jsonOut(["ok": true, "wasOpen": val == 1, "mode": mixerIsInline(win) ? "inline" : "dropdown"])
+    } else {
+        jsonOut(["ok": false, "error": "Mixer button not found"])
+    }
+
+// ── setMixerHeight: drag the Arrange/Mixer resize handle to set mixer height ──
+// Usage: LogicBridge setMixerHeight [height_px]   (default: 280)
+// Logic's inline mixer has no AXSplitter — we drag the top edge of the Mixer group.
+case "setMixerHeight":
+    let smhTargetH: CGFloat = args.count > 2 ? (CGFloat(Double(args[2]) ?? 250.0)) : 250.0
+    // Read mixer position directly without activate (same approach as test_mixer_dynamic)
+    guard let smhWins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement],
+          let smhWin = smhWins.first else {
+        jsonOut(["ok": false, "error": "no window"]); break
+    }
+    func smhFindMixer2(_ el: AXUIElement, _ d: Int) -> AXUIElement? {
+        if d > 6 { return nil }
+        if axRole(el) == "AXGroup" && (axVal(el, kAXDescriptionAttribute) as? String) == "Mixer" {
+            var szR: CFTypeRef?
+            AXUIElementCopyAttributeValue(el, kAXSizeAttribute as CFString, &szR)
+            var s = CGSize.zero
+            if let sv = szR { AXValueGetValue(sv as! AXValue, .cgSize, &s) }
+            if s.height > 100 { return el }
+        }
+        for kid in axKids(el) { if let f = smhFindMixer2(kid, d+1) { return f } }
+        return nil
+    }
+    guard let smhMg = smhFindMixer2(smhWin, 0) else {
+        jsonOut(["ok": false, "error": "Mixer group not found"]); break
+    }
+    var smhPosRef: CFTypeRef?; var smhSzRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(smhMg, kAXPositionAttribute as CFString, &smhPosRef)
+    AXUIElementCopyAttributeValue(smhMg, kAXSizeAttribute as CFString, &smhSzRef)
+    var smhPos = CGPoint.zero; var smhSz = CGSize.zero
+    if let pv = smhPosRef { AXValueGetValue(pv as! AXValue, .cgPoint, &smhPos) }
+    if let sv = smhSzRef  { AXValueGetValue(sv as! AXValue, .cgSize,  &smhSz) }
+    let smhCurrentH = smhSz.height
+    // Skip if already at target
+    if smhCurrentH <= smhTargetH + 20 {
+        jsonOut(["ok": true, "skipped": true, "prevH": smhCurrentH, "newH": smhCurrentH]); break
+    }
+    let smhFromY = smhPos.y
+    let smhToY = smhPos.y + smhSz.height - smhTargetH
+    let smhDragX = smhPos.x + smhSz.width / 2
+    let smhSrc = CGEventSource(stateID: .hidSystemState)
+    CGEvent(mouseEventSource: smhSrc, mouseType: .leftMouseDown,
+            mouseCursorPosition: CGPoint(x: smhDragX, y: smhFromY), mouseButton: .left)?.post(tap: .cghidEventTap)
+    Thread.sleep(forTimeInterval: 0.1)
+    var smhCy = smhFromY
+    while smhCy < smhToY {
+        smhCy += 2
+        CGEvent(mouseEventSource: smhSrc, mouseType: .leftMouseDragged,
+                mouseCursorPosition: CGPoint(x: smhDragX, y: smhCy), mouseButton: .left)?.post(tap: .cghidEventTap)
+        Thread.sleep(forTimeInterval: 0.008)
+    }
+    CGEvent(mouseEventSource: smhSrc, mouseType: .leftMouseUp,
+            mouseCursorPosition: CGPoint(x: smhDragX, y: smhCy), mouseButton: .left)?.post(tap: .cghidEventTap)
+    Thread.sleep(forTimeInterval: 0.15)
+    var smhSzNew: CFTypeRef?
+    AXUIElementCopyAttributeValue(smhMg, kAXSizeAttribute as CFString, &smhSzNew)
+    var smhNewSz = CGSize.zero
+    if let sv = smhSzNew { AXValueGetValue(sv as! AXValue, .cgSize, &smhNewSz) }
+    jsonOut(["ok": true, "prevH": smhCurrentH, "targetH": smhTargetH, "newH": smhNewSz.height])
+
+
+// ── ensureMixer: open mixer if closed, close Library/Inspector for space ──────
+// Used before bounce — does NOT change filter states or click All
+case "ensureMixer":
+    var emWins: CFTypeRef?
+    AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &emWins)
+    guard let emWindows = emWins as? [AXUIElement], let emWin = emWindows.first else {
+        jsonOut(["ok": false, "error": "no window"]); break
+    }
+    func emFindCheckbox(_ el: AXUIElement, titleVal: String, depth: Int = 0) -> AXUIElement? {
+        if depth > 5 { return nil }
+        if axRole(el) == "AXCheckBox" {
+            var t: CFTypeRef?; AXUIElementCopyAttributeValue(el, kAXTitleAttribute as CFString, &t)
+            if let s = t as? String, s == titleVal { return el }
+            var d: CFTypeRef?; AXUIElementCopyAttributeValue(el, kAXDescriptionAttribute as CFString, &d)
+            if let s = d as? String, s == titleVal { return el }
+        }
+        for child in axKids(el) {
+            if let found = emFindCheckbox(child, titleVal: titleVal, depth: depth + 1) { return found }
+        }
+        return nil
+    }
+    guard let emMixer = emFindCheckbox(emWin, titleVal: "Mixer") else {
+        jsonOut(["ok": false, "error": "Mixer button not found"]); break
+    }
+    if axIntValue(emMixer) == 1 {
+        // Mixer already open — instant return, no side effects on Library/Inspector
+        jsonOut(["ok": true, "opened": false]); break
+    }
+    // Mixer is closed — close Library/Inspector to give it full width, then open
+    if let library = emFindCheckbox(emWin, titleVal: "Library"), axIntValue(library) == 1 {
+        axPress(library); Thread.sleep(forTimeInterval: 0.25)
+    }
+    axPress(emMixer); tsleep(0.6)
+    if let inspector = emFindCheckbox(emWin, titleVal: "Inspector"), axIntValue(inspector) == 1 {
+        axPress(inspector); Thread.sleep(forTimeInterval: 0.25)
+    }
+    jsonOut(["ok": true, "opened": true])
+
+case "setFormat":
+    guard args.count >= 4 else { jsonOut(["error": "need fileFormat bitDepth sampleRate"]); exit(1) }
+    let fileFormat = args[2]  // e.g. "WAVE"
+    let bitDepth   = args[3]  // e.g. "24 Bit"
+    let sampleRate = args.count >= 5 ? args[4] : "48000"
+    let enableMp3  = args.count >= 6 ? args[5] == "1" : false
+    
+    // Map sample rate number to display value
+    let srDisplayMap = ["44100": "44.1 kHz", "48000": "48 kHz", "96000": "96 kHz",
+                        "44.1 kHz": "44.1 kHz", "48 kHz": "48 kHz", "96 kHz": "96 kHz"]
+    let srDisplay = srDisplayMap[sampleRate] ?? sampleRate
+    
+    var wins: CFTypeRef?
+    AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &wins)
+    guard let windows = wins as? [AXUIElement] else { jsonOut(["error": "no windows"]); exit(1) }
+    guard let bounceWin = windows.first(where: {
+        var t: CFTypeRef?
+        AXUIElementCopyAttributeValue($0, kAXTitleAttribute as CFString, &t)
+        return (t as? String ?? "").contains("Bounce")
+    }) else { jsonOut(["error": "Bounce dialog not open"]); exit(1) }
+    
+    var logicPid: pid_t = 0
+    AXUIElementGetPid(bounceWin, &logicPid)
+
+    func pressKey(_ keyCode: CGKeyCode) {
+        let src = CGEventSource(stateID: .hidSystemState)
+        if let dn = CGEvent(keyboardEventSource: src, virtualKey: keyCode, keyDown: true),
+           let up = CGEvent(keyboardEventSource: src, virtualKey: keyCode, keyDown: false) {
+            dn.postToPid(logicPid)
+            Thread.sleep(forTimeInterval: 0.05)
+            up.postToPid(logicPid)
+        }
+    }
+
+    func selectPopup(_ currentVal: String, _ newVal: String) -> Bool {
+        let popups = findAll(bounceWin, role: "AXPopUpButton", depth: 10)
+        for popup in popups {
+            var val: CFTypeRef?
+            AXUIElementCopyAttributeValue(popup, kAXValueAttribute as CFString, &val)
+            guard let v = val as? String, v == currentVal else { continue }
+            if v == newVal { return true }
+
+            // Click to open popup
+            axPress(popup)
+            Thread.sleep(forTimeInterval: 0.5)
+
+            // Logic popup menus appear as a separate AXApplication-level menu
+            // Search ALL windows of Logic for menu items
+            var allWins: CFTypeRef?
+            AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &allWins)
+            if let wins = allWins as? [AXUIElement] {
+                for w in wins {
+                    let items = findAll(w, role: "AXMenuItem", depth: 5)
+                    for item in items {
+                        var tv: CFTypeRef?
+                        AXUIElementCopyAttributeValue(item, kAXTitleAttribute as CFString, &tv)
+                        if let t = tv as? String, t == newVal {
+                            axPress(item)
+                            Thread.sleep(forTimeInterval: 0.2)
+                            return true
+                        }
+                    }
+                }
+            }
+
+            // Also check popup's own subtree
+            var kids: CFTypeRef?
+            AXUIElementCopyAttributeValue(popup, kAXChildrenAttribute as CFString, &kids)
+            if let menu = (kids as? [AXUIElement])?.first {
+                for item in findAll(menu, role: "AXMenuItem", depth: 5) {
+                    var tv: CFTypeRef?
+                    AXUIElementCopyAttributeValue(item, kAXTitleAttribute as CFString, &tv)
+                    if let t = tv as? String, t == newVal {
+                        axPress(item)
+                        Thread.sleep(forTimeInterval: 0.2)
+                        return true
+                    }
+                }
+            }
+
+            pressKey(53) // Escape
+            Thread.sleep(forTimeInterval: 0.2)
+            return false
+        }
+        return false
+    }
+    
+    var results: [String: Any] = [:]
+    
+    // Get all popups sorted by Y position
+    let allPopupsUnsorted = findAll(bounceWin, role: "AXPopUpButton", depth: 10)
+    var popupsByY: [(Int, AXUIElement)] = []
+    for popup in allPopupsUnsorted {
+        var pos: CFTypeRef?
+        AXUIElementCopyAttributeValue(popup, kAXPositionAttribute as CFString, &pos)
+        if let p = pos as! AXValue? {
+            var point = CGPoint.zero
+            AXValueGetValue(p, .cgPoint, &point)
+            popupsByY.append((Int(point.y), popup))
+        }
+    }
+    popupsByY.sort { $0.0 < $1.0 }
+    
+    // In Logic Bounce Parameters panel, popups appear in order:
+    // y~187: File Format (WAVE/AIFF/CAF)
+    // y~217: Resolution (8-bit/16 Bit/24 Bit/32 Bit)
+    // y~247: Sample Rate (22.05 kHz/44.1 kHz/48 kHz/96 kHz)
+    // y~277: File Type (Interleaved/Split)
+    
+    for (y, popup) in popupsByY {
+        var val: CFTypeRef?
+        AXUIElementCopyAttributeValue(popup, kAXValueAttribute as CFString, &val)
+        let v = (val as? String) ?? ""
+        
+        if ["WAVE","AIFF","CAF","WAVE64","MP3"].contains(v) {
+            // File Format popup
+            if v != fileFormat {
+                let r = selectPopup(v, fileFormat)
+                results["format"] = r
+            } else { results["format"] = true }
+        } else if v.lowercased().contains("bit") {
+            // Resolution popup - Logic shows "24 Bit" as current but menu items are "24-bit"
+            if v.replacingOccurrences(of: " ", with: "-").lowercased() != bitDepth.lowercased() {
+                let r = selectPopup(v, bitDepth)
+                results["bitDepth"] = r
+            } else { results["bitDepth"] = true }
+        } else if v.contains("kHz") || v.contains("Hz") {
+            // Sample Rate popup
+            if v != srDisplay {
+                let r = selectPopup(v, srDisplay)
+                results["sampleRate"] = r
+            } else { results["sampleRate"] = true }
+        }
+    }
+    
+    // Toggle MP3 checkbox
+    let cbs = findAll(bounceWin, role: "AXCheckBox", depth: 10)
+    for cb in cbs {
+        var tv: CFTypeRef?
+        AXUIElementCopyAttributeValue(cb, kAXTitleAttribute as CFString, &tv)
+        if let t = tv as? String, t == "MP3" {
+            let v = axIntValue(cb)
+            if enableMp3 && v == 0 { axPress(cb) }
+            else if !enableMp3 && v == 1 { axPress(cb) }
+            results["mp3"] = true
+            break
+        }
+    }
+    
+    jsonOut(["ok": true, "set": results])
+
+case "sendKey":
+    // sendKey <keyCode> [cmd] [shift] [opt] [ctrl]
+    guard args.count >= 3, let keyCode = UInt16(args[2]) else {
+        jsonOut(["error": "keyCode required"]); exit(1)
+    }
+    var pid: pid_t = 0
+    AXUIElementGetPid(logic, &pid)
+    var flags: CGEventFlags = []
+    if args.contains("cmd") { flags.insert(.maskCommand) }
+    if args.contains("shift") { flags.insert(.maskShift) }
+    if args.contains("opt") { flags.insert(.maskAlternate) }
+    if args.contains("ctrl") { flags.insert(.maskControl) }
+    sendKeyToLogic(pid, keyCode: CGKeyCode(keyCode), flags: flags)
+    jsonOut(["ok": true, "keyCode": keyCode])
+
+case "stop-render":
+    // Send Cmd+Period via CGEvent post(tap: .cghidEventTap) — works reliably
+    // (unlike postToPid which doesn't reach Logic during modal bounce dialog)
+    if let logicApp = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.logic10").first {
+        logicApp.activate()
+        Thread.sleep(forTimeInterval: 0.15)
+    }
+    let stopSrc = CGEventSource(stateID: .hidSystemState)
+    // Period key = 0x2F (47)
+    if let dn = CGEvent(keyboardEventSource: stopSrc, virtualKey: 0x2F, keyDown: true),
+       let up = CGEvent(keyboardEventSource: stopSrc, virtualKey: 0x2F, keyDown: false) {
+        dn.flags = .maskCommand
+        up.flags = []
+        dn.post(tap: .cghidEventTap)
+        Thread.sleep(forTimeInterval: 0.05)
+        up.post(tap: .cghidEventTap)
+    }
+    // Send twice for reliability
+    Thread.sleep(forTimeInterval: 0.2)
+    if let dn2 = CGEvent(keyboardEventSource: stopSrc, virtualKey: 0x2F, keyDown: true),
+       let up2 = CGEvent(keyboardEventSource: stopSrc, virtualKey: 0x2F, keyDown: false) {
+        dn2.flags = .maskCommand
+        up2.flags = []
+        dn2.post(tap: .cghidEventTap)
+        Thread.sleep(forTimeInterval: 0.05)
+        up2.post(tap: .cghidEventTap)
+    }
+    jsonOut(["ok": true])
+
+case "typeText":
+    // typeText <text>
+    guard args.count >= 3 else { jsonOut(["error": "text required"]); exit(1) }
+    let text = args[2...].joined(separator: " ")
+    var pid: pid_t = 0
+    AXUIElementGetPid(logic, &pid)
+    typeTextToLogic(pid, text)
+    jsonOut(["ok": true, "typed": text])
+
+case "clickWindowButton":
+    // clickWindowButton <buttonName> - searches ALL Logic windows for button
+    guard args.count >= 3 else { jsonOut(["error": "buttonName required"]); exit(1) }
+    let btnName = args[2...].joined(separator: " ")
+    var wins: CFTypeRef?
+    AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &wins)
+    guard let windows = wins as? [AXUIElement] else {
+        jsonOut(["error": "no windows"]); exit(1)
+    }
+    var clicked = false
+    for win in windows {
+        let btns = findAll(win, role: "AXButton", title: btnName, depth: 15)
+        if let btn = btns.first {
+            axPress(btn)
+            clicked = true
+            break
+        }
+    }
+    jsonOut(["ok": clicked, "clicked": clicked ? btnName : "not found"])
+
+case "getWindows":
+    var wins: CFTypeRef?
+    AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &wins)
+    let titles = (wins as? [AXUIElement])?.compactMap { win -> String? in
+        var t: CFTypeRef?
+        AXUIElementCopyAttributeValue(win, kAXTitleAttribute as CFString, &t)
+        return t as? String
+    } ?? []
+    jsonOut(["ok": true, "windows": titles])
+
+case "setFilenameAndBounce":
+    // Set Save As field and click Bounce - all via AX, no focus needed
+    guard args.count >= 3 else { jsonOut(["error": "filename required"]); exit(1) }
+    let filename = args[2...].joined(separator: " ")
+    var wins: CFTypeRef?
+    AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &wins)
+    guard let windows = wins as? [AXUIElement] else {
+        jsonOut(["error": "no windows"]); exit(1)
+    }
+    var result: [String: Any] = ["ok": false]
+    for win in windows {
+        // Find Save As text field
+        let textFields = findAll(win, role: "AXTextField", depth: 15)
+        for tf in textFields {
+            var tv: CFTypeRef?
+            AXUIElementCopyAttributeValue(tf, kAXTitleAttribute as CFString, &tv)
+            let title = (tv as? String) ?? ""
+            // "Save As:" or "name" field
+            if title.contains("Save") || title.contains("name") || title.isEmpty {
+                // Set value via AX
+                AXUIElementSetAttributeValue(tf, kAXValueAttribute as CFString, filename as CFTypeRef)
+                Thread.sleep(forTimeInterval: 0.15)
+                result["filename"] = true
+                break
+            }
+        }
+        // Find and click Bounce button
+        let bounceBtns = findAll(win, role: "AXButton", title: "Bounce", depth: 15)
+        if let btn = bounceBtns.first {
+            axPress(btn)
+            result["bounceClicked"] = true
+            result["ok"] = true
+            break
+        }
+    }
+    if !(result["ok"] as? Bool ?? false) {
+        // Fallback: press Enter
+        var pid: pid_t = 0
+        AXUIElementGetPid(logic, &pid)
+        sendKeyToLogic(pid, keyCode: 36) // Enter
+        result["ok"] = true
+        result["fallback"] = true
+    }
+    jsonOut(result)
+
+case "getMixerFilters":
+    // Retry once if mixer just opened
+    var ctrl = findMixerFilterControl(logic)
+    if ctrl == nil { Thread.sleep(forTimeInterval: 0.5); ctrl = findMixerFilterControl(logic) }
+    guard let ctrl = ctrl else {
+        jsonOut(["ok": false, "mixerOpen": false, "filters": [:]]); break
+    }
+    switch ctrl {
+    case .inline_(let grp):
+        // Mode 2: read checkboxes directly — no menu, no Logic activation
+        var filters: [String: Bool] = [:]
+        for cb in axKids(grp) where axRole(cb) == "AXCheckBox" {
+            let t = (axVal(cb, kAXTitleAttribute) as? String) ?? ""
+            let label = t.isEmpty ? ((axVal(cb, kAXDescriptionAttribute) as? String) ?? "") : t
+            guard !label.isEmpty else { continue }
+            filters[label] = axIntValue(cb) == 1
+        }
+        jsonOut(["ok": true, "mixerOpen": true, "mode": "inline", "filters": filters])
+    case .dropdown(let mb):
+        // Mode 1: open menu, read checkmarks, close
+        if let filters = readMixerFilterStates(mb) {
+            jsonOut(["ok": true, "mixerOpen": true, "mode": "dropdown", "filters": filters])
+        } else {
+            jsonOut(["ok": false, "mixerOpen": true, "filters": [:], "error": "menu did not open"])
+        }
+    }
+
+case "mixerFilterToggle":
+    guard args.count >= 3 else { jsonOut(["error": "filter name required"]); exit(1) }
+    let filterName = args[2...].joined(separator: " ")
+    var ctrl2 = findMixerFilterControl(logic)
+    if ctrl2 == nil { Thread.sleep(forTimeInterval: 0.4); ctrl2 = findMixerFilterControl(logic) }
+    guard let ctrl2 = ctrl2 else { jsonOut(["ok": false, "error": "Mixer not open"]); break }
+    switch ctrl2 {
+    case .inline_(let grp):
+        // Mode 2: click checkbox directly — instant, no menu, no activation
+        guard let cb = axKids(grp).first(where: {
+            let t = (axVal($0, kAXTitleAttribute) as? String) ?? ""
+            let label = t.isEmpty ? ((axVal($0, kAXDescriptionAttribute) as? String) ?? "") : t
+            return label == filterName
+        }) else { jsonOut(["ok": false, "error": "checkbox '\(filterName)' not found"]); break }
+        let wasOn = axIntValue(cb) == 1
+        axPress(cb)
+        Thread.sleep(forTimeInterval: 0.05)
+        jsonOut(["ok": true, "filter": filterName, "wasOn": wasOn, "isNow": !wasOn, "mode": "inline"])
+    case .dropdown(let mb):
+        // Mode 1: open menu, click item, menu closes automatically
+        axPress(mb)
+        Thread.sleep(forTimeInterval: 0.35)
+        guard let m = axKids(mb).first(where: { axRole($0) == "AXMenu" }) else {
+            jsonOut(["ok": false, "error": "menu did not open"]); break
+        }
+        guard let ti = axKids(m).first(where: { (axVal($0, kAXTitleAttribute) as? String) == filterName }) else {
+            var pidX: pid_t = 0; AXUIElementGetPid(mb, &pidX)
+            let srcX = CGEventSource(stateID: .hidSystemState)
+            if let dn = CGEvent(keyboardEventSource: srcX, virtualKey: 53, keyDown: true),
+               let up = CGEvent(keyboardEventSource: srcX, virtualKey: 53, keyDown: false) { dn.postToPid(pidX); up.postToPid(pidX) }
+            jsonOut(["ok": false, "error": "item '\(filterName)' not found"]); break
+        }
+        let wasOn2 = (axVal(ti, "AXMenuItemMarkChar") as? String) == "✓"
+        axPress(ti)
+        Thread.sleep(forTimeInterval: 0.1)
+        jsonOut(["ok": true, "filter": filterName, "wasOn": wasOn2, "isNow": !wasOn2, "mode": "dropdown"])
+    }
+
+case "enableAllMixerFilters":
+    var ctrl3 = findMixerFilterControl(logic)
+    if ctrl3 == nil { Thread.sleep(forTimeInterval: 0.6); ctrl3 = findMixerFilterControl(logic) }
+    guard let ctrl3 = ctrl3 else {
+        jsonOut(["ok": false, "error": "Mixer not open", "enabled": []]); break
+    }
+    var enabled3: [String] = []
+    switch ctrl3 {
+    case .inline_(let grp):
+        // Mode 2: directly click each OFF checkbox — fast, no menus
+        for cb in axKids(grp) where axRole(cb) == "AXCheckBox" {
+            let t = (axVal(cb, kAXTitleAttribute) as? String) ?? ""
+            let label = t.isEmpty ? ((axVal(cb, kAXDescriptionAttribute) as? String) ?? "") : t
+            guard !label.isEmpty else { continue }
+            if axIntValue(cb) == 0 {
+                axPress(cb)
+                Thread.sleep(forTimeInterval: 0.08)
+                enabled3.append(label)
+            }
+        }
+        jsonOut(["ok": true, "enabled": enabled3, "mode": "inline"])
+    case .dropdown(let mb):
+        // Mode 1: read states then click each OFF item
+        guard let states = readMixerFilterStates(mb) else {
+            jsonOut(["ok": false, "error": "menu did not open", "enabled": []]); break
+        }
+        let offNames = states.filter { !$0.value }.map { $0.key }
+        for name in offNames {
+            axPress(mb); Thread.sleep(forTimeInterval: 0.3)
+            if let m = axKids(mb).first(where: { axRole($0) == "AXMenu" }),
+               let ti = axKids(m).first(where: { (axVal($0, kAXTitleAttribute) as? String) == name }) {
+                axPress(ti); Thread.sleep(forTimeInterval: 0.25)
+                enabled3.append(name)
+            } else {
+                var pidX: pid_t = 0; AXUIElementGetPid(mb, &pidX)
+                let srcX = CGEventSource(stateID: .hidSystemState)
+                if let dn = CGEvent(keyboardEventSource: srcX, virtualKey: 53, keyDown: true),
+                   let up = CGEvent(keyboardEventSource: srcX, virtualKey: 53, keyDown: false) { dn.postToPid(pidX); up.postToPid(pidX) }
+                Thread.sleep(forTimeInterval: 0.15)
+            }
+        }
+        jsonOut(["ok": true, "enabled": enabled3, "mode": "dropdown"])
+    }
+
+case "applyBouncePreset":
+    // Apply format settings to the open Bounce dialog
+    guard args.count >= 3 else { jsonOut(["ok": false, "error": "missing args"]); break }
+    let abpJsonStr = args[2]
+    var abpParams: [String: String] = [:]
+    if let abpData = abpJsonStr.data(using: .utf8),
+       let abpObj = try? JSONSerialization.jsonObject(with: abpData) as? [String: Any] {
+        for (k, v) in abpObj { if let s = v as? String { abpParams[k] = s } else if let n = v as? Int { abpParams[k] = String(n) } }
+    }
+    // Find Bounce window
+    var abpWins: CFTypeRef?
+    AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &abpWins)
+    guard let abpWindows = abpWins as? [AXUIElement],
+          let abpBounceWin = abpWindows.first(where: {
+              var t: CFTypeRef?
+              AXUIElementCopyAttributeValue($0, kAXTitleAttribute as CFString, &t)
+              return (t as? String ?? "").contains("Bounce")
+          }) else { jsonOut(["ok": false, "error": "Bounce window not found"]); break }
+    // Get Logic PID — used for Escape key in abpSetPopup
+    var abpLogicPid: pid_t = 0; AXUIElementGetPid(logic, &abpLogicPid)
+    // Helper: select a row using AX attribute (no mouse click — safe regardless of window z-order)
+    func abpSelectRow(_ row: AXUIElement) {
+        AXUIElementSetAttributeValue(row, kAXSelectedAttribute as CFString, true as CFTypeRef)
+    }
+    // Find destination row checkboxes
+    let abpRows = findAll(abpBounceWin, role: "AXRow", depth: 10)
+    // WAV / Uncompressed checkbox (row 0, first checkbox)
+    var abpWavCB: AXUIElement? = nil
+    if !abpRows.isEmpty { abpWavCB = findAll(abpRows[0], role: "AXCheckBox", depth: 5).first }
+    // MP3 checkbox (row 1, title "MP3")
+    var abpMp3CB: AXUIElement? = nil
+    if abpRows.count > 1 {
+        for cb in findAll(abpRows[1], role: "AXCheckBox", depth: 5) {
+            if axTitle(cb).lowercased().contains("mp3") { abpMp3CB = cb; break }
+        }
+    }
+    let abpWavIsOn = abpWavCB.map { axIntValue($0) == 1 } ?? true
+    let abpMp3IsOn = abpMp3CB.map { axIntValue($0) == 1 } ?? false
+    // wavEnabled param: "1" = ensure WAV checkbox ON, "0" = OFF, absent = don't touch
+    if let wavStr = abpParams["wavEnabled"], let cb = abpWavCB {
+        let wantOn = (wavStr == "1" || wavStr == "true")
+        if abpWavIsOn != wantOn { axPress(cb); Thread.sleep(forTimeInterval: 0.3) }
+    }
+    // mp3Enabled param: "1" = ensure MP3 checkbox ON, "0" = OFF, absent = don't touch
+    if let mp3Str = abpParams["mp3Enabled"], let cb = abpMp3CB {
+        let wantOn = (mp3Str == "1" || mp3Str == "true")
+        if abpMp3IsOn != wantOn { axPress(cb); Thread.sleep(forTimeInterval: 0.3) }
+    }
+    // dest param: which row to display (0=WAV row, 1=MP3 row)
+    if let abpDestStr = abpParams["dest"], let abpDestIdx = Int(abpDestStr) {
+        let targetRow = (abpDestIdx == 1 || abpDestIdx == 2) ? 1 : 0
+        if abpRows.count > targetRow {
+            let already = (axVal(abpRows[targetRow], kAXSelectedAttribute as String) as? Bool) ?? false
+            if !already { abpSelectRow(abpRows[targetRow]); Thread.sleep(forTimeInterval: targetRow == 1 ? 0.7 : 0.5) }
+        }
+    }
+    // Get bounce window top Y — used to convert absolute → relative Y for popup matching
+    var abpWinPos: CFTypeRef?
+    AXUIElementCopyAttributeValue(abpBounceWin, kAXPositionAttribute as CFString, &abpWinPos)
+    var abpWinPt = CGPoint.zero
+    if let av = abpWinPos as! AXValue? { AXValueGetValue(av, .cgPoint, &abpWinPt) }
+    let abpWinTop = Int(abpWinPt.y)
+    // Get all popup-like controls sorted by relative Y position
+    // Logic Bounce dialog uses BOTH AXPopUpButton and AXMenuButton for its dropdowns
+    let abpPopupBtns = findAll(abpBounceWin, role: "AXPopUpButton", depth: 10)
+    let abpMenuBtns  = findAll(abpBounceWin, role: "AXMenuButton",  depth: 10)
+    let abpPopups    = abpPopupBtns + abpMenuBtns
+    let abpSortedPopups = abpPopups.sorted {
+        var p1: CFTypeRef?; AXUIElementCopyAttributeValue($0, kAXPositionAttribute as CFString, &p1)
+        var p2: CFTypeRef?; AXUIElementCopyAttributeValue($1, kAXPositionAttribute as CFString, &p2)
+        var pt1 = CGPoint.zero; var pt2 = CGPoint.zero
+        if let av = p1 as! AXValue? { AXValueGetValue(av, .cgPoint, &pt1) }
+        if let av = p2 as! AXValue? { AXValueGetValue(av, .cgPoint, &pt2) }
+        return pt1.y < pt2.y
+    }
+    // Helper: set popup value by pressing it and finding the menu item
+    var abpSetResults: [String: Bool] = [:]
+    func abpSetPopup(_ popup: AXUIElement, _ newVal: String) -> Bool {
+        let curVal = (axVal(popup, kAXValueAttribute) as? String) ?? ""
+        if curVal == newVal { return true }
+        axPress(popup)
+        // Retry loop: wait for menu to appear (up to 5 attempts)
+        var abpMenuWasOpen = false
+        let newValLower = newVal.lowercased()
+        func tryItems(_ items: [AXUIElement]) -> Bool {
+            // Exact match first
+            for item in items { if axTitle(item) == newVal { axPress(item); tsleep(0.6); return true } }
+            // Case-insensitive / partial match fallback (handles e.g. "kBit/s" vs "kbit/s" or trailing spaces)
+            for item in items { let t = axTitle(item); if t.lowercased().contains(newValLower) || newValLower.contains(t.lowercased().prefix(6)) { axPress(item); tsleep(0.6); return true } }
+            return false
+        }
+        for attempt in 0..<5 {
+            Thread.sleep(forTimeInterval: attempt == 0 ? 1.0 : 0.5)
+            // Method 1: popup's own children (dropdown menu as child element)
+            var abpKids: CFTypeRef?
+            AXUIElementCopyAttributeValue(popup, kAXChildrenAttribute as CFString, &abpKids)
+            if let menu = (abpKids as? [AXUIElement])?.first {
+                let items = findAll(menu, role: "AXMenuItem", depth: 3)
+                if !items.isEmpty {
+                    abpMenuWasOpen = true
+                    if tryItems(items) { return true }
+                    // Items found but no match — menu is genuinely open with wrong/unexpected items;
+                    // fall through to Method 2 in same attempt before giving up
+                }
+            }
+            // Method 2: search all Logic windows (menu appears as a separate floating window)
+            var abpAllWins: CFTypeRef?
+            AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &abpAllWins)
+            if let winsArr = abpAllWins as? [AXUIElement] {
+                var allItems: [AXUIElement] = []
+                for w in winsArr { allItems += findAll(w, role: "AXMenuItem", depth: 15) }
+                if !allItems.isEmpty {
+                    abpMenuWasOpen = true
+                    if tryItems(allItems) { return true }
+                    break // menu open but target genuinely not there
+                }
+            }
+        }
+        // Only send Escape if the menu was actually open (prevents accidentally closing Bounce dialog)
+        if abpMenuWasOpen {
+            let abpSrcEsc = CGEventSource(stateID: .hidSystemState)
+            if let dn = CGEvent(keyboardEventSource: abpSrcEsc, virtualKey: 53, keyDown: true),
+               let up = CGEvent(keyboardEventSource: abpSrcEsc, virtualKey: 53, keyDown: false) {
+                dn.postToPid(abpLogicPid); up.postToPid(abpLogicPid)
+            }
+            Thread.sleep(forTimeInterval: 0.4)
+        }
+        return false
+    }
+    for abpPopup in abpSortedPopups {
+        Thread.sleep(forTimeInterval: 0.12) // brief gap so Logic finishes processing previous popup change
+        var abpPos: CFTypeRef?; AXUIElementCopyAttributeValue(abpPopup, kAXPositionAttribute as CFString, &abpPos)
+        var abpPt = CGPoint.zero
+        if let av = abpPos as! AXValue? { AXValueGetValue(av, .cgPoint, &abpPt) }
+        // Use relative Y (popup.y - window.y) so matching works regardless of where Logic window is on screen
+        let abpY = Int(abpPt.y) - abpWinTop
+        // WAV row popups — relative Y values (measured from dialog window top):
+        //   fileType≈48, bitDepth≈78, sampleRate≈108, interleaved≈138, dithering≈168, mode≈240, normalize≈332
+        // MP3 row popups — relative Y:
+        //   mp3RateStereo≈48, mp3RateMono≈78, mp3Stereo≈208, mode≈240, normalize≈332
+        if let val = abpParams["fileType"],    abs(abpY - 48)  <= 15 { abpSetResults["fileType"]    = abpSetPopup(abpPopup, val) }
+        if let val = abpParams["bitDepth"],    abs(abpY - 78)  <= 15 { abpSetResults["bitDepth"]    = abpSetPopup(abpPopup, val) }
+        if let val = abpParams["sampleRate"],  abs(abpY - 108) <= 15 { abpSetResults["sampleRate"]  = abpSetPopup(abpPopup, val) }
+        if let val = abpParams["interleaved"], abs(abpY - 138) <= 15 { abpSetResults["interleaved"] = abpSetPopup(abpPopup, val) }
+        if let val = abpParams["dithering"],   abs(abpY - 168) <= 15 { abpSetResults["dithering"]   = abpSetPopup(abpPopup, val) }
+        if let val = abpParams["mode"],        abs(abpY - 240) <= 20 { abpSetResults["mode"]        = abpSetPopup(abpPopup, val) }
+        if let val = abpParams["normalize"],   abpY >= 305 && abpY <= 365 { abpSetResults["normalize"] = abpSetPopup(abpPopup, val) }
+        // MP3 specific: separate stereo and mono bit rate popups
+        let mp3RS = abpParams["mp3RateStereo"] ?? abpParams["mp3Rate"]
+        let mp3RM = abpParams["mp3RateMono"]   ?? abpParams["mp3Rate"]
+        if let val = mp3RS, abs(abpY - 48)  <= 15 { abpSetResults["mp3RateStereo"] = abpSetPopup(abpPopup, val) }
+        if let val = mp3RM, abs(abpY - 78)  <= 15 { abpSetResults["mp3RateMono"]   = abpSetPopup(abpPopup, val) }
+        if let val = abpParams["mp3Stereo"], abs(abpY - 208) <= 15 { abpSetResults["mp3Stereo"]     = abpSetPopup(abpPopup, val) }
+    }
+    // Set named checkboxes
+    func abpSetCheckbox(_ name: String, _ enabled: Bool) {
+        let cbs = findAll(abpBounceWin, role: "AXCheckBox", depth: 10)
+        for cb in cbs {
+            if axTitle(cb) == name {
+                let cur = axIntValue(cb)
+                let want = enabled ? 1 : 0
+                if cur != want { axPress(cb); Thread.sleep(forTimeInterval: 0.15) }
+                abpSetResults[name] = true
+                return
+            }
+        }
+    }
+    let abpCbMap: [(String, String)] = [
+        ("includeTempo",       "Include Tempo Information"),
+        ("includeAudioTail",   "Include Audio Tail"),
+        ("bounce2ndCyclePass", "Bounce 2nd Cycle Pass"),
+        ("mp3VBR",             "Use Variable Bit Rate Encoding (VBR)"),
+        ("mp3BestEncoding",    "Use best encoding"),
+        ("mp3Filter10hz",      "Filter frequencies below 10 Hz"),
+    ]
+    for (key, cbName) in abpCbMap {
+        if let val = abpParams[key] { abpSetCheckbox(cbName, val == "1" || val == "true") }
+    }
+    var abpOut: [String: Any] = ["ok": true]
+    var abpSetOut: [String: Any] = [:]
+    for (k, v) in abpSetResults { abpSetOut[k] = v }
+    abpOut["set"] = abpSetOut
+    jsonOut(abpOut)
+
+case "getBounceParams":
+    // Read current format params from open Bounce dialog
+    var gbpWins: CFTypeRef?
+    AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &gbpWins)
+    guard let gbpWindows = gbpWins as? [AXUIElement],
+          let gbpBounceWin = gbpWindows.first(where: {
+              var t: CFTypeRef?
+              AXUIElementCopyAttributeValue($0, kAXTitleAttribute as CFString, &t)
+              return (t as? String ?? "").contains("Bounce")
+          }) else { jsonOut(["ok": false, "error": "Bounce window not found"]); break }
+    // Find selected destination row index
+    let gbpRows = findAll(gbpBounceWin, role: "AXRow", depth: 10)
+    var gbpDestIdx = 0
+    for (i, row) in gbpRows.enumerated() {
+        if let sel = axVal(row, kAXSelectedAttribute as String) as? Bool, sel { gbpDestIdx = i; break }
+    }
+    // Get all popups sorted by Y
+    let gbpPopups = findAll(gbpBounceWin, role: "AXPopUpButton", depth: 10)
+    let gbpSortedPopups = gbpPopups.sorted {
+        var p1: CFTypeRef?; AXUIElementCopyAttributeValue($0, kAXPositionAttribute as CFString, &p1)
+        var p2: CFTypeRef?; AXUIElementCopyAttributeValue($1, kAXPositionAttribute as CFString, &p2)
+        var pt1 = CGPoint.zero; var pt2 = CGPoint.zero
+        if let av = p1 as! AXValue? { AXValueGetValue(av, .cgPoint, &pt1) }
+        if let av = p2 as! AXValue? { AXValueGetValue(av, .cgPoint, &pt2) }
+        return pt1.y < pt2.y
+    }
+    var gbpResult: [String: Any] = ["dest": gbpDestIdx]
+    for gbpPopup in gbpSortedPopups {
+        var gbpPos: CFTypeRef?; AXUIElementCopyAttributeValue(gbpPopup, kAXPositionAttribute as CFString, &gbpPos)
+        var gbpPt = CGPoint.zero
+        if let av = gbpPos as! AXValue? { AXValueGetValue(av, .cgPoint, &gbpPt) }
+        let gbpY = Int(gbpPt.y)
+        let gbpVal = (axVal(gbpPopup, kAXValueAttribute) as? String) ?? ""
+        if abs(gbpY - 187) <= 15 { gbpResult["fileType"]   = gbpVal }
+        if abs(gbpY - 217) <= 15 { gbpResult["bitDepth"]   = gbpVal }
+        if abs(gbpY - 247) <= 15 { gbpResult["sampleRate"] = gbpVal }
+        if abs(gbpY - 307) <= 15 { gbpResult["dithering"]  = gbpVal }
+        if abs(gbpY - 277) <= 15 { gbpResult["interleaved"] = gbpVal }
+        if abs(gbpY - 379) <= 15 { gbpResult["mode"]       = gbpVal }
+        if abs(gbpY - 471) <= 15 { gbpResult["normalize"]  = gbpVal }
+    }
+    // Read named checkboxes
+    let gbpCbs = findAll(gbpBounceWin, role: "AXCheckBox", depth: 10)
+    for cb in gbpCbs {
+        let t = axTitle(cb)
+        switch t {
+        case "Include Tempo Information": gbpResult["includeTempo"]       = axIntValue(cb) == 1
+        case "Include Audio Tail":        gbpResult["includeAudioTail"]   = axIntValue(cb) == 1
+        case "Bounce 2nd Cycle Pass":     gbpResult["bounce2ndCyclePass"] = axIntValue(cb) == 1
+        default: break
+        }
+    }
+    jsonOut(["ok": true, "params": gbpResult])
+
+case "debugBounce":
+    // Dump all AX elements inside the Bounce dialog for diagnostics
+    var dbWins: CFTypeRef?
+    AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &dbWins)
+    guard let dbWindows = dbWins as? [AXUIElement],
+          let bounceWin = dbWindows.first(where: {
+              var t: CFTypeRef?
+              AXUIElementCopyAttributeValue($0, kAXTitleAttribute as CFString, &t)
+              return (t as? String ?? "").contains("Bounce")
+          }) else { jsonOut(["error": "Bounce window not found"]); break }
+    // Collect all popups with their values
+    let dbPopups = findAll(bounceWin, role: "AXPopUpButton", depth: 10)
+    var popupInfo: [[String: Any]] = []
+    for p in dbPopups {
+        var pos: CFTypeRef?; AXUIElementCopyAttributeValue(p, kAXPositionAttribute as CFString, &pos)
+        var pt = CGPoint.zero
+        if let av = pos as! AXValue? { AXValueGetValue(av, .cgPoint, &pt) }
+        let val = (axVal(p, kAXValueAttribute) as? String) ?? ""
+        let desc = (axVal(p, kAXDescriptionAttribute) as? String) ?? ""
+        let title = (axVal(p, kAXTitleAttribute) as? String) ?? ""
+        popupInfo.append(["val": val, "desc": desc, "title": title, "x": Int(pt.x), "y": Int(pt.y)])
+    }
+    // Collect all checkboxes
+    let dbCbs = findAll(bounceWin, role: "AXCheckBox", depth: 10)
+    var cbInfo: [[String: Any]] = []
+    for c in dbCbs {
+        let title = (axVal(c, kAXTitleAttribute) as? String) ?? (axVal(c, kAXDescriptionAttribute) as? String) ?? ""
+        let val = axIntValue(c)
+        cbInfo.append(["title": title, "val": val])
+    }
+    // Collect table/list rows (Destination)
+    let dbRows = findAll(bounceWin, role: "AXRow", depth: 10)
+    var rowInfo: [[String: Any]] = []
+    for r in dbRows {
+        let title = axTitle(r)
+        let sel = (axVal(r, kAXSelectedAttribute) as? Bool) ?? false
+        rowInfo.append(["title": title, "selected": sel])
+    }
+    jsonOut(["ok": true, "popups": popupInfo, "checkboxes": cbInfo, "rows": rowInfo])
+
+case "debugMenuAtY":
+    // Press popup at given Y position and dump its menu items
+    // Usage: debugMenuAtY <targetY>
+    guard args.count >= 3, let dmY = Int(args[2]) else { jsonOut(["error": "need Y arg"]); break }
+    var dmWins: CFTypeRef?
+    AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &dmWins)
+    guard let dmWindows = dmWins as? [AXUIElement],
+          let dmBounceWin = dmWindows.first(where: {
+              var t: CFTypeRef?; AXUIElementCopyAttributeValue($0, kAXTitleAttribute as CFString, &t)
+              return (t as? String ?? "").contains("Bounce")
+          }) else { jsonOut(["error": "Bounce window not found"]); break }
+    let dmPopups = findAll(dmBounceWin, role: "AXPopUpButton", depth: 10)
+    var dmTarget: AXUIElement? = nil
+    for p in dmPopups {
+        var pos: CFTypeRef?; AXUIElementCopyAttributeValue(p, kAXPositionAttribute as CFString, &pos)
+        var pt = CGPoint.zero
+        if let av = pos as! AXValue? { AXValueGetValue(av, .cgPoint, &pt) }
+        if abs(Int(pt.y) - dmY) <= 20 { dmTarget = p; break }
+    }
+    guard let dmPopup = dmTarget else { jsonOut(["error": "popup not found at y=\(dmY)"]); break }
+    let dmCurVal = (axVal(dmPopup, kAXValueAttribute) as? String) ?? ""
+    axPress(dmPopup)
+    tsleep(0.7)
+    var dmKids: CFTypeRef?
+    AXUIElementCopyAttributeValue(dmPopup, kAXChildrenAttribute as CFString, &dmKids)
+    var dmItems: [[String: Any]] = []
+    if let menu = (dmKids as? [AXUIElement])?.first {
+        for item in findAll(menu, role: "AXMenuItem", depth: 3) {
+            let t = axTitle(item)
+            let bytes = Array(t.utf8)
+            dmItems.append(["title": t, "bytes": bytes])
+        }
+    }
+    // Also try Method 2: all Logic windows
+    var dmWinItems: [[String: Any]] = []
+    if dmItems.isEmpty {
+        var dmAllWins: CFTypeRef?
+        AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &dmAllWins)
+        if let wa = dmAllWins as? [AXUIElement] {
+            for w in wa {
+                for item in findAll(w, role: "AXMenuItem", depth: 15) {
+                    let t = axTitle(item)
+                    let bytes = Array(t.utf8)
+                    dmWinItems.append(["title": t, "bytes": bytes])
+                }
+            }
+        }
+    }
+    // Method 3: system-wide focused element
+    var dmSysItems: [[String: Any]] = []
+    if dmItems.isEmpty && dmWinItems.isEmpty {
+        let sys = AXUIElementCreateSystemWide()
+        var focused: CFTypeRef?
+        AXUIElementCopyAttributeValue(sys, kAXFocusedUIElementAttribute as CFString, &focused)
+        if let fe = focused as! AXUIElement? {
+            // Walk up to find the menu
+            var cur: AXUIElement = fe
+            for _ in 0..<5 {
+                for item in findAll(cur, role: "AXMenuItem", depth: 5) {
+                    let t = axTitle(item)
+                    dmSysItems.append(["title": t, "bytes": Array(t.utf8)])
+                }
+                if !dmSysItems.isEmpty { break }
+                var parent: CFTypeRef?
+                AXUIElementCopyAttributeValue(cur, kAXParentAttribute as CFString, &parent)
+                guard let p = parent as! AXUIElement? else { break }
+                cur = p
+            }
+        }
+    }
+    var dmPid: pid_t = 0; AXUIElementGetPid(dmPopup, &dmPid)
+    if let dn = CGEvent(keyboardEventSource: nil, virtualKey: 53, keyDown: true),
+       let up = CGEvent(keyboardEventSource: nil, virtualKey: 53, keyDown: false) {
+        dn.postToPid(dmPid); up.postToPid(dmPid)
+    }
+    jsonOut(["ok": true, "currentVal": dmCurVal, "y": dmY, "items": dmItems, "windowItems": dmWinItems, "sysItems": dmSysItems])
+
+case "debugSRMenu":
+    // Press the sampleRate popup (y~247) and dump all menu items — diagnostics
+    var dsrWins: CFTypeRef?
+    AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &dsrWins)
+    guard let dsrWindows = dsrWins as? [AXUIElement],
+          let dsrBounceWin = dsrWindows.first(where: {
+              var t: CFTypeRef?; AXUIElementCopyAttributeValue($0, kAXTitleAttribute as CFString, &t)
+              return (t as? String ?? "").contains("Bounce")
+          }) else { jsonOut(["error": "Bounce window not found"]); break }
+    let dsrPopups = findAll(dsrBounceWin, role: "AXPopUpButton", depth: 10)
+    var dsrSR: AXUIElement? = nil
+    for p in dsrPopups {
+        var pos: CFTypeRef?; AXUIElementCopyAttributeValue(p, kAXPositionAttribute as CFString, &pos)
+        var pt = CGPoint.zero
+        if let av = pos as! AXValue? { AXValueGetValue(av, .cgPoint, &pt) }
+        if abs(Int(pt.y) - 247) <= 15 { dsrSR = p; break }
+    }
+    guard let srPopup = dsrSR else { jsonOut(["error": "sampleRate popup not found"]); break }
+    axPress(srPopup)
+    tsleep(0.6)
+    var dsrKids: CFTypeRef?
+    AXUIElementCopyAttributeValue(srPopup, kAXChildrenAttribute as CFString, &dsrKids)
+    var items: [[String: Any]] = []
+    if let menu = (dsrKids as? [AXUIElement])?.first {
+        for item in findAll(menu, role: "AXMenuItem", depth: 3) {
+            let t = axTitle(item); let e = (axVal(item, kAXEnabledAttribute) as? Bool) ?? true
+            items.append(["title": t, "enabled": e])
+        }
+    }
+    // also check all windows
+    var dsrWins2: CFTypeRef?
+    AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &dsrWins2)
+    var winItems: [[String: Any]] = []
+    if let wa = dsrWins2 as? [AXUIElement] {
+        for w in wa {
+            for item in findAll(w, role: "AXMenuItem", depth: 15) {
+                winItems.append(["title": axTitle(item)])
+            }
+        }
+    }
+    // Press Escape to close menu
+    var dsrPid: pid_t = 0; AXUIElementGetPid(srPopup, &dsrPid)
+    if let dn = CGEvent(keyboardEventSource: nil, virtualKey: 53, keyDown: true),
+       let up = CGEvent(keyboardEventSource: nil, virtualKey: 53, keyDown: false) {
+        dn.postToPid(dsrPid); up.postToPid(dsrPid)
+    }
+    jsonOut(["ok": true, "childMenuItems": items, "windowMenuItems": winItems])
+
+case "debugBtn":
+    // Dump all AX attributes of solo+mute buttons for first channel — for diagnostics
+    let dbCh = scanChannels(logic)
+    guard let first = dbCh.first else { jsonOut(["error": "no channels found"]); break }
+    func dumpBtn(_ btn: AXUIElement, _ label: String) -> [String: Any] {
+        var attrNames: CFArray?
+        AXUIElementCopyAttributeNames(btn, &attrNames)
+        var result: [String: String] = [:]
+        if let names = attrNames as? [String] {
+            for attr in names {
+                if let v = axVal(btn, attr) {
+                    result[attr] = "\(v)"
+                }
+            }
+        }
+        return ["label": label, "role": axRole(btn), "attrs": result]
+    }
+    jsonOut(["ok": true, "channel": first.name,
+             "solo": dumpBtn(first.soloBtn, "solo"),
+             "mute": dumpBtn(first.muteBtn, "mute")])
+
+case "scan-tree":
+    // Find "Tracks header" group (contains AXDisclosureTriangle per track)
+    func findTracksHeaderGroup(_ logicApp: AXUIElement) -> AXUIElement? {
+        guard let wins = axVal(logicApp, kAXWindowsAttribute) as? [AXUIElement],
+              let win = wins.first else { return nil }
+        func dfs(_ el: AXUIElement, _ depth: Int) -> AXUIElement? {
+            if depth > 8 { return nil }
+            if axRole(el) == "AXScrollArea" {
+                for kid in axKids(el) {
+                    if (axVal(kid, kAXDescriptionAttribute) as? String) == "Tracks header" { return kid }
+                }
+            }
+            for kid in axKids(el) { if let r = dfs(kid, depth + 1) { return r } }
+            return nil
+        }
+        return dfs(win, 0)
+    }
+
+    // Find first disclosure triangle with given expanded state (any position — optClickTriangle scrolls to center)
+    // Works on both M1 (AXDisclosureTriangle) and Intel Logic 10.7 (AXButton with empty desc)
+    func findTriangle(_ group: AXUIElement, expanded: Bool) -> AXUIElement? {
+        for item in axKids(group) {
+            guard (axVal(item, kAXDescriptionAttribute) as? String ?? "").hasPrefix("Track ") else { continue }
+            for kid in axKids(item) {
+                guard isDisclosureTriangle(kid) else { continue }
+                // AXDisclosureTriangle has proper value (0/1) — filter by expanded state
+                // AXButton on Intel may not have value — accept it regardless of expanded param
+                let role = axRole(kid)
+                if role == "AXDisclosureTriangle" {
+                    if axIntValue(kid) == (expanded ? 1 : 0) { return kid }
+                } else {
+                    // AXButton fallback: check value if available, otherwise accept any
+                    let val = axVal(kid, kAXValueAttribute)
+                    if val == nil { return kid }  // no value — can't filter, accept it
+                    if axIntValue(kid) == (expanded ? 1 : 0) { return kid }
+                }
+            }
+        }
+        return nil
+    }
+
+    // Scroll the Arrange tracks to the top so group triangles are visible
+    func scrollTracksToTop(_ win: AXUIElement) {
+        func dfs(_ el: AXUIElement, _ depth: Int) -> Bool {
+            if depth > 6 { return false }
+            if axRole(el) == "AXScrollArea" {
+                for kid in axKids(el) {
+                    if (axVal(kid, kAXDescriptionAttribute) as? String) == "Tracks header" {
+                        var sbRef: CFTypeRef?
+                        AXUIElementCopyAttributeValue(el, kAXVerticalScrollBarAttribute as CFString, &sbRef)
+                        if let sb = sbRef as! AXUIElement? {
+                            AXUIElementSetAttributeValue(sb, kAXValueAttribute as CFString, 0.0 as CFTypeRef)
+                        }
+                        return true
+                    }
+                }
+            }
+            for kid in axKids(el) { if dfs(kid, depth + 1) { return true } }
+            return false
+        }
+        _ = dfs(win, 0)
+    }
+
+    // Option+click a disclosure triangle → affects ALL stacks
+    // Scroll-to-center only if needed + python CGEvent click
+    func optClickTriangle(_ tri: AXUIElement) {
+        if let sa = contentScrollArea ?? arrangeScrollArea, let bar = arrangeScrollBar {
+            // Read scroll area bounds
+            var spRef: CFTypeRef?; var ssRef: CFTypeRef?
+            AXUIElementCopyAttributeValue(sa, kAXPositionAttribute as CFString, &spRef)
+            AXUIElementCopyAttributeValue(sa, kAXSizeAttribute as CFString, &ssRef)
+            var saP = CGPoint.zero; var saS = CGSize.zero
+            if let pv = spRef { AXValueGetValue(pv as! AXValue, .cgPoint, &saP) }
+            if let sv = ssRef { AXValueGetValue(sv as! AXValue, .cgSize, &saS) }
+
+            // Read triangle position BEFORE any scroll
+            var curPosRef: CFTypeRef?
+            AXUIElementCopyAttributeValue(tri, kAXPositionAttribute as CFString, &curPosRef)
+            var curPt = CGPoint.zero
+            if let pv = curPosRef { AXValueGetValue(pv as! AXValue, .cgPoint, &curPt) }
+
+            let triVisible = curPt.y > saP.y + 10 && curPt.y < saP.y + saS.height - 20
+
+            if !triVisible {
+                // Not visible — try AXScrollToVisible first
+                AXUIElementPerformAction(tri, "AXScrollToVisible" as CFString)
+                Thread.sleep(forTimeInterval: 0.20)
+
+                // Re-check visibility after AXScrollToVisible
+                var p2Ref: CFTypeRef?
+                AXUIElementCopyAttributeValue(tri, kAXPositionAttribute as CFString, &p2Ref)
+                var pt2 = CGPoint.zero
+                if let pv = p2Ref { AXValueGetValue(pv as! AXValue, .cgPoint, &pt2) }
+                let stillInvisible = pt2.y <= saP.y + 10 || pt2.y >= saP.y + saS.height - 20
+
+                if stillInvisible {
+                    // Fallback: calibration scroll-to-center
+                    let targetY = saP.y + saS.height / 2
+                    AXUIElementSetAttributeValue(bar, kAXValueAttribute as CFString, 0.0 as CFTypeRef)
+                    Thread.sleep(forTimeInterval: 0.18)
+                    var p0Ref: CFTypeRef?
+                    AXUIElementCopyAttributeValue(tri, kAXPositionAttribute as CFString, &p0Ref)
+                    var y0: CGFloat = 0
+                    if let pv = p0Ref { var pt = CGPoint.zero; AXValueGetValue(pv as! AXValue, .cgPoint, &pt); y0 = pt.y }
+
+                    AXUIElementSetAttributeValue(bar, kAXValueAttribute as CFString, 0.1 as CFTypeRef)
+                    Thread.sleep(forTimeInterval: 0.18)
+                    var p1Ref: CFTypeRef?
+                    AXUIElementCopyAttributeValue(tri, kAXPositionAttribute as CFString, &p1Ref)
+                    var y1: CGFloat = 0
+                    if let pv = p1Ref { var pt = CGPoint.zero; AXValueGetValue(pv as! AXValue, .cgPoint, &pt); y1 = pt.y }
+
+                    let pxPer01 = y0 - y1
+                    if pxPer01 > 0 {
+                        let needed = max(0.0, min(1.0, (y0 - targetY) / (pxPer01 * 10)))
+                        AXUIElementSetAttributeValue(bar, kAXValueAttribute as CFString, needed as CFTypeRef)
+                    } else {
+                        AXUIElementSetAttributeValue(bar, kAXValueAttribute as CFString, 0.0 as CFTypeRef)
+                    }
+                    Thread.sleep(forTimeInterval: 0.20)
+                }
+            }
+            // If triVisible was true — skip all scrolling, click immediately
+        }
+
+        // Re-read position after scroll — wait longer for Logic AX layout to settle
+        Thread.sleep(forTimeInterval: 0.20)
+        var posRef: CFTypeRef?; var szRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(tri, kAXPositionAttribute as CFString, &posRef)
+        AXUIElementCopyAttributeValue(tri, kAXSizeAttribute as CFString, &szRef)
+        var pt = CGPoint.zero; var sz = CGSize.zero
+        if let pv = posRef { AXValueGetValue(pv as! AXValue, .cgPoint, &pt) }
+        if let sv = szRef { AXValueGetValue(sv as! AXValue, .cgSize, &sz) }
+
+        // Safety check — if position is invalid (0,0 or tiny), skip click
+        guard pt.x > 10 && pt.y > 50 else { return }
+
+        // Save current mouse position to restore after click
+        let origMouse = CGPoint(x: NSEvent.mouseLocation.x,
+                                y: (NSScreen.main?.frame.height ?? 0) - NSEvent.mouseLocation.y)
+
+        // Use actual size if valid, otherwise assume triangle is ~10x10px
+        let triW = sz.width  > 2 ? sz.width  : 10
+        let triH = sz.height > 2 ? sz.height : 10
+        let cx = Int(pt.x + triW / 2)
+        let cy = Int(pt.y + triH / 2)
+
+        // Activate Logic + native Swift CGEvent Option+click
+        if let logicApp = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.logic10").first {
+            logicApp.activate(options: [])
+        }
+        Thread.sleep(forTimeInterval: 0.12)
+
+        let clickPt = CGPoint(x: cx, y: cy)
+        if let eDown = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: clickPt, mouseButton: .left) {
+            eDown.flags = .maskAlternate
+            eDown.post(tap: .cghidEventTap)
+        }
+        Thread.sleep(forTimeInterval: 0.05)
+        if let eUp = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: clickPt, mouseButton: .left) {
+            eUp.flags = .maskAlternate
+            eUp.post(tap: .cghidEventTap)
+        }
+
+        // Restore mouse to original position
+        CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: origMouse, mouseButton: .left)?.post(tap: .cghidEventTap)
+    }
+
+    // Adaptive stabilization — poll track count via axKids (no scroll needed)
+    func waitStable(reference: Int, expectMore: Bool, maxWait: Double = 8.0) -> Int {
+        let start = Date()
+        var lastCount = -1; var stableRuns = 0
+        while Date().timeIntervalSince(start) < maxWait {
+            Thread.sleep(forTimeInterval: 0.15)
+            var count = 0
+            if let h = hg0 {
+                for item in axKids(h) {
+                    if (axVal(item, kAXDescriptionAttribute) as? String ?? "").hasPrefix("Track ") { count += 1 }
+                }
+            }
+            if count == 0 { continue }
+            let passed = expectMore ? (count > reference) : (count < reference)
+            if count == lastCount && count > 0 && passed {
+                stableRuns += 1; if stableRuns >= 2 { return count }
+            } else { stableRuns = 0; lastCount = count }
+        }
+        return lastCount
+    }
+
+    // ── Timing helper (stderr only) ──
+    let _treeStart = Date()
+    func _lap(_ msg: String) { fputs(String(format: "[%5.1fs] %@\n", Date().timeIntervalSince(_treeStart), msg), stderr) }
+
+    // Activate Logic (quick, no sleep — it's already active from prior steps)
+    if let logicApp = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.logic10").first {
+        logicApp.activate(options: [])
+    }
+
+    // Find window, scroll areas (header + content), header group, and VERTICAL scroll bar
+    var treeWin: AXUIElement? = nil
+    var arrangeScrollArea: AXUIElement? = nil
+    var contentScrollArea: AXUIElement? = nil
+    var arrangeScrollBar: AXUIElement? = nil
+    var hg0: AXUIElement? = nil
+    if let wins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement], let win = wins.first {
+        treeWin = win
+        func dfsFind(_ el: AXUIElement, _ depth: Int) -> Bool {
+            if depth > 8 { return false }
+            if axRole(el) == "AXSplitGroup" {
+                var headerSA: AXUIElement? = nil
+                var headerGroup: AXUIElement? = nil
+                var foundContentSA: AXUIElement? = nil
+                for kid in axKids(el) {
+                    if axRole(kid) == "AXScrollArea" {
+                        for sub in axKids(kid) {
+                            let d = (axVal(sub, kAXDescriptionAttribute) as? String) ?? ""
+                            if d == "Tracks header"   { headerSA = kid; headerGroup = sub }
+                            if d == "Tracks contents" { foundContentSA = kid }
+                        }
+                    }
+                }
+                if let hsa = headerSA, let h = headerGroup, let csa = foundContentSA {
+                    arrangeScrollArea = hsa
+                    hg0 = h
+                    contentScrollArea = csa
+                    // Vertical scroll bar from CONTENT scroll area
+                    var vbRef: CFTypeRef?
+                    AXUIElementCopyAttributeValue(csa, kAXVerticalScrollBarAttribute as CFString, &vbRef)
+                    arrangeScrollBar = vbRef as! AXUIElement?
+                    return true
+                }
+            }
+            for kid in axKids(el) { if dfsFind(kid, depth + 1) { return true } }
+            return false
+        }
+        _ = dfsFind(win, 0)
+    }
+    guard let hg0 = hg0 else {
+        jsonOut(["error": "Tracks header not found"]); exit(1)
+    }
+    _lap("setup done (window + scroll bar + header)")
+
+    // Find first triangle — axKids returns all, no scroll needed
+    let firstExpandedTri = findTriangle(hg0, expanded: true)
+    let firstCollapsedTri = firstExpandedTri != nil ? nil : findTriangle(hg0, expanded: false)
+    let hasTriangles = firstExpandedTri != nil || firstCollapsedTri != nil
+    _lap("triangles found: expanded=\(firstExpandedTri != nil) collapsed=\(firstCollapsedTri != nil)")
+
+    // Collect all tracks + triangle nums — axKids returns ALL without scrolling
+    func collectAllTracks() -> (tracks: [TrackInfo], triangleNums: Set<Int>) {
+        var allTracks: [TrackInfo] = []
+        var triNums = Set<Int>()
+        for t in readTrackInfos(hg0) {
+            allTracks.append(t)
+            if t.hasTriangle { triNums.insert(t.num) }
+        }
+        _lap("  collectAllTracks: \(allTracks.count) tracks, \(triNums.count) tri")
+        return (allTracks, triNums)
+    }
+
+    if hasTriangles {
+        // ── Adaptive 3-step scan: collapse → expand → read → collapse ──
+        _lap("Step 1: Collapse all")
+
+        // Count tracks before collapse
+        var countBefore = 0
+        for item in axKids(hg0) {
+            if (axVal(item, kAXDescriptionAttribute) as? String ?? "").hasPrefix("Track ") { countBefore += 1 }
+        }
+
+        // Step 1: Collapse all (single Option+click if any are expanded)
+        if let tri = firstExpandedTri {
+            optClickTriangle(tri)
+            let c = waitStable(reference: countBefore, expectMore: false)
+            _lap("Step 1: collapsed to \(c) tracks")
+        } else {
+            _lap("Step 1: already collapsed")
+        }
+
+        // Read collapsed state (top-level groups + standalone tracks)
+        let (beforeTracks, _) = collectAllTracks()
+        let summaryNums = Set(beforeTracks.map { $0.num })
+
+        // Step 2: Expand all (single Option+click)
+        _lap("Step 2: Expand all")
+        let collapsedCount = beforeTracks.count
+        if let tri = findTriangle(hg0, expanded: false) {
+            optClickTriangle(tri)
+            let c = waitStable(reference: collapsedCount, expectMore: true)
+            _lap("  expanded to \(c) tracks")
+        } else {
+            _lap("  WARNING: no collapsed triangle found to expand!")
+        }
+
+        // Read fully expanded state + triangle info
+        let (afterTracks, triangleNums) = collectAllTracks()
+        let after = afterTracks
+        _lap("Step 2 done: \(afterTracks.count) tracks, \(triangleNums.count) triangles")
+
+        // Step 3: Collapse back (single Option+click, adaptive wait)
+        let expandedCount = afterTracks.count
+        _lap("Step 3: Collapse back")
+        if let tri = findTriangle(hg0, expanded: true) {
+            optClickTriangle(tri)
+            let _ = waitStable(reference: expandedCount, expectMore: false)
+        }
+        _lap("Step 3 done")
+
+        // Build tree — use summaryNums + triangleNums to classify each item
+        var treeResult: [[String: Any]] = []
+        var currentGroup = ""
+        var currentSubgroup = ""
+        for t in after {
+            let isSummary = summaryNums.contains(t.num)
+            let hasTri = triangleNums.contains(t.num)
+
+            if isSummary && hasTri {
+                currentGroup = t.name
+                currentSubgroup = ""
+                treeResult.append(["num": t.num, "name": t.name, "type": "group",
+                                   "parent": "", "muted": t.muted ? 1 : 0])
+            } else if isSummary && !hasTri {
+                currentGroup = ""
+                currentSubgroup = ""
+                treeResult.append(["num": t.num, "name": t.name, "type": "track",
+                                   "parent": "", "muted": t.muted ? 1 : 0])
+            } else if !isSummary && hasTri {
+                currentSubgroup = t.name
+                treeResult.append(["num": t.num, "name": t.name, "type": "group",
+                                   "parent": currentGroup, "muted": t.muted ? 1 : 0])
+            } else {
+                let parent = currentSubgroup.isEmpty ? currentGroup : currentSubgroup
+                treeResult.append(["num": t.num, "name": t.name, "type": "track",
+                                   "parent": parent, "muted": t.muted ? 1 : 0])
+            }
+        }
+        jsonOut(["tracks": treeResult])
+    } else {
+        // ── Project has NO summing stacks — flat list of all tracks ──
+        if let sb = arrangeScrollBar { AXUIElementSetAttributeValue(sb, kAXValueAttribute as CFString, 0.0 as CFTypeRef); Thread.sleep(forTimeInterval: 0.05) }
+        guard let tc0 = findTracksHeader(logic) else {
+            jsonOut(["error": "Tracks not found"]); exit(1)
+        }
+        let allTracks = readTrackInfos(tc0)
+        var treeResult: [[String: Any]] = []
+        for t in allTracks {
+            treeResult.append(["num": t.num, "name": t.name, "type": "track",
+                               "parent": "", "muted": t.muted ? 1 : 0])
+        }
+        jsonOut(["tracks": treeResult])
+    }
+
+case "scanMasterPlugins":
+    // Find MASTER plugins via Inspector. If current track doesn't show Stereo Output
+    // with bnc in Inspector, navigate tracks (arrow down) until we find one.
+
+    // 1. Try Inspector first — check if MASTER is visible
+    var smpMaster = findInspectorMaster(logic)
+
+    // 2. If not found, navigate tracks via Arrange area to find Stereo Out (Bnc button)
+    if smpMaster == nil {
+        fputs("[scanMasterPlugins] Bounce channel not in Inspector, navigating tracks…\n", stderr)
+
+        // Hide EasyBounce so Logic gets full focus for arrow keys
+        let hideEB = Process()
+        hideEB.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+        hideEB.arguments = ["-e", "tell application \"System Events\" to set visible of process \"EasyBounce\" to false"]
+        hideEB.standardOutput = Pipe(); hideEB.standardError = Pipe()
+        try? hideEB.run(); hideEB.waitUntilExit()
+        Thread.sleep(forTimeInterval: 0.2)
+
+        // Wake Logic after scan-tree AX manipulations
+        let pos = CGEvent(source: nil)?.location ?? CGPoint(x: 500, y: 500)
+        CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: CGPoint(x: pos.x + 1, y: pos.y), mouseButton: .left)?.post(tap: .cghidEventTap)
+        Thread.sleep(forTimeInterval: 0.05)
+
+        // Activate Logic so it receives keyboard events
+        if let logicApp = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.logic10").first {
+            logicApp.activate()
+            Thread.sleep(forTimeInterval: 0.3)
+        }
+
+        // Raise Arrange window (Tracks) so arrow keys navigate tracks, not Mixer
+        if let wins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement] {
+            for w in wins {
+                let t = (axVal(w, kAXTitleAttribute) as? String) ?? ""
+                if t.contains(" - Tracks") || t.hasSuffix(".logicx") {
+                    AXUIElementPerformAction(w, kAXRaiseAction as CFString)
+                    fputs("[scanMasterPlugins] raised Arrange window: \(t)\n", stderr)
+                    Thread.sleep(forTimeInterval: 0.2)
+                    break
+                }
+            }
+        }
+
+        let src = CGEventSource(stateID: .hidSystemState)
+
+        // Check current track immediately
+        if let found = findInspectorMaster(logic) {
+            fputs("[scanMasterPlugins] found Bounce channel on current track!\n", stderr)
+            smpMaster = found
+        }
+
+        // Phase A: arrow DOWN 40 steps
+        if smpMaster == nil {
+            for attempt in 0..<40 {
+                if let ev = CGEvent(keyboardEventSource: src, virtualKey: 0x7D, keyDown: true),
+                   let up = CGEvent(keyboardEventSource: src, virtualKey: 0x7D, keyDown: false) {
+                    ev.post(tap: .cghidEventTap); up.post(tap: .cghidEventTap)
+                }
+                Thread.sleep(forTimeInterval: 0.25)
+                if let found = findInspectorMaster(logic) {
+                    fputs("[scanMasterPlugins] found Bounce channel after \(attempt + 1) DOWN presses\n", stderr)
+                    smpMaster = found
+                    break
+                }
+            }
+        }
+
+        // Phase B: arrow UP 50 steps (if not found going down)
+        if smpMaster == nil {
+            fputs("[scanMasterPlugins] not found going down, trying arrow-up…\n", stderr)
+            for attempt in 0..<50 {
+                if let ev = CGEvent(keyboardEventSource: src, virtualKey: 0x7E, keyDown: true),
+                   let up = CGEvent(keyboardEventSource: src, virtualKey: 0x7E, keyDown: false) {
+                    ev.post(tap: .cghidEventTap); up.post(tap: .cghidEventTap)
+                }
+                Thread.sleep(forTimeInterval: 0.25)
+                if let found = findInspectorMaster(logic) {
+                    fputs("[scanMasterPlugins] found Bounce channel after \(attempt + 1) UP presses\n", stderr)
+                    smpMaster = found
+                    break
+                }
+            }
+        }
+    }
+
+    // 3. Fallback: try direct Mixer search if Inspector didn't find MASTER
+    if smpMaster == nil {
+        fputs("[scanMasterPlugins] Inspector failed, trying Mixer direct…\n", stderr)
+        if let mixerChannel = findStereoOutInMixer(logic) {
+            // Read plugins directly from Mixer channel (same as masterPlugins case)
+            AXUIElementPerformAction(mixerChannel, "AXScrollToVisible" as CFString)
+            Thread.sleep(forTimeInterval: 0.2)
+            AXUIElementSetAttributeValue(mixerChannel, kAXSelectedAttribute as CFString, kCFBooleanTrue)
+            Thread.sleep(forTimeInterval: 0.6)
+            let mixerPlugins = pluginsFromMasterItem(mixerChannel)
+            if !mixerPlugins.isEmpty {
+                fputs("[scanMasterPlugins] found via Mixer direct\n", stderr)
+                jsonOut(["ok": true, "plugins": mixerPlugins, "channel": "Stereo Out", "source": "mixer"])
+                break
+            }
+            // Try Inspector again after selecting Mixer channel
+            smpMaster = findInspectorMaster(logic)
+        }
+    }
+
+    // Show EasyBounce back
+    let showEB = Process()
+    showEB.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+    showEB.arguments = ["-e", "tell application \"System Events\" to set visible of process \"EasyBounce\" to true"]
+    showEB.standardOutput = Pipe(); showEB.standardError = Pipe()
+    try? showEB.run(); showEB.waitUntilExit()
+
+    guard let masterItem = smpMaster else {
+        jsonOut(["ok": false, "error": "Master plugins not found — Stereo Output channel with Bnc button not detected"]); break
+    }
+
+    // 4. Read plugins from MASTER in Inspector
+    let smpPlugins = pluginsFromMasterItem(masterItem)
+
+    if smpPlugins.isEmpty {
+        jsonOut(["ok": false, "error": "No plugins found on Stereo Output"])
+    } else {
+        jsonOut(["ok": true, "plugins": smpPlugins, "channel": "Stereo Out", "source": "inspector"])
+    }
+
+case "masterPlugins":
+    // Returns list of plugins on Stereo Out / MASTER channel — Mixer direct (reliable)
+    if let mpChannel = findStereoOutInMixer(logic) {
+        AXUIElementPerformAction(mpChannel, "AXScrollToVisible" as CFString)
+        Thread.sleep(forTimeInterval: 0.2)
+        AXUIElementSetAttributeValue(mpChannel, kAXSelectedAttribute as CFString, kCFBooleanTrue)
+        Thread.sleep(forTimeInterval: 0.6)
+        let mpList = pluginsFromMasterItem(mpChannel)
+        jsonOut(["ok": true, "plugins": mpList, "channel": "Stereo Out", "source": "mixer"])
+    } else {
+        jsonOut(["ok": false, "error": "Stereo Out not found in Mixer"])
+    }
+
+case "masterPluginsQuick":
+    // Quick poll — no scroll, fast lookup
+    if let mqChannel = findStereoOutQuick(logic) ?? findStereoOutInMixer(logic) {
+        let mqPlugins = pluginsFromMasterItem(mqChannel)
+        jsonOut(["ok": true, "plugins": mqPlugins])
+    } else {
+        jsonOut(["ok": false, "error": "Stereo Out not found"])
+    }
+
+case "setMasterPlugin":
+    // Toggle bypass on a named plugin on Stereo Out / MASTER channel
+    // Usage: setMasterPlugin <pluginName> <0|1>  (1=active, 0=bypassed)
+    guard args.count >= 4 else { jsonOut(["ok": false, "error": "Usage: setMasterPlugin <name> <0|1>"]); break }
+    let smpName = args[2]; let smpActive = args[3] == "1"
+    // Find Stereo Out — quick first, then full scan
+    guard let smpChannel = findStereoOutQuick(logic) ?? findStereoOutInMixer(logic) else {
+        jsonOut(["ok": false, "error": "Stereo Out not found in Mixer"]); break
+    }
+    let smpGroups = axKids(smpChannel).filter { kid -> Bool in
+        guard axRole(kid) == "AXGroup" else { return false }
+        return axKids(kid).contains { axRole($0) == "AXCheckBox" && (axVal($0, kAXDescriptionAttribute) as? String ?? "") == "bypass" }
+    }
+    let smpGroup = smpGroups.first(where: {
+        let desc = axVal($0, kAXDescriptionAttribute) as? String ?? ""
+        return desc.lowercased().hasPrefix(smpName.lowercased().prefix(10))
+            || smpName.lowercased().hasPrefix(desc.lowercased().prefix(10))
+    })
+    guard let smpTarget = smpGroup,
+          let smpBypass = axKids(smpTarget).first(where: {
+              axRole($0) == "AXCheckBox" && (axVal($0, kAXDescriptionAttribute) as? String ?? "") == "bypass"
+          }) else {
+        jsonOut(["ok": false, "error": "Plugin '\(smpName)' not found"]); break
+    }
+    let currentVal = axIntValue(smpBypass)
+    let wantVal = smpActive ? 0 : 1
+    if currentVal != wantVal { axPress(smpBypass); Thread.sleep(forTimeInterval: 0.15) }
+    let newVal = axIntValue(smpBypass)
+    jsonOut(["ok": true, "plugin": smpName, "active": newVal == 0, "changed": currentVal != newVal])
+
+case "setAllMasterPlugins":
+    // Bypass or restore ALL plugins on Stereo Out / MASTER channel — Mixer direct
+    guard args.count >= 3 else { jsonOut(["ok": false, "error": "Usage: setAllMasterPlugins <0|1>"]); break }
+    let samAllActive = args[2] == "1"
+    guard let samChannel = findStereoOutQuick(logic) ?? findStereoOutInMixer(logic) else {
+        jsonOut(["ok": false, "error": "Stereo Out not found in Mixer"]); break
+    }
+    let samGroups = axKids(samChannel).filter { kid -> Bool in
+        guard axRole(kid) == "AXGroup" else { return false }
+        return axKids(kid).contains { axRole($0) == "AXCheckBox" && (axVal($0, kAXDescriptionAttribute) as? String ?? "") == "bypass" }
+    }
+    var samToggled = 0
+    for g in samGroups {
+        guard let bypassEl = axKids(g).first(where: {
+            axRole($0) == "AXCheckBox" && (axVal($0, kAXDescriptionAttribute) as? String ?? "") == "bypass"
+        }) else { continue }
+        let val = axIntValue(bypassEl)
+        let wantVal = samAllActive ? 0 : 1
+        if val != wantVal { axPress(bypassEl); samToggled += 1 }
+    }
+    jsonOut(["ok": true, "toggled": samToggled, "active": samAllActive])
+
+case "debugScanMaster":
+    // Step-by-step diagnostic for scanMasterPlugins
+    var diag: [String: Any] = [:]
+    guard let dbgWins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement] else {
+        jsonOut(["error": "no windows"]); break
+    }
+    diag["windowCount"] = dbgWins.count
+    diag["windowTitles"] = dbgWins.compactMap { axVal($0, kAXTitleAttribute) as? String }
+    guard let dbgWin = dbgWins.first(where: {
+        let t = axVal($0, kAXTitleAttribute) as? String ?? ""
+        return t.contains("Tracks") || t.contains("Logic")
+    }) ?? dbgWins.first else { jsonOut(["diag": diag, "error": "no main window"]); break }
+    let dbgWinTitle = axVal(dbgWin, kAXTitleAttribute) as? String ?? "?"
+    diag["mainWindow"] = dbgWinTitle
+    // Inspector checkbox
+    let dbgInspCB = findCheckboxByLabel(dbgWin, label: "Inspector")
+    diag["inspectorCBFound"] = dbgInspCB != nil
+    if let cb = dbgInspCB { diag["inspectorIsOpen"] = axIntValue(cb) == 1 }
+    // First track click
+    let dbgClicked = clickFirstArrangeTrack(logic)
+    diag["clickedFirstTrack"] = dbgClicked
+    if dbgClicked { Thread.sleep(forTimeInterval: 0.5) }
+    // Find Inspector group in AX tree
+    func dbgFindInspGroup(_ el: AXUIElement, depth: Int = 0) -> AXUIElement? {
+        if depth > 6 { return nil }
+        if axRole(el) == "AXGroup" && (axVal(el, kAXDescriptionAttribute) as? String ?? "") == "Inspector" { return el }
+        for child in axKids(el) { if let f = dbgFindInspGroup(child, depth: depth+1) { return f } }
+        return nil
+    }
+    let dbgInspGroup = dbgFindInspGroup(dbgWin)
+    diag["inspectorGroupFound"] = dbgInspGroup != nil
+    if let ig = dbgInspGroup {
+        // Walk to find AXLayoutArea with Mixer
+        var layoutAreas: [String] = []
+        var layoutItems: [String] = []
+        func dbgWalk(_ el: AXUIElement, d: Int = 0) {
+            if d > 8 { return }
+            let role = axRole(el)
+            let desc = axVal(el, kAXDescriptionAttribute) as? String ?? ""
+            if role == "AXLayoutArea" { layoutAreas.append(desc.isEmpty ? "(no desc)" : desc) }
+            if role == "AXLayoutItem" { layoutItems.append(desc.isEmpty ? "(no desc)" : desc) }
+            for child in axKids(el) { dbgWalk(child, d: d+1) }
+        }
+        dbgWalk(ig)
+        diag["layoutAreas"] = layoutAreas
+        diag["layoutItems"] = layoutItems
+    }
+    // Try findInspectorMaster
+    let dbgMaster = findInspectorMaster(logic)
+    diag["masterItemFound"] = dbgMaster != nil
+    if let m = dbgMaster {
+        let plugins = pluginsFromMasterItem(m)
+        diag["pluginCount"] = plugins.count
+        diag["plugins"] = plugins.map { $0["name"] as? String ?? "?" }
+    }
+    jsonOut(["ok": true, "diag": diag])
+
+case "dumpMixer":
+    // Find Mixer AXGroup and dump all children with role/title/desc
+    guard let wins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement],
+          let win = wins.first else { jsonOut(["error": "no window"]); break }
+    func dmFindMixer(_ el: AXUIElement, _ d: Int) -> AXUIElement? {
+        if d > 4 { return nil }
+        if axRole(el) == "AXGroup" && (axVal(el, kAXDescriptionAttribute) as? String) == "Mixer" { return el }
+        for kid in axKids(el) { if let f = dmFindMixer(kid, d+1) { return f } }
+        return nil
+    }
+    guard let mixer = dmFindMixer(win, 0) else { jsonOut(["error": "mixer not found"]); break }
+    func dmDump(_ el: AXUIElement, _ depth: Int) -> [[String: String]] {
+        if depth > 4 { return [] }
+        let role = axRole(el)
+        let title = (axVal(el, kAXTitleAttribute) as? String) ?? ""
+        let desc  = (axVal(el, kAXDescriptionAttribute) as? String) ?? ""
+        let val   = (axVal(el, kAXValueAttribute) as? String) ?? ""
+        var entry: [String: String] = ["role": role, "depth": "\(depth)"]
+        if !title.isEmpty { entry["title"] = title }
+        if !desc.isEmpty  { entry["desc"]  = desc  }
+        if !val.isEmpty   { entry["val"]   = val   }
+        var results = [entry]
+        for kid in axKids(el) { results += dmDump(kid, depth + 1) }
+        return results
+    }
+    jsonOut(["ok": true, "elements": dmDump(mixer, 0)])
+
+case "dumpMixer":
+    guard let wins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement],
+          let win = wins.first else { jsonOut(["error": "no window"]); break }
+    func dmFindMixer(_ el: AXUIElement, _ d: Int) -> AXUIElement? {
+        if d > 4 { return nil }
+        if axRole(el) == "AXGroup" && (axVal(el, kAXDescriptionAttribute) as? String) == "Mixer" { return el }
+        for kid in axKids(el) { if let f = dmFindMixer(kid, d+1) { return f } }
+        return nil
+    }
+    guard let mixer = dmFindMixer(win, 0) else { jsonOut(["error": "mixer not found"]); break }
+    func dmDump(_ el: AXUIElement, _ depth: Int) -> [[String: String]] {
+        if depth > 4 { return [] }
+        let role = axRole(el)
+        let title = (axVal(el, kAXTitleAttribute) as? String) ?? ""
+        let desc  = (axVal(el, kAXDescriptionAttribute) as? String) ?? ""
+        let val   = (axVal(el, kAXValueAttribute) as? String) ?? ""
+        var entry: [String: String] = ["role": role, "depth": "\(depth)"]
+        if !title.isEmpty { entry["title"] = title }
+        if !desc.isEmpty  { entry["desc"]  = desc  }
+        if !val.isEmpty   { entry["val"]   = val   }
+        var results = [entry]
+        for kid in axKids(el) { results += dmDump(kid, depth + 1) }
+        return results
+    }
+    jsonOut(["ok": true, "elements": dmDump(mixer, 0)])
+
+case "testSetInspectorWidth":
+    // Test if AX API allows setting inspector width directly (no mouse drag)
+    // Usage: testSetInspectorWidth <width>
+    let targetPx = args.count >= 3 ? (CGFloat(Double(args[2]) ?? 160)) : 160
+    guard let twWins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement],
+          let twWin = twWins.first(where: { (axVal($0, kAXTitleAttribute) as? String ?? "").contains("Tracks") }) ?? twWins.first
+    else { jsonOut(["ok": false, "error": "no window"]); break }
+    func findInspGrp(_ el: AXUIElement, _ d: Int = 0) -> AXUIElement? {
+        if d > 6 { return nil }
+        if axRole(el) == "AXGroup" && (axVal(el, kAXDescriptionAttribute) as? String ?? "") == "Inspector" { return el }
+        for c in axKids(el) { if let f = findInspGrp(c, d+1) { return f } }
+        return nil
+    }
+    guard let insp = findInspGrp(twWin) else { jsonOut(["ok": false, "error": "inspector not found"]); break }
+    // Read current size
+    var curSzRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(insp, kAXSizeAttribute as CFString, &curSzRef)
+    var curSz = CGSize.zero
+    if let v = curSzRef { AXValueGetValue(v as! AXValue, .cgSize, &curSz) }
+    // Try setting new width via AX
+    var newSz = CGSize(width: targetPx, height: curSz.height)
+    let axVal2 = AXValueCreate(.cgSize, &newSz)!
+    let err = AXUIElementSetAttributeValue(insp, kAXSizeAttribute as CFString, axVal2)
+    // Read back result
+    var afterRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(insp, kAXSizeAttribute as CFString, &afterRef)
+    var afterSz = CGSize.zero
+    if let v = afterRef { AXValueGetValue(v as! AXValue, .cgSize, &afterSz) }
+    jsonOut(["ok": true, "before": Int(curSz.width), "target": Int(targetPx),
+             "after": Int(afterSz.width), "axError": Int(err.rawValue),
+             "axWritable": err == .success])
+
+case "dumpTrackAX":
+    // Diagnostic: dump AX tree of first few track items in "Tracks header"
+    // Shows role, description, children for each — to debug missing AXDisclosureTriangle on Intel
+    guard let dtWins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement],
+          let dtWin = dtWins.first else { jsonOut(["error": "no window"]); break }
+    func dtFindHeader(_ el: AXUIElement, _ depth: Int) -> AXUIElement? {
+        if depth > 8 { return nil }
+        if axRole(el) == "AXScrollArea" {
+            for kid in axKids(el) {
+                if (axVal(kid, kAXDescriptionAttribute) as? String) == "Tracks header" { return kid }
+            }
+        }
+        for kid in axKids(el) { if let r = dtFindHeader(kid, depth + 1) { return r } }
+        return nil
+    }
+    guard let dtHeader = dtFindHeader(dtWin, 0) else { jsonOut(["error": "Tracks header not found"]); break }
+    var dtItems: [[String: Any]] = []
+    let dtKids = axKids(dtHeader)
+    fputs("[dumpTrackAX] header has \(dtKids.count) children\n", stderr)
+    for (i, item) in dtKids.prefix(8).enumerated() {
+        let role = axRole(item)
+        let desc = (axVal(item, kAXDescriptionAttribute) as? String) ?? ""
+        let title = (axVal(item, kAXTitleAttribute) as? String) ?? ""
+        var children: [[String: String]] = []
+        for kid in axKids(item) {
+            let kr = axRole(kid)
+            let kd = (axVal(kid, kAXDescriptionAttribute) as? String) ?? ""
+            let kt = (axVal(kid, kAXTitleAttribute) as? String) ?? ""
+            var grandchildren: [[String: String]] = []
+            for gk in axKids(kid) {
+                grandchildren.append([
+                    "role": axRole(gk),
+                    "desc": (axVal(gk, kAXDescriptionAttribute) as? String) ?? "",
+                    "title": (axVal(gk, kAXTitleAttribute) as? String) ?? ""
+                ])
+            }
+            var childInfo: [String: String] = ["role": kr, "desc": kd, "title": kt]
+            if !grandchildren.isEmpty {
+                childInfo["grandchildren"] = grandchildren.map { "\($0["role"]!)(\($0["desc"]!))" }.joined(separator: ", ")
+            }
+            children.append(childInfo)
+        }
+        dtItems.append([
+            "index": i, "role": role, "desc": desc, "title": title,
+            "childCount": axKids(item).count,
+            "children": children
+        ])
+    }
+    jsonOut(["ok": true, "headerChildCount": dtKids.count, "items": dtItems])
+
+default:
+    fputs("Unknown: \(cmd)\n", stderr); exit(1)
+}
+
+func setPopupValue(_ win: AXUIElement, currentValue: String, newValue: String) -> Bool {
+    // Find popup with current value and click it, then select new value
+    let allEls = findAll(win, role: "AXPopUpButton", depth: 10)
+    for popup in allEls {
+        var val: CFTypeRef?
+        AXUIElementCopyAttributeValue(popup, kAXValueAttribute as CFString, &val)
+        if let v = val as? String, v == currentValue {
+            axPress(popup)
+            Thread.sleep(forTimeInterval: 0.3)
+            // Find menu item with new value
+            var kids: CFTypeRef?
+            AXUIElementCopyAttributeValue(popup, kAXChildrenAttribute as CFString, &kids)
+            if let menu = (kids as? [AXUIElement])?.first {
+                let items = findAll(menu, role: "AXMenuItem", title: newValue, depth: 3)
+                if let item = items.first {
+                    axPress(item)
+                    return true
+                }
+                // Try by value
+                for item in findAll(menu, role: "AXMenuItem", depth: 3) {
+                    var tv: CFTypeRef?
+                    AXUIElementCopyAttributeValue(item, kAXTitleAttribute as CFString, &tv)
+                    if let t = tv as? String, t == newValue {
+                        axPress(item)
+                        return true
+                    }
+                }
+            }
+            // Press Escape to close if not found
+            let src = CGEventSource(stateID: .hidSystemState)
+            if let dn = CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: true),
+               let up = CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: false) {
+                var pid: pid_t = 0
+                AXUIElementGetPid(popup, &pid)
+                dn.postToPid(pid); up.postToPid(pid)
+            }
+        }
+    }
+    return false
+}
