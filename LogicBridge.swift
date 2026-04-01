@@ -1981,12 +1981,15 @@ case "applyBouncePreset":
     // WAV / Uncompressed checkbox (row 0, first checkbox)
     var abpWavCB: AXUIElement? = nil
     if !abpRows.isEmpty { abpWavCB = findAll(abpRows[0], role: "AXCheckBox", depth: 5).first }
-    // MP3 checkbox (row 1, title "MP3")
+    // MP3 checkbox (row 1, title "MP3" — or first checkbox in row 1 on Intel where title is empty)
     var abpMp3CB: AXUIElement? = nil
     if abpRows.count > 1 {
-        for cb in findAll(abpRows[1], role: "AXCheckBox", depth: 5) {
+        let mp3RowCbs = findAll(abpRows[1], role: "AXCheckBox", depth: 5)
+        for cb in mp3RowCbs {
             if axTitle(cb).lowercased().contains("mp3") { abpMp3CB = cb; break }
         }
+        // Fallback: Intel Logic 10.7 checkboxes have no title — use first checkbox in MP3 row
+        if abpMp3CB == nil, let firstCb = mp3RowCbs.first { abpMp3CB = firstCb }
     }
     let abpWavIsOn = abpWavCB.map { axIntValue($0) == 1 } ?? true
     let abpMp3IsOn = abpMp3CB.map { axIntValue($0) == 1 } ?? false
@@ -1998,7 +2001,26 @@ case "applyBouncePreset":
     // mp3Enabled param: "1" = ensure MP3 checkbox ON, "0" = OFF, absent = don't touch
     if let mp3Str = abpParams["mp3Enabled"], let cb = abpMp3CB {
         let wantOn = (mp3Str == "1" || mp3Str == "true")
-        if abpMp3IsOn != wantOn { axPress(cb); Thread.sleep(forTimeInterval: 0.3) }
+        if abpMp3IsOn != wantOn {
+            axPress(cb)
+            Thread.sleep(forTimeInterval: 0.5)
+            // Auto-dismiss "Enabling this destination disables Split Stereo and Surround. Proceed?"
+            var abpAllWinsAfterMp3: CFTypeRef?
+            AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &abpAllWinsAfterMp3)
+            if let winsArr = abpAllWinsAfterMp3 as? [AXUIElement] {
+                for w in winsArr {
+                    let btns = findAll(w, role: "AXButton", depth: 5)
+                    for btn in btns {
+                        let t = axTitle(btn)
+                        if t == "Proceed" || t == "OK" {
+                            axPress(btn)
+                            Thread.sleep(forTimeInterval: 0.3)
+                            break
+                        }
+                    }
+                }
+            }
+        }
     }
     // dest param: which row to display (0=WAV row, 1=MP3 row)
     if let abpDestStr = abpParams["dest"], let abpDestIdx = Int(abpDestStr) {
@@ -2036,10 +2058,18 @@ case "applyBouncePreset":
         // Retry loop: wait for menu to appear (up to 5 attempts)
         var abpMenuWasOpen = false
         let newValLower = newVal.lowercased()
+        // Normalize: "24-bit" → "24 bit", "24 Bit" → "24 bit" — handles Intel vs new Logic differences
+        let newValNorm = newValLower.replacingOccurrences(of: "-", with: " ")
         func tryItems(_ items: [AXUIElement]) -> Bool {
             // Exact match first
             for item in items { if axTitle(item) == newVal { axPress(item); tsleep(0.6); return true } }
-            // Case-insensitive / partial match fallback (handles e.g. "kBit/s" vs "kbit/s" or trailing spaces)
+            // Normalized match: "24-bit" == "24 Bit", "32 Bit Float" == "32-bit float"
+            for item in items {
+                let t = axTitle(item)
+                let tNorm = t.lowercased().replacingOccurrences(of: "-", with: " ")
+                if tNorm == newValNorm { axPress(item); tsleep(0.6); return true }
+            }
+            // Partial match fallback (handles "kBit/s" vs "kbit/s", truncated labels, etc.)
             for item in items { let t = axTitle(item); if t.lowercased().contains(newValLower) || newValLower.contains(t.lowercased().prefix(6)) { axPress(item); tsleep(0.6); return true } }
             return false
         }
@@ -2081,30 +2111,88 @@ case "applyBouncePreset":
         }
         return false
     }
+    // Identify each popup by its current value content (works across all Logic versions)
+    // Also track relative Y for fallback and MP3-specific popups
     for abpPopup in abpSortedPopups {
-        Thread.sleep(forTimeInterval: 0.12) // brief gap so Logic finishes processing previous popup change
+        Thread.sleep(forTimeInterval: 0.12)
         var abpPos: CFTypeRef?; AXUIElementCopyAttributeValue(abpPopup, kAXPositionAttribute as CFString, &abpPos)
         var abpPt = CGPoint.zero
         if let av = abpPos as! AXValue? { AXValueGetValue(av, .cgPoint, &abpPt) }
-        // Use relative Y (popup.y - window.y) so matching works regardless of where Logic window is on screen
         let abpY = Int(abpPt.y) - abpWinTop
-        // WAV row popups — relative Y values (measured from dialog window top):
-        //   fileType≈48, bitDepth≈78, sampleRate≈108, interleaved≈138, dithering≈168, mode≈240, normalize≈332
-        // MP3 row popups — relative Y:
-        //   mp3RateStereo≈48, mp3RateMono≈78, mp3Stereo≈208, mode≈240, normalize≈332
-        if let val = abpParams["fileType"],    abs(abpY - 48)  <= 15 { abpSetResults["fileType"]    = abpSetPopup(abpPopup, val) }
-        if let val = abpParams["bitDepth"],    abs(abpY - 78)  <= 15 { abpSetResults["bitDepth"]    = abpSetPopup(abpPopup, val) }
-        if let val = abpParams["sampleRate"],  abs(abpY - 108) <= 15 { abpSetResults["sampleRate"]  = abpSetPopup(abpPopup, val) }
-        if let val = abpParams["interleaved"], abs(abpY - 138) <= 15 { abpSetResults["interleaved"] = abpSetPopup(abpPopup, val) }
-        if let val = abpParams["dithering"],   abs(abpY - 168) <= 15 { abpSetResults["dithering"]   = abpSetPopup(abpPopup, val) }
-        if let val = abpParams["mode"],        abs(abpY - 240) <= 20 { abpSetResults["mode"]        = abpSetPopup(abpPopup, val) }
-        if let val = abpParams["normalize"],   abpY >= 305 && abpY <= 365 { abpSetResults["normalize"] = abpSetPopup(abpPopup, val) }
-        // MP3 specific: separate stereo and mono bit rate popups
-        let mp3RS = abpParams["mp3RateStereo"] ?? abpParams["mp3Rate"]
-        let mp3RM = abpParams["mp3RateMono"]   ?? abpParams["mp3Rate"]
-        if let val = mp3RS, abs(abpY - 48)  <= 15 { abpSetResults["mp3RateStereo"] = abpSetPopup(abpPopup, val) }
-        if let val = mp3RM, abs(abpY - 78)  <= 15 { abpSetResults["mp3RateMono"]   = abpSetPopup(abpPopup, val) }
-        if let val = abpParams["mp3Stereo"], abs(abpY - 208) <= 15 { abpSetResults["mp3Stereo"]     = abpSetPopup(abpPopup, val) }
+        let curVal = (axVal(abpPopup, kAXValueAttribute) as? String) ?? ""
+        // Identify popup type by its current value
+        let isFileFormat = ["WAVE","Wave","AIFF","CAF","WAVE64","MP3"].contains(curVal)
+        let isBitDepth = curVal.lowercased().contains("bit") && !curVal.lowercased().contains("kbit")
+        let isSampleRateKHz = curVal.contains("kHz") || curVal.contains("Hz")
+        let isSampleRateRaw = ["22050","44100","48000","88200","96000","176400","192000"].contains(curVal)
+        let isSampleRate = isSampleRateKHz || isSampleRateRaw
+        let isInterleaved = ["Interleaved","Split"].contains(curVal)
+        let isDithering = curVal.contains("POW-r") || curVal == "None" || curVal.contains("UV22")
+        let isNormalize = ["On","Off","Overload Protection Only"].contains(curVal)
+        let isMode = curVal.contains("Realtime") || curVal.contains("Offline") || curVal.contains("Online")
+        let isMp3Rate = curVal.lowercased().contains("kbit") || curVal.lowercased().contains("kbps")
+        let isMp3Stereo = curVal == "Joint Stereo" || curVal == "Stereo" || curVal == "Mono"
+
+        if isFileFormat, let val = abpParams["fileType"] {
+            abpSetResults["fileType"] = abpSetPopup(abpPopup, val)
+        } else if isBitDepth, let val = abpParams["bitDepth"] {
+            abpSetResults["bitDepth"] = abpSetPopup(abpPopup, val)
+        } else if isSampleRate, let val = abpParams["sampleRate"] {
+            // Handle both "48 kHz" and "48000" formats
+            let srDisplayMap = ["44100": "44.1 kHz", "48000": "48 kHz", "96000": "96 kHz",
+                                "44.1 kHz": "44.1 kHz", "48 kHz": "48 kHz", "96 kHz": "96 kHz"]
+            let srRawMap = ["44100": "44100", "48000": "48000", "96000": "96000",
+                            "44.1 kHz": "44100", "48 kHz": "48000", "96 kHz": "96000"]
+            if isSampleRateRaw {
+                let target = srRawMap[val] ?? val
+                abpSetResults["sampleRate"] = abpSetPopup(abpPopup, target)
+            } else {
+                let target = srDisplayMap[val] ?? val
+                abpSetResults["sampleRate"] = abpSetPopup(abpPopup, target)
+            }
+        } else if isInterleaved, let val = abpParams["interleaved"] {
+            abpSetResults["interleaved"] = abpSetPopup(abpPopup, val)
+        } else if isDithering, let val = abpParams["dithering"] {
+            abpSetResults["dithering"] = abpSetPopup(abpPopup, val)
+        } else if isMode, let val = abpParams["mode"] {
+            abpSetResults["mode"] = abpSetPopup(abpPopup, val)
+        } else if isNormalize, let val = abpParams["normalize"] {
+            abpSetResults["normalize"] = abpSetPopup(abpPopup, val)
+        } else if isMp3Rate {
+            // MP3 bit rate — distinguish stereo vs mono by position (stereo first, mono second)
+            if abpSetResults["mp3RateStereo"] == nil {
+                let val = abpParams["mp3RateStereo"] ?? abpParams["mp3Rate"]
+                if let v = val { abpSetResults["mp3RateStereo"] = abpSetPopup(abpPopup, v) }
+            } else {
+                let val = abpParams["mp3RateMono"] ?? abpParams["mp3Rate"]
+                if let v = val { abpSetResults["mp3RateMono"] = abpSetPopup(abpPopup, v) }
+            }
+        } else if isMp3Stereo, let val = abpParams["mp3Stereo"] {
+            abpSetResults["mp3Stereo"] = abpSetPopup(abpPopup, val)
+        } else {
+            // Fallback: use relative Y position for unrecognized popups
+            if let val = abpParams["fileType"],    abs(abpY - 48)  <= 15 { abpSetResults["fileType"]    = abpSetPopup(abpPopup, val) }
+            if let val = abpParams["bitDepth"],    abs(abpY - 78)  <= 15 { abpSetResults["bitDepth"]    = abpSetPopup(abpPopup, val) }
+            if let val = abpParams["sampleRate"],  abs(abpY - 108) <= 15 { abpSetResults["sampleRate"]  = abpSetPopup(abpPopup, val) }
+            if let val = abpParams["interleaved"], abs(abpY - 138) <= 15 { abpSetResults["interleaved"] = abpSetPopup(abpPopup, val) }
+            if let val = abpParams["dithering"],   abs(abpY - 168) <= 15 { abpSetResults["dithering"]   = abpSetPopup(abpPopup, val) }
+            if let val = abpParams["mode"],        abs(abpY - 240) <= 20 { abpSetResults["mode"]        = abpSetPopup(abpPopup, val) }
+            if let val = abpParams["normalize"],   abpY >= 305 && abpY <= 365 { abpSetResults["normalize"] = abpSetPopup(abpPopup, val) }
+        }
+    }
+    // Set Mode via AXRadioButton (Realtime / Offline) — not a popup on any Logic version
+    if let modeVal = abpParams["mode"] {
+        let radios = findAll(abpBounceWin, role: "AXRadioButton", depth: 10)
+        let modeNorm = modeVal.lowercased().replacingOccurrences(of: "-", with: " ")
+        for radio in radios {
+            let t = axTitle(radio)
+            let tNorm = t.lowercased().replacingOccurrences(of: "-", with: " ")
+            if tNorm == modeNorm || t.lowercased().contains(modeNorm.prefix(6)) {
+                if axIntValue(radio) != 1 { axPress(radio); Thread.sleep(forTimeInterval: 0.2) }
+                abpSetResults["mode"] = true
+                break
+            }
+        }
     }
     // Set named checkboxes
     func abpSetCheckbox(_ name: String, _ enabled: Bool) {
@@ -2193,6 +2281,14 @@ case "getBounceParams":
             if abs(gbpY - 277) <= 15 { gbpResult["interleaved"] = gbpVal }
             if abs(gbpY - 379) <= 15 { gbpResult["mode"]       = gbpVal }
             if abs(gbpY - 471) <= 15 { gbpResult["normalize"]  = gbpVal }
+        }
+    }
+    // Read Mode from radio buttons (Realtime / Offline — never a popup)
+    let gbpRadios = findAll(gbpBounceWin, role: "AXRadioButton", depth: 10)
+    for radio in gbpRadios {
+        if axIntValue(radio) == 1 {
+            let t = axTitle(radio)
+            if !t.isEmpty { gbpResult["mode"] = t; break }
         }
     }
     // Read named checkboxes

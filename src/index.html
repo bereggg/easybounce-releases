@@ -1768,7 +1768,7 @@ async function scanLogic(isAutoRetry = false) {
   // ── Step 0a: Move to Logic's space ─────────────────────────────────────
   if (window._scanCancelled) return;
   try { await window.api.moveToLogicSpace(); } catch(e) { log(`moveToLogicSpace err: ${e}`, 'warn'); }
-  try { await window.api.runScript('tell application "Logic Pro" to activate'); } catch(e) {}
+  try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) {}
   await window.api.wait(300);
 
   // ── Step 0-pre: Close plugin + editor windows (all Spaces) ──
@@ -5422,7 +5422,7 @@ function cancelBounce() {
     // Method B: AppleScript fallback — close dialogs (Escape + Cancel buttons)
     window.api.runScript([
       'tell application "System Events"',
-      '  tell process "Logic Pro"',
+      '  tell (first process whose bundle identifier is "com.apple.logic10")',
       '    key code 47 using command down',
       '    delay 0.2',
       '    key code 53',
@@ -5684,7 +5684,7 @@ async function doBounce() {
         // Close any open Bounce/save dialogs that may be blocking
         await window.api.runScript([
           'tell application "System Events"',
-          '  tell process "Logic Pro"',
+          '  tell (first process whose bundle identifier is "com.apple.logic10")',
           '    key code 53', // Escape
           '    delay 0.25',
           '    key code 53', // Escape again
@@ -5709,7 +5709,9 @@ async function doBounce() {
     // After bounce "succeeds" — verify file actually landed in the folder
     // (can fail if user accidentally minimized EasyBounce during naming)
     if (ok && !window._userCancelled && window.api.findFile) {
-      const { file: stemPrefix } = getOutputPath(job.name, job.type);
+      // Use applyNameTemplate so prefix matches the actual saved filename
+      const rawJobName = applyNameTemplate(job.name).replace(/[/\\:*?"<>|]/g, '_');
+      const stemPrefix = rawJobName || job.name.replace(/[/\\:*?"<>|]/g, '_');
       const found = await window.api.findFile(jobFolder, stemPrefix);
       if (!found) {
         log(`⚠ File missing after bounce — retrying ${job.name}…`, 'warn');
@@ -5770,7 +5772,7 @@ async function doBounce() {
         try {
           await window.api.runScript([
             'tell application "System Events"',
-            '  tell process "Logic Pro"',
+            '  tell (first process whose bundle identifier is "com.apple.logic10")',
             '    key code 47 using command down',
             '    delay 0.2',
             '    key code 53',
@@ -5793,7 +5795,7 @@ async function doBounce() {
       // ── STEP 4: Bring Logic to foreground for AX operations ──
       // Keep alwaysOnTop during cancel so overlay stays visible
       if (!window._userCancelled) await window.api.setAlwaysOnTop(false).catch(() => {});
-      try { await window.api.runScript('tell application "Logic Pro" to activate'); } catch(e) {}
+      try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) {}
       await window.api.wait(400).catch(() => {});
 
       // ── STEP 5: Restore mute/solo states ──
@@ -5933,7 +5935,7 @@ async function doBounce() {
 
 async function activateLogicForAX() {
   // Bring Logic to foreground so AX button presses take effect (AXPress fails on off-screen Space)
-  try { await window.api.runScript('tell application "Logic Pro" to activate'); } catch(e) {}
+  try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) {}
   await window.api.wait(350);
 }
 
@@ -6117,9 +6119,9 @@ let nameTemplate = localStorage.getItem('sb4_name_tpl') || '';
 async function openBounceParams() {
   if (!window.api) return;
   try {
-    await window.api.runScript('tell application "Logic Pro" to activate');
+    await window.api.runScript('tell application id "com.apple.logic10" to activate');
     await window.api.wait(500);
-    await window.api.runScript('tell application "System Events" to tell process "Logic Pro" to keystroke "b" using command down');
+    await window.api.runScript('tell application "System Events" to tell (first process whose bundle identifier is "com.apple.logic10") to keystroke "b" using command down');
   } catch(e) {}
 }
 
@@ -6719,7 +6721,7 @@ async function triggerBounce(name, folder, isFirst) {
   // Cmd+B — ensure Logic is front before triggering bounce dialog
   if (window._userCancelled) return false;
   log('▶ ' + name, 'info');
-  try { await window.api.runScript('tell application "Logic Pro" to activate'); } catch(e) {}
+  try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) {}
   await window.api.wait(300);
   if (window._userCancelled) return false;
   const br = await window.api.bounce();
@@ -6731,7 +6733,7 @@ async function triggerBounce(name, folder, isFirst) {
   // Subsequent bounces: always re-apply SR + bitDepth because Logic resets them to project values.
   if (window._userCancelled) return false;
   window._bouncePhase = 'format';
-  try { await window.api.runScript('tell application "Logic Pro" to activate'); } catch(e) {}
+  try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) {}
   await window.api.wait(200);
   const _fmtPreset = getActiveFmtPreset();
   if (_fmtPreset && fmtSource === 'preset') {
@@ -6747,11 +6749,11 @@ async function triggerBounce(name, folder, isFirst) {
 
   // Click OK in format dialog — activate Logic first so dialog is reachable
   if (window._userCancelled) return false;
-  try { await window.api.runScript('tell application "Logic Pro" to activate'); } catch(e) {}
+  try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) {}
   await window.api.wait(200);
   await window.api.runScript([
     'tell application "System Events"',
-    '  tell process "Logic Pro"',
+    '  tell (first process whose bundle identifier is "com.apple.logic10")',
     '    try',
     '      click button "OK" of window 1',
     '    end try',
@@ -6769,7 +6771,7 @@ async function triggerBounce(name, folder, isFirst) {
     try {
       await window.api.runScript([
         'tell application "System Events"',
-        '  tell process "Logic Pro"',
+        '  tell (first process whose bundle identifier is "com.apple.logic10")',
         '    try',
         '      if (count of sheets of window 1) > 0 then',
         '        set shBtns to name of every button of sheet 1 of window 1',
@@ -6785,13 +6787,13 @@ async function triggerBounce(name, folder, isFirst) {
     } catch(e) {}
     log('📁 Navigating to STEMS…', 'info');
     // Make sure Logic is the focused app BEFORE sending the keyboard shortcut
-    try { await window.api.runScript('tell application "Logic Pro" to activate'); } catch(e) {}
+    try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) {}
     await window.api.wait(350);
     await window.api.setClipboard(stemsFolder);
     await window.api.wait(150);
     await window.api.runScript([
       'tell application "System Events"',
-      '  tell process "Logic Pro"',
+      '  tell (first process whose bundle identifier is "com.apple.logic10")',
       '    keystroke "g" using {command down, shift down}',
       '    delay 0.8',
       '    keystroke "v" using {command down}',
@@ -6806,7 +6808,7 @@ async function triggerBounce(name, folder, isFirst) {
   // Activate Logic before setting filename — user may have clicked EasyBounce in between
   if (window._userCancelled) return false;
   window._bouncePhase = 'naming';
-  try { await window.api.runScript('tell application "Logic Pro" to activate'); } catch(e) {}
+  try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) {}
   await window.api.wait(300);
 
   // Set filename and click Bounce — with fallback + retry (splitter group may not exist)
@@ -6814,7 +6816,7 @@ async function triggerBounce(name, folder, isFirst) {
   const _asName = safeName.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   const _bounceScript = [
     'tell application "System Events"',
-    '  tell process "Logic Pro"',
+    '  tell (first process whose bundle identifier is "com.apple.logic10")',
     '    -- Try via sheet of window 1 (save panel as sheet)',
     '    try',
     '      if (count of sheets of window 1) > 0 then',
@@ -6896,7 +6898,7 @@ async function triggerBounce(name, folder, isFirst) {
     }
     const check = await window.api.runScript([
       'tell application "System Events"',
-      '  tell process "Logic Pro"',
+      '  tell (first process whose bundle identifier is "com.apple.logic10")',
       '    try',
       '      if (count of windows) = 0 then return "done"',
       '      -- Check for stuck "Go to folder" navigation sheet (user focus stolen)',
@@ -6932,6 +6934,12 @@ async function triggerBounce(name, folder, isFirst) {
       '        delay 0.3',
       '        return "replaced"',
       '      end if',
+      '      -- Auto-confirm "Enabling this destination disables Split Stereo..." dialog',
+      '      if btns contains "Proceed" then',
+      '        click button "Proceed" of window 1',
+      '        delay 0.3',
+      '        return "dialog"',
+      '      end if',
       '      -- Auto-dismiss any unexpected OK/alert dialogs',
       '      if btns contains "OK" and btns does not contain "Bounce" then',
       '        click button "OK" of window 1',
@@ -6957,7 +6965,7 @@ async function triggerBounce(name, folder, isFirst) {
       log('⚠ Navigation dialog was stuck — confirmed, re-clicking Bounce…', 'warn');
       dialogStuckCount = 0;
       await window.api.wait(500);
-      try { await window.api.runScript('tell application "Logic Pro" to activate'); } catch(e) {}
+      try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) {}
       await window.api.wait(200);
       await window.api.runScript(_bounceScript);
       await window.api.wait(300);
@@ -6974,7 +6982,7 @@ async function triggerBounce(name, folder, isFirst) {
         reTriggerCount++;
         dialogStuckCount = 0;
         log(`⚠ Bounce dialog stalled — user interaction detected, re-clicking Bounce (attempt ${reTriggerCount})…`, 'warn');
-        try { await window.api.runScript('tell application "Logic Pro" to activate'); } catch(e) {}
+        try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) {}
         await window.api.wait(400);
         const reR = await window.api.runScript(_bounceScript);
         log(`Re-trigger result: ${reR.output || reR.error || '?'}`, 'info');
@@ -7041,7 +7049,7 @@ async function showMiniPlayer() {
   // Resize first, then swap CSS so content matches window size
   if (window.api.enterMiniMode) await window.api.enterMiniMode();
   document.body.classList.add('mini-mode');
-  try { await window.api.runScript('tell application "Logic Pro" to activate'); } catch(e) {}
+  try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) {}
 }
 
 async function exitMiniMode() {
@@ -8436,7 +8444,7 @@ async function _waitForBounceDialog(maxMs = 3000) {
   const steps = Math.ceil(maxMs / interval);
   const script = [
     'tell application "System Events"',
-    '  tell process "Logic Pro"',
+    '  tell (first process whose bundle identifier is "com.apple.logic10")',
     '    if (count of windows) > 0 then',
     '      if exists button "OK" of window 1 then',
     '        return "ready"',
@@ -8459,8 +8467,15 @@ async function _waitForBounceDialog(maxMs = 3000) {
 async function applyFmtPreset(p, mode = false) {
   // mode: false = full apply, 'sr_bd' = re-apply sampleRate + bitDepth only (subsequent bounces)
   if (!p || !window.api || !window.api.applyBouncePreset) return false;
-  const wavOn = p.dest === 0 || p.dest === 2;
-  const mp3On = p.dest === 1 || p.dest === 2;
+  // Normalize sampleRate: "48 kHz" → "48000" (Intel Logic 10.7 uses raw numbers)
+  const srMap = {'44.1 kHz':'44100','48 kHz':'48000','96 kHz':'96000','22.05 kHz':'22050','88.2 kHz':'88200','176.4 kHz':'176400','192 kHz':'192000'};
+  if (p.sampleRate && srMap[p.sampleRate]) p = {...p, sampleRate: srMap[p.sampleRate]};
+  // Normalize bitDepth: "24-bit" → "24 Bit", "32-bit float" → "32 Bit Float" (Intel Logic 10.7 format)
+  if (p.bitDepth && p.bitDepth.includes('-')) {
+    p = {...p, bitDepth: p.bitDepth.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())};
+  }
+  const wavOn = p.dest == 0 || p.dest == 2;
+  const mp3On = p.dest == 1 || p.dest == 2;
 
   if (mode === 'sr_bd' || mode === true) {
     // Re-apply sampleRate + bitDepth (Logic resets these to project values on every bounce)
@@ -8514,14 +8529,14 @@ async function applyFmtPreset(p, mode = false) {
 
 async function openBounceInLogic() {
   // Activate Logic and open Bounce dialog so user can set params manually
-  try { await window.api.runScript('tell application "Logic Pro" to activate'); } catch(e) {}
+  try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) {}
   await window.api.wait(400);
   const wins = await window.api.getWindows();
   const bounceOpen = wins && wins.windows && wins.windows.some(w => w.includes('Bounce'));
   if (!bounceOpen) {
     await window.api.bounce();
     await window.api.wait(500);
-    try { await window.api.runScript('tell application "Logic Pro" to activate'); } catch(e) {}
+    try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) {}
   }
   // Close format modal so user can interact with Logic
   closeFormatModal();
@@ -8552,7 +8567,7 @@ async function applyFormatToLogicNow() {
     // Disable alwaysOnTop so EasyBounce window doesn't intercept mouse clicks meant for Logic
     if (window.api.setAlwaysOnTop) await window.api.setAlwaysOnTop(false);
     // Activate Logic and ensure it stays front during the entire apply
-    try { await window.api.runScript('tell application "Logic Pro" to activate'); } catch(e) {}
+    try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) {}
     await window.api.wait(500);
     const wins = await window.api.getWindows();
     const bounceOpen = wins && wins.windows && wins.windows.some(w => w.includes('Bounce'));
@@ -8561,7 +8576,7 @@ async function applyFormatToLogicNow() {
       await _waitForBounceDialog(3000); // poll for OK button instead of fixed wait
     }
     // Re-activate Logic so Bounce dialog is frontmost
-    try { await window.api.runScript('tell application "Logic Pro" to activate'); } catch(e) {}
+    try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) {}
     await window.api.wait(500);
     const ok = await applyFmtPreset(p);
     // Bring EasyBounce back to front

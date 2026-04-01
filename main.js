@@ -268,7 +268,17 @@ ipcMain.handle('get-windows', () => bridge('getWindows'));
 ipcMain.handle('set-filename-bounce', (_, name) => bridge('setFilenameAndBounce', name));
 ipcMain.handle('set-filename-and-bounce', (_, name) => bridge('setFilenameAndBounce', name));
 ipcMain.handle('check-metronome', () => bridge('metronome'));
-ipcMain.handle('set-format', (_, fmt, bit, sr) => bridge('setFormat', fmt, bit, sr));
+ipcMain.handle('set-format', async (_, fmt, bit, sr) => {
+  const wasOnTop = mainWindow?.isAlwaysOnTop?.() ?? false;
+  if (mainWindow) mainWindow.setAlwaysOnTop(false);
+  try { return await bridge('setFormat', fmt, bit, sr); }
+  finally {
+    if (mainWindow && wasOnTop) {
+      mainWindow.setAlwaysOnTop(true, 'pop-up-menu');
+      mainWindow.showInactive();
+    }
+  }
+});
 ipcMain.handle('metronome-toggle', () => bridge('metronomeToggle'));
 ipcMain.handle('solo-index',    (_, i) => bridge('soloIndex', i));
 ipcMain.handle('unsolo-index',  (_, i) => bridge('unsoloIndex', i));
@@ -375,7 +385,18 @@ ipcMain.handle('mixer-get-filters',    () => bridge('getMixerFilters'));
 ipcMain.handle('mixer-filter-toggle',  (_, name) => bridge('mixerFilterToggle', name));
 ipcMain.handle('mixer-enable-all',     () => bridge('enableAllMixerFilters'));
 ipcMain.handle('set-mixer-height', (_, h) => bridge('setMixerHeight', String(h || 280)));
-ipcMain.handle('apply-bounce-preset', (_, params) => bridge('applyBouncePreset', JSON.stringify(params)));
+ipcMain.handle('apply-bounce-preset', async (_, params) => {
+  // Step aside so popup menus appear above Logic, not behind our alwaysOnTop overlay
+  const wasOnTop = mainWindow?.isAlwaysOnTop?.() ?? false;
+  if (mainWindow) mainWindow.setAlwaysOnTop(false);
+  try { return await bridge('applyBouncePreset', JSON.stringify(params)); }
+  finally {
+    if (mainWindow && wasOnTop) {
+      mainWindow.setAlwaysOnTop(true, 'pop-up-menu');
+      mainWindow.showInactive();
+    }
+  }
+});
 ipcMain.handle('get-bounce-params', () => bridge('getBounceParams'));
 ipcMain.handle('focus-app', () => {
   if (_scanTreeActive) return { ok: true };
