@@ -237,7 +237,10 @@ ipcMain.handle('scan-tree', async () => {
   try { return await bridge('scan-tree'); }
   finally {
     _scanTreeActive = false;
-    if (mainWindow && wasOnTop) mainWindow.setAlwaysOnTop(true, 'pop-up-menu');
+    if (mainWindow && wasOnTop) {
+      mainWindow.setAlwaysOnTop(true, 'pop-up-menu');
+      mainWindow.showInactive();
+    }
   }
 });
 ipcMain.handle('maximize-logic',         () => bridge('maximizeLogic'));
