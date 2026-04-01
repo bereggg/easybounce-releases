@@ -927,13 +927,29 @@ case "metronome":
     guard let windows = wins as? [AXUIElement], let win = windows.first else {
         jsonOut(["on": false, "error": "no window"]); break
     }
-    // Search all elements for AXCheckBox with title "Metronome Click"
+    // Search all elements for AXCheckBox with title "Metronome Click" or description containing "metronome"/"click"
     func findMetronome(_ el: AXUIElement, depth: Int = 0) -> AXUIElement? {
         if depth > 30 { return nil }
         if axRole(el) == "AXCheckBox" {
             var titleVal: CFTypeRef?
             AXUIElementCopyAttributeValue(el, kAXTitleAttribute as CFString, &titleVal)
-            if let t = titleVal as? String, t == "Metronome Click" { return el }
+            let t = (titleVal as? String) ?? ""
+            if t == "Metronome Click" || t == "Click" || t == "Metronome" { return el }
+            var descVal: CFTypeRef?
+            AXUIElementCopyAttributeValue(el, kAXDescriptionAttribute as CFString, &descVal)
+            let d = (descVal as? String) ?? ""
+            if d.lowercased().contains("metronome") || d.lowercased().contains("click") { return el }
+        }
+        // Also check AXButton with AXSwitch subrole (Intel Logic 10.7 uses AXButton/AXSwitch for toggles)
+        if axRole(el) == "AXButton" {
+            var subRef: CFTypeRef?
+            AXUIElementCopyAttributeValue(el, kAXSubroleAttribute as CFString, &subRef)
+            if (subRef as? String) == "AXSwitch" {
+                var descVal: CFTypeRef?
+                AXUIElementCopyAttributeValue(el, kAXDescriptionAttribute as CFString, &descVal)
+                let d = (descVal as? String) ?? ""
+                if d.lowercased().contains("metronome") || d.lowercased() == "click" { return el }
+            }
         }
         for child in axKids(el) {
             if let found = findMetronome(child, depth: depth + 1) { return found }
@@ -958,7 +974,22 @@ case "metronomeToggle":
         if axRole(el) == "AXCheckBox" {
             var titleVal: CFTypeRef?
             AXUIElementCopyAttributeValue(el, kAXTitleAttribute as CFString, &titleVal)
-            if let t = titleVal as? String, t == "Metronome Click" { return el }
+            let t = (titleVal as? String) ?? ""
+            if t == "Metronome Click" || t == "Click" || t == "Metronome" { return el }
+            var descVal: CFTypeRef?
+            AXUIElementCopyAttributeValue(el, kAXDescriptionAttribute as CFString, &descVal)
+            let d = (descVal as? String) ?? ""
+            if d.lowercased().contains("metronome") || d.lowercased().contains("click") { return el }
+        }
+        if axRole(el) == "AXButton" {
+            var subRef: CFTypeRef?
+            AXUIElementCopyAttributeValue(el, kAXSubroleAttribute as CFString, &subRef)
+            if (subRef as? String) == "AXSwitch" {
+                var descVal: CFTypeRef?
+                AXUIElementCopyAttributeValue(el, kAXDescriptionAttribute as CFString, &descVal)
+                let d = (descVal as? String) ?? ""
+                if d.lowercased().contains("metronome") || d.lowercased() == "click" { return el }
+            }
         }
         for child in axKids(el) {
             if let found = findMetronome2(child, depth: depth + 1) { return found }
@@ -1511,9 +1542,14 @@ case "setFormat":
     let enableMp3  = args.count >= 6 ? args[5] == "1" : false
     
     // Map sample rate number to display value
+    // Intel Logic 10.7 shows raw numbers like "44100", newer Logic shows "44.1 kHz"
     let srDisplayMap = ["44100": "44.1 kHz", "48000": "48 kHz", "96000": "96 kHz",
                         "44.1 kHz": "44.1 kHz", "48 kHz": "48 kHz", "96 kHz": "96 kHz"]
     let srDisplay = srDisplayMap[sampleRate] ?? sampleRate
+    // Also prepare raw number for Intel matching
+    let srRawMap = ["44100": "44100", "48000": "48000", "96000": "96000",
+                    "44.1 kHz": "44100", "48 kHz": "48000", "96 kHz": "96000"]
+    let srRaw = srRawMap[sampleRate] ?? sampleRate
     
     var wins: CFTypeRef?
     AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &wins)
@@ -1630,9 +1666,15 @@ case "setFormat":
                 results["bitDepth"] = r
             } else { results["bitDepth"] = true }
         } else if v.contains("kHz") || v.contains("Hz") {
-            // Sample Rate popup
+            // Sample Rate popup (newer Logic: "44.1 kHz")
             if v != srDisplay {
                 let r = selectPopup(v, srDisplay)
+                results["sampleRate"] = r
+            } else { results["sampleRate"] = true }
+        } else if ["22050","44100","48000","88200","96000","176400","192000"].contains(v) {
+            // Sample Rate popup (Intel Logic 10.7: raw number like "44100")
+            if v != srRaw {
+                let r = selectPopup(v, srRaw)
                 results["sampleRate"] = r
             } else { results["sampleRate"] = true }
         }
@@ -1640,6 +1682,7 @@ case "setFormat":
     
     // Toggle MP3 checkbox
     let cbs = findAll(bounceWin, role: "AXCheckBox", depth: 10)
+    var mp3Found = false
     for cb in cbs {
         var tv: CFTypeRef?
         AXUIElementCopyAttributeValue(cb, kAXTitleAttribute as CFString, &tv)
@@ -1648,7 +1691,25 @@ case "setFormat":
             if enableMp3 && v == 0 { axPress(cb) }
             else if !enableMp3 && v == 1 { axPress(cb) }
             results["mp3"] = true
+            mp3Found = true
             break
+        }
+    }
+    // Fallback for Intel Logic 10.7 where checkboxes have no title
+    // MP3 is the 2nd row in the destination list (PCM=0, MP3=1, M4A=2, Burn=3)
+    if !mp3Found {
+        let rows = findAll(bounceWin, role: "AXRow", depth: 10)
+        if rows.count >= 2 {
+            // MP3 row is index 1; find the checkbox inside it
+            let mp3Row = rows[1]
+            let rowCbs = findAll(mp3Row, role: "AXCheckBox", depth: 5)
+            if let mp3Cb = rowCbs.first {
+                let v = axIntValue(mp3Cb)
+                if enableMp3 && v == 0 { axPress(mp3Cb) }
+                else if !enableMp3 && v == 1 { axPress(mp3Cb) }
+                results["mp3"] = true
+                mp3Found = true
+            }
         }
     }
     
@@ -2108,13 +2169,31 @@ case "getBounceParams":
         if let av = gbpPos as! AXValue? { AXValueGetValue(av, .cgPoint, &gbpPt) }
         let gbpY = Int(gbpPt.y)
         let gbpVal = (axVal(gbpPopup, kAXValueAttribute) as? String) ?? ""
-        if abs(gbpY - 187) <= 15 { gbpResult["fileType"]   = gbpVal }
-        if abs(gbpY - 217) <= 15 { gbpResult["bitDepth"]   = gbpVal }
-        if abs(gbpY - 247) <= 15 { gbpResult["sampleRate"] = gbpVal }
-        if abs(gbpY - 307) <= 15 { gbpResult["dithering"]  = gbpVal }
-        if abs(gbpY - 277) <= 15 { gbpResult["interleaved"] = gbpVal }
-        if abs(gbpY - 379) <= 15 { gbpResult["mode"]       = gbpVal }
-        if abs(gbpY - 471) <= 15 { gbpResult["normalize"]  = gbpVal }
+        // Identify popups by value content (works across Logic versions with different layouts)
+        if ["WAVE","AIFF","CAF","WAVE64"].contains(gbpVal) {
+            gbpResult["fileFormat"] = gbpVal
+        } else if gbpVal.lowercased().contains("bit") {
+            gbpResult["bitDepth"] = gbpVal
+        } else if gbpVal.contains("kHz") || gbpVal.contains("Hz") {
+            gbpResult["sampleRate"] = gbpVal
+        } else if ["22050","44100","48000","88200","96000","176400","192000"].contains(gbpVal) {
+            gbpResult["sampleRate"] = gbpVal
+        } else if ["Interleaved","Split"].contains(gbpVal) {
+            gbpResult["fileType"] = gbpVal
+        } else if gbpVal.contains("POW-r") || gbpVal == "None" || gbpVal.contains("UV22") {
+            gbpResult["dithering"] = gbpVal
+        } else if ["On","Off","Overload Protection Only"].contains(gbpVal) {
+            gbpResult["normalize"] = gbpVal
+        } else {
+            // Fallback: use Y position
+            if abs(gbpY - 187) <= 15 { gbpResult["fileType"]   = gbpVal }
+            if abs(gbpY - 217) <= 15 { gbpResult["bitDepth"]   = gbpVal }
+            if abs(gbpY - 247) <= 15 { gbpResult["sampleRate"] = gbpVal }
+            if abs(gbpY - 307) <= 15 { gbpResult["dithering"]  = gbpVal }
+            if abs(gbpY - 277) <= 15 { gbpResult["interleaved"] = gbpVal }
+            if abs(gbpY - 379) <= 15 { gbpResult["mode"]       = gbpVal }
+            if abs(gbpY - 471) <= 15 { gbpResult["normalize"]  = gbpVal }
+        }
     }
     // Read named checkboxes
     let gbpCbs = findAll(gbpBounceWin, role: "AXCheckBox", depth: 10)
