@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <style>
   *{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none;}
-  html,body{width:360px;height:580px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;background:#161616;color:#fff;}
+  html,body{width:360px;height:580px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;background:#161616;color:#fff;-webkit-app-region:drag;}
   .drag-bar{height:34px;-webkit-app-region:drag;}
 
   .card{padding:0 20px 18px;display:flex;flex-direction:column;align-items:center;}
@@ -53,10 +53,9 @@
   .bottom-hint b{color:rgba(255,255,255,.55);}
 
   /* ── Restart hint (shown if AX granted but not detected) ── */
-  .restart-hint{width:100%;background:rgba(255,193,7,.1);border:1.5px solid rgba(255,193,7,.35);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:none;cursor:pointer;-webkit-app-region:no-drag;transition:background .15s;}
-  .restart-hint:hover{background:rgba(255,193,7,.18);}
+  .restart-hint{width:100%;background:rgba(255,71,87,.1);border:1.5px solid rgba(255,71,87,.35);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:none;-webkit-app-region:no-drag;}
   .restart-hint.show{display:block;}
-  .restart-hint p{font-size:11px;color:rgba(255,193,7,.95);line-height:1.55;margin-bottom:8px;pointer-events:none;}
+  .restart-hint p{font-size:11px;color:#ff4757;line-height:1.6;margin:0;pointer-events:none;}
   .btn-restart{width:100%;padding:9px;border-radius:8px;border:none;background:rgba(255,193,7,.2);color:rgba(255,193,7,1);font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;-webkit-app-region:no-drag;}
   .btn-restart:hover{background:rgba(255,193,7,.32);}
 
@@ -147,9 +146,8 @@
   <p class="bottom-hint">Enable all toggles for <b>EasyBounce</b><br>in System Settings, then come back here.</p>
 
   <!-- Shown if AX is enabled in Settings but still not detected after a while -->
-  <div class="restart-hint" id="restart-hint" onclick="restartApp()">
-    <p>⚠️ Accessibility is ON but not detected yet.<br>Try restarting EasyBounce.<br><br>If that doesn't help — open Accessibility settings, remove EasyBounce via <b style="color:rgba(255,193,7,1)">−</b>, then add it back via <b style="color:rgba(255,193,7,1)">+</b>.</p>
-    <button class="btn-restart">↺ Tap here to Restart EasyBounce</button>
+  <div class="restart-hint" id="restart-hint">
+    <p style="color:var(--red,#ff4757);">If EasyBounce is already enabled but still not detected — remove it via <b style="color:var(--red,#ff4757)">−</b> then add it back via <b style="color:rgba(255,193,7,1)">+</b>, and make sure the toggle next to it is <b style="color:rgba(255,193,7,1)">switched ON</b> ●</p>
   </div>
 
   <button class="btn-done" id="btn-done" onclick="doneClicked()">✓ All Done — Let's Go!</button>
@@ -310,8 +308,7 @@
     // Show restart hint if: user opened Accessibility settings >8s ago, came back, but ax is still false
     const restartHint = document.getElementById('restart-hint');
     if (restartHint) {
-      const shouldShow = _axOpened && !state.ax && (Date.now() - _axOpenedAt > 8000);
-      restartHint.classList.toggle('show', shouldShow);
+      restartHint.classList.add('show');
     }
 
     // "Done" appears only when all required permissions are granted

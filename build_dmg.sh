@@ -7,20 +7,32 @@ TMP_DIR="$ROOT/dist/dmg_tmp"
 DMG_TMP="$ROOT/dist/${DMG_NAME}_tmp.dmg"
 DMG_OUT="$ROOT/dist/${DMG_NAME}.dmg"
 
+IDENTITY="Developer ID Application: Dmytro Berezhnyi (2VKTV5VPVB)"
+NOTARY_PROFILE="notarytool"
+
 # ── Source: universal build (works on Apple Silicon + Intel) ──────────────────
-APP_SRC="$ROOT/dist/mac-universal/EasyBounce.app"
+APP_SRC="$ROOT/dist/mac-arm64/EasyBounce.app"
 if [ ! -d "$APP_SRC" ]; then
-  echo "❌ Universal build not found: $APP_SRC"
-  echo "   Run: npm run build:universal  first"
+  echo "❌ Build not found: $APP_SRC"
   exit 1
 fi
+
+# ── Build arm64 (no signing) ──────────────────────────────────────────────────
+echo "▶ Building app (arm64)…"
+cd "$ROOT"
+CSC_IDENTITY_AUTO_DISCOVERY=false npm run build:arm64
+echo "  ✓ Build complete"
+
+# ── Sign with @electron/osx-sign ─────────────────────────────────────────────
+echo "▶ Signing app…"
+/opt/homebrew/bin/node sign_app.js
 
 echo "▶ Preparing DMG contents…"
 rm -rf "$TMP_DIR"
 mkdir -p "$TMP_DIR"
 
 # ── Copy app + README ─────────────────────────────────────────────────────────
-cp -r "$APP_SRC" "$TMP_DIR/EasyBounce.app"
+ditto "$APP_SRC" "$TMP_DIR/EasyBounce.app"
 cp "$ROOT/README.txt" "$TMP_DIR/README.txt"
 ln -s /Applications "$TMP_DIR/Applications"
 
@@ -47,7 +59,7 @@ sleep 1
 
 # ── Copy files into mounted DMG ───────────────────────────────────────────────
 echo "▶ Copying files…"
-cp -r "$TMP_DIR/EasyBounce.app" "$MOUNT_DIR/"
+ditto "$TMP_DIR/EasyBounce.app" "$MOUNT_DIR/EasyBounce.app"
 cp "$TMP_DIR/README.txt" "$MOUNT_DIR/"
 ln -s /Applications "$MOUNT_DIR/Applications"
 sleep 1
@@ -95,7 +107,18 @@ hdiutil convert "$DMG_TMP" -format UDZO -imagekey zlib-level=9 -o "$DMG_OUT"
 rm -f "$DMG_TMP"
 rm -rf "$TMP_DIR"
 
+# ── Notarize DMG ─────────────────────────────────────────────────────────────
+echo "▶ Notarizing DMG (this takes ~5–10 min)…"
+xcrun notarytool submit "$DMG_OUT" \
+  --keychain-profile "$NOTARY_PROFILE" \
+  --wait
+
+# ── Staple ────────────────────────────────────────────────────────────────────
+echo "▶ Stapling notarization ticket…"
+xcrun stapler staple "$DMG_OUT"
+
 echo ""
 echo "✅ Done: $DMG_OUT"
 echo "   Size: $(du -sh "$DMG_OUT" | cut -f1)"
-echo "   Arch: universal (Apple Silicon + Intel)"
+echo "   Arch: Apple Silicon (arm64)"
+echo "   Signed + Notarized + Stapled ✓"

@@ -116,18 +116,37 @@ async function sendTelegramNotification(bounceData) {
       + (bounceData.stems.length > 8 ? `\n  <i>+${bounceData.stems.length - 8} more</i>` : '')
     : '';
 
-  const text =
-    `✅ <b>Bounce complete!</b>\n` +
-    `━━━━━━━━━━━━━━━━\n` +
-    `📁 <b>${bounceData.project}</b>\n\n` +
-    `🎚 Stems: <b>${bounceData.totalFiles}</b>` +
-      (bounceData.totalPlanned ? ` of ${bounceData.totalPlanned}` : '') + `\n` +
-    `⏱ Time: <b>${bounceData.duration}</b>\n` +
-    (bounceData.totalSize ? `💾 Size: <b>${bounceData.totalSize}</b>\n` : '') +
-    (bounceData.format ? `🎵 Format: ${bounceData.format}\n` : '') +
-    errLine +
-    (stemsLine ? `\n<b>Files:</b>\n${stemsLine}\n` : '') +
-    `\n📂 <code>${bounceData.folder}</code>`;
+  const hasErrors = (bounceData.errors || 0) > 0;
+  const text = bounceData.failed
+    ? `❌ <b>Bounce cancelled / failed!</b>\n` +
+      `━━━━━━━━━━━━━━━━\n` +
+      `📁 <b>${bounceData.project}</b>\n\n` +
+      `⚠️ <b>Reason:</b> ${bounceData.failReason || 'Unknown error'}\n` +
+      `🎚 Completed: <b>${bounceData.totalFiles}</b> of ${bounceData.totalPlanned || '?'}\n` +
+      `⏱ Time: <b>${bounceData.duration}</b>\n` +
+      (stemsLine ? `\n<b>Completed files:</b>\n${stemsLine}\n` : '') +
+      `\n📂 <code>${bounceData.folder}</code>`
+    : hasErrors
+    ? `⚠️ <b>Bounce finished with errors!</b>\n` +
+      `━━━━━━━━━━━━━━━━\n` +
+      `📁 <b>${bounceData.project}</b>\n\n` +
+      `🎚 Done: <b>${bounceData.totalFiles}</b> of ${bounceData.totalPlanned || '?'} — <b>${bounceData.errors} failed</b>\n` +
+      `⏱ Time: <b>${bounceData.duration}</b>\n` +
+      (bounceData.totalSize ? `💾 Size: <b>${bounceData.totalSize}</b>\n` : '') +
+      (bounceData.format ? `🎵 Format: ${bounceData.format}\n` : '') +
+      (stemsLine ? `\n<b>Completed:</b>\n${stemsLine}\n` : '') +
+      `\n📂 <code>${bounceData.folder}</code>`
+    : `✅ <b>Bounce complete!</b>\n` +
+      `━━━━━━━━━━━━━━━━\n` +
+      `📁 <b>${bounceData.project}</b>\n\n` +
+      `🎚 Stems: <b>${bounceData.totalFiles}</b>` +
+        (bounceData.totalPlanned ? ` of ${bounceData.totalPlanned}` : '') + `\n` +
+      `⏱ Time: <b>${bounceData.duration}</b>\n` +
+      (bounceData.totalSize ? `💾 Size: <b>${bounceData.totalSize}</b>\n` : '') +
+      (bounceData.format ? `🎵 Format: ${bounceData.format}\n` : '') +
+      `✔️ Errors: 0 — clean\n` +
+      (stemsLine ? `\n<b>Files:</b>\n${stemsLine}\n` : '') +
+      `\n📂 <code>${bounceData.folder}</code>`;
 
   try {
     const result = await sendTelegramMessage(settings.telegramChatId, text);
@@ -158,8 +177,12 @@ async function sendEmailNotification(bounceData) {
   const msg = {
     to: settings.notificationEmail,
     from: 'EasyBounce <onboarding@resend.dev>',
-    replyTo: 'easybounce.app@gmail.com',
-    subject: `Bounce done — ${bounceData.project} (${bounceData.totalFiles} stems)`,
+    replyTo: 'support@easybounce.app',
+    subject: bounceData.failed
+      ? `❌ Bounce failed — ${bounceData.project}`
+      : (bounceData.errors || 0) > 0
+      ? `⚠️ Bounce errors — ${bounceData.project} (${bounceData.errors} failed)`
+      : `✅ Bounce done — ${bounceData.project} (${bounceData.totalFiles} stems)`,
     text:
       `Bounce complete!\n\n` +
       `Project: ${bounceData.project}\n` +
@@ -173,7 +196,11 @@ async function sendEmailNotification(bounceData) {
       <div style="max-width:500px;margin:0 auto;">
         <div style="margin-bottom:18px;">
           <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#555;margin-bottom:6px;">EasyBounce</div>
-          <div style="font-size:22px;font-weight:700;color:#f0f0f0;">Bounce complete — <span style="color:#1D9E75;">${bounceData.project}</span></div>
+          ${bounceData.failed
+            ? `<div style="font-size:22px;font-weight:700;color:#f0f0f0;">❌ Bounce failed — <span style="color:#f55;">${bounceData.project}</span></div>
+               <div style="margin-top:10px;padding:12px 16px;background:#2a1010;border-radius:10px;border:1px solid #5a1a1a;color:#f88;font-size:13px;">⚠️ ${bounceData.failReason || 'Unknown error'}</div>`
+            : `<div style="font-size:22px;font-weight:700;color:#f0f0f0;">Bounce complete — <span style="color:#1D9E75;">${bounceData.project}</span></div>`
+          }
         </div>
         <table style="width:100%;border-collapse:separate;border-spacing:8px 8px;margin-bottom:16px;">
           <tr>

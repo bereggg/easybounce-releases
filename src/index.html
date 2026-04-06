@@ -34,7 +34,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 @keyframes fade{0%,100%{opacity:1;}50%{opacity:.4;}}
 @keyframes scanPulse{0%,100%{box-shadow:0 8px 48px rgba(185,28,28,.45),0 0 0 1px rgba(239,68,68,.18),0 0 0 0 rgba(239,68,68,.3);}50%{box-shadow:0 8px 48px rgba(185,28,28,.7),0 0 0 1px rgba(239,68,68,.5),0 0 0 6px rgba(239,68,68,.0);}}
 .shell{display:grid;grid-template-columns:var(--pl-w,252px) 5px 1fr 208px;height:calc(100vh - 50px);transition:grid-template-columns .22s ease;}
-.shell.act-collapsed{grid-template-columns:var(--pl-w,252px) 5px 1fr 28px;}
+.shell.act-collapsed{grid-template-columns:var(--pl-w,252px) 5px 1fr 44px;}
 .panel{display:flex;flex-direction:column;overflow:hidden;}
 .pl{border-right:none;}
 .panel-resizer{width:7px;cursor:col-resize;background:transparent;border-right:1px solid var(--b);flex-shrink:0;position:relative;z-index:10;transition:background .15s;}
@@ -50,8 +50,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .scroll::-webkit-scrollbar{width:3px;}
 .scroll::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
 .empty-hint{padding:28px 16px;text-align:center;color:var(--muted);font-size:11px;line-height:1.9;}
-.search-bar{padding:6px 10px;border-bottom:1px solid var(--b);display:flex;gap:5px;align-items:center;flex-shrink:0;}
-.search-inp{flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 9px;transition:border-color .18s;}
+.search-bar{padding:6px 10px;border-bottom:1px solid var(--b);display:flex;gap:5px;align-items:center;flex-shrink:0;flex-wrap:wrap;}
+.search-inp{flex:1;min-width:0;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 9px;transition:border-color .18s;}
 .search-inp::placeholder{color:var(--muted);}
 .search-inp:focus{outline:none;border-color:rgba(108,99,255,.6);}
 .hidden-btn{display:flex;align-items:center;gap:4px;padding:5px 9px;border-radius:var(--r);border:1px solid var(--b);background:transparent;color:var(--muted);font-size:10px;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap;flex-shrink:0;}
@@ -217,16 +217,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .act-tab.active{background:var(--card);border-color:var(--b);color:var(--text);}
 .act-tab:hover:not(.active){color:var(--t2);}
 /* ── Easy Mode Toggle ──────────────────────────────────── */
-.em-wrap{display:flex;align-items:center;gap:7px;padding:5px 14px 5px 11px;border-radius:20px;border:1.5px solid color-mix(in srgb,var(--accent) 35%,var(--b));background:rgba(108,99,255,.08);cursor:pointer;transition:all .2s;-webkit-app-region:no-drag;user-select:none;position:absolute;left:50%;transform:translateX(-50%);box-shadow:0 0 12px rgba(108,99,255,.1);}
-.em-wrap:hover{border-color:rgba(108,99,255,.5);background:rgba(108,99,255,.12);}
+.em-wrap{display:flex;align-items:center;gap:7px;padding:5px 14px 5px 11px;border-radius:20px;border:1.5px solid rgba(108,99,255,.45);background:rgba(108,99,255,.13);cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s;-webkit-app-region:no-drag;user-select:none;position:absolute;left:50%;transform:translateX(-50%);z-index:2;box-shadow:0 0 10px rgba(108,99,255,.15),0 0 0 1px rgba(108,99,255,.08);}
+.em-wrap:hover{border-color:rgba(108,99,255,.65);background:rgba(108,99,255,.2);box-shadow:0 0 16px rgba(108,99,255,.25),0 0 0 1px rgba(108,99,255,.12);}
 .em-track{width:28px;height:14px;border-radius:7px;background:var(--b2);position:relative;transition:background .22s;flex-shrink:0;}
-.em-thumb{position:absolute;top:2.5px;left:2px;width:9px;height:9px;border-radius:50%;background:var(--t2);opacity:.5;transition:all .22s;}
-.em-lbl{font-size:10px;font-weight:800;color:var(--t2);letter-spacing:.1em;text-transform:uppercase;transition:color .2s;opacity:.7;}
+.em-thumb{position:absolute;top:2.5px;left:2px;width:9px;height:9px;border-radius:50%;background:var(--t2);opacity:.6;transition:all .22s;}
+.em-lbl{font-size:10px;font-weight:800;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;transition:color .2s;opacity:.85;}
 /* ── Easy Mode: toggle styles ─────────────────── */
-body.easy .em-track{background:var(--accent);}
-body.easy .em-thumb{left:15px;background:#fff;}
-body.easy .em-lbl{color:var(--accent);}
-body.easy .em-wrap{border-color:rgba(108,99,255,.45);background:rgba(108,99,255,.07);}
+body.easy .em-track{background:linear-gradient(135deg,var(--accent),var(--a2));}
+body.easy .em-thumb{left:15px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);}
+body.easy .em-lbl{color:var(--accent)!important;opacity:1!important;font-weight:900!important;}
+body.easy .em-wrap{border-color:rgba(108,99,255,.7)!important;background:linear-gradient(135deg,rgba(108,99,255,.18),rgba(255,101,132,.12))!important;box-shadow:0 0 20px rgba(108,99,255,.3),inset 0 0 12px rgba(108,99,255,.06)!important;}
 
 /* ── Easy Mode: hide non-essentials ──────────── */
 body.easy .em-hide{display:none!important;}
@@ -247,6 +247,10 @@ body.easy #metro-btn span{margin:0!important;}
 body.easy #reload-queue-btn{display:none!important;}
 body.easy #clear-done-btn{display:none!important;}
 body.easy #add-preset-btn-footer{display:none!important;}
+/* Markers — hidden in easy mode */
+body.easy #markers-btn{display:none!important;}
+body.easy #markers-chips-btn{display:none!important;}
+body.easy #markers-popup{display:none!important;}
 /* mini-btn visible in easy mode during bounce */
 body.easy .sec-badge{display:none!important;}
 body.easy #metro-btn{display:none!important;}
@@ -395,13 +399,35 @@ body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:va
 .pr{border-left:1px solid var(--b);overflow:hidden;transition:all .22s ease;}
 .pr-collapse-btn{position:absolute;top:50%;right:0;transform:translateY(-50%);width:14px;height:40px;background:var(--card);border:1px solid var(--b);border-right:none;border-radius:6px 0 0 6px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:9px;transition:all .15s;}
 .pr-collapse-btn:hover{color:var(--text);background:var(--b2);}
-.act-collapsed-strip{display:none;flex-direction:column;align-items:center;justify-content:center;width:28px;height:100%;cursor:pointer;gap:4px;}
+/* Activity panel collapsed state */
+.shell.act-collapsed .act-main-content{display:none!important;}
+.shell.act-collapsed .stats-grid{display:none!important;}
+.act-collapsed-strip{
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  width:100%;
+  height:100%;
+  cursor:pointer;
+  padding-top:8px;
+  gap:4px;
+}
+.act-collapsed-strip:hover .act-strip-btn{color:var(--accent);border-color:rgba(108,99,255,.4);background:rgba(108,99,255,.08);}
 .shell.act-collapsed .act-collapsed-strip{display:flex;}
-.shell.act-collapsed .act-main-content{display:none;}
-.shell.act-collapsed .stats-grid{display:none;}
-.act-strip-label{font-size:8px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;writing-mode:vertical-rl;text-orientation:mixed;}
-.act-strip-btn{width:20px;height:20px;border-radius:6px;border:1px solid var(--b);background:var(--card);color:var(--accent);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
-.act-strip-btn:hover{background:rgba(108,99,255,.15);}
+.act-strip-label{display:none;}
+.act-strip-btn{
+  width:24px;height:24px;
+  border-radius:6px;
+  border:1px solid var(--b);
+  background:var(--card);
+  color:var(--muted);
+  font-size:11px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+  font-family:'Space Grotesk',sans-serif;
+}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(10px);}
 .overlay.show{display:flex;}
 .modal{background:var(--card);border:1px solid var(--glass-border);border-radius:var(--r2);padding:24px;width:400px;box-shadow:0 32px 80px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.06);max-height:86vh;display:flex;flex-direction:column;gap:14px;}
@@ -584,10 +610,10 @@ body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini
       <div class="ldot" id="ldot"></div>
       <span class="llbl" id="llbl">Logic off</span>
     </div>
-    <button class="tb-pill" id="update-btn" onclick="checkUpdates()" style="padding:3px 7px;font-size:9px;border-color:var(--b);color:var(--muted);gap:3px;opacity:.6;" title="Check for updates">
-      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" style="width:10px;height:10px;"><path d="M7 1v5l3.5 2" stroke-linecap="round"/><circle cx="7" cy="7" r="6"/></svg>
+    <button class="tb-pill" id="update-btn" onclick="checkUpdates()" style="padding:3px 9px;font-size:10px;border-color:rgba(108,99,255,.3);color:var(--accent);gap:4px;opacity:.85;background:rgba(108,99,255,.07);font-weight:600;" title="Check for updates">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" style="width:11px;height:11px;"><path d="M7 1v5l3.5 2" stroke-linecap="round"/><circle cx="7" cy="7" r="6"/></svg>v1.0
     </button>
-    <button class="tb-pill" id="tooltip-toggle-btn" onclick="onHelpClick()" style="width:26px;height:26px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;background:transparent;border:1.5px solid var(--b);color:var(--t2);font-size:13px;font-weight:800;flex-shrink:0;opacity:.75;" title="Help / Onboarding">?</button>
+    <button class="tb-pill" id="tooltip-toggle-btn" onclick="onHelpClick()" style="width:28px;height:28px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;background:rgba(108,99,255,.1);border:1.5px solid rgba(108,99,255,.35);color:var(--accent);font-size:13px;font-weight:800;flex-shrink:0;box-shadow:0 0 8px rgba(108,99,255,.2);" title="Toggle tips">?</button>
   </div>
 </div>
 <div class="shell">
@@ -621,6 +647,30 @@ body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini
       <div class="queue-hdr">
         <span class="sec-title">Bounce Queue</span>
         <span id="q-total-lbl" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--t2);margin-left:4px;"></span>
+        <!-- Markers button -->
+        <div style="position:relative;margin-left:6px;display:flex;align-items:center;gap:3px;">
+          <button id="markers-btn" onclick="toggleMarkersPopup()" title="Bounce by markers — set cycle ranges per bounce pass"
+            style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .16s;white-space:nowrap;">
+            <span style="font-size:10px;">📍</span>
+            <span id="markers-btn-lbl">Markers</span>
+          </button>
+          <button id="markers-chips-btn" onclick="toggleQueueMarkersChips()" title="Show/hide marker names on queue items"
+            style="padding:2px 7px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .14s;line-height:1.4;">–</button>
+          <!-- Markers popup -->
+          <div id="markers-popup" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;min-width:480px;background:var(--card2);border:1px solid var(--b2);border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:700;padding:6px 0;">
+            <div style="padding:4px 10px 6px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:6px;">
+              <span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);flex:1;">Bounce Ranges</span>
+              <button onclick="rescanMarkers()" title="Re-scan markers from Logic" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;padding:0 2px;" id="markers-rescan-btn">↺</button>
+              <button class="hidden-btn" id="markers-showhidden-btn" onclick="toggleMarkersHidden()" title="Show/hide hidden markers">
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 7s2-4 6-4 6 4 6 4-2 4-6 4-6-4-6-4z"/><circle cx="7" cy="7" r="1.6"/><line x1="2" y1="2" x2="12" y2="12" class="hidden-slash" style="display:none;"/></svg>
+                Hidden
+              </button>
+            </div>
+            <div id="markers-popup-list" style="max-height:260px;overflow-y:auto;padding:4px 0;">
+              <div style="color:var(--muted);font-size:10px;padding:6px 10px;">No markers scanned yet</div>
+            </div>
+          </div>
+        </div>
         <div class="q-mini-btns">
           <button class="q-mini-btn" id="save-job-set-btn" onclick="saveJobSet()" title="Save current queue as a reusable set">💾 Save set</button>
           <button class="q-mini-btn" id="reload-queue-btn" onclick="reloadQueue()" title="Reset all items back to pending">↺ Reset all</button>
@@ -733,9 +783,8 @@ body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini
   </div>
   <div class="panel pr" id="panel-pr" style="position:relative;">
     <!-- Collapsed strip (visible only when panel is hidden) -->
-    <div class="act-collapsed-strip" onclick="toggleActivityPanel()" title="Show Activity">
-      <div class="act-strip-btn">▶</div>
-      <div class="act-strip-label">Activity</div>
+    <div class="act-collapsed-strip" onclick="toggleActivityPanel()" title="Open Activity panel">
+      <button class="act-strip-btn q-mini-btn" style="width:24px;height:24px;padding:0;font-size:11px;">▶</button>
     </div>
     <!-- Full panel content -->
     <div class="act-main-content" style="display:flex;flex-direction:column;flex:1;overflow:hidden;min-width:0;">
@@ -950,19 +999,30 @@ body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini
   </div>
 </div>
 <div class="overlay" id="edit-stem-preset-modal" onclick="if(event.target===this)document.getElementById('edit-stem-preset-modal').classList.remove('show')">
-  <div class="modal" style="width:420px;">
-    <div class="modal-hdr">Edit Stem Preset</div>
-    <div class="mfield"><label>Name</label><input type="text" id="esp-name-inp" onkeydown="if(event.key==='Enter')saveEditedStemPreset()"></div>
-    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px;">Stems in preset</div>
-    <div id="esp-stems-list" style="max-height:130px;overflow-y:auto;margin:0 0 10px;border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:4px;"></div>
-    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px;">Add Presets — Stem Presets</div>
-    <div id="esp-preset-chips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;min-height:22px;"></div>
-    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px;">Add channels</div>
-    <input type="text" id="esp-search" placeholder="Search channels…" oninput="_renderEspChannels()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:11px;padding:5px 9px;margin-bottom:6px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;">
-    <div id="esp-channels-list" style="max-height:130px;overflow-y:auto;border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:4px;margin-bottom:10px;"></div>
+  <div class="modal" style="width:480px;max-width:96vw;">
+    <div class="modal-hdr" id="esp-modal-title">Edit Stem Preset</div>
+    <div id="esp-modal-filters" style="display:none;align-items:center;gap:3px;flex-wrap:wrap;padding:2px 0;margin-bottom:4px;"></div>
+    <div class="mfield"><label>Preset Name</label><input type="text" id="esp-name-inp" onkeydown="if(event.key==='Enter'){event.preventDefault();saveEditedStemPreset();}"></div>
+    <div id="esp-name-presets" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:2px 0 10px;min-height:22px;"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <input id="esp-search" type="text" placeholder="Search channels…" oninput="_renderEspChannels()" style="flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:11px;padding:6px 10px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;">
+      <button id="esp-hidden-tab" onclick="_espToggleHidden()" title="Show hidden channels" style="display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:11px;cursor:pointer;flex-shrink:0;white-space:nowrap;transition:all .14s;">
+        <span id="esp-hidden-eye" style="font-size:12px;">👁</span><span>Hidden</span>
+      </button>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+      <span style="font-size:10px;color:var(--muted);font-weight:600;flex:1;">Select channels to include in this stem</span>
+      <button id="esp-toggle-all-btn" onclick="_espToggleAll()" style="padding:2px 9px;border-radius:5px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;cursor:pointer;transition:all .14s;">All</button>
+    </div>
+    <div id="esp-channels-list" style="max-height:240px;overflow-y:auto;border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:4px;margin-bottom:8px;" class="scroll"></div>
+    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px;margin-top:4px;">Stems in preset <span id="esp-stems-count" style="color:var(--accent);font-family:'JetBrains Mono',monospace;margin-left:4px;"></span></div>
+    <div id="esp-stems-list" style="max-height:90px;overflow-y:auto;border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:4px;margin-bottom:8px;" class="scroll"></div>
+    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px;">Add from other presets</div>
+    <div id="esp-preset-chips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px;min-height:22px;"></div>
     <div class="modal-actions">
       <button class="mbtn cancel" onclick="document.getElementById('edit-stem-preset-modal').classList.remove('show')">Cancel</button>
-      <button class="mbtn save" onclick="saveEditedStemPreset()">Save</button>
+      <button class="mbtn save" style="background:rgba(74,140,28,.15);border-color:rgba(74,140,28,.4);color:var(--a3);" onclick="saveEditedStemPreset()">💾 Save preset</button>
+      <button class="mbtn save" onclick="_espAddToQueue()">Add to Queue</button>
     </div>
   </div>
 </div>
@@ -1040,7 +1100,7 @@ body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini
   </div>
 </div>
 <div class="overlay" id="preset-name-modal">
-  <div class="modal" style="width:340px;">
+  <div class="modal" style="width:480px;max-width:96vw;">
     <div class="modal-hdr">Save Stem Preset</div>
     <div class="mfield"><label>Preset Name</label><input type="text" id="preset-name-input" placeholder="e.g. All Drum Stems" onkeydown="if(event.key==='Enter')confirmSavePreset()"></div>
     <div id="stem-name-presets" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:2px 0 10px;min-height:22px;"></div>
@@ -1070,7 +1130,6 @@ body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <div style="display:flex;gap:6px;" id="ob-dots"></div>
       <div style="display:flex;gap:8px;">
-        <button onclick="obSkip()" style="padding:9px 16px;border-radius:10px;border:1px solid var(--b2);background:transparent;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit;">Skip</button>
         <button onclick="obNext()" id="ob-next" style="padding:9px 24px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent),var(--a2));color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 20px rgba(108,99,255,.4);letter-spacing:.02em;">NEXT →</button>
       </div>
     </div>
@@ -1081,18 +1140,25 @@ body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini
 </div>
 
 <!-- Master Plugins Modal -->
-<div id="mp-modal" style="display:none;position:fixed;inset:0;z-index:9980;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);" onclick="if(event.target===this)closeMasterPluginsModal()">
-  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:340px;background:var(--bg);border:1px solid var(--b);border-radius:12px;padding:18px;box-shadow:0 16px 48px rgba(0,0,0,.6);">
-    <div style="display:flex;align-items:center;margin-bottom:14px;">
-      <span style="font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1;">🎛 Master Plugins</span>
-      <button onclick="closeMasterPluginsModal()" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0 4px;line-height:1;">✕</button>
+<div id="mp-modal" style="display:none;position:fixed;inset:0;z-index:9980;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);" onclick="if(event.target===this)closeMasterPluginsModal()">
+  <div class="mp-modal-box" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:420px;background:var(--card2,#111);border:1px solid var(--b2,#222);border-radius:16px;padding:24px;box-shadow:0 24px 64px rgba(0,0,0,.7);">
+    <div style="margin-bottom:20px;">
+      <div style="font-size:20px;font-weight:700;color:var(--text);letter-spacing:-.02em;">Master Plugin Control</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5;">View &amp; bypass all master bus plugins before bouncing stems. One-click bypass/restore for the entire chain.</div>
     </div>
-    <div id="mp-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;max-height:320px;overflow-y:auto;">
-      <span style="color:var(--muted);font-size:10px;grid-column:1/-1;">Plugins are loaded automatically during scan</span>
+    <div class="mp-modal-inner" style="background:var(--card,#1a1a1a);border-radius:10px;overflow:hidden;border:1px solid var(--b,#222);margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--b,#222);">
+        <div style="width:8px;height:8px;border-radius:50%;background:#ff4757;flex-shrink:0;"></div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;">Master Plugins</span>
+        <button onclick="closeMasterPluginsModal()" style="margin-left:auto;background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0;line-height:1;transition:color .14s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+      </div>
+      <div id="mp-grid" style="max-height:300px;overflow-y:auto;">
+        <div style="padding:16px 14px;color:var(--muted);font-size:11px;">Plugins are loaded automatically during scan</div>
+      </div>
     </div>
-    <div style="display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--b);">
-      <button onclick="bypassAllMasterPlugins()" style="flex:1;padding:6px;border-radius:var(--r);border:1px solid rgba(255,169,77,.4);background:rgba(255,169,77,.08);color:var(--warn);font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.04em;text-transform:uppercase;transition:all .14s;">Bypass All</button>
-      <button onclick="restoreAllMasterPlugins()" style="flex:1;padding:6px;border-radius:var(--r);border:1px solid rgba(74,140,28,.4);background:rgba(74,140,28,.08);color:var(--a3);font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.04em;text-transform:uppercase;transition:all .14s;">Restore All</button>
+    <div style="display:flex;gap:10px;">
+      <button class="mp-bypass-btn" onclick="bypassAllMasterPlugins()" style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,71,87,.4);background:rgba(255,71,87,.09);color:#ff4757;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.06em;text-transform:uppercase;transition:all .14s;" onmouseover="this.style.background='rgba(255,71,87,.16)'" onmouseout="this.style.background='rgba(255,71,87,.09)'">Bypass All</button>
+      <button class="mp-restore-btn" onclick="restoreAllMasterPlugins()" style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(74,140,28,.4);background:rgba(74,140,28,.09);color:#5abf28;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.06em;text-transform:uppercase;transition:all .14s;" onmouseover="this.style.background='rgba(74,140,28,.16)'" onmouseout="this.style.background='rgba(74,140,28,.09)'">Restore All</button>
     </div>
   </div>
 </div>
@@ -1415,15 +1481,8 @@ function formatChName(name) {
 // Bus channel keywords — channels containing these are "bus" tracks
 const BUS_KEYWORDS = ['ALL ','BUS','AUX','MASTER','DRUM','KICK','SNARE','HAT','CYMBAL','TOM','FILL','CLAP','PERC','BASS','GUITAR','VOCAL','VOX','STRING','BRASS','ORCH','CHOIR','PIANO','SYNTH','PAD','BRAAMS','FX','BOOM','SIDEEE','SHAKER','OTHER','TAMB','LOW CONTROL','LOOP','EFFECTS','SATUR','COMP','STEREO','SHIMMER','DELEY','HALL','PLATE','SPRING','ROOM','REVERB','CLICK'];
 
-// Built-in presets — will be populated from scanned bus channels
-const BUILTIN_PRESETS = [
-  { id:'full',     icon:'🎛', name:'Full Mix',      mutedKeywords:[] },
-  { id:'no_drums', icon:'🥁', name:'NO Drums',      mutedKeywords:['DRUM','KICK','SNARE','HAT','CYMBAL','TOM','FILL','CLAP','SIDEEE','SHAKER'] },
-  { id:'no_bass',  icon:'🎸', name:'NO Bass',       mutedKeywords:['BASS','SUB'] },
-  { id:'no_vox',   icon:'🎤', name:'NO Vocals',     mutedKeywords:['VOCAL','VOX'] },
-  { id:'no_str',   icon:'🎻', name:'NO Strings',    mutedKeywords:['STRING','BRASS','ORCH','CHOIR'] },
-  { id:'inst',     icon:'🎹', name:'Instrumental',  mutedKeywords:['VOCAL','VOX','CHOIR'] },
-];
+// Built-in version presets — empty; Full Version is seeded into user presets instead
+const BUILTIN_PRESETS = [];
 
 // Channels, tree, groups — all cleared on launch, only populated after scan
 let channels  = [];
@@ -1432,17 +1491,23 @@ let collapsedGroups = new Set();
 let queue     = []; // Don't restore queue between sessions
 let presets = (() => {
   const s = localStorage.getItem(SK.presets);
-  if (s !== null) return JSON.parse(s);
-  const defaults = [{ id: 'p_default1', name: 'Version 1', mutedIndices: [], mutedNames: [], mutedKeywords: [] }];
-  localStorage.setItem(SK.presets, JSON.stringify(defaults));
-  return defaults;
+  const arr = s !== null ? JSON.parse(s) : [];
+  // Seed "Full Version" as first preset if not present
+  if (!arr.find(p => p.id === 'p_full')) {
+    arr.unshift({ id: 'p_full', icon: '🎛', name: 'Full Version', mutedIndices: [], mutedNames: [] });
+    localStorage.setItem(SK.presets, JSON.stringify(arr));
+  }
+  return arr;
 })();
 let stemPresets = (() => {
   const s = localStorage.getItem(SK.stemPresets);
-  if (s !== null) return JSON.parse(s);
-  const defaults = [{ id: 'sp_default1', name: 'All Stems', indices: [], names: [] }];
-  localStorage.setItem(SK.stemPresets, JSON.stringify(defaults));
-  return defaults;
+  const arr = s !== null ? JSON.parse(s) : [];
+  // Seed built-in "All Drums" preset at index 0 if not present
+  if (!arr.find(p => p.id === 'bs_drums')) {
+    arr.unshift({ id: 'bs_drums', name: 'All Drums', indices: [], names: [] });
+    localStorage.setItem(SK.stemPresets, JSON.stringify(arr));
+  }
+  return arr;
 })();
 let outputFolder = localStorage.getItem(SK.folder)  || '~/Desktop';
 let projectName  = localStorage.getItem(SK.project) || null;
@@ -1472,6 +1537,7 @@ formatPresets.forEach(p => {
 let activeFmtId     = localStorage.getItem('sb4_fmt_active') || 'fp_d1';
 let editingFmtId    = activeFmtId;
 let sidechainChannel = localStorage.getItem('sb4_sidechain') || null;
+let sidechainIndex   = JSON.parse(localStorage.getItem('sb4_sidechain_idx') ?? 'null');
 let sidechainEnabled = localStorage.getItem('sb4_sidechain_on') === 'true';
 let hiddenMixes  = new Set(JSON.parse(localStorage.getItem('sb4_hidden_mixes') || '[]'));
 let showHidden   = localStorage.getItem('sb4_show_hidden') === 'true';
@@ -1489,6 +1555,8 @@ let _shiftPrevRange = null; // previous shift range (to undo on drag back)
 let _preShiftSelection = new Set(); // selection before shift started
 let _shiftDragSession = new Set(); // items selected during current shift-drag (for undo on drag back)
 let _shiftDragLast = null; // last element entered during shift-drag (to deselect turning point)
+let _currentVisibleOrder = []; // visible channel indices in display order (updated each renderChannels)
+let _lastHoveredChIdx = null; // last channel idx hovered during shift+drag (for dedup)
 let jobSets = (() => {
   const s = localStorage.getItem('sb4_job_sets');
   if (s !== null) return JSON.parse(s);
@@ -1513,9 +1581,8 @@ function applyEasyMode() {
   // Auto-collapse activity panel in easy mode
   const pr = document.getElementById('panel-pr');
   const shell = document.querySelector('.shell');
-  if (pr && shell) {
+  if (shell) {
     if (easyMode) {
-      pr.classList.add('act-collapsed');
       shell.classList.add('act-collapsed');
     }
   }
@@ -1556,6 +1623,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   updateFmtBar();
   initCheckLogic();
   applySkin(currentSkin);
+  _updateMarkersChipsBtn();
   applyEasyMode();
   // Listen for cancel triggered from mini player
   if (window.api && window.api.onTriggerCancel) {
@@ -2020,7 +2088,8 @@ async function scanLogic(isAutoRetry = false) {
 
   if (window._scanCancelled) return;
 
-  if (window._scanCancelled) return;
+  // ── Step 2b: Markers (silent) ──────────────────────────────────────────────
+  await loadProjectMarkers(true);
 
   // ── Step 3: Master plugins ─────────────────────────────────────────────────
   if (window._scanCancelled) return;
@@ -2060,9 +2129,15 @@ async function scanLogic(isAutoRetry = false) {
   const treeGroups = trackTree.filter(t => t.type === 'group').length;
   const treeTracks = trackTree.filter(t => t.type === 'track').length;
 
-  if (treeGroups > 0 && treeTracks === 0) {
-    toast('⚠ Tree scan incomplete — please rescan');
-    log('⚠ Tree scan incomplete — please rescan', 'warn');
+  // Partial scan detection: groups found but zero tracks inside = definitely broken
+  const treeIncomplete = treeGroups > 0 && treeTracks === 0;
+  if (treeIncomplete && !isAutoRetry) {
+    log(`⚠ Tree scan incomplete (${treeGroups} groups, 0 tracks) — auto-retrying…`, 'warn');
+    return _abort(`Tree scan incomplete — groups found but no tracks`);
+  } else if (treeIncomplete && isAutoRetry) {
+    toast('⚠ Tree scan incomplete — please rescan manually');
+    log(`⚠ Tree scan still incomplete after retry — giving up`, 'warn');
+    showScanDone();
   } else {
     showScanDone();
   }
@@ -2204,10 +2279,10 @@ async function toggleMixerFilter(name) {
       if (turningOff) {
         channels = channels.filter(ch => !typeSet.has(ch.name));
       } else {
-        const masterOrder = _masterChannels.map(c => c.name);
-        const toAdd = _masterChannels.filter(c => typeSet.has(c.name) && !channels.find(x => x.name === c.name));
+        const masterOrder = _masterChannels.map(c => c.index);
+        const toAdd = _masterChannels.filter(c => typeSet.has(c.name) && !channels.find(x => x.index === c.index));
         channels = [...channels, ...toAdd]
-          .sort((a, b) => masterOrder.indexOf(a.name) - masterOrder.indexOf(b.name));
+          .sort((a, b) => masterOrder.indexOf(a.index) - masterOrder.indexOf(b.index));
       }
       localStorage.setItem(SK.channels, JSON.stringify(channels));
       renderChannels();
@@ -2469,12 +2544,18 @@ function renderChannels() {
 
     // ── Shift+Click/Drag helpers ──
     // Get ordered list of visible channel indices as displayed in tree
+    // Uses chByNameAll + local counter to correctly handle duplicate-named channels
     function getVisibleOrderedIndices() {
       const ordered = [];
+      const localUsed = {};
       function walk(parentName) {
         const kids = trackTree.filter(t => t.parent === parentName);
         kids.forEach(t => {
-          const ch = chByName[t.name.toLowerCase()];
+          const k = t.name.toLowerCase();
+          const allCh = chByNameAll[k] || [];
+          const usedIdx = localUsed[k] || 0;
+          const ch = allCh[usedIdx] || allCh[0] || null;
+          if (ch) localUsed[k] = usedIdx + 1;
           if (t.type === 'group') {
             if (ch && treeItemVisible(ch)) ordered.push(ch.index);
             if (!collapsedGroups.has(t.name)) walk(t.name);
@@ -2509,18 +2590,29 @@ function renderChannels() {
       _shiftPrevRange = newRange;
     }
 
-    // Get direct children (groups + tracks) of a parent
-    function getDirectChildren(parentName) {
+    // Keep _currentVisibleOrder updated for container-level mousemove drag
+    _currentVisibleOrder = getVisibleOrderedIndices();
+
+    // Get direct children by parentNum (index) when available, fallback to name
+    function getDirectChildren(parentName, parentNum) {
+      if (parentNum !== undefined && parentNum >= 0) {
+        return trackTree.filter(t => t.parentNum === parentNum);
+      }
+      // fallback: lookup parentNum from name, then retry
+      const parentNode = trackTree.find(t => t.name === parentName && t.type === 'group');
+      if (parentNode && parentNode.num !== undefined) {
+        return trackTree.filter(t => t.parentNum === parentNode.num);
+      }
       return trackTree.filter(t => t.parent === parentName);
     }
 
     // Recursively get ALL descendants
-    function getAllDescendantNames(parentName) {
+    function getAllDescendantNames(parentName, parentNum) {
       const result = [];
-      const kids = getDirectChildren(parentName);
+      const kids = getDirectChildren(parentName, parentNum);
       kids.forEach(k => {
         result.push(k.name);
-        if (k.type === 'group') result.push(...getAllDescendantNames(k.name));
+        if (k.type === 'group') result.push(...getAllDescendantNames(k.name, k.num));
       });
       return result;
     }
@@ -2538,6 +2630,26 @@ function renderChannels() {
       return result;
     }
 
+    // Get visible descendant CHANNELS with correct index for duplicate-named tracks.
+    // startUsed = snapshot of chByNameUsed at the time the parent group was rendered.
+    function getVisibleDescendantChannels(parentName, startUsed) {
+      const result = [];
+      const localUsed = Object.assign({}, startUsed);
+      function walk(pName) {
+        getDirectChildren(pName).forEach(k => {
+          const kk = k.name.toLowerCase();
+          const allCh = chByNameAll[kk] || [];
+          const ui = localUsed[kk] || 0;
+          const kch = allCh[ui] || null;
+          if (kch && k.type === 'track') localUsed[kk] = ui + 1;
+          if (kch && treeItemVisible(kch)) result.push(kch);
+          if (k.type === 'group' && !collapsedGroups.has(k.name)) walk(k.name);
+        });
+      }
+      walk(parentName);
+      return result;
+    }
+
     // Check if a group has any visible descendant
     function hasVisibleDescendant(groupName) {
       const kids = getDirectChildren(groupName);
@@ -2550,21 +2662,30 @@ function renderChannels() {
     }
 
     // Check if ANY ancestor is collapsed
-    function isAncestorCollapsed(parentName) {
-      if (!parentName) return false;
-      if (collapsedGroups.has(parentName)) return true;
-      const parentItem = trackTree.find(t => t.name === parentName);
-      if (parentItem && parentItem.parent) return isAncestorCollapsed(parentItem.parent);
+    function isAncestorCollapsed(parentName, parentNum) {
+      if (!parentName && (parentNum === undefined || parentNum < 0)) return false;
+      if (parentName && collapsedGroups.has(parentName)) return true;
+      // find parent node by num if available, else by name
+      const parentItem = (parentNum >= 0)
+        ? trackTree.find(t => t.num === parentNum)
+        : trackTree.find(t => t.name === parentName && t.type === 'group');
+      if (parentItem && parentItem.parent) return isAncestorCollapsed(parentItem.parent, parentItem.parentNum);
       return false;
     }
 
     // Calculate depth of an item
     function getDepth(item) {
-      let depth = 0, p = item.parent;
-      while (p) {
+      let depth = 0;
+      let curNum = item.parentNum;
+      let curName = item.parent;
+      while (curName || (curNum !== undefined && curNum >= 0)) {
         depth++;
-        const parentItem = trackTree.find(t => t.name === p);
-        p = parentItem ? parentItem.parent : null;
+        const parentItem = (curNum >= 0)
+          ? trackTree.find(t => t.num === curNum)
+          : trackTree.find(t => t.name === curName && t.type === 'group');
+        if (!parentItem) break;
+        curNum = parentItem.parentNum;
+        curName = parentItem.parent;
       }
       return depth;
     }
@@ -2580,12 +2701,15 @@ function renderChannels() {
       const depth = getDepth(t);
 
       // Skip if any ancestor is collapsed
-      if (t.parent && isAncestorCollapsed(t.parent)) return;
+      if (t.parent && isAncestorCollapsed(t.parent, t.parentNum >= 0 ? t.parentNum : undefined)) return;
 
       if (t.type === 'group') {
         const groupSelfVisible = treeItemVisible(ch);
+        // In normal view: completely skip hidden groups (children still render on their own)
+        if (channelFilter !== 'hidden' && ch && hiddenChannels.has(ch.name)) return;
         if (!groupSelfVisible && !hasVisibleDescendant(t.name)) return;
 
+        const _usedSnapshot = Object.assign({}, chByNameUsed); // snapshot before children are counted
         const hasChildren = trackTree.some(c => c.parent === t.name);
         const isCollapsed = collapsedGroups.has(t.name);
         const indent = 14 + depth * 18;
@@ -2623,7 +2747,7 @@ function renderChannels() {
           if (e.target.closest('.tree-toggle')) return;
           div._wasDragged = false;
           if (e.shiftKey && ch) {
-            if (_shiftAnchor === null) { _shiftAnchor = ch.index; _preShiftSelection = new Set(selectedIdx); }
+            _shiftAnchor = ch.index; _preShiftSelection = new Set(selectedIdx);
           }
         };
         div.onclick = (e) => {
@@ -2656,9 +2780,9 @@ function renderChannels() {
             // Collapsed → select/deselect only the group itself
             if (sel) { selectedIdx.delete(ch.index); } else { selectedIdx.add(ch.index); }
           } else {
-            // Expanded → select/deselect group + all visible children
-            const descNames = hasChildren ? getVisibleDescendantNames(t.name) : [];
-            const descIndices = descNames.map(n => chByName[n.toLowerCase()]?.index).filter(i => i != null);
+            // Expanded → select/deselect group + all visible children (duplicate-safe)
+            const descChs = hasChildren ? getVisibleDescendantChannels(t.name, _usedSnapshot) : [];
+            const descIndices = descChs.map(c => c.index);
             const allIndices = [ch.index, ...descIndices];
             const allSelected = allIndices.every(i => selectedIdx.has(i));
             if (allSelected) {
@@ -2671,27 +2795,7 @@ function renderChannels() {
           updateAddStemsBtn(); renderChannels();
         };
         // Shift+drag over groups
-        div.onmouseenter = (e) => {
-          if (!ch || !e.buttons || !e.shiftKey) return;
-          if (_shiftDragSession.has(ch.index)) {
-            // Going backward over item added this session — deselect
-            selectedIdx.delete(ch.index);
-            _shiftDragSession.delete(ch.index);
-            // Also deselect the turning point (last item entered before direction change)
-            if (_shiftDragLast !== null && _shiftDragLast !== ch.index && _shiftDragSession.has(_shiftDragLast)) {
-              selectedIdx.delete(_shiftDragLast);
-              _shiftDragSession.delete(_shiftDragLast);
-            }
-          } else if (selectedIdx.has(ch.index)) {
-            // Already selected from a previous session — deselect on new drag
-            selectedIdx.delete(ch.index);
-          } else {
-            selectedIdx.add(ch.index);
-            _shiftDragSession.add(ch.index);
-          }
-          _shiftDragLast = ch.index;
-          updateAddStemsBtn(); renderChannels();
-        };
+        if (ch) div.dataset.chIdx = ch.index;
         div.oncontextmenu = (e) => {
           e.preventDefault();
           if (easyMode) return;
@@ -2702,7 +2806,8 @@ function renderChannels() {
         if (ch) {
           div.draggable = true;
           div.addEventListener('dragstart', (e) => {
-            if (e.shiftKey || _shiftAnchor !== null) { e.preventDefault(); return; }
+            if (e.shiftKey) { e.preventDefault(); return; }
+            if (_shiftAnchor !== null) _shiftAnchor = null; // done shift-selecting, allow drag
             div._wasDragged = true;
             e.dataTransfer.setData('channel-name', ch.name);
             e.dataTransfer.setData('channel-index', String(ch.index));
@@ -2732,7 +2837,7 @@ function renderChannels() {
         div.onmousedown = (e) => {
           div._wasDragged = false;
           if (e.shiftKey && ch) {
-            if (_shiftAnchor === null) { _shiftAnchor = ch.index; _preShiftSelection = new Set(selectedIdx); }
+            _shiftAnchor = ch.index; _preShiftSelection = new Set(selectedIdx);
           }
         };
         div.onclick = (e) => {
@@ -2742,7 +2847,7 @@ function renderChannels() {
           e.preventDefault();
           saveUndo();
           if (e.shiftKey) {
-            if (_shiftAnchor === null) { _shiftAnchor = ch.index; _preShiftSelection = new Set(selectedIdx); }
+            if (_shiftAnchor === null) { _shiftAnchor = _lastClickedIndex ?? ch.index; _preShiftSelection = new Set(selectedIdx); }
             shiftSelectTo(ch.index);
             _lastClickedIndex = ch.index;
             updateAddStemsBtn(); renderChannels();
@@ -2753,24 +2858,7 @@ function renderChannels() {
           _lastClickedIndex = ch.index;
           updateAddStemsBtn(); renderChannels();
         };
-        div.onmouseenter = (e) => {
-          if (!ch || !e.buttons || !e.shiftKey) return;
-          if (_shiftDragSession.has(ch.index)) {
-            selectedIdx.delete(ch.index);
-            _shiftDragSession.delete(ch.index);
-            if (_shiftDragLast !== null && _shiftDragLast !== ch.index && _shiftDragSession.has(_shiftDragLast)) {
-              selectedIdx.delete(_shiftDragLast);
-              _shiftDragSession.delete(_shiftDragLast);
-            }
-          } else if (selectedIdx.has(ch.index)) {
-            selectedIdx.delete(ch.index);
-          } else {
-            selectedIdx.add(ch.index);
-            _shiftDragSession.add(ch.index);
-          }
-          _shiftDragLast = ch.index;
-          updateAddStemsBtn(); renderChannels();
-        };
+        if (ch) div.dataset.chIdx = ch.index;
         div.oncontextmenu = (e) => {
           e.preventDefault();
           if (easyMode) return;
@@ -2782,7 +2870,8 @@ function renderChannels() {
         if (ch) {
           div.draggable = true;
           div.addEventListener('dragstart', (e) => {
-            if (e.shiftKey || _shiftAnchor !== null) { e.preventDefault(); return; }
+            if (e.shiftKey) { e.preventDefault(); return; }
+            if (_shiftAnchor !== null) _shiftAnchor = null;
             div._wasDragged = true;
             e.dataTransfer.setData('channel-name', ch.name);
             e.dataTransfer.setData('channel-index', String(ch.index));
@@ -2812,11 +2901,13 @@ function renderChannels() {
 
   document.getElementById('ch-count').textContent = `${visible.length}/${channels.length}`;
 
+  _currentVisibleOrder = visible.map(c => c.index);
   visible.forEach(ch => {
     const sel = selectedIdx.has(ch.index);
     const chMuted = ch.isMuted;
     const div = document.createElement('div');
     div.className = 'ch-item' + (sel ? ' sel' : '');
+    div.dataset.chIdx = ch.index;
     div.innerHTML = `
       <div class="ch-dot" style="background:${ch.color}"></div>
       <div class="ch-name">${ch.name}</div>
@@ -2834,7 +2925,7 @@ function renderChannels() {
       if (e.shiftKey) {
         // Shift+Click: range select in flat list
         const visibleIndices = visible.map(c => c.index);
-        if (_shiftAnchor === null) { _shiftAnchor = ch.index; _preShiftSelection = new Set(selectedIdx); }
+        if (_shiftAnchor === null) { _shiftAnchor = _lastClickedIndex ?? ch.index; _preShiftSelection = new Set(selectedIdx); }
         const anchorPos = visibleIndices.indexOf(_shiftAnchor);
         const toPos = visibleIndices.indexOf(ch.index);
         if (anchorPos !== -1 && toPos !== -1) {
@@ -2861,7 +2952,7 @@ function renderChannels() {
         updateAddStemsBtn();
       } else {
         // Single click — add to queue directly
-        const _isStemDupCh = (j) => j.type === 'stem' && j.status !== 'done' && (j.name === ch.name || j.channelIndex === ch.index);
+        const _isStemDupCh = (j) => j.type === 'stem' && j.status !== 'done' && j.channelIndex === ch.index;
         const existing = queue.find(q => _isStemDupCh(q) || (q.type === 'set' && q.jobs.some(_isStemDupCh)));
         if (existing) { toast(ch.name + ' already in queue'); return; }
         saveUndo();
@@ -2889,7 +2980,7 @@ function renderChannels() {
 }
 
 function addChannelToQueue(ch) {
-  const _isDup = (j) => j.type === 'stem' && j.status !== 'done' && (j.name === ch.name || j.channelIndex === ch.index);
+  const _isDup = (j) => j.type === 'stem' && j.status !== 'done' && j.channelIndex === ch.index;
   const existing = queue.find(q => _isDup(q) || (q.type === 'set' && q.jobs.some(_isDup)));
   if (existing) { toast(ch.name + ' already in queue'); return; }
   saveUndo();
@@ -3090,6 +3181,7 @@ function resolveIndexNamePairs(indices, names) {
   return { validIndices, validNames, skippedNames };
 }
 
+
 function addStemPresetToQueue(preset) {
   const savedNames = preset.names || [];
   const skippedNames = [];
@@ -3150,9 +3242,18 @@ function editStemPreset(id) {
   if (!p) return;
   _editingStemPresetId = id;
   _espSelectedChs.clear();
+  _espActiveFilters.clear();
+  _espShowHiddenOnly = false;
   document.getElementById('esp-name-inp').value = p.name;
   const srch = document.getElementById('esp-search');
   if (srch) srch.value = '';
+  // Reset hidden toggle UI
+  const hBtn = document.getElementById('esp-hidden-tab');
+  const hEye = document.getElementById('esp-hidden-eye');
+  if (hBtn) { hBtn.style.background='var(--card)'; hBtn.style.color='var(--muted)'; hBtn.style.borderColor='var(--b)'; }
+  if (hEye) hEye.textContent = '👁';
+  _renderEspFilters();
+  _renderEspQuickNames();
   _renderEspStems();
   _renderEspChannels();
   _renderEspPresetChips();
@@ -3207,6 +3308,8 @@ function _renderEspStems() {
   const p = stemPresets.find(x => x.id === _editingStemPresetId);
   const cont = document.getElementById('esp-stems-list');
   if (!p || !cont) return;
+  const countBadge = document.getElementById('esp-stems-count');
+  if (countBadge) countBadge.textContent = (p.names||[]).length > 0 ? (p.names||[]).length : '';
   cont.innerHTML = '';
   (p.names || []).forEach((name, i) => {
     const row = document.createElement('div');
@@ -3240,9 +3343,19 @@ function _renderEspChannels() {
   cont.innerHTML = '';
   const search = (document.getElementById('esp-search')?.value || '').toLowerCase();
   const inPreset = new Set(p ? (p.names || []) : []);
+  const hiddenChs = new Set(JSON.parse(localStorage.getItem('sb4_hidden_channels') || '[]'));
   const toShow = channels.filter(ch => {
     if (inPreset.has(ch.name)) return false;
     if (search && !ch.name.toLowerCase().includes(search)) return false;
+    if (_espShowHiddenOnly && !hiddenChs.has(ch.name)) return false;
+    if (_espActiveFilters.size > 0) {
+      let match = false;
+      for (const f of _espActiveFilters) {
+        const typeChans = _channelTypeMap[f];
+        if (typeChans && typeChans.includes(ch.name)) { match = true; break; }
+      }
+      if (!match) return false;
+    }
     return true;
   });
   if (toShow.length === 0) {
@@ -3345,7 +3458,7 @@ function espAddSelected() {
   let added = 0;
   selectedIdx.forEach(idx => {
     const ch = channels.find(c => c.index === idx);
-    if (!ch || (p.names || []).includes(ch.name)) return;
+    if (!ch || (p.indices || []).includes(ch.index)) return;
     p.names = p.names || []; p.indices = p.indices || [];
     p.names.push(ch.name); p.indices.push(ch.index); added++;
   });
@@ -3363,6 +3476,130 @@ function saveEditedStemPreset() {
   renderPresets();
   document.getElementById('edit-stem-preset-modal').classList.remove('show');
   toast('✓ Preset "' + name + '" saved');
+}
+
+// ── ESP filter / quick-names / hidden / add-to-queue ───────────────────────
+let _espActiveFilters  = new Set();
+let _espShowHiddenOnly = false;
+
+function _renderEspFilters() {
+  const el = document.getElementById('esp-modal-filters');
+  if (!el) return;
+  if (Object.keys(_mixerFilters || {}).length === 0) { el.style.display = 'none'; return; }
+  const known = MF_ALL_NAMES.filter(n => n in _mixerFilters);
+  const extra = Object.keys(_mixerFilters).filter(n => !MF_ALL_NAMES.includes(n));
+  el.style.display = 'flex';
+  el.innerHTML = '<span class="mf-label">FILTER</span>' + [...known, ...extra].map(name => {
+    const active = _espActiveFilters.has(name);
+    const mixerOn = _mixerFilters[name];
+    if (active) return `<button style="padding:3px 8px;border-radius:5px;border:1px solid rgba(74,140,28,.5);background:rgba(74,140,28,.15);color:var(--a3);font-size:10px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;" onclick="_espToggleFilter('${name.replace(/'/g,"\\'")}')">${name}</button>`;
+    if (!mixerOn) return `<button class="mf-btn off" onclick="_espToggleFilter('${name.replace(/'/g,"\\'")}')">${name}</button>`;
+    return `<button class="mf-btn" style="color:var(--t2);border:1px solid var(--b2);background:var(--card);" onclick="_espToggleFilter('${name.replace(/'/g,"\\'")}')">${name}</button>`;
+  }).join('');
+}
+
+function _espToggleFilter(name) {
+  if (_espActiveFilters.has(name)) _espActiveFilters.delete(name);
+  else _espActiveFilters.add(name);
+  _renderEspFilters();
+  _renderEspChannels();
+}
+
+function _espToggleHidden() {
+  _espShowHiddenOnly = !_espShowHiddenOnly;
+  const btn = document.getElementById('esp-hidden-tab');
+  const eye = document.getElementById('esp-hidden-eye');
+  if (btn) {
+    btn.style.background    = _espShowHiddenOnly ? 'rgba(108,99,255,.12)' : 'var(--card)';
+    btn.style.color         = _espShowHiddenOnly ? 'var(--accent)'        : 'var(--muted)';
+    btn.style.borderColor   = _espShowHiddenOnly ? 'rgba(108,99,255,.4)'  : 'var(--b)';
+  }
+  if (eye) eye.textContent = _espShowHiddenOnly ? '🙈' : '👁';
+  _renderEspChannels();
+}
+
+function _espToggleAll() {
+  const p = stemPresets.find(x => x.id === _editingStemPresetId);
+  if (!p) return;
+  // Determine visible channels in current filtered list
+  const search = (document.getElementById('esp-search')?.value || '').toLowerCase();
+  const inPreset = new Set(p.names || []);
+  const hiddenChs = new Set(JSON.parse(localStorage.getItem('sb4_hidden_channels') || '[]'));
+  const visible = channels.filter(ch => {
+    if (inPreset.has(ch.name)) return false;
+    if (search && !ch.name.toLowerCase().includes(search)) return false;
+    if (_espShowHiddenOnly && !hiddenChs.has(ch.name)) return false;
+    if (_espActiveFilters.size > 0) {
+      let m = false;
+      for (const f of _espActiveFilters) { const tc = _channelTypeMap[f]; if (tc && tc.includes(ch.name)) { m=true; break; } }
+      if (!m) return false;
+    }
+    return true;
+  });
+  const anySelected = visible.some(ch => _espSelectedChs.has(ch.index));
+  visible.forEach(ch => { if (anySelected) _espSelectedChs.delete(ch.index); else _espSelectedChs.add(ch.index); });
+  _renderEspChannels();
+}
+
+function _renderEspQuickNames() {
+  const cont = document.getElementById('esp-name-presets');
+  if (!cont) return;
+  cont.innerHTML = '';
+  const chips = _loadStemChips();
+  const lbl = document.createElement('span');
+  lbl.style.cssText = 'font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:2px;white-space:nowrap;';
+  lbl.textContent = 'Quick names:';
+  cont.appendChild(lbl);
+  chips.forEach((name, i) => {
+    const chip = document.createElement('span');
+    chip.className = 'vnp-chip';
+    chip.innerHTML = `${name}<span class="vnp-x" onclick="event.stopPropagation();_espRemoveChip(${i})">✕</span>`;
+    chip.title = 'Click to use · Right-click to edit';
+    chip.onclick = () => { const inp = document.getElementById('esp-name-inp'); if (inp) { inp.value = name; inp.focus(); } };
+    chip.oncontextmenu = (e) => showPresetCtxMenu(e, [
+      { label: '✕  Remove "' + name + '"', red: true, action: () => _espRemoveChip(i) },
+      '-',
+      { label: '+ Save current input as chip', action: () => {
+        const val = (document.getElementById('esp-name-inp')?.value || '').trim();
+        if (!val) { toast('Type a name first'); return; }
+        const arr = _loadStemChips();
+        if (arr.includes(val)) { toast('Already saved'); return; }
+        arr.push(val); _saveStemChips(arr); _renderEspQuickNames();
+        toast('✓ "' + val + '" saved');
+      }}
+    ]);
+    cont.appendChild(chip);
+  });
+  const addBtn = document.createElement('span');
+  addBtn.className = 'vnp-add';
+  addBtn.innerHTML = '+ Save';
+  addBtn.title = 'Save current name as a chip';
+  addBtn.onclick = () => {
+    const val = (document.getElementById('esp-name-inp')?.value || '').trim();
+    if (!val) { toast('Type a name first'); return; }
+    const arr = _loadStemChips();
+    if (arr.includes(val)) { toast('Already saved'); return; }
+    arr.push(val); _saveStemChips(arr); _renderEspQuickNames();
+    toast('✓ "' + val + '" saved');
+  };
+  cont.appendChild(addBtn);
+}
+
+function _espRemoveChip(idx) {
+  const arr = _loadStemChips(); arr.splice(idx, 1);
+  _saveStemChips(arr); _renderEspQuickNames();
+}
+
+function _espAddToQueue() {
+  const p = stemPresets.find(x => x.id === _editingStemPresetId);
+  if (!p) return;
+  const name = (document.getElementById('esp-name-inp')?.value || '').trim();
+  if (!name) { toast('Enter a name first'); return; }
+  p.name = name;
+  localStorage.setItem(SK.stemPresets, JSON.stringify(stemPresets));
+  renderPresets();
+  document.getElementById('edit-stem-preset-modal').classList.remove('show');
+  addStemPresetToQueue(p);
 }
 
 function renameJobSet(id) { openEditSetModal(id); }
@@ -3719,7 +3956,7 @@ function esetAddSelectedStems() {
   selectedIdx.forEach(idx => {
     const ch = channels.find(c => c.index === idx);
     if (!ch) return;
-    const dup = _editSetTempJobs.find(j => j.type === 'stem' && (j.channelIndex === idx || j.name === ch.name));
+    const dup = _editSetTempJobs.find(j => j.type === 'stem' && j.channelIndex === idx);
     if (!dup) { _editSetTempJobs.push({ id: 'j_' + Date.now() + Math.random(), type: 'stem', name: ch.name, channelIndex: ch.index, color: ch.color || '', status: 'pending' }); added++; }
   });
   _esetRenderJobs(); _esetRenderTabContent();
@@ -3847,13 +4084,13 @@ function renderPresets() {
   }
 
   // ─── MIXES ───
-  const allMixes = [...BUILTIN_PRESETS.filter(p => !hiddenMixes.has(p.name)), ...presets];
+  const allMixes = [...BUILTIN_PRESETS.filter(p => !hiddenMixes.has(p.id)), ...presets];
   if (allMixes.length > 0 && !isEasy) addLabel('VERSIONS:');
 
   let mixCount = 0;
   const _easyOverflow = []; // collect overflow wraps for toggle
 
-  BUILTIN_PRESETS.filter(p => !hiddenMixes.has(p.name)).forEach(p => {
+  BUILTIN_PRESETS.filter(p => !hiddenMixes.has(p.id)).forEach(p => {
     mixCount++;
     const wrap = document.createElement('div');
     wrap.className = 'pchip-wrap';
@@ -3868,7 +4105,7 @@ function renderPresets() {
     del.title = 'Hide this mix';
     del.onclick = (e) => {
       e.stopPropagation();
-      hiddenMixes.add(p.name);
+      hiddenMixes.add(p.id);
       localStorage.setItem('sb4_hidden_mixes', JSON.stringify([...hiddenMixes]));
       renderPresets();
       toast('"' + p.name + '" hidden');
@@ -3885,7 +4122,7 @@ function renderPresets() {
     if (isEasy && mixCount > EASY_MAX_MIXES) { wrap.style.display = 'none'; _easyOverflow.push(wrap); }
     const btn = document.createElement('button');
     btn.className = 'pchip mix-chip custom';
-    btn.textContent = '🎚 ' + p.name;
+    btn.textContent = (p.icon || '🎚') + ' ' + p.name;
     btn.onclick = () => addPresetToQueue(p);
     btn.oncontextmenu = (e) => showPresetCtxMenu(e, [
       { label: '✏  Edit version', action: () => openMixModal(p.id) }
@@ -4041,6 +4278,7 @@ function renderPresets() {
 function addPresetToQueue(preset) {
   // For keyword-based presets: match by name keywords
   // For custom presets: verify index+name pair via shared resolveIndexNamePairs
+  const displayName = preset.name;
   let mutedIndices, mutedNames;
   if (preset.mutedKeywords && preset.mutedKeywords.length > 0) {
     // Default preset — match by keywords in channel names
@@ -4053,7 +4291,7 @@ function addPresetToQueue(preset) {
     mutedNames = r.validNames;
     if (r.skippedNames.length > 0) {
       toast(`⚠ ${r.skippedNames.length} mute channel(s) not found`);
-      log(`Version "${preset.name}": not found: ${r.skippedNames.join(', ')}`, 'warn');
+      log(`Version "${displayName}": not found: ${r.skippedNames.join(', ')}`, 'warn');
     }
   } else {
     mutedIndices = [];
@@ -4062,15 +4300,15 @@ function addPresetToQueue(preset) {
   // Duplicate check — same name OR same muted channel set already pending (incl. inside set groups)
   const sortedNew = [...mutedIndices].sort((a,b) => a-b).join(',');
   const _isMixDup = (j) => j.type === 'mix' && j.status !== 'done' && (
-    j.name === preset.name || [...(j.mutedIndices||[])].sort((a,b) => a-b).join(',') === sortedNew
+    j.name === displayName || [...(j.mutedIndices||[])].sort((a,b) => a-b).join(',') === sortedNew
   );
   const dup = queue.find(q => _isMixDup(q) || (q.type === 'set' && q.jobs.some(_isMixDup)));
-  if (dup) { toast(`"${preset.name}" already in queue`); return; }
+  if (dup) { toast(`"${displayName}" already in queue`); return; }
 
   queue.push({
     id: 'q_' + Date.now() + Math.random(),
     type: 'mix',
-    name: preset.name,
+    name: displayName,
     mutedIndices,
     mutedNames,
     status: 'pending'
@@ -4078,8 +4316,8 @@ function addPresetToQueue(preset) {
   saveQueue(); renderQueue(); updateBounceBtn();
   mixSelectNone(); updateMixToggleBtn();
   selectedIdx.clear(); renderChannels(); updateAddStemsBtn(); // clear stems selection after adding preset to queue
-  toast(`✓ "${preset.name}" added to queue`);
-  log(`Queue: added mix "${preset.name}"`, 'info');
+  toast(`✓ "${displayName}" added to queue`);
+  log(`Queue: added mix "${displayName}"`, 'info');
 }
 
 // ═══════════════════════════════════════════════════
@@ -4091,7 +4329,7 @@ function addSelAsStems() {
   for (const idx of selectedIdx) {
     const ch = channels.find(c => c.index === idx);
     if (!ch) continue;
-    const _isDup = (j) => j.type === 'stem' && j.status !== 'done' && (j.channelIndex === ch.index || j.name === ch.name);
+    const _isDup = (j) => j.type === 'stem' && j.status !== 'done' && j.channelIndex === ch.index;
     if (queue.some(q => _isDup(q) || (q.type === 'set' && q.jobs.some(_isDup)))) { dupes++; continue; }
     queue.push({ id:'q_'+Date.now()+Math.random(), type:'stem', name:ch.name, channelIndex:idx, color:ch.color, status:'pending' });
     added++;
@@ -5223,6 +5461,52 @@ function renderQueue() {
     const editBtn = isMix && item.status === 'pending'
       ? `<button class="qedit" onclick="editQueueMix('${item.id}')" title="Edit mix"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" width="10" height="10" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.5a1.5 1.5 0 012 2L5 12H2v-3L10 2.5z"/></svg></button>`
       : '';
+
+    // Per-item marker chips — only shown when _queueMarkersChipsVisible
+    const visibleMarkers_ = _projectMarkers.filter(m => !_hiddenMarkers.has(markerId(m)));
+    const fullChip = (_fullActive && _queueMarkersChipsVisible)
+      ? (() => {
+          const fullExcluded = !!item.fullExclusion;
+          const fullStyle = fullExcluded
+            ? 'background:transparent;color:rgba(255,255,255,.3);border:1.5px solid rgba(255,255,255,.12);text-decoration:line-through;'
+            : 'background:rgba(80,200,120,.12);color:#7ef0a8;border:1.5px solid rgba(80,200,120,.4);';
+          const fullTitle = fullExcluded ? 'Full skipped for this item — click to include' : 'Will bounce full range — click to skip for this item';
+          return `<span onclick="event.stopPropagation();toggleJobFull('${item.id}');"
+            title="${fullTitle}"
+            style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .12s;user-select:none;${fullStyle}"
+          >Full</span>`;
+        })()
+      : '';
+    const markerChips = (visibleMarkers_.length > 0 && _queueMarkersChipsVisible)
+      ? visibleMarkers_.map(m => {
+          const mid = markerId(m);
+          const name = m.name;
+          const willBounce = shouldBounceJobForMarker(item, mid);
+          const globallyActive = _activeMarkers.has(mid);
+          const excluded = (item.markerExclusions||[]).includes(mid);
+          const added    = (item.markerAdditions||[]).includes(mid);
+          // Style: active=colored, excluded=strikethrough, globally-off-but-added=orange outline, globally-off=very dim
+          let style, title;
+          if (globallyActive && !excluded) {
+            style = 'background:rgba(108,99,255,.18);color:#b8b0ff;border:1.5px solid rgba(108,99,255,.4);';
+            title = 'Will bounce — click to skip for this item';
+          } else if (globallyActive && excluded) {
+            style = 'background:transparent;color:rgba(255,255,255,.3);border:1.5px solid rgba(255,255,255,.12);text-decoration:line-through;';
+            title = 'Skipped — click to include';
+          } else if (!globallyActive && added) {
+            style = 'background:rgba(255,169,77,.12);color:#ffb340;border:1.5px solid rgba(255,169,77,.4);';
+            title = 'Added only for this item — click to remove';
+          } else {
+            style = 'background:transparent;color:rgba(255,255,255,.35);border:1.5px dashed rgba(255,255,255,.15);';
+            title = 'Click to add this marker only for this item';
+          }
+          return `<span onclick="event.stopPropagation();toggleJobMarker('${item.id}','${mid.replace(/'/g,"\\'")}');"
+            title="${title}"
+            style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .12s;user-select:none;${style}"
+          >${name}</span>`;
+        }).join('')
+      : '';
+
     div.innerHTML = `
       <div class="drag-handle">⠿</div>
       <div class="qnum">${String(regIdx).padStart(2,'0')}</div>
@@ -5232,6 +5516,7 @@ function renderQueue() {
           <span class="qtag ${item.type}">${item.type}</span>
         </div>
         ${pills ? `<div class="qsub">${pills}</div>` : ''}
+        ${(fullChip || markerChips) ? `<div class="qsub" style="gap:3px;margin-top:2px;">${fullChip}${markerChips}</div>` : ''}
       </div>
       <div class="qst ${item.status || 'pending'}">${item.status || 'pending'}</div>
       ${editBtn}
@@ -5282,6 +5567,8 @@ document.addEventListener('mouseup', () => {
   _shiftDragSession.clear(); _shiftDragLast = null;
   _esetShiftSession.clear(); _esetShiftLast = null;
   _espShiftSession.clear();  _espShiftLast = null;
+  _lastHoveredChIdx = null;
+  _shiftAnchor = null; _shiftPrevRange = null; // reset after each drag so next drag starts fresh
 });
 document.getElementById('ch-list').addEventListener('selectstart', e => e.preventDefault());
 
@@ -5304,6 +5591,27 @@ document.getElementById('ch-list').addEventListener('selectstart', e => e.preven
       _shiftAnchor = null; _shiftPrevRange = null;
       updateAddStemsBtn(); renderChannels();
     }
+  });
+
+  // Container-level shift+drag — reliable at any drag speed via elementFromPoint
+  chList.addEventListener('mousemove', e => {
+    if (!e.buttons || !e.shiftKey || _shiftAnchor === null || !_currentVisibleOrder.length) return;
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const itemEl = el && el.closest('[data-ch-idx]');
+    if (!itemEl) return;
+    const idx = parseInt(itemEl.dataset.chIdx);
+    if (isNaN(idx) || idx === _lastHoveredChIdx) return;
+    _lastHoveredChIdx = idx;
+    const anchorPos = _currentVisibleOrder.indexOf(_shiftAnchor);
+    const toPos = _currentVisibleOrder.indexOf(idx);
+    if (anchorPos === -1 || toPos === -1) return;
+    const newRange = new Set();
+    const start = Math.min(anchorPos, toPos), end = Math.max(anchorPos, toPos);
+    for (let i = start; i <= end; i++) newRange.add(_currentVisibleOrder[i]);
+    if (_shiftPrevRange) _shiftPrevRange.forEach(i => { if (!newRange.has(i)) selectedIdx.delete(i); });
+    newRange.forEach(i => selectedIdx.add(i));
+    _shiftPrevRange = newRange;
+    updateAddStemsBtn(); renderChannels();
   });
 })();
 
@@ -5331,8 +5639,8 @@ document.getElementById('ch-list').addEventListener('selectstart', e => e.preven
     const draggedIsSelected = selectedIdx.has(chIdx);
     const toAdd = [];
     const _isDupStem = (ch) => queue.some(q => {
-      if (q.type === 'stem' && q.status !== 'done' && (q.name === ch.name || q.channelIndex === ch.index)) return true;
-      if (q.type === 'set') return q.jobs.some(j => j.type === 'stem' && j.status !== 'done' && (j.name === ch.name || j.channelIndex === ch.index));
+      if (q.type === 'stem' && q.status !== 'done' && q.channelIndex === ch.index) return true;
+      if (q.type === 'set') return q.jobs.some(j => j.type === 'stem' && j.status !== 'done' && j.channelIndex === ch.index);
       return false;
     });
     if (draggedIsSelected && selectedIdx.size > 1) {
@@ -5411,6 +5719,7 @@ function cancelBounce() {
   // 1. Set flags FIRST — bounceStem/bounceMix check these to skip cleanup
   window._userCancelled = true;
   bouncing = false;
+  if (window.api?.hideBounceOverlay) window.api.hideBounceOverlay().catch(()=>{});
   // 2. Signal main.js: sets cancelRequested=true → all wait() calls resolve instantly
   //    Fire-and-forget (no await) — message arrives before next 80ms poll
   if (window.api) window.api.cancelBounce();
@@ -5496,6 +5805,19 @@ async function doBounce() {
     }
   }
 
+  // Check cycle — warn if OFF only when at least one job will do a Full bounce
+  // (marker-only passes set cycle automatically, Full pass uses current cycle region)
+  const _anyJobHasFull = _fullActive && pending.some(j => !j.fullExclusion);
+  if (_anyJobHasFull && window.api && window.api.checkCycle) {
+    try {
+      const cycleState = await window.api.checkCycle();
+      if (cycleState && cycleState.found && !cycleState.on) {
+        const cycleAction = await window.api.showCycleWarning();
+        if (cycleAction === 'cancel') return;
+      }
+    } catch(e) {}
+  }
+
   // Restore bell sound
   const savedBell = localStorage.getItem('sb4_bell');
   if (savedBell) { const bs = document.getElementById('bell-sound'); if(bs) bs.value = savedBell; }
@@ -5507,8 +5829,12 @@ async function doBounce() {
   if (window.api) await window.api.resetCancel();
   window._userCancelled = false;
   window._bouncePhase = null;
-  window._fmtApplied = false;     // Reset: apply full preset on first bounce
-  window._logicDefaultSR = null;  // Will be read from Bounce dialog on first open
+  window._fmtApplied = false;
+  window._bounceFatalHang = false;
+  window._lastHangReason = null;
+  window._bounceReturnApp = null;
+  window._projectDefaultSR = null;
+  window._projectDefaultBD = null;
 
   // ── Pre-bounce mixer check ─────────────────────────────────────────────────
   // ensureMixer checks the AX checkbox state directly — reliable even if
@@ -5550,6 +5876,17 @@ async function doBounce() {
   // ──────────────────────────────────────────────────────────────────────────
 
   bouncing = true; updateBounceBtn();
+  // Auto-enter mini mode + show floating overlay
+  if (!window._miniActive) showMiniPlayer();
+  if (window.api?.showBounceOverlay) window.api.showBounceOverlay().catch(()=>{});
+  // Prevent Mac from sleeping during bounce (caffeinate -dims keeps display + disk + system awake)
+  try {
+    if (window.api?.exec) {
+      window.api.exec('caffeinate', ['-dims', '-w', String(process.pid)]).then(r => { _caffeinatePid = r?.pid || null; }).catch(() => {});
+    } else if (window.api?.runShell) {
+      window.api.runShell('caffeinate -dims &').catch(() => {});
+    }
+  } catch(e) {}
   document.getElementById('cancel-btn').style.display = 'flex';
   document.getElementById('mini-btn').style.display = 'flex';
   document.getElementById('reveal-btn').style.display = 'none';
@@ -5566,6 +5903,7 @@ async function doBounce() {
   const _bounceStartTime = Date.now();
   let _stemTimes = [];           // duration (s) of each completed stem
   let _stemStartTime = Date.now(); // reset per stem in the loop below
+  let consecutiveFails = 0;     // stop after 2 consecutive failures
   let _estimatedTotal = pending.length * 45; // initial rough guess
   function _recalcEta() {
     if (_stemTimes.length === 0) return;
@@ -5595,14 +5933,36 @@ async function doBounce() {
   // Save sidechain state at bounce start
   const _sidechainEnabled = sidechainEnabled;
   const _sidechainChannel = sidechainChannel;
-  log(`▶ Starting: ${pending.length} jobs`, 'ok');
 
-  // Track which job types have already navigated in this run — used for folder navigation
-  const navigatedTypes = new Set();
+  // ── Build marker passes ────────────────────────────────────────────────────
+  // Pass 0 = full project (always first, always all jobs).
+  // Then each active marker in order.
+  // Also include markers that are globally off but added to at least one job.
+  const _markerPasses = _fullActive ? [{ id: 'full', name: 'full', suffix: '', index: null }] : [];
+  // Active markers in project order (not Set insertion order)
+  const _activeArr = _projectMarkers.filter(m => _activeMarkers.has(markerId(m)) && !_hiddenMarkers.has(markerId(m)));
+  for (const m of _activeArr) _markerPasses.push({ id: markerId(m), name: m.name, suffix: '_' + m.name, index: m.index });
+  // Add item-only markers (globally off but added to specific jobs)
+  const _itemOnlyMarkerIds = new Set();
+  for (const j of pending) { for (const id of (j.markerAdditions||[])) { if (!_activeMarkers.has(id) && !_hiddenMarkers.has(id)) _itemOnlyMarkerIds.add(id); } }
+  for (const id of _itemOnlyMarkerIds) {
+    const m = markerById(id);
+    if (m) _markerPasses.push({ id, name: m.name, suffix: '_' + m.name, index: m.index });
+  }
 
+  if (_markerPasses.length === 0) {
+    log('✗ Nothing to bounce — Full is off and no marker passes active', 'err');
+    bouncing = false; setBounceBtn(false); return;
+  }
+
+  const _totalFiles = _markerPasses.reduce((sum, p) => sum + pending.filter(j => shouldBounceJobForMarker(j, p.id)).length, 0);
+  if (_markerPasses.length > 1) {
+    log(`▶ Starting: ${pending.length} jobs × ${_markerPasses.length} ranges = ${_totalFiles} files`, 'ok');
+    log(`📍 Passes: ${_markerPasses.map(p => p.name).join(' → ')}`, 'info');
+  } else log(`▶ Starting: ${pending.length} jobs`, 'ok');
+  // ──────────────────────────────────────────────────────────────────────────
 
   // Remember where the user was — after each bounce trigger, return them there
-  // (Bounce renders in Logic's background; the poll loop works without Logic focus)
   window._bounceReturnApp = null;
   try {
     const fr = await window.api.runScript(
@@ -5621,13 +5981,37 @@ async function doBounce() {
   log(`Output folder: ${folder}`, 'info');
 
   try {
+  for (const _mPass of _markerPasses) {
+    if (!bouncing) break;
+    window._currentBounceMarkerSuffix = _mPass.suffix;
+
+    const navigatedTypes = new Set();
+    let _markerLocatorSet = false; // set locator once, right before first eligible item
   for (let i = 0; i < queue.length; i++) {
     const job = queue[i];
     if (job.status !== 'pending') continue;
+    // Skip this job if it shouldn't bounce for this marker pass
+    if (!shouldBounceJobForMarker(job, _mPass.id)) continue;
+
+    // Set cycle locator right before the first item of this marker pass
+    if (_mPass.id !== 'full' && !_markerLocatorSet) {
+      log(`📍 Setting range: ${_mPass.name}`, 'info');
+      const _isLastPass = _markerPasses.indexOf(_mPass) === _markerPasses.length - 1;
+      // Ensure Logic and EasyBounce are on the same Space before HID click
+      if (window.api.moveToLogicSpace) await window.api.moveToLogicSpace().catch(() => {});
+      await window.api.setAlwaysOnTop(false).catch(() => {}); // must be off so HID click reaches Logic's ML window
+      await window.api.setLocatorsByMarker(_mPass.index, !_isLastPass);
+      await window.api.wait(500);
+      await activateLogicForAX(); // refocus Logic main window after marker list interaction
+      _markerLocatorSet = true;
+    }
     if (!bouncing) { job.status = 'cancelled'; renderQueue(); continue; }
 
     job.status = 'running'; renderQueue();
+    if (window.api?.updateBounceOverlay) window.api.updateBounceOverlay({ name: job.name, done: totalDone, total: pending.length }).catch(()=>{});
     _stemStartTime = Date.now(); // track this stem's start
+    // Create reference file for mtime comparison (file newer than this = fresh bounce)
+    window.api.runShell('touch /tmp/.eb_stemstart').catch(() => {});
     prog(totalDone, pending.length, job.name);
     document.getElementById('s-cur').textContent = job.name;
     log(`▶ [${job.type}] ${job.name}`, 'info');
@@ -5638,6 +6022,9 @@ async function doBounce() {
     let ok = false;
     const { folder: jobFolder } = getOutputPath('', job.type);
     if (window.api.mkdir) await window.api.mkdir(jobFolder);
+    // Recover Space: if Logic was accidentally swiped to another Desktop/Space,
+    // move EasyBounce alongside Logic before any AX interaction
+    if (window.api.moveToLogicSpace) await window.api.moveToLogicSpace().catch(() => {});
     try {
       if (job.type === 'stem') {
         ok = await bounceStem(job, jobFolder, needsNavigation);
@@ -5651,11 +6038,41 @@ async function doBounce() {
       ok = false;
     }
 
-    // ── Auto-retry on transient error (user clicked mouse, AX refs stale, etc.) ──
+    // ── Auto-retry: close any stuck dialogs, rescan, try again ──────────────
     if (!ok && !window._userCancelled) {
-      log(`⟳ Retrying ${job.name} in 1.5s…`, 'warn');
+      log(`⟳ Retrying ${job.name} — closing dialogs…`, 'warn');
+      try {
+        await window.api.runScript([
+          'tell application "System Events"',
+          '  tell (first process whose bundle identifier is "com.apple.logic10")',
+          '    repeat with w in windows',
+          '      try',
+          '        set wBtns to name of every button of w',
+          '        if wBtns contains "Cancel" and wBtns does not contain "Bounce" then',
+          '          click button "Cancel" of w', // close Replace/overwrite dialogs first
+          '          delay 0.2',
+          '        end if',
+          '      end try',
+          '    end repeat',
+          '    key code 53', // Escape any remaining dialog
+          '    delay 0.2',
+          '    key code 53',
+          '  end tell',
+          'end tell'
+        ].join('\n'));
+      } catch(e) { log('Dialog close error: ' + (e.message||e), 'warn'); }
       await window.api.wait(1500);
-      // Rescan to get fresh AX element references before retrying
+      // Re-set cycle range before retry in case locator wasn't applied correctly
+      if (_mPass.name !== 'full') {
+        try {
+          log(`📍 Re-setting range: ${_mPass.name}`, 'info');
+          const _isLastPass = _markerPasses.indexOf(_mPass) === _markerPasses.length - 1;
+          await window.api.setAlwaysOnTop(false).catch(() => {});
+          await window.api.setLocatorsByMarker(_mPass.index, !_isLastPass);
+          await window.api.wait(500);
+          await activateLogicForAX();
+        } catch(e) { log('Re-set locators error: ' + (e.message||e), 'warn'); }
+      }
       try {
         const reScan = await window.api.scanChannels();
         if (reScan && !reScan.error && reScan.channels && reScan.channels.length > 0) {
@@ -5664,68 +6081,41 @@ async function doBounce() {
             chType: ch.hasMonitoring && ch.hasRecord ? 'Audio' : ch.hasRecord && !ch.hasMonitoring ? 'Inst' : 'Bus'
           }));
         }
-      } catch(e) {}
+      } catch(e) { log('Rescan error: ' + (e.message||e), 'warn'); }
       try {
         ok = job.type === 'stem' ? await bounceStem(job, jobFolder, true)
            : job.type === 'group' ? await bounceGroup(job, jobFolder, true)
            : await bounceMix(job, jobFolder, true);
-        if (ok) log(`✓ Retry 1 succeeded: ${job.name}`, 'ok');
-        else    log(`✗ Retry 1 failed: ${job.name}`, 'err');
+        if (ok) log(`✓ Retry succeeded: ${job.name}`, 'ok');
+        else    log(`✗ Retry failed: ${job.name}`, 'err');
       } catch(retryErr) {
-        log(`✗ Retry 1 exception: ${retryErr.message}`, 'err');
-        ok = false;
-      }
-    }
-
-    // ── Second auto-retry: close stuck dialogs, wait 2s, full reset ───────────
-    if (!ok && !window._userCancelled) {
-      log(`⟳ Retry 2 for ${job.name} — closing dialogs, resetting Logic state…`, 'warn');
-      try {
-        // Close any open Bounce/save dialogs that may be blocking
-        await window.api.runScript([
-          'tell application "System Events"',
-          '  tell (first process whose bundle identifier is "com.apple.logic10")',
-          '    key code 53', // Escape
-          '    delay 0.25',
-          '    key code 53', // Escape again
-          '  end tell',
-          'end tell'
-        ].join('\n'));
-      } catch(e) {}
-      await window.api.wait(2000);
-      try {
-        ok = job.type === 'stem' ? await bounceStem(job, jobFolder, true)
-           : job.type === 'group' ? await bounceGroup(job, jobFolder, true)
-           : await bounceMix(job, jobFolder, true);
-        if (ok) log(`✓ Retry 2 succeeded: ${job.name}`, 'ok');
-        else    log(`✗ All 2 retries failed: ${job.name}`, 'err');
-      } catch(retryErr2) {
-        log(`✗ Retry 2 exception: ${retryErr2.message}`, 'err');
+        log(`✗ Retry exception: ${retryErr?.message || retryErr}`, 'err');
         ok = false;
       }
     }
     // ─────────────────────────────────────────────────────────────────────────
 
-    // After bounce "succeeds" — verify file actually landed in the folder
-    // (can fail if user accidentally minimized EasyBounce during naming)
+    // Verify file actually landed in the folder AND is newer than stem start
+    // Catches: bounce "finished" in 1s (dialog closed instantly), old file from prev run
     if (ok && !window._userCancelled && window.api.findFile) {
-      // Use applyNameTemplate so prefix matches the actual saved filename
-      const rawJobName = applyNameTemplate(job.name).replace(/[/\\:*?"<>|]/g, '_');
-      const stemPrefix = rawJobName || job.name.replace(/[/\\:*?"<>|]/g, '_');
+      const _mSuffix = window._currentBounceMarkerSuffix || '';
+      const rawJobName = applyNameTemplate(job.name + _mSuffix).replace(/[/\\:*?"<>|]/g, '_');
+      const stemPrefix = rawJobName || (job.name + _mSuffix).replace(/[/\\:*?"<>|]/g, '_');
       const found = await window.api.findFile(jobFolder, stemPrefix);
-      if (!found) {
-        log(`⚠ File missing after bounce — retrying ${job.name}…`, 'warn');
-        await window.api.wait(800);
+      // Also check file mtime > stem start time (catches stale old files)
+      let fileIsNew = true;
+      if (found && window.api.runShell && _stemStartTime) {
         try {
-          // Retry with navigation (isFirst=true) to be safe
-          ok = job.type === 'stem' ? await bounceStem(job, jobFolder, true)
-             : job.type === 'group' ? await bounceGroup(job, jobFolder, true)
-             : await bounceMix(job, jobFolder, true);
-          if (ok) {
-            const found2 = await window.api.findFile(jobFolder, stemPrefix);
-            if (!found2) { ok = false; log(`✗ File still missing after retry: ${job.name}`, 'err'); }
-          }
-        } catch(retryErr) { ok = false; }
+          const mtimeRes = await window.api.runShell(
+            `find "${jobFolder}" -name "${stemPrefix}*" -newer /tmp/.eb_stemstart 2>/dev/null | head -1`
+          );
+          // Create reference file at stem start so -newer comparison works
+          fileIsNew = !!(mtimeRes?.stdout?.trim());
+        } catch(e) { fileIsNew = true; } // if check fails, assume ok
+      }
+      if (!found || !fileIsNew) {
+        log(`⚠ File ${!found ? 'missing' : 'too old (stale)'} after bounce: ${job.name}`, 'warn');
+        ok = false;
       }
     }
 
@@ -5735,6 +6125,7 @@ async function doBounce() {
     } else {
       job.status = ok ? 'done' : 'error';
       if (ok) {
+        consecutiveFails = 0;
         totalDone++;
         // Record real stem duration and immediately recalculate ETA
         _stemTimes.push(Math.max(1, Math.floor((Date.now() - _stemStartTime) / 1000)));
@@ -5745,19 +6136,52 @@ async function doBounce() {
         const doneEl = document.querySelector(`[data-qid="${job.id}"]`);
         if (doneEl) { doneEl.style.animation = 'done-flash .5s ease'; setTimeout(()=>doneEl.style.animation='',500); }
       } else if (!window._userCancelled) {
+        consecutiveFails++;
         // Shake on error
         const errEl = document.querySelector(`[data-qid="${job.id}"]`);
         if (errEl) { errEl.style.animation = 'shake .4s ease'; setTimeout(()=>errEl.style.animation='',400); }
         log(`✗ Failed: ${job.name}`, 'err');
+        // Stop after 2 consecutive failures — don't spam all 40 stems
+        if (consecutiveFails >= 2) {
+          const reason = `${consecutiveFails} consecutive bounces failed — check Logic state`;
+          log(`✗ ${reason}`, 'err');
+          toast(`⚠ Stopping — ${consecutiveFails} consecutive failures`);
+          window._bounceFatalHang = true;
+          window._lastHangReason = reason;
+        }
       }
     }
 
     renderQueue();
     prog(totalDone, pending.length, job.name);
     saveQueue();
+    // Fatal hang (Logic crashed / not responding) — stop entire bounce immediately
+    if (window._bounceFatalHang) break;
+  }
+  if (window._bounceFatalHang) break;
+  consecutiveFails = 0; // reset between marker passes — different pass = fresh start
+  // Between marker passes: reset done jobs back to pending so next pass can run them
+  if (_markerPasses.indexOf(_mPass) < _markerPasses.length - 1) {
+    const nextPass = _markerPasses[_markerPasses.indexOf(_mPass) + 1];
+    pending.forEach(j => {
+      if (j.status === 'done' && shouldBounceJobForMarker(j, nextPass.id)) {
+        j.status = 'pending';
+      }
+    });
+    renderQueue();
+    if (window._userCancelled) break;
+  }
+  } // end _mPass loop
+  window._currentBounceMarkerSuffix = '';
+  // Close Marker List when marker passes were used and bounce completed normally
+  if (!window._userCancelled && _markerPasses.some(p => p.name !== 'full')) {
+    try { await window.api.closeMarkerList(); } catch(e) {}
   }
   } catch(loopErr) {
     log(`✗ Bounce crash: ${loopErr.message}`, 'err');
+    if (_markerPasses && _markerPasses.some(p => p.name !== 'full')) {
+      try { await window.api.closeMarkerList(); } catch(e) {}
+    }
   } finally {
     if (window.api) {
       // ── STEP 1: Reset cancelRequested so all wait() calls below have REAL delays ──
@@ -5800,33 +6224,51 @@ async function doBounce() {
 
       // ── STEP 5: Restore mute/solo states ──
       if (window._userCancelled) {
-        const cancelNames = (window._cancelMutedNames || []).filter(n => !window._mixAlreadyMuted?.has(n));
-        const hasMuted = cancelNames.length > 0;
-        const hasSoloed = !!window._cancelSoloedName;
+        const cancelIndices = (window._cancelMutedIndices || []);
+        const cancelNames   = (window._cancelMutedNames   || []).filter(n => !window._mixAlreadyMuted?.has(n));
+        const hasMuted    = cancelIndices.length > 0 || cancelNames.length > 0;
+        const hasSoloed   = !!window._cancelSoloedName;
         const hasSidechain = !!window._cancelSidechainName;
-        const hasGroup = (window._cancelGroupNames || []).length > 0;
+        const hasGroup    = (window._cancelGroupNames || []).length > 0;
 
         // Run unmute + unsolo in parallel (independent AX operations)
         const restoreOps = [];
         if (hasMuted) {
           restoreOps.push((async () => {
-            try { await window.api.unmuteMany(cancelNames); } catch(e) {}
+            try {
+              if (cancelIndices.length > 0) await window.api.unmuteManyByIndex(cancelIndices.join('|'));
+              else await window.api.unmuteMany(cancelNames);
+            } catch(e) {}
           })());
         }
         if (hasSoloed) {
           restoreOps.push((async () => {
-            try { await window.api.unsoloByName(window._cancelSoloedName); } catch(e) {}
+            try {
+              window._cancelSoloedIndex != null
+                ? await window.api.unsoloIndex(window._cancelSoloedIndex)
+                : await window.api.unsoloByName(window._cancelSoloedName);
+            } catch(e) {}
           })());
         }
         if (hasSidechain) {
           restoreOps.push((async () => {
-            try { await window.api.unsoloByName(window._cancelSidechainName); } catch(e) {}
+            try {
+              window._cancelSidechainIndex != null
+                ? await window.api.unsoloIndex(window._cancelSidechainIndex)
+                : await window.api.unsoloByName(window._cancelSidechainName);
+            } catch(e) {}
           })());
         }
         if (hasGroup) {
           restoreOps.push((async () => {
-            for (const n of window._cancelGroupNames || []) {
-              try { await window.api.unsoloByName(n); } catch(e) {}
+            const indices = window._cancelGroupIndices || [];
+            const names   = window._cancelGroupNames  || [];
+            for (let i = 0; i < names.length; i++) {
+              try {
+                indices[i] != null
+                  ? await window.api.unsoloIndex(indices[i])
+                  : await window.api.unsoloByName(names[i]);
+              } catch(e) {}
             }
           })());
         }
@@ -5862,6 +6304,7 @@ async function doBounce() {
   }
 
   bouncing = false; updateBounceBtn();
+  if (window.api?.hideBounceOverlay) window.api.hideBounceOverlay().catch(()=>{});
   clearInterval(_timerInterval);
   document.getElementById('cancel-btn').style.display = 'none';
   document.getElementById('mini-btn').style.display = 'none';
@@ -5879,48 +6322,100 @@ async function doBounce() {
   // Show "Redo All" button if any jobs completed (so user can re-bounce everything)
   const hasDoneJobs = queue.some(q => q.status === 'done');
   if (hasDoneJobs && easyMode) document.getElementById('redo-all-btn').style.display = 'flex';
-  if (!window._userCancelled) playBell();
-  if (!window._userCancelled) toast(`✓ ${totalDone}/${pending.length} complete!`);
-  log(`Done: ${totalDone}/${pending.length}`, 'ok');
-  stopCaffeinate(); // release sleep prevention after bounce
-  // Save session to history + update cumulative stats
-  if (totalDone > 0 && !window._userCancelled) {
-    const sessionSec = Math.floor((Date.now() - _bounceStartTime) / 1000);
-    const completedJobs = queue.filter(q => q.status === 'done');
-    saveBounceSession({
-      id: Date.now(),
-      date: new Date().toISOString(),
-      project: projectName || outputFolder.split('/').pop() || 'Session',
-      folder: outputFolder,
-      files: completedJobs.map(j => ({ name: j.name, type: j.type, id: j.id,
-        channelIndex: j.channelIndex,
-        mutedIndices: j.mutedIndices, mutedNames: j.mutedNames })),
-      totalTime: sessionSec,
-      totalFiles: totalDone,
-      namePrefix: (document.getElementById('name-template')?.value || '').trim(),
-      format: localStorage.getItem('sb4_fmt_current') || null,
-      masterPlugins: _masterPlugins.length > 0 ? [..._masterPlugins] : null,
-      sidechain: sidechainEnabled ? sidechainChannel : null
-    });
-    updateCumulativeStats(totalDone, sessionSec);
-    // Send Telegram / Email notifications
-    const fmtLabel = localStorage.getItem('sb4_fmt_current') || '';
-    const mins = Math.floor(sessionSec / 60);
-    const secs = sessionSec % 60;
-    const _errCount = queue.filter(q => q.status === 'error').length;
-    const _sizeResult = await window.api?.runShell(`find "${outputFolder}" -type f | xargs stat -f%z 2>/dev/null | awk '{s+=$1} END {if(s>=1073741824) printf "%.1f GB", s/1073741824; else printf "%.0f MB", s/1048576}'`);
-    const completedStems = completedJobs.map(j => ({ name: j.name, type: j.type }));
+  const _wasFatalHang = !!window._bounceFatalHang;
+  if (window._bounceFatalHang) {
+    // Logic crashed or hung — play error sound + notify
+    playErrorSound();
+    playErrorSound();
+    const hangReason = window._lastHangReason || 'Logic not responding';
+    toast(`⚠ Bounce stopped: ${hangReason}`);
+    log(`✗ Bounce stopped: ${hangReason}`, 'err');
+    window._bounceFatalHang = false;
+    window._lastHangReason = null;
+    const sessionSec2 = Math.floor((Date.now() - _bounceStartTime) / 1000);
+    const mins2 = Math.floor(sessionSec2 / 60);
+    const secs2 = sessionSec2 % 60;
     sendBounceNotifications({
       project: projectName || outputFolder.split('/').pop() || 'Session',
       totalFiles: totalDone,
       totalPlanned: pending.length,
-      errors: _errCount,
-      duration: `${mins}:${String(secs).padStart(2,'0')}`,
-      format: fmtLabel,
-      totalSize: _sizeResult?.stdout || '',
-      stems: completedStems,
-      folder: outputFolder
+      errors: pending.length - totalDone,
+      duration: `${mins2}:${String(secs2).padStart(2,'0')}`,
+      format: localStorage.getItem('sb4_fmt_current') || '',
+      totalSize: '',
+      stems: queue.filter(q => q.status === 'done').map(j => ({ name: j.name, type: j.type })),
+      folder: outputFolder,
+      failed: true,
+      failReason: hangReason
     });
+  } else if (!window._userCancelled) {
+    const _failCount = queue.filter(q => q.status === 'error').length;
+    if (_failCount > 0) {
+      playErrorSound();
+      toast(totalDone > 0
+        ? `⚠ ${totalDone}/${pending.length} done — ${_failCount} failed`
+        : `⚠ All ${_failCount} bounce(s) failed`);
+    } else {
+      playBell();
+      toast(`✓ ${totalDone}/${pending.length} complete!`);
+    }
+  }
+  log(`Done: ${totalDone}/${pending.length}`, 'ok');
+  stopCaffeinate(); // release sleep prevention after bounce
+  // Save session to history + update cumulative stats + send notifications
+  if (!window._userCancelled && !_wasFatalHang) {
+    const sessionSec = Math.floor((Date.now() - _bounceStartTime) / 1000);
+    const mins = Math.floor(sessionSec / 60);
+    const secs = sessionSec % 60;
+    const _errCount = queue.filter(q => q.status === 'error').length;
+    if (totalDone > 0) {
+      const completedJobs = queue.filter(q => q.status === 'done');
+      saveBounceSession({
+        id: Date.now(),
+        date: new Date().toISOString(),
+        project: projectName || outputFolder.split('/').pop() || 'Session',
+        folder: outputFolder,
+        files: completedJobs.map(j => ({ name: j.name, type: j.type, id: j.id,
+          channelIndex: j.channelIndex,
+          mutedIndices: j.mutedIndices, mutedNames: j.mutedNames })),
+        totalTime: sessionSec,
+        totalFiles: totalDone,
+        namePrefix: (document.getElementById('name-template')?.value || '').trim(),
+        format: localStorage.getItem('sb4_fmt_current') || null,
+        masterPlugins: _masterPlugins.length > 0 ? [..._masterPlugins] : null,
+        sidechain: sidechainEnabled ? sidechainChannel : null
+      });
+      updateCumulativeStats(totalDone, sessionSec);
+      const fmtLabel = localStorage.getItem('sb4_fmt_current') || '';
+      const _sizeResult = await window.api?.runShell(`find "${outputFolder}" -type f | xargs stat -f%z 2>/dev/null | awk '{s+=$1} END {if(s>=1073741824) printf "%.1f GB", s/1073741824; else printf "%.0f MB", s/1048576}'`);
+      const completedStems = completedJobs.map(j => ({ name: j.name, type: j.type }));
+      sendBounceNotifications({
+        project: projectName || outputFolder.split('/').pop() || 'Session',
+        totalFiles: totalDone,
+        totalPlanned: pending.length,
+        errors: _errCount,
+        duration: `${mins}:${String(secs).padStart(2,'0')}`,
+        format: fmtLabel,
+        totalSize: _sizeResult?.stdout || '',
+        stems: completedStems,
+        folder: outputFolder
+      });
+    } else if (_errCount > 0) {
+      // All jobs failed — send failure notification
+      sendBounceNotifications({
+        project: projectName || outputFolder.split('/').pop() || 'Session',
+        totalFiles: 0,
+        totalPlanned: pending.length,
+        errors: _errCount,
+        duration: `${mins}:${String(secs).padStart(2,'0')}`,
+        format: localStorage.getItem('sb4_fmt_current') || '',
+        totalSize: '',
+        stems: [],
+        folder: outputFolder,
+        failed: true,
+        failReason: `All ${_errCount} bounce(s) failed`
+      });
+    }
   }
   document.getElementById('s-cur').textContent = '—';
   setTimeout(resetProg, 4000);
@@ -5934,6 +6429,20 @@ async function doBounce() {
 }
 
 async function activateLogicForAX() {
+  // Unminimize any minimized Logic windows before activating
+  try {
+    await window.api.runScript([
+      'tell application "System Events"',
+      '  tell (first process whose bundle identifier is "com.apple.logic10")',
+      '    repeat with w in windows',
+      '      try',
+      '        if miniaturized of w then set miniaturized of w to false',
+      '      end try',
+      '    end repeat',
+      '  end tell',
+      'end tell'
+    ].join('\n'));
+  } catch(e) {}
   // Bring Logic to foreground so AX button presses take effect (AXPress fails on off-screen Space)
   try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) {}
   await window.api.wait(350);
@@ -5950,28 +6459,33 @@ async function returnToPrevApp() {
 
 async function bounceStem(job, folder, isFirst) {
   window._cancelMutedNames = [];
-  window._cancelSoloedName = null;
-  window._cancelGroupNames = [];
-  window._cancelSidechainName = null;
+  window._cancelSoloedName = null;  window._cancelSoloedIndex = null;
+  window._cancelGroupNames = [];    window._cancelGroupIndices = [];
+  window._cancelSidechainName = null; window._cancelSidechainIndex = null;
 
   if (window._userCancelled) return false;
   window._bouncePhase = 'solo';
   await activateLogicForAX();
 
-  // 1. Solo main stem
+  // 1. Solo main stem — use index when available to handle duplicate names
   if (window._userCancelled) return false;
-  const r = await window.api.soloByName(job.name);
+  const r = job.channelIndex != null
+    ? await window.api.soloIndex(job.channelIndex)
+    : await window.api.soloByName(job.name);
   if (r && r.error) { log('Solo error: ' + r.error, 'err'); return false; }
-  window._cancelSoloedName = job.name;
+  window._cancelSoloedName = job.name; window._cancelSoloedIndex = job.channelIndex ?? null;
   await window.api.wait(300);
 
   // 2. Solo sidechain if enabled
   if (window._userCancelled) return false;
-  if (sidechainEnabled && sidechainChannel && sidechainChannel !== job.name) {
-    await window.api.soloByName(sidechainChannel);
-    window._cancelSidechainName = sidechainChannel;
+  const _scIdx = sidechainIndex; const _scName = sidechainChannel;
+  if (sidechainEnabled && _scName && _scName !== job.name) {
+    _scIdx != null
+      ? await window.api.soloIndex(_scIdx)
+      : await window.api.soloByName(_scName);
+    window._cancelSidechainName = _scName; window._cancelSidechainIndex = _scIdx;
     await window.api.wait(300);
-    log('🔒 Sidechain: ' + sidechainChannel + ' + ' + job.name, 'info');
+    log('🔒 Sidechain: ' + _scName + ' + ' + job.name, 'info');
   }
 
   // 3. Render
@@ -5981,16 +6495,24 @@ async function bounceStem(job, folder, isFirst) {
 
   // 4. Unsolo (only on normal completion — cancel handled in doBounce finally)
   if (!window._userCancelled) {
+    // Grace period: warn user before Logic becomes active so they don't accidentally click
+    toast('↩ Returning to Logic…');
+    await window.api.wait(1000);
+    await window.api.moveToLogicSpace().catch(() => {});
     await activateLogicForAX();
-    // Unsolo sidechain FIRST (it was soloed second)
-    if (sidechainEnabled && sidechainChannel && sidechainChannel !== job.name) {
-      await window.api.unsoloByName(sidechainChannel);
-      window._cancelSidechainName = null;
+    // Unsolo sidechain FIRST
+    if (sidechainEnabled && _scName && _scName !== job.name) {
+      _scIdx != null
+        ? await window.api.unsoloIndex(_scIdx)
+        : await window.api.unsoloByName(_scName);
+      window._cancelSidechainName = null; window._cancelSidechainIndex = null;
       await window.api.wait(300);
     }
     // Unsolo main stem
-    await window.api.unsoloByName(job.name);
-    window._cancelSoloedName = null;
+    job.channelIndex != null
+      ? await window.api.unsoloIndex(job.channelIndex)
+      : await window.api.unsoloByName(job.name);
+    window._cancelSoloedName = null; window._cancelSoloedIndex = null;
     await window.api.wait(300);
     await returnToPrevApp();
   }
@@ -5999,32 +6521,38 @@ async function bounceStem(job, folder, isFirst) {
 
 async function bounceGroup(job, folder, isFirst) {
   window._cancelMutedNames = [];
-  window._cancelSoloedName = null;
-  window._cancelGroupNames = [];
-  window._cancelSidechainName = null;
+  window._cancelSoloedName = null;   window._cancelSoloedIndex = null;
+  window._cancelGroupNames = [];     window._cancelGroupIndices = [];
+  window._cancelSidechainName = null; window._cancelSidechainIndex = null;
 
   if (window._userCancelled) return false;
   window._bouncePhase = 'solo';
   await activateLogicForAX();
 
-  // Solo all channels in the group simultaneously (they stack)
+  // Solo all channels in the group — use index to handle duplicate names
   const chans = job.channels || [];
   for (const ch of chans) {
     if (window._userCancelled) return false;
-    const r = await window.api.soloByName(ch.name);
+    const r = ch.channelIndex != null
+      ? await window.api.soloIndex(ch.channelIndex)
+      : await window.api.soloByName(ch.name);
     if (r && r.error) log(`Solo warn (${ch.name}): ${r.error}`, 'warn');
     window._cancelGroupNames.push(ch.name);
+    window._cancelGroupIndices.push(ch.channelIndex ?? null);
     await window.api.wait(150);
   }
   log(`⊕ Group soloed: ${chans.map(c => c.name).join(', ')}`, 'info');
 
   // Solo sidechain if enabled and not already in group
   if (window._userCancelled) return false;
-  if (sidechainEnabled && sidechainChannel && !chans.some(c => c.name === sidechainChannel)) {
-    await window.api.soloByName(sidechainChannel);
-    window._cancelSidechainName = sidechainChannel;
+  const _scIdx = sidechainIndex; const _scName = sidechainChannel;
+  if (sidechainEnabled && _scName && !chans.some(c => c.name === _scName)) {
+    _scIdx != null
+      ? await window.api.soloIndex(_scIdx)
+      : await window.api.soloByName(_scName);
+    window._cancelSidechainName = _scName; window._cancelSidechainIndex = _scIdx;
     await window.api.wait(300);
-    log('🔒 Sidechain: ' + sidechainChannel, 'info');
+    log('🔒 Sidechain: ' + _scName, 'info');
   }
 
   // Render
@@ -6034,17 +6562,25 @@ async function bounceGroup(job, folder, isFirst) {
 
   // Unsolo all (only on normal completion)
   if (!window._userCancelled) {
+    toast('↩ Returning to Logic…');
+    await window.api.wait(1000);
+    await window.api.moveToLogicSpace().catch(() => {});
     await activateLogicForAX();
-    if (sidechainEnabled && sidechainChannel && window._cancelSidechainName) {
-      await window.api.unsoloByName(sidechainChannel);
-      window._cancelSidechainName = null;
+    if (sidechainEnabled && _scName && window._cancelSidechainName) {
+      _scIdx != null
+        ? await window.api.unsoloIndex(_scIdx)
+        : await window.api.unsoloByName(_scName);
+      window._cancelSidechainName = null; window._cancelSidechainIndex = null;
       await window.api.wait(200);
     }
-    for (const ch of chans) {
-      await window.api.unsoloByName(ch.name);
+    for (let i = 0; i < chans.length; i++) {
+      const ch = chans[i];
+      ch.channelIndex != null
+        ? await window.api.unsoloIndex(ch.channelIndex)
+        : await window.api.unsoloByName(ch.name);
       await window.api.wait(150);
     }
-    window._cancelGroupNames = [];
+    window._cancelGroupNames = []; window._cancelGroupIndices = [];
     await window.api.wait(200);
     await returnToPrevApp();
   }
@@ -6052,10 +6588,10 @@ async function bounceGroup(job, folder, isFirst) {
 }
 
 async function bounceMix(job, folder, isFirst) {
-  window._cancelMutedNames = [];
-  window._cancelSoloedName = null;
-  window._cancelGroupNames = [];
-  window._cancelSidechainName = null;
+  window._cancelMutedNames = [];   window._cancelMutedIndices = [];
+  window._cancelSoloedName = null; window._cancelSoloedIndex = null;
+  window._cancelGroupNames = [];   window._cancelGroupIndices = [];
+  window._cancelSidechainName = null; window._cancelSidechainIndex = null;
 
   if (window._userCancelled) return false;
   window._bouncePhase = 'mute';
@@ -6063,32 +6599,38 @@ async function bounceMix(job, folder, isFirst) {
 
   // 1. Read current mute state — skip channels already muted by user
   if (window._userCancelled) return false;
-  const allNames = (job.mutedNames || []).filter(n => n && typeof n === 'string');
-  let namesToMute = allNames;
+  const allIndices = (job.mutedIndices || []).filter(i => typeof i === 'number');
+  const allNames   = (job.mutedNames   || []).filter(n => n && typeof n === 'string');
+  let indicesToMute = allIndices;
   try {
     const states = await window.api.readStates();
-    const alreadyMuted = new Set(states?.muted || []);
-    const skipped = allNames.filter(n => alreadyMuted.has(n));
-    namesToMute = allNames.filter(n => !alreadyMuted.has(n));
-    if (skipped.length > 0) log(`Skip already muted: ${skipped.join(', ')}`, 'info');
+    const alreadyMutedNames = new Set(states?.muted || []);
+    // Filter out indices whose name is already muted (by-name check, best effort)
+    indicesToMute = allIndices.filter((idx, i) => !alreadyMutedNames.has(allNames[i]));
+    const skippedCount = allIndices.length - indicesToMute.length;
+    if (skippedCount > 0) log(`Skip ${skippedCount} already muted`, 'info');
   } catch(e) { log('readStates failed, muting all: ' + e.message, 'warn'); }
 
-  // 2. Mute only channels that weren't already muted
+  // 2. Mute by index — correct even with duplicate track names
   if (window._userCancelled) return false;
-  if (namesToMute.length > 0) {
-    const muteResult = await window.api.muteMany(namesToMute);
-    window._cancelMutedNames = namesToMute;
+  if (indicesToMute.length > 0) {
+    const muteResult = await window.api.muteManyByIndex(indicesToMute.join('|'));
+    window._cancelMutedIndices = indicesToMute;
+    window._cancelMutedNames = indicesToMute.map((idx, i) => allNames[allIndices.indexOf(idx)] || '');
     log(`Muted ${muteResult?.muted?.length || 0} channels`, 'info');
     await window.api.wait(350);
   }
 
-  // 3. Solo sidechain if enabled
+  // 3. Solo sidechain if enabled — skip for Full Version (nothing muted)
   if (window._userCancelled) return false;
-  if (sidechainEnabled && sidechainChannel) {
-    await window.api.soloByName(sidechainChannel);
-    window._cancelSidechainName = sidechainChannel;
+  const _scIdx = sidechainIndex; const _scName = sidechainChannel;
+  if (sidechainEnabled && _scName && allIndices.length > 0) {
+    _scIdx != null
+      ? await window.api.soloIndex(_scIdx)
+      : await window.api.soloByName(_scName);
+    window._cancelSidechainName = _scName; window._cancelSidechainIndex = _scIdx;
     await window.api.wait(300);
-    log('🔒 Sidechain: ' + sidechainChannel, 'info');
+    log('🔒 Sidechain: ' + _scName, 'info');
   }
 
   // 4. Render
@@ -6098,15 +6640,20 @@ async function bounceMix(job, folder, isFirst) {
 
   // 5. Unsolo sidechain + unmute only what WE muted
   if (!window._userCancelled) {
+    toast('↩ Returning to Logic…');
+    await window.api.wait(1000);
+    await window.api.moveToLogicSpace().catch(() => {});
     await activateLogicForAX();
-    if (sidechainEnabled && sidechainChannel) {
-      await window.api.unsoloByName(sidechainChannel);
-      window._cancelSidechainName = null;
+    if (sidechainEnabled && _scName && window._cancelSidechainName) {
+      _scIdx != null
+        ? await window.api.unsoloIndex(_scIdx)
+        : await window.api.unsoloByName(_scName);
+      window._cancelSidechainName = null; window._cancelSidechainIndex = null;
       await window.api.wait(300);
     }
-    if (namesToMute.length > 0) {
-      await window.api.unmuteMany(namesToMute);
-      window._cancelMutedNames = [];
+    if (indicesToMute.length > 0) {
+      await window.api.unmuteManyByIndex(indicesToMute.join('|'));
+      window._cancelMutedIndices = []; window._cancelMutedNames = [];
       await window.api.wait(350);
     }
     await returnToPrevApp();
@@ -6205,10 +6752,10 @@ function renderMasterPlugins() {
     return;
   }
   grid.innerHTML = _masterPlugins.map((p, i) => `
-    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:5px 6px;border-radius:6px;transition:background .12s;${p.active ? '' : 'opacity:.55;'}" onmouseover="this.style.background='rgba(108,99,255,.08)'" onmouseout="this.style.background=''" title="${p.name}">
-      <input type="checkbox" ${p.active ? 'checked' : ''} onchange="toggleMasterPlugin(${i}, this.checked)" style="width:13px;height:13px;cursor:pointer;accent-color:var(--accent);flex-shrink:0;">
-      <span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:${p.active ? 'var(--t2)' : 'rgba(120,120,140,.6)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.active ? '' : '⊘ '}${p.name}</span>
-    </label>
+    <div onclick="toggleMasterPlugin(${i}, ${!p.active})" style="display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid var(--b);cursor:pointer;transition:background .12s;" onmouseover="this.style.background='rgba(128,128,128,.06)'" onmouseout="this.style.background='transparent'" title="Click to ${p.active ? 'bypass' : 'restore'} ${p.name}">
+      <span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:12px;color:${p.active ? 'var(--text)' : 'var(--muted)'};">${p.name}</span>
+      <span style="font-size:9px;font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:20px;${p.active ? 'color:#5abf28;background:rgba(90,191,40,.1);border:1px solid rgba(90,191,40,.28);' : 'color:var(--red);background:rgba(255,71,87,.09);border:1px solid rgba(255,71,87,.22);'}">${p.active ? 'ACTIVE' : 'BYPASSED'}</span>
+    </div>
   `).join('');
   // Update badge on the open button
   const bypassed = _masterPlugins.filter(p => !p.active).length;
@@ -6270,8 +6817,15 @@ window.addEventListener('resize', function() {
   if (hint && hint.classList.contains('show')) positionScanHint();
 });
 function obNext() {
+  if (_obStep >= OB_STEPS.length - 1) {
+    // Last step — check "don't show again"
+    const neverShow = document.getElementById('ob-never-show');
+    if (neverShow && neverShow.checked) {
+      localStorage.setItem('sb4_ob_never', '1');
+    }
+    obSkip(); return;
+  }
   _obStep++;
-  if (_obStep >= OB_STEPS.length) { obSkip(); return; }
   updateObStep();
 }
 function updateObStep() {
@@ -6280,6 +6834,22 @@ function updateObStep() {
   document.getElementById('ob-title').textContent = s.title;
   document.getElementById('ob-sub').textContent = s.sub;
   document.getElementById('ob-body').innerHTML = s.body;
+  // "Don't show again" checkbox on last step
+  const obCard = document.getElementById('ob-card');
+  let neverCheckbox = document.getElementById('ob-never-checkbox-wrap');
+  if (_obStep === OB_STEPS.length - 1) {
+    if (!neverCheckbox) {
+      neverCheckbox = document.createElement('label');
+      neverCheckbox.id = 'ob-never-checkbox-wrap';
+      neverCheckbox.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);cursor:pointer;margin-bottom:16px;';
+      neverCheckbox.innerHTML = '<input type="checkbox" id="ob-never-show" style="accent-color:var(--accent);"> Don\'t show onboarding again';
+      const dotsRow = document.getElementById('ob-dots').parentElement;
+      obCard.insertBefore(neverCheckbox, dotsRow);
+    }
+    neverCheckbox.style.display = 'flex';
+  } else if (neverCheckbox) {
+    neverCheckbox.style.display = 'none';
+  }
   // Dots
   const dots = document.getElementById('ob-dots');
   dots.innerHTML = OB_STEPS.map((_,i) => `<div style="width:8px;height:8px;border-radius:50%;background:${i===_obStep?'var(--accent)':'var(--b2)'};transition:background .2s;"></div>`).join('');
@@ -6710,7 +7280,8 @@ async function triggerBounce(name, folder, isFirst) {
     if (cv.cancelled) { log('Cancelled', 'warn'); return false; }
   }
 
-  const rawName = applyNameTemplate(name);
+  const markerSuffix = window._currentBounceMarkerSuffix || '';
+  const rawName = applyNameTemplate(name + markerSuffix);
   const safeName = rawName.replace(/[/\\:*?"<>|]/g, '_');
   const home = window._homeDir || '/Users/dbsound';
   const stemsFolder = folder;
@@ -6741,7 +7312,7 @@ async function triggerBounce(name, folder, isFirst) {
       await applyFmtPreset(_fmtPreset, false); // full apply on first bounce
       window._fmtApplied = true;
     } else {
-      // Subsequent bounces: re-apply SR + bitDepth (Logic always resets these to project values)
+      // Subsequent bounces: re-apply SR + bitDepth only if they differ from project defaults
       await applyFmtPreset(_fmtPreset, 'sr_bd');
     }
   }
@@ -6891,7 +7462,7 @@ async function triggerBounce(name, folder, isFirst) {
   let consecutiveErrors = 0;
   let dialogStuckCount = 0;  // how many polls the Bounce dialog has been visible
   let reTriggerCount = 0;    // how many times we've re-clicked Bounce (max 2)
-  while (waited < 300000) {
+  while (waited < 600000) {
     if (window.api) {
       const cv2 = await window.api.checkCancel();
       if (cv2.cancelled) { log('Cancelled', 'warn'); return false; }
@@ -6901,52 +7472,76 @@ async function triggerBounce(name, folder, isFirst) {
       '  tell (first process whose bundle identifier is "com.apple.logic10")',
       '    try',
       '      if (count of windows) = 0 then return "done"',
-      '      -- Check for stuck "Go to folder" navigation sheet (user focus stolen)',
-      '      try',
-      '        if (count of sheets of window 1) > 0 then',
-      '          set sheetBtns to name of every button of sheet 1 of window 1',
-      '          if sheetBtns contains "Go" then',
-      '            -- Path was already typed by EasyBounce — just confirm it',
-      '            keystroke return',
-      '            delay 0.8',
-      '            return "goto-confirmed"',
+      '      -- Check ALL windows for Replace/Cancel dialog (may open as separate window)',
+      '      repeat with w in windows',
+      '        try',
+      '          set wBtns to name of every button of w',
+      '          -- "Save/Don\'t Save/Cancel" quit dialog — detect by Save+Cancel without Bounce',
+      '          if wBtns contains "Save" and wBtns contains "Cancel" and wBtns does not contain "Bounce" then',
+      '            click button "Cancel" of w',
+      '            delay 0.3',
+      '            return "quit-cancelled"',
       '          end if',
-      '        end if',
-      '      end try',
-      '      -- Replace dialog may appear as a sheet on window 1',
-      '      try',
-      '        set sheetBtns to name of every button of sheet 1 of window 1',
-      '        if sheetBtns contains "Replace" then',
-      '          click button "Replace" of sheet 1 of window 1',
-      '          delay 0.3',
-      '          return "replaced"',
-      '        end if',
-      '        if sheetBtns contains "OK" then',
-      '          click button "OK" of sheet 1 of window 1',
-      '          delay 0.3',
-      '          return "dialog"',
-      '        end if',
-      '      end try',
+      '          if wBtns contains "Replace" then',
+      '            click button "Replace" of w',
+      '            delay 0.5',
+      '            return "replaced"',
+      '          end if',
+      '        end try',
+      '      end repeat',
+      '      -- Check sheets of all windows',
+      '      repeat with w in windows',
+      '        try',
+      '          if (count of sheets of w) > 0 then',
+      '            set sheetBtns to name of every button of sheet 1 of w',
+      '            -- Save/quit dialog as sheet',
+      '            if sheetBtns contains "Save" and sheetBtns contains "Cancel" and sheetBtns does not contain "Bounce" then',
+      '              click button "Cancel" of sheet 1 of w',
+      '              delay 0.3',
+      '              return "quit-cancelled"',
+      '            end if',
+      '            if sheetBtns contains "Replace" then',
+      '              click button "Replace" of sheet 1 of w',
+      '              delay 0.5',
+      '              return "replaced"',
+      '            end if',
+      '            if sheetBtns contains "Go" then',
+      '              keystroke return',
+      '              delay 0.8',
+      '              return "goto-confirmed"',
+      '            end if',
+      '            if sheetBtns contains "OK" then',
+      '              click button "OK" of sheet 1 of w',
+      '              delay 0.3',
+      '              return "dialog"',
+      '            end if',
+      '          end if',
+      '        end try',
+      '      end repeat',
+      '      -- Check window 1 for other dialogs',
       '      set btns to name of every button of window 1',
-      '      -- Auto-handle Replace / overwrite dialog (direct on window)',
-      '      if btns contains "Replace" then',
-      '        click button "Replace" of window 1',
-      '        delay 0.3',
-      '        return "replaced"',
-      '      end if',
-      '      -- Auto-confirm "Enabling this destination disables Split Stereo..." dialog',
       '      if btns contains "Proceed" then',
       '        click button "Proceed" of window 1',
       '        delay 0.3',
       '        return "dialog"',
       '      end if',
-      '      -- Auto-dismiss any unexpected OK/alert dialogs',
       '      if btns contains "OK" and btns does not contain "Bounce" then',
       '        click button "OK" of window 1',
       '        delay 0.3',
       '        return "dialog"',
       '      end if',
       '      if btns contains "Bounce" then return "dialog"',
+      '      -- Check for bounce progress window: has Cancel but no Bounce + has progress indicator',
+      '      -- This is the offline render progress window — if present, bounce is still running',
+      '      repeat with w in windows',
+      '        try',
+      '          set wBtns3 to name of every button of w',
+      '          if wBtns3 contains "Cancel" and wBtns3 does not contain "Bounce" and wBtns3 does not contain "Replace" then',
+      '            set wProgs to (every UI element of w whose role is "AXProgressIndicator")',
+      '            if (count of wProgs) > 0 then return "rendering"',
+      '          end if',
+      '        end try',
+      '      end repeat',
       '    end try',
       '    return "done"',
       '  end tell',
@@ -6956,9 +7551,18 @@ async function triggerBounce(name, folder, isFirst) {
       log('✓ ' + name + ' (' + Math.round((waited+1000)/1000) + 's)', 'ok');
       break;
     }
+    if (check.output === 'rendering') {
+      // Bounce progress window visible — render is still in progress, keep waiting
+      consecutiveErrors = 0; // Logic IS responding
+    }
+    if (check.output === 'quit-cancelled') {
+      log('⚠ Logic tried to quit — clicked Cancel to keep it open', 'warn');
+      toast('⚠ Logic close prevented — continuing bounce');
+    }
     if (check.output === 'replaced') {
-      log('⚠ Replaced existing file, continuing…', 'warn');
-      // Don't break — keep polling until bounce actually finishes
+      log('⚠ Replaced existing file — waiting for render to start…', 'warn');
+      // After Replace, Logic needs ~1s before render actually begins
+      await window.api.wait(1200);
     }
     if (check.output === 'goto-confirmed') {
       // "Go to folder" sheet was stuck open — path confirmed, now click Bounce
@@ -6990,15 +7594,33 @@ async function triggerBounce(name, folder, isFirst) {
         if (window._bounceReturnApp) {
           try { await window.api.runScript(`tell application "${window._bounceReturnApp}" to activate`); } catch(e) {}
         }
+      } else if (dialogStuckCount >= 3 && reTriggerCount >= 2) {
+        log(`✗ Bounce dialog stuck after 2 re-trigger attempts on "${name}" — aborting`, 'err');
+        toast(`⚠ Bounce dialog stuck — skipping "${name}"`);
+        return false;
       }
     } else {
       dialogStuckCount = 0;
     }
-    // AppleScript failed — Logic may be on wrong Desktop or not responding
+    // AppleScript failed — Logic may be on wrong Desktop, crashed, or not responding
     if (!check.ok) {
       consecutiveErrors++;
       if (consecutiveErrors >= 38) { // ~30s of consecutive failures
-        log(`✗ Logic not responding for ${name} — wrong Desktop or Logic busy`, 'err');
+        // Check if Logic process is still alive
+        const logicAlive = await window.api.checkLogic().catch(() => ({ running: false }));
+        if (!logicAlive.running) {
+          const reason = `Logic Pro has crashed or quit during "${name}"`;
+          log(`✗ ${reason}`, 'err');
+          toast(`⚠ Logic quit — bounce stopped`);
+          window._lastHangReason = reason;
+          window._bounceFatalHang = true;
+        } else {
+          const reason = `Logic not responding for 30s on "${name}"`;
+          log(`✗ ${reason}`, 'err');
+          toast(`⚠ Logic not responding — stopping`);
+          window._lastHangReason = reason;
+          window._bounceFatalHang = true;
+        }
         return false;
       }
       await window.api.wait(800);
@@ -7017,7 +7639,8 @@ async function triggerBounce(name, folder, isFirst) {
     try {
       const fileFound = await window.api.findFile(stemsFolder, safeName);
       if (!fileFound) {
-        log(`⚠ File not found after bounce: ${name} — will retry`, 'warn');
+        log(`✗ File not created: "${safeName}" in ${stemsFolder} — will retry`, 'err');
+        toast(`⚠ No file for "${name}" — retrying`);
         return false;
       }
     } catch(e) {}
@@ -7159,12 +7782,23 @@ function renderHistory() {
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   el.innerHTML = history.map(s => {
     const d = new Date(s.date);
-    const dateStr = `${d.getDate()} ${months[d.getMonth()]}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    const dur = s.totalTime >= 60
-      ? `${Math.floor(s.totalTime/60)}m ${s.totalTime%60}s`
-      : `${s.totalTime}s`;
+    const dateStr = `${months[d.getMonth()]} ${d.getDate()}`;
     const proj = (s.project || 'Session').replace(/</g,'&lt;');
-    const filesHtml = s.files.map(f =>
+    const stemCount = (s.files || []).filter(f => f.type !== 'mix').length;
+    const mixCount  = (s.files || []).filter(f => f.type === 'mix').length;
+    const countLabel = stemCount > 0 && mixCount > 0
+      ? `${stemCount} stems + ${mixCount} mixes`
+      : stemCount > 0 ? `${stemCount} stems`
+      : mixCount  > 0 ? `${mixCount} mixes`
+      : `${s.totalFiles} files`;
+    const hasBypass = s.masterPlugins && s.masterPlugins.some(p => !p.active);
+    const fmtTag = s.format
+      ? `<span style="padding:2px 7px;border-radius:5px;border:1px solid var(--b2);font-size:9px;font-weight:600;color:var(--t2);font-family:'JetBrains Mono',monospace;">${s.format}</span>`
+      : '';
+    const bypassTag = hasBypass
+      ? `<span style="padding:2px 7px;border-radius:5px;border:1px solid rgba(255,71,87,.3);background:rgba(255,71,87,.08);font-size:9px;font-weight:600;color:var(--red);font-family:'JetBrains Mono',monospace;">master bypass</span>`
+      : '';
+    const filesHtml = (s.files || []).map(f =>
       `<div class="hist-file">
         <span class="hist-badge ${f.type}">${f.type === 'mix' ? 'VER' : 'STM'}</span>
         ${f.name.replace(/</g,'&lt;')}
@@ -7172,8 +7806,14 @@ function renderHistory() {
     return `<div class="hist-item" id="hi-${s.id}">
       <div class="hist-hdr" onclick="toggleHistExpand(${s.id})">
         <div class="hist-meta">
-          <span class="hist-proj">${proj}</span>
-          <span class="hist-date">${dateStr} · ${dur} · ${s.totalFiles} files</span>
+          <div style="display:flex;align-items:baseline;gap:8px;">
+            <span style="font-size:9px;font-weight:600;color:var(--muted);font-family:'JetBrains Mono',monospace;flex-shrink:0;">${dateStr}</span>
+            <span class="hist-proj">${proj}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;margin-top:5px;flex-wrap:wrap;">
+            <span style="padding:2px 7px;border-radius:5px;border:1px solid var(--b2);font-size:9px;font-weight:600;color:var(--t2);font-family:'JetBrains Mono',monospace;">${countLabel}</span>
+            ${fmtTag}${bypassTag}
+          </div>
         </div>
         <div class="hist-right">
           <span class="hist-arrow">▶</span>
@@ -7432,6 +8072,22 @@ function playBellSound(type, delay) {
     }
   } catch(e) {}
 }
+function playErrorSound() {
+  try {
+    const ctx = new(window.AudioContext||window.webkitAudioContext)();
+    const t = ctx.currentTime;
+    // Two descending low tones — clearly different from success bell
+    [220, 165].forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = f; o.type = 'sawtooth';
+      g.gain.setValueAtTime(0, t + i * 0.35);
+      g.gain.linearRampToValueAtTime(0.18, t + i * 0.35 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.35 + 0.7);
+      o.start(t + i * 0.35); o.stop(t + i * 0.35 + 0.8);
+    });
+  } catch(e) {}
+}
 // ── Notification Settings ──────────────────────────────────────────────────────
 let _notifSettings = {};
 let _tgPollInterval = null;
@@ -7499,6 +8155,31 @@ async function toggleEmail(enabled) {
   updateNotifIcon();
 }
 
+function copyTgCode() {
+  const code = document.getElementById('notif-tg-code-val').textContent;
+  if (code && code !== '—') {
+    navigator.clipboard.writeText(code).then(() => toast('✓ Code copied!'));
+  }
+}
+
+function openTgWithCode() {
+  const code = document.getElementById('notif-tg-code-val').textContent;
+  if (code && code !== '—') {
+    navigator.clipboard.writeText(code);
+    // tg://msg_url prefills message text in any open chat
+    if (window.api && window.api.openExternal) {
+      window.api.openExternal(`https://t.me/EasyBounceBot?start=${code}`);
+    }
+  }
+}
+
+async function addTelegramBot() {
+  if (window.api && window.api.openExternal) {
+    window.api.openExternal('https://t.me/EasyBounceBot');
+  }
+  await connectTelegram();
+}
+
 async function connectTelegram() {
   const btn = document.getElementById('notif-tg-connect-btn');
   btn.textContent = 'Connecting…';
@@ -7545,7 +8226,7 @@ async function disconnectTelegram() {
   _notifSettings.telegramChatId = null;
   document.getElementById('notif-tg-connected').style.display = 'none';
   document.getElementById('notif-tg-disconnected').style.display = 'block';
-  document.getElementById('notif-tg-connect-btn').textContent = 'Connect Telegram';
+  document.getElementById('notif-tg-connect-btn').textContent = 'Add Bot';
   document.getElementById('notif-tg-connect-btn').disabled = false;
   document.getElementById('notif-tg-toggle').checked = false;
   updateNotifIcon();
@@ -7577,6 +8258,13 @@ async function saveNotifEmail() {
   document.getElementById('notif-email-status').textContent = 'Saved ✓';
   document.getElementById('notif-email-status').className = 'notif-status ok';
   updateNotifIcon();
+  // Auto-send test email silently
+  try {
+    const testResult = await window.api.notifTestEmail();
+    if (testResult && testResult.ok) {
+      document.getElementById('notif-email-status').textContent = '✓ Saved — test email sent!';
+    }
+  } catch(e) { /* keep 'Saved ✓' if test fails */ }
 }
 
 async function testEmail() {
@@ -7589,7 +8277,7 @@ async function testEmail() {
     document.getElementById('notif-email-status').textContent = 'Test email sent!';
     document.getElementById('notif-email-status').className = 'notif-status ok';
   } else {
-    document.getElementById('notif-email-status').textContent = 'Error: ' + (result.reason || result.error || 'unknown');
+    document.getElementById('notif-email-status').textContent = '⚠ Could not send — check your email address';
     document.getElementById('notif-email-status').className = 'notif-status';
   }
 }
@@ -7672,8 +8360,8 @@ const SKINS = {
     vars:{'--bg':'#0c0c10','--s':'#111116','--card':'#17171e','--card2':'#1c1c24','--b':'#252530','--b2':'#30303e','--accent':'#6c63ff','--a2':'#ff6584','--a3':'#43e97b','--warn':'#ffa94d','--red':'#ff4757','--text':'#e2e2f0','--t2':'#8888a8','--muted':'#444458','--r':'10px','--r2':'16px','--r3':'24px'}
   },
   logic: {
-    name:'LOGIC', preview:['#0A84FF','#2C2C2E','#30D158'],
-    vars:{'--bg':'#2C2C2E','--s':'#1C1C1E','--card':'#3A3A3C','--card2':'#48484A','--b':'#545458','--b2':'#545458','--accent':'#0A84FF','--a2':'#30D158','--a3':'#30D158','--warn':'#FF9F0A','--red':'#FF453A','--text':'#FFFFFF','--t2':'#A1A1A6','--muted':'#8E8E93','--glass':'rgba(255,255,255,.04)','--glass-border':'rgba(255,255,255,.06)','--r':'7px','--r2':'12px','--r3':'18px'}
+    name:'LOGIC', preview:['#0A84FF','#2A2A2A','#30D158'],
+    vars:{'--bg':'#292929','--s':'#1A1A1A','--card':'#333333','--card2':'#3D3D3D','--b':'#484848','--b2':'#505050','--accent':'#0A84FF','--a2':'#30D158','--a3':'#30D158','--warn':'#FF9F0A','--red':'#FF453A','--text':'#F0F0F0','--t2':'#999999','--muted':'#7A7A7A','--glass':'rgba(255,255,255,.04)','--glass-border':'rgba(255,255,255,.06)','--r':'7px','--r2':'12px','--r3':'18px'}
   },
   aurora: {
     name:'AURORA', preview:['#e879a0','#080012','#7c6aff'],
@@ -7681,15 +8369,15 @@ const SKINS = {
   },
   obsidian: {
     name:'OBSIDIAN', preview:['#e8e8e8','#050505','#555'],
-    vars:{'--bg':'#050505','--s':'#0a0a0a','--card':'#111111','--card2':'#161616','--b':'#222222','--b2':'#2e2e2e','--accent':'#ffffff','--a2':'#aaaaaa','--a3':'#dddddd','--warn':'#ffaa00','--red':'#ff4444','--text':'#d8d8d8','--t2':'#777777','--muted':'#333333','--r':'10px','--r2':'16px','--r3':'24px'}
+    vars:{'--bg':'#050505','--s':'#0a0a0a','--card':'#141414','--card2':'#1a1a1a','--b':'#222222','--b2':'#2e2e2e','--accent':'#ffffff','--a2':'#cccccc','--a3':'#dddddd','--warn':'#ffaa00','--red':'#ff4444','--text':'#e8e8e8','--t2':'#777777','--muted':'#333333','--r':'10px','--r2':'16px','--r3':'24px'}
   },
   luxury: {
     name:'STUDIO', preview:['#b4ff00','#080808','#1e2e10'],
-    vars:{'--bg':'#080808','--s':'#0e0e0e','--card':'#141414','--card2':'#1a1a1a','--b':'#242424','--b2':'#2e2e2e','--accent':'#b4ff00','--a2':'#d4ff60','--a3':'#60e890','--warn':'#ff9900','--red':'#ff4040','--text':'#f0f0f0','--t2':'#a0a0a0','--muted':'#484848','--r':'10px','--r2':'16px','--r3':'24px'}
+    vars:{'--bg':'#080808','--s':'#0e0e0e','--card':'#161616','--card2':'#1a1a1a','--b':'#242424','--b2':'#2e2e2e','--accent':'#b4ff00','--a2':'#d4ff60','--a3':'#60e890','--warn':'#ff9900','--red':'#ff4040','--text':'#f5f5f5','--t2':'#b8b8b8','--muted':'#484848','--r':'10px','--r2':'16px','--r3':'24px'}
   },
   anime: {
-    name:'PEARL', preview:['#8fa8c4','#e0dde6','#c8a87c'],
-    vars:{'--bg':'#e0dde6','--s':'#d8d5de','--card':'#e8e6ec','--card2':'#e4e1ea','--b':'#c8c4d4','--b2':'#bbb6cc','--accent':'#8070b8','--a2':'#c8a87c','--a3':'#6aaa80','--warn':'#c8882a','--red':'#c04848','--text':'#1e1c2e','--t2':'#3c3a52','--muted':'#8880a8','--r':'10px','--r2':'16px','--r3':'24px'}
+    name:'PEARL', preview:['#8fa8c4','#d8d6de','#c4a07c'],
+    vars:{'--bg':'#d8d6de','--s':'#cac8d0','--card':'#e0dfe6','--card2':'#d4d2da','--b':'#a8a6b4','--b2':'#b0aebb','--accent':'#6858a8','--a2':'#c4a07c','--a3':'#5a9870','--warn':'#b87820','--red':'#c04040','--text':'#0e0c1e','--t2':'#2c2a3e','--muted':'#5e5878','--r':'10px','--r2':'16px','--r3':'24px'}
   },
 };
 
@@ -7722,19 +8410,19 @@ function applySkin(name) {
       .stat-val{color:#6c63ff!important;}
     `,
     logic: `
-      body{background:#2C2C2E!important;}
-      .titlebar{background:#1C1C1E!important;border-bottom:1px solid #000!important;}
-      .titlebar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(10,132,255,.2),rgba(48,209,88,.15),transparent);}
+      body{background:#292929!important;}
+      .titlebar{background:linear-gradient(180deg,#222222 0%,#1d1d1d 100%)!important;border-bottom:1px solid #111!important;box-shadow:0 1px 0 #3a3a3a,0 2px 10px rgba(0,0,0,.5)!important;}
+      .titlebar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(10,132,255,.25),rgba(48,209,88,.18),transparent);}
       .tb-logo-mark{background:linear-gradient(135deg,#0A84FF,#30D158)!important;box-shadow:0 4px 14px rgba(10,132,255,.3)!important;}
-      .bbtn:not(.off):not(.running){background:linear-gradient(180deg,#0A84FF 0%,#0070E0 100%)!important;color:#fff!important;font-weight:700;border:1px solid #0060C8!important;box-shadow:0 4px 16px rgba(10,132,255,.3),inset 0 1px 0 rgba(255,255,255,.12)!important;}
-      .bbtn:not(.off):not(.running):hover{background:linear-gradient(180deg,#3399FF 0%,#0A84FF 100%)!important;box-shadow:0 8px 28px rgba(10,132,255,.45),inset 0 1px 0 rgba(255,255,255,.18)!important;}
+      .bbtn:not(.off):not(.running){background:linear-gradient(180deg,#0A84FF 0%,#0070E0 100%)!important;color:#fff!important;font-weight:700;border:1px solid #0060C8!important;box-shadow:0 4px 16px rgba(10,132,255,.3),inset 0 1px 0 rgba(255,255,255,.15)!important;}
+      .bbtn:not(.off):not(.running):hover{background:linear-gradient(180deg,#3399FF 0%,#0A84FF 100%)!important;box-shadow:0 8px 28px rgba(10,132,255,.45),inset 0 1px 0 rgba(255,255,255,.2)!important;}
       .stat-val{color:#0A84FF!important;}
-      .panel{background:#3A3A3C!important;border-color:#545458!important;}
-      .panel.pl{background:#2C2C2E!important;}
-      .sec-hdr{background:#48484A!important;border-bottom:1px solid #545458!important;}
-      .ch-item{border-color:#545458!important;}
-      .ch-item:hover{background:rgba(10,132,255,.07)!important;border-color:#636366!important;}
-      .ch-item.sel{background:rgba(10,132,255,.14)!important;border-left-color:#0A84FF!important;box-shadow:none!important;}
+      .panel{background:#333333!important;border-color:#484848!important;border-top:1px solid #404040!important;}
+      .panel.pl{background:#272727!important;border-color:#3a3a3a!important;}
+      .sec-hdr{background:linear-gradient(180deg,#3c3c3c,#363636)!important;border-bottom:1px solid #2e2e2e!important;border-top:1px solid #444!important;}
+      .ch-item{border-color:#3e3e3e!important;border-bottom:1px solid #2c2c2c!important;}
+      .ch-item:hover{background:rgba(10,132,255,.07)!important;border-color:#505050!important;}
+      .ch-item.sel{background:rgba(10,132,255,.15)!important;border-left-color:#0A84FF!important;box-shadow:none!important;}
       .tree-group.depth-0{background:rgba(10,132,255,.06)!important;}
       .tree-group.depth-1{background:rgba(10,132,255,.035)!important;}
       .tree-group.depth-2{background:rgba(10,132,255,.02)!important;}
@@ -7749,17 +8437,19 @@ function applySkin(name) {
       .ldot.live{background:#30D158!important;box-shadow:0 0 0 3px rgba(48,209,88,.2),0 0 8px rgba(48,209,88,.4)!important;}
       .q-mini-btn:hover{background:rgba(10,132,255,.1)!important;border-color:rgba(10,132,255,.35)!important;color:#3399FF!important;}
       .mbtn.save{background:linear-gradient(135deg,#0A84FF,#0070E0)!important;color:#fff!important;font-weight:700!important;}
-      .pchip{background:#48484A!important;border-color:#545458!important;color:#A1A1A6!important;}
+      .pchip{background:#3d3d3d!important;border-color:#4a4a4a!important;color:#a0a0a0!important;}
       .pchip:hover{border-color:rgba(10,132,255,.5)!important;color:#3399FF!important;background:rgba(10,132,255,.08)!important;}
-      .stat-card{background:#48484A!important;border-color:#545458!important;}
-      .out-wrap,.bounce-wrap{background:#3A3A3C!important;}
-      .modal{background:#3A3A3C!important;border-color:#545458!important;box-shadow:0 24px 60px rgba(0,0,0,.6)!important;}
-      .q-item{background:#48484A!important;border-color:#545458!important;}
+      .stat-card{background:linear-gradient(145deg,#3c3c3c,#353535)!important;border-color:#484848!important;box-shadow:0 2px 8px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.05)!important;}
+      .out-wrap,.bounce-wrap{background:#2e2e2e!important;border-top:1px solid #3a3a3a!important;}
+      .modal{background:linear-gradient(145deg,#383838,#2e2e2e)!important;border-color:#484848!important;box-shadow:0 24px 60px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.06)!important;}
+      .q-item{background:#3a3a3a!important;border-color:#484848!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;}
       .q-item:hover{border-color:rgba(10,132,255,.3)!important;}
       .qst.done{color:#30D158!important;background:rgba(48,209,88,.1)!important;}
-      .scroll::-webkit-scrollbar-thumb{background:#545458!important;}
-      .scroll::-webkit-scrollbar-thumb:hover{background:#636366!important;}
-      input,select{background:#48484A!important;border-color:#545458!important;color:#fff!important;}
+      .scroll::-webkit-scrollbar-thumb{background:#4a4a4a!important;}
+      .scroll::-webkit-scrollbar-thumb:hover{background:#565656!important;}
+      input,select{background:#3a3a3a!important;border-color:#484848!important;color:#f0f0f0!important;box-shadow:inset 0 1px 3px rgba(0,0,0,.3)!important;}
+      .presets-bar{background:#2e2e2e!important;border-top:1px solid #3a3a3a!important;border-bottom:1px solid #222!important;}
+      .log-body{background:#222222!important;}
     `,
     matrix: `
       body{background:#1a1a1a!important;}
@@ -7817,49 +8507,59 @@ function applySkin(name) {
     obsidian: `
       body{
         background:
-          radial-gradient(ellipse at 50% -10%,rgba(120,120,120,.12) 0%,transparent 55%),
-          radial-gradient(ellipse at 90% 90%,rgba(60,60,60,.1) 0%,transparent 40%),
+          radial-gradient(ellipse at 50% -10%,rgba(120,120,120,.14) 0%,transparent 55%),
+          radial-gradient(ellipse at 90% 90%,rgba(60,60,60,.12) 0%,transparent 40%),
+          radial-gradient(ellipse at 10% 110%,rgba(80,80,80,.08) 0%,transparent 40%),
           #050505!important;
       }
-      .titlebar{background:linear-gradient(180deg,rgba(30,30,30,.95) 0%,rgba(10,10,10,.95) 100%)!important;backdrop-filter:blur(20px)!important;border-bottom:1px solid #1e1e1e!important;}
-      .titlebar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),rgba(255,255,255,.08),transparent);}
+      .titlebar{background:linear-gradient(180deg,rgba(35,35,35,.97) 0%,rgba(12,12,12,.97) 100%)!important;backdrop-filter:blur(20px)!important;border-bottom:1px solid #1e1e1e!important;box-shadow:0 1px 0 rgba(255,255,255,.06),0 2px 12px rgba(0,0,0,.5)!important;}
+      .titlebar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),rgba(255,255,255,.10),transparent);}
       .tb-logo-mark{background:linear-gradient(135deg,#fff,#aaa)!important;box-shadow:0 4px 16px rgba(255,255,255,.15)!important;}
       .bbtn:not(.off):not(.running){
         background:linear-gradient(160deg,#2c2c2c 0%,#1a1a1a 50%,#0e0e0e 100%)!important;
         color:#ffffff!important;font-weight:700;
         border:1px solid #333!important;
-        box-shadow:0 6px 24px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -1px 0 rgba(0,0,0,.6)!important;}
+        box-shadow:0 6px 24px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.16),inset 0 -1px 0 rgba(0,0,0,.6)!important;}
       .bbtn:not(.off):not(.running):hover{
         background:linear-gradient(160deg,#3a3a3a 0%,#242424 50%,#161616 100%)!important;
-        box-shadow:0 12px 40px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.2),0 0 0 1px rgba(255,255,255,.06)!important;}
+        box-shadow:0 12px 40px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.22),0 0 0 1px rgba(255,255,255,.07)!important;}
       .stat-val{color:#ffffff!important;}
-      .stat-card{background:linear-gradient(145deg,#181818,#0e0e0e)!important;border-color:#202020!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)!important;}
-      .panel,.center{background:linear-gradient(180deg,rgba(255,255,255,.01) 0%,transparent 40%),#080808!important;}
-      .sec-hdr{background:linear-gradient(180deg,#141414,#0f0f0f)!important;border-bottom-color:#1e1e1e!important;}
+      .stat-card{background:linear-gradient(145deg,#1c1c1c,#111111)!important;border-color:#222!important;box-shadow:0 4px 12px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08),inset 0 0 0 1px rgba(255,255,255,.03)!important;}
+      .panel,.center{background:linear-gradient(180deg,rgba(255,255,255,.025) 0%,transparent 60%),#080808!important;border-top:1px solid rgba(255,255,255,.05)!important;}
+      .sec-hdr{background:linear-gradient(180deg,#161616,#101010)!important;border-bottom:1px solid #1c1c1c!important;border-top:1px solid rgba(255,255,255,.04)!important;}
       .sec-badge{background:rgba(255,255,255,.07)!important;border-color:rgba(255,255,255,.1)!important;color:#888!important;}
-      .out-wrap,.bounce-wrap{background:linear-gradient(180deg,#0d0d0d,#090909)!important;}
-      .modal{background:linear-gradient(145deg,#181818,#0f0f0f)!important;box-shadow:0 32px 80px rgba(0,0,0,.95),inset 0 1px 0 rgba(255,255,255,.08)!important;}
-      .ch-item.sel{background:rgba(255,255,255,.06)!important;border-left-color:#fff!important;}
+      .out-wrap,.bounce-wrap{background:linear-gradient(180deg,#0e0e0e,#0a0a0a)!important;border-top:1px solid rgba(255,255,255,.04)!important;}
+      .modal{background:linear-gradient(145deg,#1c1c1c,#101010)!important;box-shadow:0 32px 80px rgba(0,0,0,.95),inset 0 1px 0 rgba(255,255,255,.1),0 0 0 1px rgba(255,255,255,.04)!important;}
+      .ch-item{border-top:1px solid #1e1e1e!important;border-bottom:1px solid #0e0e0e!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;}
+      .ch-item.sel{background:rgba(255,255,255,.07)!important;border-left-color:#fff!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 0 1px rgba(255,255,255,.03)!important;}
+      .ch-item:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),inset 0 0 12px rgba(255,255,255,.02)!important;}
       .bus-toggle.on{border-color:rgba(255,255,255,.3)!important;color:#fff!important;background:rgba(255,255,255,.06)!important;}
       .qst.done{color:#fff!important;background:rgba(255,255,255,.1)!important;}
-      .prog-fill{background:linear-gradient(90deg,#fff,#888)!important;}
+      .prog-fill{background:linear-gradient(90deg,#ccc,#fff,#aaa)!important;}
       .pchip:hover{border-color:rgba(255,255,255,.4)!important;color:#fff!important;}
-      .mbtn.save{background:linear-gradient(135deg,#2c2c2c,#1a1a1a)!important;border:1px solid #333!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.1)!important;}
-      .ch-item{border-top:1px solid #222!important;border-bottom:1px solid #111!important;}
-      .ch-item:hover{box-shadow:inset 0 0 8px rgba(255,255,255,.015)!important;}
-      .stat-card{box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 3px 8px rgba(0,0,0,.7)!important;}
+      .pchip{border-color:rgba(255,255,255,.1)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)!important;}
+      .mbtn.save{background:linear-gradient(135deg,#2c2c2c,#1a1a1a)!important;border:1px solid #333!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 2px 8px rgba(0,0,0,.5)!important;}
+      .q-item{background:linear-gradient(180deg,#171717,#111)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)!important;}
+      .presets-bar{border-top:1px solid rgba(255,255,255,.04)!important;border-bottom:1px solid #0e0e0e!important;}
+      input,select{background:linear-gradient(180deg,#1a1a1a,#141414)!important;border-color:#282828!important;box-shadow:inset 0 1px 3px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04)!important;}
     `,
     luxury: `
-      body{background:#080808!important;}
-      .titlebar{background:rgba(10,10,10,.97)!important;border-bottom:1px solid #1c1c1c!important;}
-      .titlebar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(180,255,0,.4),rgba(212,255,96,.6),rgba(180,255,0,.4),transparent);}
+      body{
+        background:
+          radial-gradient(ellipse at 50% -5%,rgba(180,255,0,.06) 0%,transparent 50%),
+          radial-gradient(ellipse at 100% 100%,rgba(80,120,0,.06) 0%,transparent 45%),
+          #080808!important;
+      }
+      .titlebar{background:linear-gradient(180deg,rgba(18,18,18,.98) 0%,rgba(10,10,10,.98) 100%)!important;border-bottom:1px solid #1c1c1c!important;box-shadow:0 1px 0 rgba(180,255,0,.08),0 2px 14px rgba(0,0,0,.6)!important;}
+      .titlebar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(180,255,0,.5),rgba(212,255,96,.7),rgba(180,255,0,.5),transparent);}
       .tb-logo-mark{background:linear-gradient(135deg,#6aaa00,#b4ff00)!important;box-shadow:0 4px 20px rgba(180,255,0,.35)!important;}
-      .panel{background:#0e0e0e!important;border-color:#1c1c1c!important;}
-      .panel.pl{background:#0c0c0c!important;}
-      .sec-hdr{background:linear-gradient(180deg,#141414,#101010)!important;border-bottom:1px solid #1c1c1c!important;}
-      .ch-item:hover{background:rgba(180,255,0,.03)!important;border-color:#2a2a2a!important;}
-      .ch-item.sel{background:rgba(180,255,0,.07)!important;border-left-color:#b4ff00!important;}
-      .bbtn:not(.off):not(.running){background:linear-gradient(160deg,#7acc00 0%,#b4ff00 50%,#9ae000 100%)!important;color:#0a1400!important;font-weight:800;letter-spacing:.04em;box-shadow:0 8px 32px rgba(180,255,0,.45),inset 0 1px 0 rgba(255,255,255,.35)!important;}
+      .panel{background:linear-gradient(180deg,rgba(255,255,255,.015) 0%,transparent 50%),#0e0e0e!important;border-color:#1c1c1c!important;border-top:1px solid rgba(255,255,255,.04)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;}
+      .panel.pl{background:linear-gradient(180deg,rgba(255,255,255,.01) 0%,transparent 50%),#0c0c0c!important;}
+      .sec-hdr{background:linear-gradient(180deg,#161616,#101010)!important;border-bottom:1px solid #1c1c1c!important;border-top:1px solid rgba(255,255,255,.04)!important;}
+      .ch-item{border-top:1px solid #1e1e1e!important;border-bottom:1px solid #0e0e0e!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;}
+      .ch-item:hover{background:rgba(180,255,0,.04)!important;border-color:#2a2a2a!important;box-shadow:inset 0 1px 0 rgba(180,255,0,.06)!important;}
+      .ch-item.sel{background:rgba(180,255,0,.08)!important;border-left-color:#b4ff00!important;box-shadow:inset 0 1px 0 rgba(180,255,0,.08)!important;}
+      .bbtn:not(.off):not(.running){background:linear-gradient(160deg,#7acc00 0%,#b4ff00 50%,#9ae000 100%)!important;color:#0a1400!important;font-weight:800;letter-spacing:.04em;box-shadow:0 8px 32px rgba(180,255,0,.45),inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,0,0,.15)!important;}
       .bbtn:not(.off):not(.running):hover{box-shadow:0 14px 48px rgba(180,255,0,.65),inset 0 1px 0 rgba(255,255,255,.4)!important;}
       .stat-val{color:#b4ff00!important;text-shadow:0 0 20px rgba(180,255,0,.25)!important;}
       .ldot.live{background:#b4ff00!important;box-shadow:0 0 0 3px rgba(180,255,0,.2),0 0 12px rgba(180,255,0,.3)!important;}
@@ -7868,55 +8568,63 @@ function applySkin(name) {
       .q-mini-btn:hover{background:rgba(180,255,0,.1)!important;border-color:rgba(180,255,0,.35)!important;color:#b4ff00!important;}
       .sec-badge{background:rgba(180,255,0,.07)!important;border-color:rgba(180,255,0,.15)!important;color:#b4ff00!important;}
       .pchip:hover{border-color:rgba(180,255,0,.4)!important;color:#b4ff00!important;}
+      .pchip{box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 1px 3px rgba(0,0,0,.4)!important;}
       .mbtn.save{background:linear-gradient(135deg,#7acc00,#b4ff00)!important;color:#0a1400!important;font-weight:800!important;}
-      .stat-card{background:#111!important;border-color:#222!important;}
-      .q-item{background:#101010!important;border-color:#1c1c1c!important;}
-      .out-wrap,.bounce-wrap{background:#0e0e0e!important;}
+      .stat-card{background:linear-gradient(145deg,#151515,#0e0e0e)!important;border-color:#222!important;box-shadow:0 4px 12px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.05),inset 0 0 0 1px rgba(180,255,0,.03)!important;}
+      .q-item{background:linear-gradient(180deg,#141414,#101010)!important;border-color:#1c1c1c!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;}
+      .out-wrap,.bounce-wrap{background:linear-gradient(180deg,#0f0f0f,#0b0b0b)!important;border-top:1px solid rgba(255,255,255,.04)!important;}
+      .modal{background:linear-gradient(145deg,#181818,#0f0f0f)!important;border-color:#222!important;box-shadow:0 32px 80px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.07),0 0 0 1px rgba(180,255,0,.04)!important;}
+      input,select{background:linear-gradient(180deg,#181818,#121212)!important;border-color:#282828!important;box-shadow:inset 0 1px 3px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04)!important;}
+      .presets-bar{border-top:1px solid rgba(255,255,255,.04)!important;border-bottom:1px solid #0e0e0e!important;}
       #scan-btn{background:linear-gradient(160deg,#3a6200,#508a00)!important;box-shadow:0 4px 16px rgba(80,138,0,.25)!important;}
       .foot-btn.green{background:rgba(74,140,28,.12)!important;border-color:rgba(74,140,28,.3)!important;color:#7acc00!important;}
       #add-stems-btn[style*="gradient"]{background:linear-gradient(160deg,#3a6200,#508a00)!important;box-shadow:0 4px 12px rgba(80,138,0,.2)!important;}
       #merge-btn.ok[style*="gradient"]{background:linear-gradient(160deg,#3a6200,#1a5c52)!important;box-shadow:0 4px 12px rgba(26,92,82,.2)!important;}
     `,
-    pearl: `
-      body{background:linear-gradient(160deg,#ededf2 0%,#e8e7ee 40%,#eee9e6 100%)!important;}
-      .titlebar{background:linear-gradient(180deg,#f5f4f8 0%,#eeecf2 100%)!important;border-bottom:1px solid rgba(0,0,0,.08)!important;box-shadow:0 2px 10px rgba(0,0,0,.07)!important;}
-      .tb-logo-mark{background:linear-gradient(135deg,#a0b4cc,#c8ae8a)!important;box-shadow:0 3px 12px rgba(0,0,0,.14)!important;}
-      .tb-pill{background:linear-gradient(180deg,#f8f7fa,#f0eef4)!important;border-color:rgba(0,0,0,.09)!important;color:#3c3a52!important;box-shadow:0 1px 3px rgba(0,0,0,.06)!important;}
-      .tb-pill:hover{background:linear-gradient(180deg,#f2f0f6,#e8e5ee)!important;}
-      .panel{background:linear-gradient(160deg,#f4f3f7 0%,#eeecf2 100%)!important;border-color:rgba(0,0,0,.07)!important;box-shadow:0 1px 6px rgba(0,0,0,.05)!important;}
-      .panel.pl{background:linear-gradient(160deg,#f0eff4 0%,#eae8ef 100%)!important;}
-      .sec-hdr{background:linear-gradient(180deg,#eceaf0,#e6e4ec)!important;border-color:rgba(0,0,0,.07)!important;}
-      .sec-title{color:#2e2c44!important;font-weight:700!important;}
-      .ch-item{background:linear-gradient(180deg,#f8f7fa,#f2f1f6)!important;border-color:rgba(0,0,0,.07)!important;}
-      .ch-item:hover{background:linear-gradient(180deg,#eceaf4,#e4e1ee)!important;border-color:rgba(100,90,160,.18)!important;}
-      .ch-item.sel{background:linear-gradient(160deg,#e0ddef,#d6d2e8)!important;border-left-color:#8070b8!important;}
-      .ch-name{color:#1e1c2e!important;}
-      .ch-idx{color:#9a92b2!important;}
+    anime: `
+      body{background:linear-gradient(160deg,#d9d7e0 0%,#d3d1da 40%,#ceccda 100%)!important;}
+      .titlebar{background:linear-gradient(180deg,#d4d2da 0%,#cccad4 100%)!important;border-bottom:1px solid rgba(0,0,0,.18)!important;box-shadow:0 2px 10px rgba(0,0,0,.15)!important;}
+      .tb-logo-mark{background:linear-gradient(135deg,#9098b4,#c4a07c)!important;box-shadow:0 3px 12px rgba(0,0,0,.22)!important;}
+      .tb-pill{background:linear-gradient(180deg,#dddbe4,#d4d2db)!important;border-color:rgba(0,0,0,.15)!important;color:#0e0c1e!important;box-shadow:0 1px 3px rgba(0,0,0,.12)!important;}
+      .tb-pill:hover{background:linear-gradient(180deg,#d4d2db,#cac8d2)!important;}
+      .panel{background:linear-gradient(160deg,#dcdae2 0%,#d6d4dc 100%)!important;border-color:rgba(0,0,0,.13)!important;box-shadow:0 2px 10px rgba(0,0,0,.12),inset 0 1px 0 rgba(255,255,255,.5)!important;}
+      .panel.pl{background:linear-gradient(160deg,#d4d2da 0%,#ceccd6 100%)!important;}
+      .sec-hdr{background:linear-gradient(180deg,#c8c6d0,#c2c0ca)!important;border-color:rgba(0,0,0,.14)!important;box-shadow:0 1px 3px rgba(0,0,0,.1)!important;}
+      .sec-title{color:#0a0818!important;font-weight:700!important;}
+      .ch-item{background:linear-gradient(180deg,#dddbe4,#d8d6de)!important;border-color:rgba(0,0,0,.12)!important;box-shadow:0 1px 4px rgba(0,0,0,.1),inset 0 1px 0 rgba(255,255,255,.45)!important;}
+      .ch-item:hover{background:linear-gradient(180deg,#d4d2dc,#ceccd6)!important;border-color:rgba(0,0,0,.18)!important;box-shadow:0 2px 6px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.5)!important;}
+      .ch-item.sel{background:linear-gradient(160deg,#c8c5d6,#c0bdcc)!important;border-left-color:#6858a8!important;box-shadow:0 2px 6px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.4)!important;}
+      .ch-name{color:#0e0c1e!important;font-weight:600!important;}
+      .ch-idx{color:#5e5878!important;}
       .bbtn:not(.off):not(.running){
-        background:linear-gradient(160deg,#8fa8c4 0%,#a8bfd8 35%,#b8d0e0 60%,#c8a87c 100%)!important;
-        color:#ffffff!important;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.15);
-        box-shadow:0 6px 20px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(0,0,0,.08)!important;}
-      .ldot.live{background:#6aaa80!important;box-shadow:0 0 0 3px rgba(106,170,128,.2)!important;}
-      .stat-val{color:#8070b8!important;}
-      .stat-card{background:linear-gradient(145deg,#f4f3f7,#eeecf2)!important;border-color:rgba(0,0,0,.07)!important;box-shadow:0 1px 4px rgba(0,0,0,.05)!important;}
-      .pchip,.preset-pill{background:linear-gradient(180deg,#f6f5f9,#eeedf3)!important;border-color:rgba(0,0,0,.09)!important;color:#3c3a52!important;box-shadow:0 1px 3px rgba(0,0,0,.05)!important;}
-      .q-item{background:linear-gradient(180deg,#f4f3f7,#eeecf2)!important;border-color:rgba(0,0,0,.07)!important;}
-      .q-mini-btn{background:linear-gradient(180deg,#f4f3f7,#eeecf2)!important;border-color:rgba(0,0,0,.09)!important;color:#3c3a52!important;box-shadow:0 1px 3px rgba(0,0,0,.05)!important;font-weight:600!important;}
-      .q-mini-btn:hover{background:linear-gradient(135deg,#8070b8,#6058a0)!important;color:#fff!important;border-color:#8070b8!important;box-shadow:0 2px 8px rgba(128,112,184,.3)!important;}
-      .out-wrap,.bounce-wrap{background:linear-gradient(180deg,#f0eff4,#eae8ef)!important;border-color:rgba(0,0,0,.07)!important;}
-      .prog-fill{background:linear-gradient(90deg,#8fa8c4,#a8c0d8,#c8a87c)!important;}
-      .log-body{background:linear-gradient(180deg,#eae8ee,#e4e2ea)!important;}
-      input,select{background:linear-gradient(180deg,#f4f3f7,#eeecf2)!important;border-color:rgba(0,0,0,.09)!important;color:#1e1c2e!important;}
-      .out-path{background:linear-gradient(180deg,#f4f3f7,#eeecf2)!important;border-color:rgba(0,0,0,.08)!important;color:#3c3a52!important;}
-      .presets-bar{background:linear-gradient(180deg,#e8e6ec,#e2e0e8)!important;border-color:rgba(0,0,0,.07)!important;}
-      .modal{background:linear-gradient(160deg,#f4f3f7,#eeecf2)!important;border-color:rgba(0,0,0,.09)!important;box-shadow:0 20px 60px rgba(0,0,0,.15)!important;}
-      .sec-badge{background:linear-gradient(135deg,rgba(143,168,196,.15),rgba(200,168,124,.15))!important;color:#7888a8!important;}
-      .mbtn.save{background:linear-gradient(135deg,#8fa8c4,#c8a87c)!important;color:#fff!important;}
-      .ch-item{box-shadow:0 1px 3px rgba(0,0,0,.06),inset 0 1px 0 rgba(255,255,255,.65)!important;}
-      .ch-item:hover{box-shadow:0 2px 6px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.75)!important;}
-      .stat-card{box-shadow:0 2px 8px rgba(0,0,0,.06),inset 0 1px 0 rgba(255,255,255,.9)!important;}
-      .pchip{box-shadow:0 1px 3px rgba(0,0,0,.06),inset 0 1px 0 rgba(255,255,255,.7)!important;}
-      .toast{box-shadow:0 8px 24px rgba(0,0,0,.12),inset 0 1px 0 rgba(255,255,255,.8)!important;}
+        background:linear-gradient(160deg,#7890a8 0%,#90a8c0 35%,#a0b8cc 60%,#c4a07c 100%)!important;
+        color:#ffffff!important;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.3);
+        box-shadow:0 6px 20px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.4),inset 0 -1px 0 rgba(0,0,0,.15)!important;}
+      .bbtn:not(.off):not(.running):hover{box-shadow:0 10px 30px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.45)!important;}
+      .ldot.live{background:#5a9870!important;box-shadow:0 0 0 3px rgba(90,152,112,.25)!important;}
+      .stat-val{color:#6858a8!important;}
+      .stat-card{background:linear-gradient(145deg,#dcdae2,#d4d2da)!important;border-color:rgba(0,0,0,.13)!important;box-shadow:0 3px 10px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.5)!important;}
+      .pchip,.preset-pill{background:linear-gradient(180deg,#dddbe4,#d5d3dc)!important;border-color:rgba(0,0,0,.14)!important;color:#0e0c1e!important;box-shadow:0 1px 4px rgba(0,0,0,.12),inset 0 1px 0 rgba(255,255,255,.45)!important;}
+      .q-item{background:linear-gradient(180deg,#d8d6de,#d2d0d8)!important;border-color:rgba(0,0,0,.12)!important;box-shadow:0 1px 3px rgba(0,0,0,.1)!important;}
+      .q-mini-btn{background:linear-gradient(180deg,#d8d6de,#d2d0d8)!important;border-color:rgba(0,0,0,.13)!important;color:#0e0c1e!important;box-shadow:0 1px 3px rgba(0,0,0,.1)!important;font-weight:600!important;}
+      .q-mini-btn:hover{background:linear-gradient(135deg,#6858a8,#5040a0)!important;color:#fff!important;border-color:#6858a8!important;box-shadow:0 2px 8px rgba(104,88,168,.35)!important;}
+      .out-wrap,.bounce-wrap{background:linear-gradient(180deg,#d2d0d8,#cccad4)!important;border-color:rgba(0,0,0,.12)!important;}
+      .prog-fill{background:linear-gradient(90deg,#7890a8,#90a8c0,#c4a07c)!important;}
+      .log-body{background:linear-gradient(180deg,#c8c6d0,#c2c0ca)!important;color:#0e0c1e!important;}
+      input,select{background:linear-gradient(180deg,#dddbe4,#d6d4dc)!important;border-color:rgba(0,0,0,.16)!important;color:#0e0c1e!important;box-shadow:inset 0 1px 4px rgba(0,0,0,.12)!important;}
+      .out-path{background:linear-gradient(180deg,#dddbe4,#d6d4dc)!important;border-color:rgba(0,0,0,.12)!important;color:#2c2a3e!important;}
+      .presets-bar{background:linear-gradient(180deg,#ccccd4,#c8c6d0)!important;border-color:rgba(0,0,0,.12)!important;}
+      .modal{background:linear-gradient(160deg,#dcdae2,#d4d2da)!important;border-color:rgba(0,0,0,.16)!important;box-shadow:0 24px 60px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.45)!important;}
+      .sec-badge{background:rgba(104,88,168,.12)!important;border-color:rgba(104,88,168,.25)!important;color:#6858a8!important;}
+      .mbtn.save{background:linear-gradient(135deg,#7890a8,#c4a07c)!important;color:#fff!important;font-weight:700!important;text-shadow:0 1px 2px rgba(0,0,0,.2)!important;}
+      .toast{background:linear-gradient(160deg,#e0dee6,#d8d6de)!important;border-color:rgba(0,0,0,.15)!important;box-shadow:0 8px 28px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.5)!important;color:#0e0c1e!important;}
+      .mp-bypass-btn{border-color:rgba(180,60,60,.4)!important;background:rgba(180,60,60,.1)!important;color:#a83030!important;}
+      .mp-bypass-btn:hover{background:rgba(180,60,60,.18)!important;}
+      .mp-restore-btn{border-color:rgba(60,130,60,.4)!important;background:rgba(60,130,60,.1)!important;color:#2a7a2a!important;}
+      .mp-restore-btn:hover{background:rgba(60,130,60,.18)!important;}
+      .bus-toggle.on{border-color:rgba(104,88,168,.5)!important;color:#6858a8!important;background:rgba(104,88,168,.12)!important;}
+      .scroll::-webkit-scrollbar-thumb{background:rgba(0,0,0,.22)!important;}
+      .scroll::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.3)!important;}
     `,
   };
   s.textContent = effects[name] || effects.default;
@@ -8062,10 +8770,12 @@ function toggleTooltips() {
       btn.style.background = 'linear-gradient(135deg,#00c8a0,#00a8d4)';
       btn.style.color = '#fff'; btn.style.border = 'none';
       btn.style.boxShadow = '0 2px 8px rgba(0,200,160,.4)';
+      btn.style.opacity = '1';
     } else {
-      btn.style.background = 'var(--card)';
-      btn.style.color = 'var(--muted)'; btn.style.border = '1px solid var(--b)';
-      btn.style.boxShadow = 'none';
+      btn.style.background = 'transparent';
+      btn.style.color = 'var(--muted)'; btn.style.border = '1.5px dashed var(--b2)';
+      btn.style.boxShadow = '0 0 0 2.5px rgba(128,128,128,.18)';
+      btn.style.opacity = '1';
     }
   }
   if (window._setTooltipsEnabled) window._setTooltipsEnabled(_tooltipsEnabled);
@@ -8188,7 +8898,7 @@ function renderSidechainDropdown() {
     item.innerHTML = `<div style="width:6px;height:6px;border-radius:50%;background:${ch.color||'var(--muted)'};flex-shrink:0;"></div><span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'JetBrains Mono',monospace;">${ch.name}</span>${ch.isMuted ? '<span class="ch-mute-badge">M</span>' : ''}`;
     item.onclick = (e) => {
       e.stopPropagation();
-      selectSidechain(ch.name);
+      selectSidechain(ch.name, ch.index);
       updateSidechainBtn();
       closeSidechainDropdown();
     };
@@ -8402,6 +9112,249 @@ function onFmtFieldChange() {
   saveFmtPresets(); updateFmtBar();
 }
 
+// ═══════════════════════════════════════════════════════
+// MARKERS — bounce by marker ranges
+// ═══════════════════════════════════════════════════════
+let _projectMarkers   = [];      // [{name,position,length,index}] from Logic
+// v2 keys use "name::index" IDs to distinguish duplicate-named markers
+let _hiddenMarkers    = new Set(JSON.parse(localStorage.getItem('sb4_hidden_markers_v2')||'[]'));
+let _activeMarkers    = new Set(JSON.parse(localStorage.getItem('sb4_active_markers_v2')||'[]'));
+let _fullActive       = JSON.parse(localStorage.getItem('sb4_full_active') ?? 'true');
+let _markersPopupOpen = false;
+let _markersShowHidden = false;  // toggle: show hidden section
+
+// Unique ID for a marker: name::index (e.g. "CHORUS 2::3")
+function markerId(m) { return m.name + '::' + m.index; }
+function markerById(id) { return _projectMarkers.find(m => markerId(m) === id); }
+
+function _saveMarkerPrefs() {
+  localStorage.setItem('sb4_hidden_markers_v2', JSON.stringify([..._hiddenMarkers]));
+  localStorage.setItem('sb4_active_markers_v2', JSON.stringify([..._activeMarkers]));
+  localStorage.setItem('sb4_full_active', JSON.stringify(_fullActive));
+}
+
+async function loadProjectMarkers(silent) {
+  if (!window.api || !window.api.scanMarkers) return;
+  try {
+    const res = await window.api.scanMarkers();
+    if (!res || !res.ok) return;
+    const fresh = res.markers || [];
+    // New markers default to inactive (user opts in)
+    // Prune stale IDs (marker was removed from project or index shifted)
+    const freshIds = new Set(fresh.map(m => markerId(m)));
+    for (const id of [..._activeMarkers]) { if (!freshIds.has(id)) _activeMarkers.delete(id); }
+    for (const id of [..._hiddenMarkers]) { if (!freshIds.has(id)) _hiddenMarkers.delete(id); }
+    _projectMarkers = fresh;
+    _saveMarkerPrefs();
+    updateMarkersBtnLabel();
+    renderMarkersPopupList();
+    if (!silent && fresh.length > 0) log(`✓ Markers: ${fresh.length} found`, 'ok');
+  } catch(e) {}
+}
+
+async function rescanMarkers() {
+  const btn = document.getElementById('markers-rescan-btn');
+  if (btn) { btn.style.opacity = '.4'; btn.style.pointerEvents = 'none'; }
+  await loadProjectMarkers(false);
+  if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
+}
+
+function updateMarkersBtnLabel() {
+  const btnEl = document.getElementById('markers-btn');
+  const lblEl = document.getElementById('markers-btn-lbl');
+  if (!lblEl || !btnEl) return;
+  const activeCount = _projectMarkers.filter(m => _activeMarkers.has(markerId(m)) && !_hiddenMarkers.has(markerId(m))).length;
+  const hasAny = _fullActive || activeCount > 0;
+  lblEl.textContent = 'Markers';
+  btnEl.style.color = hasAny ? 'var(--accent)' : 'var(--muted)';
+  btnEl.style.borderColor = hasAny ? 'rgba(108,99,255,.4)' : 'var(--b)';
+  btnEl.style.background = hasAny ? 'rgba(108,99,255,.08)' : 'var(--card)';
+}
+
+function renderMarkersPopupList() {
+  const el = document.getElementById('markers-popup-list');
+  if (!el) return;
+
+  if (_projectMarkers.length === 0) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:10px;padding:10px 12px;line-height:1.5;">No markers in project.<br>Run Scan Logic to load.</div>';
+    return;
+  }
+
+  const visibleMarkers = _projectMarkers.filter(m => !_hiddenMarkers.has(markerId(m)));
+  const hiddenMarkers  = _projectMarkers.filter(m =>  _hiddenMarkers.has(markerId(m)));
+
+  // ── Full chip + visible markers in one row ──
+  let html = '<div style="display:flex;flex-wrap:wrap;gap:4px;padding:10px 10px 8px;">';
+  html += `<div onclick="toggleFullActive()" title="Include a full-range bounce pass for every item"
+    style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;cursor:pointer;transition:all .13s;user-select:none;
+      ${_fullActive
+        ? 'background:rgba(80,200,120,.18);border:1.5px solid rgba(80,200,120,.5);'
+        : 'background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.2);'}">
+    <span style="font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:600;
+      color:${_fullActive ? '#7ef0a8' : 'rgba(255,255,255,.7)'};">Full</span>
+  </div>`;
+  if (visibleMarkers.length === 0) {
+    html += '<span style="color:var(--muted);font-size:10px;">All markers hidden</span>';
+  }
+  for (const m of visibleMarkers) {
+    const id = markerId(m);
+    const isActive = _activeMarkers.has(id);
+    const idSafe = id.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    html += `<div onclick="toggleMarkerActive('${idSafe}',${!isActive})"
+      style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px 2px 7px;border-radius:20px;cursor:pointer;transition:all .13s;user-select:none;
+        ${isActive
+          ? 'background:rgba(108,99,255,.2);border:1.5px solid rgba(108,99,255,.55);'
+          : 'background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.2);'}">
+      <span style="font-size:10px;font-family:\'JetBrains Mono\',monospace;font-weight:600;
+        color:${isActive ? '#b8b0ff' : 'rgba(255,255,255,.7)'};">${m.name}</span>
+      <span onclick="event.stopPropagation();hideMarker('${idSafe}')"
+        style="font-size:9px;line-height:1;color:rgba(255,255,255,.25);cursor:pointer;margin-left:1px;transition:color .1s;"
+        onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.25)'">✕</span>
+    </div>`;
+  }
+  html += '</div>';
+
+  // ── Hidden section ──
+  if (_markersShowHidden && hiddenMarkers.length > 0) {
+    html += '<div style="border-top:1px solid rgba(255,255,255,.06);padding:6px 10px 8px;">';
+    html += '<div style="font-size:8px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">Hidden</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:5px;">';
+    for (const m of hiddenMarkers) {
+      const idSafe2 = markerId(m).replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      html += `<div style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;
+        background:transparent;border:1.5px dashed rgba(255,255,255,.15);">
+        <span style="font-size:10px;font-family:\'JetBrains Mono\',monospace;color:rgba(255,255,255,.35);">${m.name}</span>
+        <span onclick="restoreMarker('${idSafe2}')" title="Restore to list"
+          style="font-size:10px;color:rgba(255,255,255,.3);cursor:pointer;transition:color .1s;"
+          onmouseover="this.style.color='rgba(255,255,255,.8)'" onmouseout="this.style.color='rgba(255,255,255,.3)'">↩</span>
+      </div>`;
+    }
+    html += '</div></div>';
+  }
+
+  el.innerHTML = html;
+}
+
+function toggleFullActive() {
+  _fullActive = !_fullActive;
+  _saveMarkerPrefs();
+  updateMarkersBtnLabel();
+  renderMarkersPopupList();
+  renderQueue();
+}
+
+function toggleMarkerActive(id, on) {
+  if (on) _activeMarkers.add(id); else _activeMarkers.delete(id);
+  _saveMarkerPrefs();
+  updateMarkersBtnLabel();
+  renderMarkersPopupList();
+  renderQueue();
+}
+
+function hideMarker(id) {
+  _hiddenMarkers.add(id);
+  _activeMarkers.delete(id);
+  _saveMarkerPrefs();
+  updateMarkersBtnLabel();
+  renderMarkersPopupList();
+  renderQueue();
+}
+
+function restoreMarker(id) {
+  _hiddenMarkers.delete(id);
+  // Do NOT auto-check — user decides later
+  _saveMarkerPrefs();
+  updateMarkersBtnLabel();
+  renderMarkersPopupList();
+  renderQueue();
+}
+
+function toggleMarkersHidden() {
+  _markersShowHidden = !_markersShowHidden;
+  const btn = document.getElementById('markers-showhidden-btn');
+  if (btn) btn.classList.toggle('on', _markersShowHidden);
+  renderMarkersPopupList();
+}
+
+let _queueMarkersChipsVisible = localStorage.getItem('sb4_queue_markers_vis') === 'true';
+function toggleQueueMarkersChips() {
+  _queueMarkersChipsVisible = !_queueMarkersChipsVisible;
+  localStorage.setItem('sb4_queue_markers_vis', _queueMarkersChipsVisible);
+  _updateMarkersChipsBtn();
+  renderQueue();
+}
+function _updateMarkersChipsBtn() {
+  const btn = document.getElementById('markers-chips-btn');
+  if (!btn) return;
+  if (_queueMarkersChipsVisible) {
+    btn.style.borderColor = 'var(--accent)';
+    btn.style.color = 'var(--accent)';
+    btn.style.background = 'rgba(108,99,255,.1)';
+  } else {
+    btn.style.borderColor = 'var(--b)';
+    btn.style.color = 'var(--muted)';
+    btn.style.background = 'var(--card)';
+  }
+}
+
+function toggleMarkersPopup() {
+  const popup = document.getElementById('markers-popup');
+  if (!popup) return;
+  _markersPopupOpen = !_markersPopupOpen;
+  popup.style.display = _markersPopupOpen ? 'block' : 'none';
+  if (_markersPopupOpen) renderMarkersPopupList();
+}
+
+// ── Per-item marker override ─────────────────────────────
+// job.markerExclusions = markers excluded for this item (globally active but skipped here)
+// job.markerAdditions  = markers added for this item (globally inactive but run for this item)
+// job.fullExclusion    = true if this item should skip the full-range pass
+function toggleJobFull(jobId) {
+  const job = queue.find(j => j.id === jobId);
+  if (!job) return;
+  job.fullExclusion = !job.fullExclusion;
+  saveQueue(); renderQueue();
+}
+
+function toggleJobMarker(jobId, markerId_) {
+  const job = queue.find(j => j.id === jobId);
+  if (!job) return;
+  if (!job.markerExclusions) job.markerExclusions = [];
+  if (!job.markerAdditions)  job.markerAdditions  = [];
+
+  const globallyActive = _activeMarkers.has(markerId_);
+
+  if (globallyActive) {
+    // Toggle exclusion
+    const idx = job.markerExclusions.indexOf(markerId_);
+    if (idx >= 0) job.markerExclusions.splice(idx, 1);
+    else job.markerExclusions.push(markerId_);
+  } else {
+    // Toggle addition
+    const idx = job.markerAdditions.indexOf(markerId_);
+    if (idx >= 0) job.markerAdditions.splice(idx, 1);
+    else job.markerAdditions.push(markerId_);
+  }
+  saveQueue(); renderQueue();
+}
+
+// Is a specific job going to be bounced for a given marker pass?
+// markerPassId is 'full' or a markerId "name::index"
+function shouldBounceJobForMarker(job, markerPassId) {
+  if (markerPassId === 'full') return !job.fullExclusion;
+  const excluded = (job.markerExclusions || []).includes(markerPassId);
+  const added    = (job.markerAdditions  || []).includes(markerPassId);
+  return _activeMarkers.has(markerPassId) ? !excluded : added;
+}
+
+// Close popup on outside click
+document.addEventListener('click', e => {
+  if (_markersPopupOpen && !e.target.closest('#markers-btn') && !e.target.closest('#markers-popup')) {
+    document.getElementById('markers-popup').style.display = 'none';
+    _markersPopupOpen = false;
+  }
+});
+
 function openFormatModal() {
   editingFmtId = activeFmtId;
   const _p = getEditingFmtPreset();
@@ -8478,18 +9431,28 @@ async function applyFmtPreset(p, mode = false) {
   const mp3On = p.dest == 1 || p.dest == 2;
 
   if (mode === 'sr_bd' || mode === true) {
-    // Re-apply sampleRate + bitDepth (Logic resets these to project values on every bounce)
-    if (wavOn) {
-      const srParams = { dest: '0' };
-      if (p.sampleRate) srParams.sampleRate = p.sampleRate;
-      if (p.bitDepth)   srParams.bitDepth   = p.bitDepth;
-      try { await window.api.applyBouncePreset(srParams); } catch(e) {}
+    // Subsequent bounces in same queue:
+    //   - sampleRate: re-apply every time it differs from project default
+    //   - bitDepth: already set on first bounce — never re-apply within same queue
+    if (wavOn && p.sampleRate) {
+      const norm = (s) => srMap[s] ?? s ?? '';
+      const srMatch = norm(p.sampleRate) === norm(window._projectDefaultSR);
+      if (!srMatch) {
+        try { await window.api.applyBouncePreset({ dest: '0', sampleRate: p.sampleRate }); } catch(e) {}
+      }
     }
     return true;
   }
 
   try {
-    // ── Step 1: Set checkbox states + WAV params on row 0 ────────────────────
+    // ── Step 1: Read project defaults (once), then apply WAV params ──────────
+    if (!window._projectDefaultSR && window.api.getBounceParams) {
+      const cur = await window.api.getBounceParams().catch(() => null);
+      if (cur?.ok) {
+        window._projectDefaultSR = cur.params?.sampleRate ?? null;
+        window._projectDefaultBD = cur.params?.bitDepth   ?? null;
+      }
+    }
     const wavParams = {
       dest: '0',
       wavEnabled: wavOn ? '1' : '0',
@@ -8589,9 +9552,11 @@ async function applyFormatToLogicNow() {
   }
 }
 
-function selectSidechain(val) {
+function selectSidechain(val, idx) {
   sidechainChannel = val || null;
+  sidechainIndex   = (idx != null && idx !== undefined) ? idx : null;
   localStorage.setItem('sb4_sidechain', sidechainChannel || '');
+  localStorage.setItem('sb4_sidechain_idx', JSON.stringify(sidechainIndex));
 }
 
 function updateSidechainSelect() {
@@ -8611,9 +9576,25 @@ function updateSidechainSelect() {
 }
 
 async function checkUpdates() {
-  if (window.api && window.api.checkForUpdates) {
-    toast('Checking for updates…');
-    await window.api.checkForUpdates();
+  if (!window.api || !window.api.checkForUpdates) return;
+  toast('Checking for updates…');
+  try {
+    const res = await window.api.checkForUpdates();
+    if (res && res.hasUpdate) {
+      // Show inline update toast with clickable download link
+      const t = document.getElementById('toast');
+      if (t) {
+        t.innerHTML = `EasyBounce v${res.version} available — <a href="#" onclick="window.api.openExternal('https://github.com/bereggg/easybounce-releases/releases/latest');return false;" style="color:var(--accent);text-decoration:underline;cursor:pointer;">Download</a>`;
+        t.style.display = 'flex';
+        t.style.pointerEvents = 'auto';
+        clearTimeout(t._toastTimer);
+        t._toastTimer = setTimeout(() => { t.style.display = 'none'; t.style.pointerEvents = ''; }, 8000);
+      }
+    } else {
+      toast('✓ You have the latest version (v1.0.0)');
+    }
+  } catch(e) {
+    toast('Could not check for updates');
   }
 }
 function highlightUpdateBtn(version) {
@@ -8736,14 +9717,23 @@ window.addEventListener('load', function(){
   // Init ? button visual state
   var qb = document.getElementById('tooltip-toggle-btn');
   if(qb && localStorage.getItem('sb4_tooltips')==='0'){
-    qb.style.background='var(--card2)';
+    // OFF state — dashed outline (same as toggleTooltips OFF)
+    qb.style.background='transparent';
     qb.style.color='var(--muted)';
-    qb.style.border='1px solid var(--b)';
-    qb.style.boxShadow='none';
+    qb.style.border='1.5px dashed var(--b2)';
+    qb.style.boxShadow='0 0 0 2.5px rgba(128,128,128,.18)';
+    qb.style.opacity='1';
+  } else if (qb) {
+    // ON state — green gradient
+    qb.style.background='linear-gradient(135deg,#00c8a0,#00a8d4)';
+    qb.style.color='#fff';
+    qb.style.border='none';
+    qb.style.boxShadow='0 2px 8px rgba(0,200,160,.4)';
+    qb.style.opacity='1';
   }
-  // If tooltips are ON → show onboarding on every launch
+  // If tooltips are ON → show onboarding on every launch (unless user said "don't show again")
   // If tooltips are OFF → skip onboarding, show scan hint arrows instead
-  if(localStorage.getItem('sb4_tooltips') !== '0'){
+  if(localStorage.getItem('sb4_tooltips') !== '0' && localStorage.getItem('sb4_ob_never') !== '1'){
     setTimeout(function(){
       if(typeof showOnboarding==='function') showOnboarding();
     }, 800);
@@ -8752,6 +9742,12 @@ window.addEventListener('load', function(){
       if(typeof showScanHint==='function') showScanHint(true); // force=true: always show regardless of loaded channels
     }, 700);
   }
+  // Escape key: hide window (if no input focused)
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !e.target.matches('input,textarea,select')) {
+      if (window.api && window.api.hideWindow) window.api.hideWindow();
+    }
+  });
 });
 </script>
 <div id="js-tip" style="position:fixed;background:rgba(0,0,0,.92);color:#fff;font-size:10px;padding:5px 9px;border-radius:6px;white-space:nowrap;z-index:9999;pointer-events:none;display:none;font-family:'Space Grotesk',sans-serif;"></div>
@@ -8845,15 +9841,16 @@ window.addEventListener('load', function(){
       <div id="notif-tg-disconnected">
         <div style="font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.5;">
           Get bounce notifications in Telegram.<br>
-          1. Open <b>@EasyBounceBot</b> in Telegram<br>
-          2. Click Connect below<br>
-          3. Send the code to the bot
+          1. Click 'Add Bot' to open @EasyBounceBot<br>
+          2. Press START in Telegram<br>
+          3. Send the code shown below to the bot
         </div>
-        <button class="notif-btn" id="notif-tg-connect-btn" onclick="connectTelegram()">Connect Telegram</button>
+        <button class="notif-btn" id="notif-tg-connect-btn" onclick="addTelegramBot()">Add Bot</button>
       </div>
       <div id="notif-tg-code" style="display:none;">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Send this code to <b>@EasyBounceBot</b>:</div>
-        <div class="notif-code" id="notif-tg-code-val">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Tap the code to copy, then send it to <b>@EasyBounceBot</b>:</div>
+        <div class="notif-code" id="notif-tg-code-val" onclick="copyTgCode()" title="Tap to copy" style="cursor:pointer;user-select:all;border-radius:8px;border:1px solid var(--b2);transition:background .15s;" onmouseover="this.style.background='rgba(108,99,255,.1)'" onmouseout="this.style.background='transparent'">—</div>
+        <button class="notif-btn" onclick="openTgWithCode()" style="width:100%;margin-top:6px;background:linear-gradient(135deg,#229ED9,#1a8bc4);color:#fff;border:none;">📨 Open Telegram &amp; Send Code</button>
         <div class="notif-status" id="notif-tg-waiting">Waiting for connection…</div>
       </div>
       <div id="notif-tg-connected" style="display:none;">
@@ -8876,7 +9873,6 @@ window.addEventListener('load', function(){
       </div>
       <div style="display:flex;gap:6px;">
         <button class="notif-btn" onclick="saveNotifEmail()">Save</button>
-        <button class="notif-btn" onclick="testEmail()">Test</button>
       </div>
       <div class="notif-status" id="notif-email-status"></div>
     </div>

@@ -330,7 +330,6 @@ func scanChannels(_ logicApp: AXUIElement) -> [Channel] {
         guard items.count > 1 else { continue }
         
         var channels: [Channel] = []
-        var nameCounts: [String: Int] = [:]
 
         for item in items {
             let kids = axKids(item)
@@ -362,12 +361,9 @@ func scanChannels(_ logicApp: AXUIElement) -> [Channel] {
 
             var nameVal: CFTypeRef?
             AXUIElementCopyAttributeValue(nf, kAXValueAttribute as CFString, &nameVal)
-            var name = (nameVal as? String) ?? ""
+            let name = (nameVal as? String) ?? ""
             guard !name.isEmpty else { continue }
-            // Allow duplicate names — append suffix to make unique
-            let count = (nameCounts[name] ?? 0) + 1
-            nameCounts[name] = count
-            if count > 1 { name = "\(name) (\(count))" }
+            // Keep original name — duplicates are distinguished by index, not name
 
             let isBus = !hasMonitoring && !hasRecord
             channels.append(Channel(name: name, index: channels.count,
@@ -921,6 +917,42 @@ case "unmuteMany":
     }
     jsonOut(["ok": true, "action": "unmuteMany", "unmuted": unmuted])
 
+case "muteManyByIndex":
+    guard args.count >= 3 else { jsonOut(["error": "indices required"]); exit(1) }
+    let miIndices = args[2].split(separator: "|").compactMap { Int($0) }
+    let miCh = scanChannels(logic)
+    var miMuted: [Int] = []; var miNotFound: [Int] = []
+    for idx in miIndices {
+        if idx < miCh.count { axPress(miCh[idx].muteBtn); miMuted.append(idx) }
+        else { miNotFound.append(idx) }
+    }
+    jsonOut(["ok": true, "action": "muteManyByIndex", "muted": miMuted, "notFound": miNotFound])
+
+case "unmuteManyByIndex":
+    guard args.count >= 3 else { jsonOut(["error": "indices required"]); exit(1) }
+    let umiIndices = args[2].split(separator: "|").compactMap { Int($0) }
+    let umiCh = scanChannels(logic)
+    var umiUnmuted: [Int] = []
+    for idx in umiIndices {
+        if idx < umiCh.count { axPress(umiCh[idx].muteBtn); umiUnmuted.append(idx) }
+    }
+    jsonOut(["ok": true, "action": "unmuteManyByIndex", "unmuted": umiUnmuted])
+
+case "close-marker-list":
+    func findMLClose(_ app: AXUIElement) -> AXUIElement? {
+        guard let wins = axVal(app, kAXWindowsAttribute) as? [AXUIElement] else { return nil }
+        return wins.first { (axVal($0, kAXTitleAttribute) as? String ?? "").contains("Marker List") }
+    }
+    if let mlWinC = findMLClose(logic) {
+        var cBtnRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(mlWinC, kAXCloseButtonAttribute as CFString, &cBtnRef)
+        if let ref = cBtnRef { axPress(ref as! AXUIElement) }
+        Thread.sleep(forTimeInterval: 0.1)
+        jsonOut(["ok": true, "closed": true])
+    } else {
+        jsonOut(["ok": true, "closed": false, "note": "not open"])
+    }
+
 case "metronome":
     var wins: CFTypeRef?
     AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &wins)
@@ -958,6 +990,37 @@ case "metronome":
     }
     if let metro = findMetronome(win) {
         let val = axIntValue(metro)
+        jsonOut(["on": val == 1, "found": true])
+    } else {
+        jsonOut(["on": false, "found": false])
+    }
+
+case "check-cycle":
+    var cycleWins: CFTypeRef?
+    AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &cycleWins)
+    guard let cycleWindows = cycleWins as? [AXUIElement], let cycleWin = cycleWindows.first else {
+        jsonOut(["on": false, "found": false, "error": "no window"]); break
+    }
+    func findCycleBtn(_ el: AXUIElement, depth: Int = 0) -> AXUIElement? {
+        if depth > 30 { return nil }
+        let role = axRole(el)
+        if role == "AXCheckBox" || role == "AXButton" {
+            let d = (axVal(el, kAXDescriptionAttribute) as? String ?? "").lowercased()
+            let t = (axVal(el, kAXTitleAttribute) as? String ?? "").lowercased()
+            if d == "cycle" || t == "cycle" || d.hasPrefix("cycle ") || t.hasPrefix("cycle ") { return el }
+            if role == "AXButton" {
+                var subRef: CFTypeRef?
+                AXUIElementCopyAttributeValue(el, kAXSubroleAttribute as CFString, &subRef)
+                if (subRef as? String) == "AXSwitch" && (d.contains("cycle") || t.contains("cycle")) { return el }
+            }
+        }
+        for child in axKids(el) {
+            if let found = findCycleBtn(child, depth: depth + 1) { return found }
+        }
+        return nil
+    }
+    if let cycleBtn = findCycleBtn(cycleWin) {
+        let val = axIntValue(cycleBtn)
         jsonOut(["on": val == 1, "found": true])
     } else {
         jsonOut(["on": false, "found": false])
@@ -2132,6 +2195,10 @@ case "applyBouncePreset":
         let isMode = curVal.contains("Realtime") || curVal.contains("Offline") || curVal.contains("Online")
         let isMp3Rate = curVal.lowercased().contains("kbit") || curVal.lowercased().contains("kbps")
         let isMp3Stereo = curVal == "Joint Stereo" || curVal == "Stereo" || curVal == "Mono"
+        // Bounce Range popup: "Locators" / "Cycle" / "Song End" / "Project End" / "End of last region"
+        let isRange = ["Locators","Cycle","Cycle Area","Song End","Project End",
+                       "End of last region","End of Last Region","Sequence End","Project Length"].contains(curVal)
+                      || (curVal.lowercased().contains("locator") && !curVal.lowercased().contains("kbit"))
 
         if isFileFormat, let val = abpParams["fileType"] {
             abpSetResults["fileType"] = abpSetPopup(abpPopup, val)
@@ -2156,6 +2223,8 @@ case "applyBouncePreset":
             abpSetResults["dithering"] = abpSetPopup(abpPopup, val)
         } else if isMode, let val = abpParams["mode"] {
             abpSetResults["mode"] = abpSetPopup(abpPopup, val)
+        } else if isRange, let val = abpParams["bounceRange"] {
+            abpSetResults["bounceRange"] = abpSetPopup(abpPopup, val)
         } else if isNormalize, let val = abpParams["normalize"] {
             abpSetResults["normalize"] = abpSetPopup(abpPopup, val)
         } else if isMp3Rate {
@@ -2258,8 +2327,14 @@ case "getBounceParams":
         let gbpY = Int(gbpPt.y)
         let gbpVal = (axVal(gbpPopup, kAXValueAttribute) as? String) ?? ""
         // Identify popups by value content (works across Logic versions with different layouts)
+        let gbpIsRange = ["Locators","Cycle","Cycle Area","Song End","Project End",
+                          "End of last region","End of Last Region","Sequence End","Project Length"].contains(gbpVal)
+                         || (gbpVal.lowercased().contains("locator") && !gbpVal.lowercased().contains("kbit"))
+                         || gbpVal.lowercased().contains("end of") || gbpVal.lowercased().contains("project end")
         if ["WAVE","AIFF","CAF","WAVE64"].contains(gbpVal) {
             gbpResult["fileFormat"] = gbpVal
+        } else if gbpIsRange {
+            gbpResult["bounceRange"] = gbpVal
         } else if gbpVal.lowercased().contains("bit") {
             gbpResult["bitDepth"] = gbpVal
         } else if gbpVal.contains("kHz") || gbpVal.contains("Hz") {
@@ -2273,6 +2348,8 @@ case "getBounceParams":
         } else if ["On","Off","Overload Protection Only"].contains(gbpVal) {
             gbpResult["normalize"] = gbpVal
         } else {
+            // Log unrecognized popup so we can identify bounceRange value
+            fputs("[getBounceParams] UNRECOGNIZED popup y=\(gbpY) val='\(gbpVal)'\n", stderr)
             // Fallback: use Y position
             if abs(gbpY - 187) <= 15 { gbpResult["fileType"]   = gbpVal }
             if abs(gbpY - 217) <= 15 { gbpResult["bitDepth"]   = gbpVal }
@@ -2659,7 +2736,9 @@ case "scan-tree":
     }
 
     // Adaptive stabilization — poll track count via axKids (no scroll needed)
-    func waitStable(reference: Int, expectMore: Bool, maxWait: Double = 8.0) -> Int {
+    // maxWait increased to 15s for large projects (100+ tracks, slow machines)
+    // stableRuns=3 means count must be stable for 3 consecutive polls (~450ms) before accepting
+    func waitStable(reference: Int, expectMore: Bool, maxWait: Double = 15.0) -> Int {
         let start = Date()
         var lastCount = -1; var stableRuns = 0
         while Date().timeIntervalSince(start) < maxWait {
@@ -2673,7 +2752,7 @@ case "scan-tree":
             if count == 0 { continue }
             let passed = expectMore ? (count > reference) : (count < reference)
             if count == lastCount && count > 0 && passed {
-                stableRuns += 1; if stableRuns >= 2 { return count }
+                stableRuns += 1; if stableRuns >= 3 { return count }
             } else { stableRuns = 0; lastCount = count }
         }
         return lastCount
@@ -2761,10 +2840,25 @@ case "scan-tree":
         }
 
         // Step 1: Collapse all (single Option+click if any are expanded)
+        // After collapse, verify count actually decreased — retry once if not
         if let tri = firstExpandedTri {
             optClickTriangle(tri)
             let c = waitStable(reference: countBefore, expectMore: false)
-            _lap("Step 1: collapsed to \(c) tracks")
+            _lap("Step 1: collapsed to \(c) tracks (was \(countBefore))")
+
+            // Verify collapse worked: count should be less than before
+            // If equal, Logic may have ignored the click — retry once
+            if c >= countBefore {
+                _lap("Step 1: collapse may have failed (count unchanged) — retrying…")
+                Thread.sleep(forTimeInterval: 0.4)
+                if let tri2 = findTriangle(hg0, expanded: true) {
+                    optClickTriangle(tri2)
+                    let c2 = waitStable(reference: countBefore, expectMore: false)
+                    _lap("Step 1 retry: collapsed to \(c2) tracks")
+                } else {
+                    _lap("Step 1 retry: no expanded triangle found — already collapsed?")
+                }
+            }
         } else {
             _lap("Step 1: already collapsed")
         }
@@ -2774,12 +2868,26 @@ case "scan-tree":
         let summaryNums = Set(beforeTracks.map { $0.num })
 
         // Step 2: Expand all (single Option+click)
+        // After expand, verify count actually increased — retry once if not
         _lap("Step 2: Expand all")
         let collapsedCount = beforeTracks.count
         if let tri = findTriangle(hg0, expanded: false) {
             optClickTriangle(tri)
             let c = waitStable(reference: collapsedCount, expectMore: true)
-            _lap("  expanded to \(c) tracks")
+            _lap("  expanded to \(c) tracks (was \(collapsedCount))")
+
+            // Verify expand worked: count should be greater than collapsed count
+            if c <= collapsedCount {
+                _lap("  Step 2: expand may have failed (count unchanged) — retrying…")
+                Thread.sleep(forTimeInterval: 0.4)
+                if let tri2 = findTriangle(hg0, expanded: false) {
+                    optClickTriangle(tri2)
+                    let c2 = waitStable(reference: collapsedCount, expectMore: true)
+                    _lap("  Step 2 retry: expanded to \(c2) tracks")
+                } else {
+                    _lap("  Step 2 retry: no collapsed triangle found — already expanded or no groups?")
+                }
+            }
         } else {
             _lap("  WARNING: no collapsed triangle found to expand!")
         }
@@ -2799,31 +2907,42 @@ case "scan-tree":
         _lap("Step 3 done")
 
         // Build tree — use summaryNums + triangleNums to classify each item
+        // parentNum tracks by index (not name) to handle duplicate track names correctly
         var treeResult: [[String: Any]] = []
-        var currentGroup = ""
-        var currentSubgroup = ""
+        var currentGroupNum = -1
+        var currentGroupName = ""
+        var currentSubgroupNum = -1
+        var currentSubgroupName = ""
         for t in after {
             let isSummary = summaryNums.contains(t.num)
             let hasTri = triangleNums.contains(t.num)
 
             if isSummary && hasTri {
-                currentGroup = t.name
-                currentSubgroup = ""
+                currentGroupNum = t.num
+                currentGroupName = t.name
+                currentSubgroupNum = -1
+                currentSubgroupName = ""
                 treeResult.append(["num": t.num, "name": t.name, "type": "group",
-                                   "parent": "", "muted": t.muted ? 1 : 0])
+                                   "parent": "", "parentNum": -1, "muted": t.muted ? 1 : 0])
             } else if isSummary && !hasTri {
-                currentGroup = ""
-                currentSubgroup = ""
+                currentGroupNum = -1
+                currentGroupName = ""
+                currentSubgroupNum = -1
+                currentSubgroupName = ""
                 treeResult.append(["num": t.num, "name": t.name, "type": "track",
-                                   "parent": "", "muted": t.muted ? 1 : 0])
+                                   "parent": "", "parentNum": -1, "muted": t.muted ? 1 : 0])
             } else if !isSummary && hasTri {
-                currentSubgroup = t.name
+                currentSubgroupNum = t.num
+                currentSubgroupName = t.name
                 treeResult.append(["num": t.num, "name": t.name, "type": "group",
-                                   "parent": currentGroup, "muted": t.muted ? 1 : 0])
+                                   "parent": currentGroupName, "parentNum": currentGroupNum,
+                                   "muted": t.muted ? 1 : 0])
             } else {
-                let parent = currentSubgroup.isEmpty ? currentGroup : currentSubgroup
+                let parentNum = currentSubgroupNum >= 0 ? currentSubgroupNum : currentGroupNum
+                let parentName = currentSubgroupName.isEmpty ? currentGroupName : currentSubgroupName
                 treeResult.append(["num": t.num, "name": t.name, "type": "track",
-                                   "parent": parent, "muted": t.muted ? 1 : 0])
+                                   "parent": parentName, "parentNum": parentNum,
+                                   "muted": t.muted ? 1 : 0])
             }
         }
         jsonOut(["tracks": treeResult])
@@ -3232,6 +3351,575 @@ case "dumpTrackAX":
         ])
     }
     jsonOut(["ok": true, "headerChildCount": dtKids.count, "items": dtItems])
+
+// ─────────────────────────────────────────────
+// dump-transport: Find cycle locator fields in Logic transport bar
+// ─────────────────────────────────────────────
+case "dump-transport":
+    guard let wins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement] else {
+        jsonOut(["ok": false, "error": "no windows"]); break
+    }
+    // Find main Tracks/Arrange window
+    let mainWin = wins.first(where: { (axVal($0, kAXTitleAttribute) as? String ?? "").contains("Tracks") })
+                  ?? wins.first(where: { !(axVal($0, kAXTitleAttribute) as? String ?? "").contains("Marker List") })
+                  ?? wins.first!
+
+    // Recursive dump — look for anything that contains "Locator" or "Cycle" or position-like values
+    func dtDump(_ el: AXUIElement, _ depth: Int, _ path: String) -> [[String: Any]] {
+        if depth > 8 { return [] }
+        let role  = axRole(el)
+        let title = (axVal(el, kAXDescriptionAttribute) as? String) ?? (axVal(el, kAXTitleAttribute) as? String) ?? ""
+        let val   = (axVal(el, kAXValueAttribute) as? String) ?? ""
+        var settable = false
+        var isSettable: DarwinBoolean = false
+        AXUIElementIsAttributeSettable(el, kAXValueAttribute as CFString, &isSettable)
+        settable = isSettable.boolValue
+
+        var results: [[String: Any]] = []
+        let interesting = title.lowercased().contains("locator") || title.lowercased().contains("cycle")
+            || title.lowercased().contains("left") || title.lowercased().contains("right")
+            || val.contains(" 1 1") || val.contains("bar") || role == "AXTextField"
+        if interesting || depth <= 3 {
+            results.append(["depth": depth, "role": role, "title": title, "val": val,
+                            "settable": settable, "path": path])
+        }
+        for (i, kid) in axKids(el).enumerated() {
+            results += dtDump(kid, depth+1, "\(path).\(i)")
+        }
+        return results
+    }
+    jsonOut(["ok": true, "elements": dtDump(mainWin, 0, "root")])
+
+// ─────────────────────────────────────────────
+// scan-markers: Read all markers from Marker List window
+// Returns JSON: { ok: true, markers: [{name, position, length}] }
+// ─────────────────────────────────────────────
+case "scan-markers":
+    // Open Navigate menu → Marker List to ensure window is open
+    func openMarkerList(_ app: AXUIElement) {
+        guard let menuBarRaw = axVal(app, kAXMenuBarAttribute) else { return }
+        let menuBar = menuBarRaw as! AXUIElement
+        for menu in axKids(menuBar) {
+            let title = (axVal(menu, kAXTitleAttribute) as? String) ?? ""
+            if title == "Navigate" {
+                axPress(menu)
+                Thread.sleep(forTimeInterval: 0.2)
+                let items = findAll(menu, role: "AXMenuItem", depth: 5)
+                for item in items {
+                    let t = (axVal(item, kAXTitleAttribute) as? String) ?? ""
+                    if t.contains("Marker List") {
+                        axPress(item)
+                        // Poll for window (max 800ms) instead of fixed sleep
+                        for _ in 0..<8 {
+                            Thread.sleep(forTimeInterval: 0.1)
+                            if let wins = axVal(app, kAXWindowsAttribute) as? [AXUIElement],
+                               wins.contains(where: { (axVal($0, kAXTitleAttribute) as? String ?? "").contains("Marker List") }) { break }
+                        }
+                        return
+                    }
+                }
+                // Close menu if Marker List item not found
+                let src2 = CGEventSource(stateID: .hidSystemState)
+                if let dn = CGEvent(keyboardEventSource: src2, virtualKey: 53, keyDown: true),
+                   let up = CGEvent(keyboardEventSource: src2, virtualKey: 53, keyDown: false) {
+                    dn.post(tap: .cghidEventTap); up.post(tap: .cghidEventTap)
+                }
+                break
+            }
+        }
+    }
+
+    // Find Marker List window (title contains "Marker List")
+    func findMarkerListWindow(_ app: AXUIElement) -> AXUIElement? {
+        guard let wins = axVal(app, kAXWindowsAttribute) as? [AXUIElement] else { return nil }
+        for w in wins {
+            let t = (axVal(w, kAXTitleAttribute) as? String) ?? ""
+            if t.contains("Marker List") { return w }
+        }
+        return nil
+    }
+
+    // Try to find window; if not found, open it (and remember we opened it)
+    var mlWin = findMarkerListWindow(logic)
+    let weOpenedMarkerList = mlWin == nil
+    if mlWin == nil {
+        openMarkerList(logic)
+        mlWin = findMarkerListWindow(logic)
+    }
+
+    guard let markerWin = mlWin else {
+        jsonOut(["ok": false, "error": "no-marker-list"])
+        break
+    }
+
+    // Find AXTable in the window
+    func findTable(_ el: AXUIElement, depth: Int) -> AXUIElement? {
+        if depth > 8 { return nil }
+        if axRole(el) == "AXTable" { return el }
+        for kid in axKids(el) { if let f = findTable(kid, depth: depth+1) { return f } }
+        return nil
+    }
+
+    guard let table = findTable(markerWin, depth: 0) else {
+        jsonOut(["ok": false, "error": "No table found in Marker List window"])
+        break
+    }
+
+    // Expand the window height so ALL marker rows become visible in the AX tree.
+    // Logic only renders AX rows for on-screen rows; a small window hides scrolled-off ones.
+    var mlOrigSizeRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(markerWin, kAXSizeAttribute as CFString, &mlOrigSizeRef)
+    var mlOrigSize = CGSize(width: 560, height: 320) // fallback
+    if let sv = mlOrigSizeRef { AXValueGetValue(sv as! AXValue, .cgSize, &mlOrigSize) }
+    var mlBigSize = CGSize(width: max(mlOrigSize.width, 500), height: 1400)
+    if let sizeAX = AXValueCreate(.cgSize, &mlBigSize) {
+        AXUIElementSetAttributeValue(markerWin, kAXSizeAttribute as CFString, sizeAX)
+        Thread.sleep(forTimeInterval: 0.25) // let Logic re-render rows
+    }
+
+    // Wait for Logic to populate all marker rows (poll until stable, max 1.5s)
+    var prevCount = -1
+    for _ in 0..<15 {
+        let count = axKids(table).filter { axRole($0) == "AXRow" }.count
+        if count > 0 && count == prevCount { break }
+        prevCount = count
+        Thread.sleep(forTimeInterval: 0.1)
+    }
+
+    let rows = axKids(table).filter { axRole($0) == "AXRow" }
+    fputs("[scan-markers] found \(rows.count) rows\n", stderr)
+
+    var markers: [[String: String]] = []
+    for (i, row) in rows.enumerated() {
+        let cells = axKids(row)
+        guard cells.count >= 3 else { continue }
+
+        // cell[1]: position — child is AXGroup with description like "9 1 1 1"
+        var position = ""
+        let cell1Kids = axKids(cells[1])
+        if let posEl = cell1Kids.first {
+            position = (axVal(posEl, kAXDescriptionAttribute) as? String) ?? ""
+        }
+
+        // cell[2]: name — child is AXCell with description = marker name
+        var name = ""
+        let cell2Kids = axKids(cells[2])
+        if let nameEl = cell2Kids.first {
+            name = (axVal(nameEl, kAXDescriptionAttribute) as? String) ?? ""
+            // Fallback: try value
+            if name.isEmpty { name = (axVal(nameEl, kAXValueAttribute) as? String) ?? "" }
+        }
+        // Also try description directly on cell[2]
+        if name.isEmpty { name = (axVal(cells[2], kAXDescriptionAttribute) as? String) ?? "" }
+
+        // cell[3]: length — child is AXGroup with description like "4 0 0 0"
+        var length = ""
+        if cells.count >= 4 {
+            let cell3Kids = axKids(cells[3])
+            if let lenEl = cell3Kids.first {
+                length = (axVal(lenEl, kAXDescriptionAttribute) as? String) ?? ""
+            }
+        }
+
+        fputs("[scan-markers] row \(i): name='\(name)' pos='\(position)' len='\(length)'\n", stderr)
+        if !name.isEmpty {
+            markers.append(["name": name, "position": position, "length": length, "index": "\(i)"])
+        }
+    }
+
+    // Restore original window size
+    if var restoreSize = Optional(mlOrigSize), let sizeAX2 = AXValueCreate(.cgSize, &restoreSize) {
+        AXUIElementSetAttributeValue(markerWin, kAXSizeAttribute as CFString, sizeAX2)
+    }
+
+    // Close Marker List if we opened it
+    if weOpenedMarkerList {
+        var closeBtnRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(markerWin, kAXCloseButtonAttribute as CFString, &closeBtnRef)
+        if let ref = closeBtnRef {
+            axPress(ref as! AXUIElement)
+        } else {
+            let src = CGEventSource(stateID: .hidSystemState)
+            var logicPid: pid_t = 0; AXUIElementGetPid(markerWin, &logicPid)
+            if let dn = CGEvent(keyboardEventSource: src, virtualKey: 13, keyDown: true),
+               let up = CGEvent(keyboardEventSource: src, virtualKey: 13, keyDown: false) {
+                dn.flags = .maskCommand; up.flags = .maskCommand
+                dn.postToPid(logicPid); up.postToPid(logicPid)
+            }
+        }
+        Thread.sleep(forTimeInterval: 0.15)
+    }
+
+    jsonOut(["ok": true, "markers": markers])
+
+// ─────────────────────────────────────────────
+// set-locators-by-marker: Select a marker row and set cycle region
+// Args: marker name (string) or index (int)
+// Usage: LogicBridge set-locators-by-marker "60s"
+// ─────────────────────────────────────────────
+case "set-locators-by-marker":
+    let markerTarget = args.count >= 3 ? args[2] : ""
+    // Pass "keep-ml" in any arg position to prevent closing Marker List after
+    let keepML = args.contains("keep-ml")
+    guard !markerTarget.isEmpty else {
+        jsonOut(["ok": false, "error": "Usage: set-locators-by-marker <markerName>"])
+        break
+    }
+
+    // Find Marker List window
+    func findMarkerListWin2(_ app: AXUIElement) -> AXUIElement? {
+        guard let wins = axVal(app, kAXWindowsAttribute) as? [AXUIElement] else { return nil }
+        for w in wins {
+            let t = (axVal(w, kAXTitleAttribute) as? String) ?? ""
+            if t.contains("Marker List") { return w }
+        }
+        return nil
+    }
+
+    // Open if needed
+    let weOpenedML2 = findMarkerListWin2(logic) == nil
+    if weOpenedML2 {
+        guard let menuBar2Raw = axVal(logic, kAXMenuBarAttribute) else {
+            jsonOut(["ok": false, "error": "No menu bar"]); break
+        }
+        let menuBar2 = menuBar2Raw as! AXUIElement
+        for menu in axKids(menuBar2) {
+            let t = (axVal(menu, kAXTitleAttribute) as? String) ?? ""
+            if t == "Navigate" {
+                axPress(menu); Thread.sleep(forTimeInterval: 0.2)
+                for item in findAll(menu, role: "AXMenuItem", depth: 5) {
+                    let it = (axVal(item, kAXTitleAttribute) as? String) ?? ""
+                    if it.contains("Marker List") { axPress(item); break }
+                }
+                break
+            }
+        }
+        // Poll up to 1.5s for ML window to appear
+        var mlPollWin: AXUIElement? = nil
+        for _ in 0..<15 {
+            Thread.sleep(forTimeInterval: 0.1)
+            if let w = findMarkerListWin2(logic) { mlPollWin = w; break }
+        }
+        if mlPollWin == nil {
+            jsonOut(["ok": false, "error": "Marker List window not found"]); break
+        }
+    }
+
+    guard let mlWin2 = findMarkerListWin2(logic) else {
+        jsonOut(["ok": false, "error": "Marker List window not found"]); break
+    }
+
+    // Find table
+    func findTable2(_ el: AXUIElement, depth: Int) -> AXUIElement? {
+        if depth > 8 { return nil }
+        if axRole(el) == "AXTable" { return el }
+        for kid in axKids(el) { if let f = findTable2(kid, depth: depth+1) { return f } }
+        return nil
+    }
+
+    guard let table2 = findTable2(mlWin2, depth: 0) else {
+        jsonOut(["ok": false, "error": "No table in Marker List"]); break
+    }
+
+    // Expand window so all rows are visible in AX tree before searching/clicking
+    var slbmOrigSizeRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(mlWin2, kAXSizeAttribute as CFString, &slbmOrigSizeRef)
+    var slbmOrigSize = CGSize(width: 560, height: 320)
+    if let sv = slbmOrigSizeRef { AXValueGetValue(sv as! AXValue, .cgSize, &slbmOrigSize) }
+    var slbmBigSize = CGSize(width: max(slbmOrigSize.width, 500), height: 1400)
+    if let sizeAX = AXValueCreate(.cgSize, &slbmBigSize) {
+        AXUIElementSetAttributeValue(mlWin2, kAXSizeAttribute as CFString, sizeAX)
+        Thread.sleep(forTimeInterval: 0.2)
+    }
+
+    let rows2 = axKids(table2).filter { axRole($0) == "AXRow" }
+
+    // Find the row matching the target marker name or index
+    var targetRow: AXUIElement? = nil
+    let targetIndex = Int(markerTarget)
+
+    for (i, row) in rows2.enumerated() {
+        let cells = axKids(row)
+        guard cells.count >= 3 else { continue }
+
+        var name = ""
+        let cell2Kids = axKids(cells[2])
+        if let nameEl = cell2Kids.first {
+            name = (axVal(nameEl, kAXDescriptionAttribute) as? String) ?? ""
+            if name.isEmpty { name = (axVal(nameEl, kAXValueAttribute) as? String) ?? "" }
+        }
+        if name.isEmpty { name = (axVal(cells[2], kAXDescriptionAttribute) as? String) ?? "" }
+
+        if let idx = targetIndex {
+            if i == idx { targetRow = row; break }
+        } else {
+            if name == markerTarget { targetRow = row; break }
+        }
+    }
+
+    guard let rowToClick = targetRow else {
+        // Restore size before early exit
+        if var restoreSize2 = Optional(slbmOrigSize), let sizeAX2 = AXValueCreate(.cgSize, &restoreSize2) {
+            AXUIElementSetAttributeValue(mlWin2, kAXSizeAttribute as CFString, sizeAX2)
+        }
+        jsonOut(["ok": false, "error": "Marker '\(markerTarget)' not found"]); break
+    }
+
+    // Find main Tracks window (not Marker List / Mixer / Bounce)
+    func slbmTracksWin(_ app: AXUIElement) -> AXUIElement? {
+        guard let wins = axVal(app, kAXWindowsAttribute) as? [AXUIElement] else { return nil }
+        for w in wins {
+            let t = (axVal(w, kAXTitleAttribute) as? String) ?? ""
+            if t.isEmpty || t.contains("Marker List") || t.contains("Mixer") || t.contains("Bounce") { continue }
+            return w
+        }
+        return nil
+    }
+
+    // Navigate to Global Tracks header (UI element 1 of splitter group 1 of splitter group 1 of group 2 of group 3)
+    func slbmGTHeader(_ win: AXUIElement) -> AXUIElement? {
+        let g3 = axKids(win).filter { axRole($0) == "AXGroup" }
+        guard g3.count >= 3 else { return nil }
+        let g2 = axKids(g3[2]).filter { axRole($0) == "AXGroup" }
+        guard g2.count >= 2 else { return nil }
+        let sg1 = axKids(g2[1]).filter { axRole($0) == "AXSplitGroup" }
+        guard let sg = sg1.first else { return nil }
+        let sg2 = axKids(sg).filter { axRole($0) == "AXSplitGroup" }
+        guard let sg2el = sg2.first else { return nil }
+        return axKids(sg2el).first
+    }
+
+    // Enable Marker Track via Track → Global Tracks → Marker Track (AX, no focus needed)
+    func slbmEnableMarkerTrack(_ app: AXUIElement) {
+        guard let mbRaw = axVal(app, kAXMenuBarAttribute) else { return }
+        let mb = mbRaw as! AXUIElement
+        func escapeMenu() {
+            let src = CGEventSource(stateID: .hidSystemState)
+            if let dn = CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: true),
+               let up = CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: false) {
+                dn.post(tap: .cghidEventTap); up.post(tap: .cghidEventTap)
+            }
+        }
+        for menu in axKids(mb) {
+            guard (axVal(menu, kAXTitleAttribute) as? String) == "Track" else { continue }
+            axPress(menu); Thread.sleep(forTimeInterval: 0.3)
+            // Find Global Tracks submenu item
+            var gti: AXUIElement? = nil
+            for item in findAll(menu, role: "AXMenuItem", depth: 5) {
+                if (axVal(item, kAXTitleAttribute) as? String) == "Global Tracks" { gti = item; break }
+            }
+            guard let gt = gti else { escapeMenu(); return }
+            // Press Global Tracks to expand submenu (same as AppleScript "click menu item Global Tracks")
+            axPress(gt); Thread.sleep(forTimeInterval: 0.35)
+            // Get submenu as first AXMenu child of Global Tracks item
+            var found = false
+            let subMenus = axKids(gt).filter { axRole($0) == "AXMenu" }
+            for sm in subMenus {
+                for si in axKids(sm).filter({ axRole($0) == "AXMenuItem" }) {
+                    if (axVal(si, kAXTitleAttribute) as? String ?? "").contains("Marker") {
+                        axPress(si); Thread.sleep(forTimeInterval: 0.25)
+                        fputs("[set-locators-by-marker] enabled Marker Track\n", stderr)
+                        found = true; break
+                    }
+                }
+                if found { break }
+            }
+            if !found {
+                fputs("[set-locators-by-marker] WARNING: Marker Track not found — closing menu\n", stderr)
+                escapeMenu()
+            }
+            break
+        }
+    }
+
+    var hadGlobalTracks = false
+    if let tw = slbmTracksWin(logic), let ue1 = slbmGTHeader(tw) {
+        func markerPopupVisible() -> Bool {
+            axKids(ue1).filter { axRole($0) == "AXPopUpButton" }
+                .contains { (axVal($0, kAXDescriptionAttribute) as? String ?? "").contains("Marker") }
+        }
+        // Check Marker popup first — if visible, GT is already open with Marker
+        if markerPopupVisible() {
+            hadGlobalTracks = true
+        } else {
+            // GT might be hidden — check checkbox and show if needed
+            let cb = axKids(ue1).filter { axRole($0) == "AXCheckBox" }
+                .first { (axVal($0, kAXDescriptionAttribute) as? String ?? "").contains("Global Tracks") }
+            let cbVal = cb.map { axIntValue($0) } ?? -1
+            hadGlobalTracks = cbVal == 1
+            if !hadGlobalTracks, let cb = cb {
+                axPress(cb); Thread.sleep(forTimeInterval: 0.4)
+            }
+            // If Marker still not visible after showing GT — enable via Track menu
+            if !markerPopupVisible() {
+                fputs("[set-locators-by-marker] Marker missing — enabling via Track menu\n", stderr)
+                slbmEnableMarkerTrack(logic); Thread.sleep(forTimeInterval: 0.2)
+            }
+        }
+    }
+
+    // Raise ML window FIRST, then get positions (window may move on raise)
+    var lpidML: pid_t = 0; AXUIElementGetPid(rowToClick, &lpidML)
+    if let mlWin2raise = findMarkerListWin2(logic) {
+        AXUIElementPerformAction(mlWin2raise, kAXRaiseAction as CFString)
+    }
+    NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.logic10").first?
+        .activate(options: .activateIgnoringOtherApps)
+    Thread.sleep(forTimeInterval: 0.25)
+    // Re-fetch table/rows after raise so positions are current
+    var clickPt: CGPoint? = nil
+    if let mlWin2b = findMarkerListWin2(logic) {
+        func findTable2b(_ el: AXUIElement, _ d: Int) -> AXUIElement? {
+            if d > 8 { return nil }
+            if axRole(el) == "AXTable" { return el }
+            for k in axKids(el) { if let f = findTable2b(k, d+1) { return f } }
+            return nil
+        }
+        if let tbl = findTable2b(mlWin2b, 0) {
+            let rows2b = axKids(tbl).filter { axRole($0) == "AXRow" }
+            for (i, row) in rows2b.enumerated() {
+                let cells = axKids(row)
+                guard cells.count >= 3 else { continue }
+                var name2 = ""
+                if let nameEl = axKids(cells[2]).first {
+                    name2 = (axVal(nameEl, kAXDescriptionAttribute) as? String) ?? ""
+                    if name2.isEmpty { name2 = (axVal(nameEl, kAXValueAttribute) as? String) ?? "" }
+                }
+                if name2.isEmpty { name2 = (axVal(cells[2], kAXDescriptionAttribute) as? String) ?? "" }
+                let matches = (targetIndex != nil) ? (i == targetIndex!) : (name2 == markerTarget)
+                if matches {
+                    // Get position from name cell (cells[2]) — most reliable
+                    func cp(_ el: AXUIElement) -> CGPoint? {
+                        var pRef: CFTypeRef?; var sRef: CFTypeRef?
+                        AXUIElementCopyAttributeValue(el, kAXPositionAttribute as CFString, &pRef)
+                        AXUIElementCopyAttributeValue(el, kAXSizeAttribute as CFString, &sRef)
+                        guard let p = pRef, let s = sRef else { return nil }
+                        var pt = CGPoint.zero; var sz = CGSize.zero
+                        AXValueGetValue(p as! AXValue, .cgPoint, &pt)
+                        AXValueGetValue(s as! AXValue, .cgSize, &sz)
+                        guard sz.width > 0 && sz.height > 0 else { return nil }
+                        return CGPoint(x: pt.x + sz.width/2, y: pt.y + sz.height/2)
+                    }
+                    // Prefer name cell, then position cell, then row
+                    for ci in [2, 1, 3] {
+                        if ci < cells.count, let p = cp(cells[ci]) { clickPt = p; break }
+                    }
+                    if clickPt == nil { clickPt = cp(row) }
+                    break
+                }
+            }
+        }
+    }
+    fputs("[set-locators-by-marker] clickPt=\(String(describing: clickPt)), pid=\(lpidML)\n", stderr)
+    // Click the marker row name cell via real HID event (cghidEventTap)
+    // Save and restore mouse position so it's non-intrusive
+    let hidSrc = CGEventSource(stateID: .hidSystemState)
+    let savedMouse = CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: .zero, mouseButton: .left)?.location ?? .zero
+    var setLocatorsOk = false
+    if let cp = clickPt {
+        if let ev1 = CGEvent(mouseEventSource: hidSrc, mouseType: .leftMouseDown, mouseCursorPosition: cp, mouseButton: .left),
+           let ev2 = CGEvent(mouseEventSource: hidSrc, mouseType: .leftMouseUp,   mouseCursorPosition: cp, mouseButton: .left) {
+            ev1.post(tap: .cghidEventTap); ev2.post(tap: .cghidEventTap)
+        }
+        Thread.sleep(forTimeInterval: 0.2)
+        // Navigate menu → "Set Locators by Selection and Enable Cycle"
+        if let menuBar3Raw = axVal(logic, kAXMenuBarAttribute) {
+            let menuBar3 = menuBar3Raw as! AXUIElement
+            for menu in axKids(menuBar3) {
+                let t = (axVal(menu, kAXTitleAttribute) as? String) ?? ""
+                if t == "Navigate" {
+                    axPress(menu); Thread.sleep(forTimeInterval: 0.2)
+                    for item in findAll(menu, role: "AXMenuItem", depth: 5) {
+                        let it = (axVal(item, kAXTitleAttribute) as? String) ?? ""
+                        if it.contains("Set Locators by Selection") && !it.contains("Rounded") {
+                            axPress(item); Thread.sleep(forTimeInterval: 0.2)
+                            setLocatorsOk = true; break
+                        }
+                    }
+                    if !setLocatorsOk {
+                        let src3 = CGEventSource(stateID: .hidSystemState)
+                        if let dn = CGEvent(keyboardEventSource: src3, virtualKey: 53, keyDown: true),
+                           let up = CGEvent(keyboardEventSource: src3, virtualKey: 53, keyDown: false) {
+                            dn.post(tap: .cghidEventTap); up.post(tap: .cghidEventTap)
+                        }
+                    }
+                    break
+                }
+            }
+        }
+        // Restore mouse position
+        if let mv = CGEvent(mouseEventSource: hidSrc, mouseType: .mouseMoved, mouseCursorPosition: savedMouse, mouseButton: .left) {
+            mv.post(tap: .cghidEventTap)
+        }
+    }
+
+    // Hide Global Tracks again if we showed them
+    if !hadGlobalTracks && setLocatorsOk {
+        if let tw = slbmTracksWin(logic), let ue1 = slbmGTHeader(tw),
+           let cb = axKids(ue1).filter({ axRole($0) == "AXCheckBox" })
+               .first(where: { (axVal($0, kAXDescriptionAttribute) as? String ?? "").contains("Global Tracks") }) {
+            axPress(cb); Thread.sleep(forTimeInterval: 0.2)
+        }
+    }
+
+    // Restore Marker List window to original size (if it's still open)
+    if !weOpenedML2 || keepML {
+        if let mlWin2c = findMarkerListWin2(logic),
+           var restoreSize3 = Optional(slbmOrigSize),
+           let sizeAX3 = AXValueCreate(.cgSize, &restoreSize3) {
+            AXUIElementSetAttributeValue(mlWin2c, kAXSizeAttribute as CFString, sizeAX3)
+        }
+    }
+
+    // Close Marker List if we opened it (and keepML not requested)
+    if weOpenedML2 && !keepML {
+        if let mlWin2b = findMarkerListWin2(logic) {
+            var closeBtnRef2: CFTypeRef?
+            AXUIElementCopyAttributeValue(mlWin2b, kAXCloseButtonAttribute as CFString, &closeBtnRef2)
+            if let ref = closeBtnRef2 {
+                axPress(ref as! AXUIElement)
+            } else {
+                let src = CGEventSource(stateID: .hidSystemState)
+                var lpid: pid_t = 0; AXUIElementGetPid(mlWin2b, &lpid)
+                if let dn = CGEvent(keyboardEventSource: src, virtualKey: 13, keyDown: true),
+                   let up = CGEvent(keyboardEventSource: src, virtualKey: 13, keyDown: false) {
+                    dn.flags = .maskCommand; up.flags = .maskCommand
+                    dn.postToPid(lpid); up.postToPid(lpid)
+                }
+            }
+            Thread.sleep(forTimeInterval: 0.15)
+        }
+    }
+
+    // Raise main Logic Arrange window and restore OS-level focus so Bounce works
+    // Also do a real HID click on the Tracks window toolbar to steal focus from Marker List
+    NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.logic10").first?
+        .activate(options: .activateIgnoringOtherApps)
+    Thread.sleep(forTimeInterval: 0.1)
+    if let tw = slbmTracksWin(logic) {
+        AXUIElementSetAttributeValue(logic, kAXFocusedWindowAttribute as CFString, tw as CFTypeRef)
+        AXUIElementPerformAction(tw, kAXRaiseAction as CFString)
+        Thread.sleep(forTimeInterval: 0.1)
+        // Click on the toolbar area of the Tracks window to give it real OS focus
+        var twPosRef: CFTypeRef?; var twSzRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(tw, kAXPositionAttribute as CFString, &twPosRef)
+        AXUIElementCopyAttributeValue(tw, kAXSizeAttribute as CFString, &twSzRef)
+        if let p = twPosRef, let s = twSzRef {
+            var twPt = CGPoint.zero; var twSz = CGSize.zero
+            AXValueGetValue(p as! AXValue, .cgPoint, &twPt)
+            AXValueGetValue(s as! AXValue, .cgSize, &twSz)
+            // Click at top-center of window (toolbar area) — safe, doesn't change tracks
+            let safeClick = CGPoint(x: twPt.x + twSz.width / 2, y: twPt.y + 20)
+            let twHidSrc = CGEventSource(stateID: .hidSystemState)
+            if let e1 = CGEvent(mouseEventSource: twHidSrc, mouseType: .leftMouseDown, mouseCursorPosition: safeClick, mouseButton: .left),
+               let e2 = CGEvent(mouseEventSource: twHidSrc, mouseType: .leftMouseUp,   mouseCursorPosition: safeClick, mouseButton: .left) {
+                e1.post(tap: .cghidEventTap); e2.post(tap: .cghidEventTap)
+            }
+        }
+    }
+    Thread.sleep(forTimeInterval: 0.25)
+
+    jsonOut(["ok": setLocatorsOk, "marker": markerTarget])
 
 default:
     fputs("Unknown: \(cmd)\n", stderr); exit(1)

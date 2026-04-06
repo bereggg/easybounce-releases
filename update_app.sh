@@ -1,4 +1,5 @@
 #!/bin/bash
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:$PATH"
 cd "/Users/dbsound/Desktop/WORK-/EasyBounce"
 
 # Compile Swift as universal binary (arm64 + x86_64)

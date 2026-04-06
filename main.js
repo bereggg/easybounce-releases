@@ -13,6 +13,7 @@ const execAsync = promisify(exec);
 
 let mainWindow;
 let _preMini = null;
+let _overlayWindow = null;
 // In packaged app LogicBridge is in app.asar.unpacked (not executable from inside asar)
 const BRIDGE = app.isPackaged
   ? path.join(process.resourcesPath, 'app.asar.unpacked', 'LogicBridge')
@@ -85,6 +86,11 @@ function createWindow() {
   // ───────────────────────────────────────────────────────────────────────────
 
   mainWindow.once('ready-to-show', () => {
+    // Fix: ensure window is not positioned above screen top
+    const pos = mainWindow.getPosition();
+    if (pos[1] < 0) {
+      mainWindow.setPosition(pos[0], 0);
+    }
     mainWindow.show();
   });
 }
@@ -134,7 +140,7 @@ function _showAxWindowAndWait() {
     _axWindow = new BrowserWindow({
       width: 360, height: 580,
       resizable: false, minimizable: false, maximizable: false,
-      alwaysOnTop: true,
+      alwaysOnTop: false,
       titleBarStyle: 'hiddenInset',
       backgroundColor: '#161616',
       webPreferences: { nodeIntegration: false, contextIsolation: true, preload: path.join(__dirname, 'preload.js') }
@@ -144,7 +150,7 @@ function _showAxWindowAndWait() {
     // Allow close — if user closes without granting, quit the app cleanly
     _axWindow.on('close', () => {
       if (!global._permsGranted) {
-        setTimeout(() => app.quit(), 200);
+        setTimeout(() => app.quit(), 300);
       }
     });
     _axWindow.on('closed', () => { _axWindow = null; done(); });
@@ -163,6 +169,9 @@ function _showAxWindowAndWait() {
 }
 
 app.whenReady().then(async () => {
+  // Kill any caffeinate left from a previous crashed session
+  try { execAsync('killall caffeinate 2>/dev/null').catch(() => {}); } catch(e) {}
+
   // ── Step 1: License / Trial check ─────────────────────────────────────────
   const licenseFile = path.join(app.getPath('userData'), 'license.json');
   let licensed = false;
@@ -198,14 +207,17 @@ app.whenReady().then(async () => {
 });
 app.on('window-all-closed', () => { if (!_activating) app.quit(); });
 app.on('activate', () => {
-  // If ax permissions window is hidden (stepped aside) — bring it back on Dock click
-  if (_axWindow && !_axWindow.isDestroyed()) {
-    _axWindow.show();
-    _axWindow.setAlwaysOnTop(true);
-    _axWindow.focus();
-    return;
+  // Always show + focus main window on Dock click
+  if (mainWindow) {
+    mainWindow.show();
+    mainWindow.focus();
+  } else if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
   }
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  // Also restore ax window if open
+  if (_axWindow && !_axWindow.isDestroyed()) {
+    _axWindow.showInactive();
+  }
 });
 
 // ── Bridge helper ─────────────────────────────────────────────────────────────
@@ -284,9 +296,12 @@ ipcMain.handle('solo-index',    (_, i) => bridge('soloIndex', i));
 ipcMain.handle('unsolo-index',  (_, i) => bridge('unsoloIndex', i));
 ipcMain.handle('mute-index',    (_, i) => bridge('muteIndex', i));
 ipcMain.handle('unmute-index',  (_, i) => bridge('unmuteIndex', i));
-ipcMain.handle('unsolo-all',    () => bridge('unsoloAll'));
-ipcMain.handle('unmute-all',    () => bridge('unmuteAll'));
-ipcMain.handle('read-states',   () => bridge('readStates'));
+ipcMain.handle('unsolo-all',           () => bridge('unsoloAll'));
+ipcMain.handle('unmute-all',           () => bridge('unmuteAll'));
+ipcMain.handle('mute-many-by-index',   (_, ids) => bridge('muteManyByIndex', ids));
+ipcMain.handle('unmute-many-by-index', (_, ids) => bridge('unmuteManyByIndex', ids));
+ipcMain.handle('close-marker-list',    () => bridge('close-marker-list'));
+ipcMain.handle('read-states',          () => bridge('readStates'));
 ipcMain.handle('bounce',        () => bridge('bounce'));
 
 // ── Cancel support ────────────────────────────────────────────────────────────
@@ -398,6 +413,8 @@ ipcMain.handle('apply-bounce-preset', async (_, params) => {
   }
 });
 ipcMain.handle('get-bounce-params', () => bridge('getBounceParams'));
+ipcMain.handle('scan-markers', () => bridge('scan-markers'));
+ipcMain.handle('set-locators-by-marker', async (_, name, keepML) => bridge('set-locators-by-marker', name, ...(keepML ? ['keep-ml'] : [])));
 ipcMain.handle('focus-app', () => {
   if (_scanTreeActive) return { ok: true };
   if (mainWindow) { mainWindow.show(); mainWindow.focus(); }
@@ -477,6 +494,57 @@ ipcMain.handle('exit-mini-mode', () => {
 });
 
 
+// ── Bounce Overlay — floating always-on-top progress window ─────────────────
+function _createOverlay() {
+  if (_overlayWindow && !_overlayWindow.isDestroyed()) { _overlayWindow.show(); return; }
+  const { screen } = require('electron');
+  const { x, y, width, height } = screen.getPrimaryDisplay().workArea;
+  const W = 380, H = 272;
+  _overlayWindow = new BrowserWindow({
+    width: W, height: H,
+    x: Math.round(x + (width  - W) / 2),
+    y: Math.round(y + (height - H) / 2),
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    resizable: false,
+    movable: true,
+    skipTaskbar: true,
+    hasShadow: true,
+    vibrancy: 'under-window',
+    visualEffectState: 'active',
+    webPreferences: { nodeIntegration: true, contextIsolation: false }
+  });
+  _overlayWindow.setAlwaysOnTop(true, 'screen-saver');
+  _overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  const overlayPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'app.asar.unpacked', 'src', 'overlay.html')
+    : path.join(__dirname, 'src', 'overlay.html');
+  _overlayWindow.loadFile(overlayPath);
+  _overlayWindow.on('closed', () => { _overlayWindow = null; });
+}
+
+ipcMain.handle('show-bounce-overlay', () => { _createOverlay(); return { ok: true }; });
+
+ipcMain.handle('update-bounce-overlay', (_, data) => {
+  if (_overlayWindow && !_overlayWindow.isDestroyed()) {
+    _overlayWindow.webContents.send('overlay-update', data);
+  }
+  return { ok: true };
+});
+
+ipcMain.handle('hide-bounce-overlay', () => {
+  if (_overlayWindow && !_overlayWindow.isDestroyed()) { _overlayWindow.close(); }
+  _overlayWindow = null;
+  return { ok: true };
+});
+
+ipcMain.handle('overlay-dismiss', () => {
+  if (_overlayWindow && !_overlayWindow.isDestroyed()) { _overlayWindow.close(); }
+  _overlayWindow = null;
+  return { ok: true };
+});
+
 // ── Scan Badge Mode — shrink window to scan warning badge only ────────────────
 let _preScan = null;
 ipcMain.handle('enter-scan-badge', () => {
@@ -533,33 +601,10 @@ async function checkForUpdates(silent = false) {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('update-available', latestVersion);
       }
-      if (!silent) {
-        const { dialog } = require('electron');
-        const result = await dialog.showMessageBox(mainWindow, {
-          type: 'info',
-          title: 'Update Available',
-          message: `EasyBounce ${latestVersion} is available!`,
-          detail: `You have version ${CURRENT_VERSION}. Would you like to download the update?`,
-          buttons: ['Download', 'Later'],
-          defaultId: 0
-        });
-        if (result.response === 0) {
-          require('electron').shell.openExternal('https://github.com/bereggg/easybounce-releases/releases/latest');
-        }
-      }
+      // renderer handles UI when not silent
       return { hasUpdate: true, version: latestVersion };
     } else {
       _updateAvailable = null;
-      if (!silent) {
-        const { dialog } = require('electron');
-        dialog.showMessageBox(mainWindow, {
-          type: 'info',
-          title: 'No Updates',
-          message: 'EasyBounce is up to date!',
-          detail: `You have the latest version (${CURRENT_VERSION})`,
-          buttons: ['OK']
-        });
-      }
       return { hasUpdate: false };
     }
   } catch(e) { return { hasUpdate: false }; }
@@ -756,15 +801,38 @@ ipcMain.handle('show-accessibility-window', () => {
   if (_axWindow && !_axWindow.isDestroyed()) { _axWindow.focus(); return; }
   _axWindow = new BrowserWindow({
     width: 360, height: 580,
-    resizable: false, minimizable: false, maximizable: false,
-    alwaysOnTop: true,
+    resizable: false, minimizable: true, maximizable: false,
+    alwaysOnTop: false,
     titleBarStyle: 'hiddenInset',
     backgroundColor: '#161616',
     webPreferences: { nodeIntegration: false, contextIsolation: true, preload: path.join(__dirname, 'preload.js') }
   });
-  // Same pattern as main window — __dirname resolves correctly in both dev & packaged
   _axWindow.loadFile(path.join(__dirname, 'src', 'accessibility.html'));
   _axWindow.on('closed', () => { _axWindow = null; });
+
+  // Hide ax window when user switches to another app
+  const _axHideIfExternal = () => {
+    setTimeout(() => {
+      const focused = BrowserWindow.getFocusedWindow();
+      const isOurWindow = focused === mainWindow || focused === _axWindow;
+      if (!isOurWindow && _axWindow && !_axWindow.isDestroyed()) {
+        _axWindow.hide();
+      }
+    }, 80);
+  };
+  _axWindow.on('blur', _axHideIfExternal);
+  mainWindow.on('blur', _axHideIfExternal);
+
+  // Show again when EasyBounce main window is focused
+  const _axRestoreOnFocus = () => {
+    if (_axWindow && !_axWindow.isDestroyed()) _axWindow.showInactive();
+  };
+  mainWindow.on('focus', _axRestoreOnFocus);
+
+  _axWindow.on('closed', () => {
+    mainWindow.removeListener('focus', _axRestoreOnFocus);
+    mainWindow.removeListener('blur', _axHideIfExternal);
+  });
 });
 
 ipcMain.handle('close-accessibility-window', () => {
@@ -1028,5 +1096,22 @@ ipcMain.handle('show-metronome-warning', async () => {
   });
   if (result.response === 0) return 'turnoff';
   if (result.response === 1) return 'bounce';
+  return 'cancel';
+});
+
+ipcMain.handle('check-cycle', () => bridge('check-cycle'));
+
+ipcMain.handle('show-cycle-warning', async () => {
+  const { dialog } = require('electron');
+  const result = await dialog.showMessageBox(mainWindow, {
+    type: 'warning',
+    title: 'Cycle is OFF',
+    message: '⚠️ Cycle (Loop) mode is disabled!',
+    detail: 'The bounce will use the full project length instead of the cycle region. Enable Cycle in Logic first, or continue anyway.',
+    buttons: ['Bounce Anyway', 'Cancel'],
+    defaultId: 1,
+    cancelId: 1
+  });
+  if (result.response === 0) return 'bounce';
   return 'cancel';
 });

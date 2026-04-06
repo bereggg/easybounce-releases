@@ -14,7 +14,7 @@
     "release": "bash build_release.sh"
   },
   "devDependencies": {
-    "electron": "^28.0.0",
+    "electron": "^33.4.11",
     "electron-builder": "^24.0.0"
   },
   "build": {
