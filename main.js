@@ -282,19 +282,36 @@ ipcMain.handle('scan-tree', async () => {
 });
 ipcMain.handle('maximize-logic',         () => bridge('maximizeLogic'));
 ipcMain.handle('exit-fullscreen-only',   () => bridge('exitFullscreenOnly'));
-ipcMain.handle('minimize-inspector', async () => {
-  // Step aside so CGEvent drag reaches Logic, not our alwaysOnTop overlay
+ipcMain.handle('close-panels', async () => {
   const wasOnTop = mainWindow?.isAlwaysOnTop?.() ?? false;
   if (mainWindow) mainWindow.setAlwaysOnTop(false);
-  const result = await bridge('minimizeInspector');
+  const result = await bridge('closePanels');
   if (mainWindow && wasOnTop) {
     mainWindow.setAlwaysOnTop(true, 'pop-up-menu');
-    mainWindow.showInactive(); // re-show badge if it went behind Logic during drag
+    mainWindow.showInactive();
   }
   return result;
 });
-ipcMain.handle('check-inspector', () => bridge('checkInspector'));
-ipcMain.handle('open-mixer', () => bridge('openMixer'));
+ipcMain.handle('scroll-to-bnc', async () => {
+  const wasOnTop = mainWindow?.isAlwaysOnTop?.() ?? false;
+  if (mainWindow) mainWindow.setAlwaysOnTop(false);
+  const result = await bridge('scrollToBnc');
+  if (mainWindow && wasOnTop) {
+    mainWindow.setAlwaysOnTop(true, 'pop-up-menu');
+    mainWindow.showInactive();
+  }
+  return result;
+});
+ipcMain.handle('open-mixer', async () => {
+  const wasOnTop = mainWindow?.isAlwaysOnTop?.() ?? false;
+  if (mainWindow) mainWindow.setAlwaysOnTop(false);
+  const result = await bridge('openMixer');
+  if (mainWindow && wasOnTop) {
+    mainWindow.setAlwaysOnTop(true, 'pop-up-menu');
+    mainWindow.showInactive();
+  }
+  return result;
+});
 ipcMain.handle('close-mixer', () => bridge('closeMixer'));
 ipcMain.handle('ensure-mixer', () => bridge('ensureMixer'));
 ipcMain.handle('send-key', (_, keyCode, ...mods) => bridge('sendKey', String(keyCode), ...mods));
@@ -422,9 +439,20 @@ ipcMain.handle('mute-many',   (_, names) => bridge('muteMany',   names.join('|')
 ipcMain.handle('unmute-many', (_, names) => bridge('unmuteMany', names.join('|')));
 ipcMain.handle('reset-mutes', () => bridge('resetMutes'));
 ipcMain.handle('mixer-get-filters',    () => bridge('getMixerFilters'));
-ipcMain.handle('mixer-filter-toggle',  (_, name) => bridge('mixerFilterToggle', name));
-ipcMain.handle('mixer-enable-all',     () => bridge('enableAllMixerFilters'));
-ipcMain.handle('set-mixer-height', (_, h) => bridge('setMixerHeight', String(h || 280)));
+ipcMain.handle('mixer-filter-toggle', async (_, name) => {
+  const wasOnTop = mainWindow?.isAlwaysOnTop?.() ?? false;
+  if (mainWindow) mainWindow.setAlwaysOnTop(false);
+  const result = await bridge('mixerFilterToggle', name);
+  if (mainWindow && wasOnTop) { mainWindow.setAlwaysOnTop(true, 'pop-up-menu'); mainWindow.showInactive(); }
+  return result;
+});
+ipcMain.handle('mixer-enable-all', async () => {
+  const wasOnTop = mainWindow?.isAlwaysOnTop?.() ?? false;
+  if (mainWindow) mainWindow.setAlwaysOnTop(false);
+  const result = await bridge('enableAllMixerFilters');
+  if (mainWindow && wasOnTop) { mainWindow.setAlwaysOnTop(true, 'pop-up-menu'); mainWindow.showInactive(); }
+  return result;
+});
 ipcMain.handle('apply-bounce-preset', async (_, params) => {
   // Step aside so popup menus appear above Logic, not behind our alwaysOnTop overlay
   const wasOnTop = mainWindow?.isAlwaysOnTop?.() ?? false;

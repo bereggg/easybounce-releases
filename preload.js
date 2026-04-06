@@ -1,12 +1,12 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('api', {
   scanChannels:      ()    => ipcRenderer.invoke('scan-channels'),
+  closePanels:       ()    => ipcRenderer.invoke('close-panels'),
+  scrollToBnc:       ()    => ipcRenderer.invoke('scroll-to-bnc'),
   openMixer:         ()    => ipcRenderer.invoke('open-mixer'),
   closeMixer:        ()    => ipcRenderer.invoke('close-mixer'),
   maximizeLogic:         ()  => ipcRenderer.invoke('maximize-logic'),
   exitFullscreenOnly:    ()  => ipcRenderer.invoke('exit-fullscreen-only'),
-  minimizeInspector:   ()  => ipcRenderer.invoke('minimize-inspector'),
-  checkInspector:      ()  => ipcRenderer.invoke('check-inspector'),
   ensureMixer:       ()    => ipcRenderer.invoke('ensure-mixer'),
   sendKey:           (k,...m) => ipcRenderer.invoke('send-key', k, ...m),
   stopRender:        ()    => ipcRenderer.invoke('stop-render'),
@@ -77,7 +77,6 @@ contextBridge.exposeInMainWorld('api', {
   mixerGetFilters:   ()    => ipcRenderer.invoke('mixer-get-filters'),
   mixerFilterToggle: (n)  => ipcRenderer.invoke('mixer-filter-toggle', n),
   mixerEnableAll:    ()    => ipcRenderer.invoke('mixer-enable-all'),
-  setMixerHeight:    (h)  => ipcRenderer.invoke('set-mixer-height', h),
   hideWindow:      ()         => ipcRenderer.invoke('hide-window'),
   showWindow:      ()         => ipcRenderer.invoke('show-window'),
   focusApp:        ()         => ipcRenderer.invoke('focus-app'),

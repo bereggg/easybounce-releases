@@ -1882,33 +1882,33 @@ async function scanLogic(isAutoRetry = false) {
     }
   } catch(e) { console.warn(`maximizeLogic err: ${e}`); }
 
-  // ── Step 0c: Minimize Inspector ──────────────────────────────────────────────
+  // ── Close panels (Inspector, Library, Browsers) + resize mixer if already open ──
   if (window._scanCancelled) return;
+  let _mixerWasOpen = false;
   try {
-    const miResult = await window.api.minimizeInspector();
-    console.log(`minimizeInspector: ok=${miResult?.ok} action=${miResult?.action} from=${miResult?.from} to=${miResult?.to}`);
-  } catch(e) { console.warn(`minimizeInspector err: ${e}`); }
+    const cpResult = await window.api.closePanels();
+    _mixerWasOpen = cpResult?.mixerWasOpen || false;
+    console.log(`closePanels: ok=${cpResult?.ok} mixerWasOpen=${_mixerWasOpen}`);
+  } catch(e) { console.warn(`closePanels err: ${e}`); }
 
-  // ── Step 0d: Open Mixer + all filters ────────────────────────────────────────
+  if (window._scanCancelled) return;
+  let _savedBounds = null;
+  let treeOk = true;
+
+  // ── Open Mixer (if wasn't open) + scroll to BNC + enable all filters ──
   if (window._scanCancelled) return;
   try {
     const omResult = await window.api.openMixer();
-    console.log(`openMixer: ok=${omResult?.ok} mode=${omResult?.mode} wasOpen=${omResult?.wasOpen}`);
-    await window.api.wait(omResult && omResult.wasOpen ? 200 : 400);
+    console.log(`openMixer: ok=${omResult?.ok} wasOpen=${omResult?.wasOpen} hasBnc=${omResult?.hasBnc}`);
+    await window.api.wait(400);
   } catch(e) { console.warn(`openMixer err: ${e}`); }
   try {
-    await window.api.mixerEnableAll();
+    const enRes = await window.api.mixerEnableAll();
+    log(`  enableAll: ${JSON.stringify(enRes)}`, 'info');
     await window.api.wait(100);
     MF_ALL_NAMES.forEach(n => { _mixerFilters[n] = true; });
     saveMixerFilterPrefs();
     renderMixerFilters();
-  } catch(e) {}
-
-  // ── Step 0d: Shrink mixer if too tall ────────────────────────────────────────
-  if (window._scanCancelled) return;
-  try {
-    const mhResult = await window.api.setMixerHeight(280);
-    console.log(`setMixerHeight: ${mhResult?.prevH}→${mhResult?.newH}px`);
   } catch(e) {}
 
   if (!_scanInitDone) {
@@ -1965,8 +1965,14 @@ async function scanLogic(isAutoRetry = false) {
   }
 
   if (window._scanCancelled) return;
-  const result = await window.api.scanChannels();
+  let result = await window.api.scanChannels();
   console.log(`scanChannels raw: channels=${result.channels?.length ?? 'none'} err=${result.error||'—'}`);
+  // Retry up to 3x if Logic hasn't finished rebuilding the mixer view yet (e.g. after Tracks→All switch)
+  for (let _r = 0; _r < 3 && !window._scanCancelled && (!result.channels || result.channels.length === 0) && !result.error; _r++) {
+    await window.api.wait(600);
+    result = await window.api.scanChannels();
+    console.log(`scanChannels retry ${_r+1}: channels=${result.channels?.length ?? 'none'}`);
+  }
   if (result.error || !result.channels || result.channels.length === 0) {
     if (result.debugInfo) { log(`🔍 AX Debug: ${result.debugInfo}`, 'warn'); }
     return _abort(`Mixer scan failed: ${result.error || 'no channels found'}`);
@@ -2011,18 +2017,36 @@ async function scanLogic(isAutoRetry = false) {
   if (window._scanCancelled) return;
 
   // ── Step 1b: Learn filter types ──────────────────────────────────────────────
+  // Flow: enableAll → toggle OFF each filter one by one (cumulative, no re-enable)
+  // After last (MIDI) Logic auto-restores all filters when all are OFF
   if (channels.length > 0 && window.api && !window._scanCancelled) {
     const filterNames = MF_ALL_NAMES.filter(n => n in _mixerFilters);
     if (filterNames.length > 0) {
       log('Learning channel types…', 'info');
       _channelTypeMap = {};
-      let prevNames = (_masterChannels.length > 0 ? _masterChannels : channels).map(c => c.name);
+      let prevNames = [];
       await window.api.setAlwaysOnTop(true);
       try {
-        await window.api.mixerEnableAll();
+        // openMixer: клікає All + відкриває міксер якщо закритий
+        await window.api.openMixer();
+        await window.api.wait(200);
+        // Увімкнути всі фільтри
+        const enRes2 = await window.api.mixerEnableAll();
+        log(`  enableAll (learning): ${JSON.stringify(enRes2)}`, 'info');
+        await window.api.wait(400);
+        // Baseline: scan AFTER enableAll — guaranteed full channel list
+        const baseRes = await window.api.scanChannels();
+        if (baseRes && !baseRes.error && baseRes.channels) {
+          prevNames = baseRes.channels.map(c => c.name);
+          log(`  baseline: ${prevNames.length} channels`, 'info');
+        }
+        if (prevNames.length === 0) {
+          log('⚠ baseline empty, skip learning', 'warn');
+        } else {
         for (const fname of filterNames) {
           if (window._scanCancelled) break;
           await window.api.mixerFilterToggle(fname);
+          await window.api.wait(80);
           const res = await window.api.scanChannels();
           if (res && !res.error && res.channels) {
             const nowNames = res.channels.map(c => c.name);
@@ -2035,8 +2059,13 @@ async function scanLogic(isAutoRetry = false) {
             if (nowNames.length <= prevNames.length) prevNames = nowNames;
           }
         }
+        }
+        // Після MIDI (останній) Logic сам відновлює всі фільтри до true
+        await window.api.wait(150);
+        MF_ALL_NAMES.forEach(n => { if (n in _mixerFilters) _mixerFilters[n] = true; });
+        saveMixerFilterPrefs();
+        renderMixerFilters();
       } catch(e) { log(`⚠ Learning failed: ${e.message}`, 'warn'); }
-      await window.api.mixerEnableAll();
       await window.api.setAlwaysOnTop(false);
       localStorage.setItem('sb4_channel_type_map', JSON.stringify(_channelTypeMap));
       if (_masterChannels.length > 0) {
@@ -2050,51 +2079,12 @@ async function scanLogic(isAutoRetry = false) {
     }
   }
 
+  // ── Scroll mixer to BNC strip (needed for master plugins scan) ──
   if (window._scanCancelled) return;
-
-  // ── Step 2: Track tree ─────────────────────────────────────────────────────
-  if (window._scanCancelled) return;
-  let _savedBounds = null;
-
-  let treeOk = false;
-  if (window.api.scanTree) {
-    try {
-      await window.api.setAlwaysOnTop(true, 'pop-up-menu').catch(() => {});
-      log('Scanning track tree…', 'info');
-      const treeResult = await window.api.scanTree();
-        const _tg = (treeResult.tracks||[]).filter(t=>t.type==='group').length;
-        const _tt = (treeResult.tracks||[]).filter(t=>t.type==='track').length;
-        if (!treeResult.error && treeResult.tracks && treeResult.tracks.length > 0) {
-          trackTree = treeResult.tracks;
-          localStorage.setItem('sb4_track_tree', JSON.stringify(trackTree));
-          collapsedGroups.clear();
-          trackTree.filter(t => t.type === 'group' && trackTree.some(c => c.parent === t.name))
-            .forEach(t => collapsedGroups.add(t.name));
-          localStorage.setItem('sb4_collapsed_groups', JSON.stringify([...collapsedGroups]));
-          const treeMuted = treeResult.tracks.filter(t => t.muted === 1).map(t => t.name.toLowerCase());
-          if (treeMuted.length > 0) {
-            const mutedSet = new Set(treeMuted);
-            channels.forEach(c => {
-              const baseName = c.name.replace(/ \(\d+\)$/, '').toLowerCase();
-              if (mutedSet.has(c.name.toLowerCase()) || mutedSet.has(baseName)) c.isMuted = true;
-            });
-            _masterChannels = channels.map(c => ({name:c.name,isBus:c.isBus,chType:c.chType,color:c.color,index:c.index,isMuted:c.isMuted}));
-            localStorage.setItem(SK.channels, JSON.stringify(channels));
-            localStorage.setItem('sb4_master_channels', JSON.stringify(_masterChannels));
-          }
-          renderChannels();
-          log(`✓ Track tree: ${_tg} groups, ${_tt} tracks, ${treeMuted.length} muted`, 'ok');
-          treeOk = true;
-        } else {
-          log(`⚠ Tree scan failed: ${treeResult.error || 'no tracks'} — auto-retrying…`, 'warn');
-        }
-    } catch(e) { log(`⚠ Tree scan error: ${e.message} — auto-retrying…`, 'warn'); }
-  } else { treeOk = true; }
-
-  if (window._scanCancelled) return;
-
-  // ── Step 2b: Markers (silent) ──────────────────────────────────────────────
-  await loadProjectMarkers(true);
+  try {
+    const stbResult = await window.api.scrollToBnc();
+    console.log(`scrollToBnc: ok=${stbResult?.ok} hasBnc=${stbResult?.hasBnc}`);
+  } catch(e) { console.warn(`scrollToBnc err: ${e}`); }
 
   // ── Step 3: Master plugins ─────────────────────────────────────────────────
   if (window._scanCancelled) return;
@@ -2115,6 +2105,50 @@ async function scanLogic(isAutoRetry = false) {
       }
     } catch(e) { log(`⚠ Master plugins not found: ${e.message}`, 'warn'); }
   } else { masterOk = true; }
+
+  // ── Markers (after mixer work is done) ──
+  if (window._scanCancelled) return;
+  await loadProjectMarkers(true);
+
+  // ── Track tree (after all mixer work is done — scanTree uses Option+click which disrupts mixer) ──
+  if (window._scanCancelled) return;
+  if (window.api.scanTree) {
+    try {
+      log('Scanning track tree…', 'info');
+      const treeResult = await window.api.scanTree();
+      const _tg = (treeResult.tracks||[]).filter(t=>t.type==='group').length;
+      const _tt = (treeResult.tracks||[]).filter(t=>t.type==='track').length;
+      if (!treeResult.error && treeResult.tracks && treeResult.tracks.length > 0) {
+        trackTree = treeResult.tracks;
+        localStorage.setItem('sb4_track_tree', JSON.stringify(trackTree));
+        collapsedGroups.clear();
+        trackTree.filter(t => t.type === 'group' && trackTree.some(c => c.parent === t.name))
+          .forEach(t => collapsedGroups.add(t.name));
+        localStorage.setItem('sb4_collapsed_groups', JSON.stringify([...collapsedGroups]));
+        log(`✓ Track tree: ${_tg} groups, ${_tt} tracks`, 'ok');
+        treeOk = true;
+      } else {
+        log(`⚠ Tree scan failed: ${treeResult.error || 'no tracks'}`, 'warn');
+      }
+    } catch(e) { log(`⚠ Tree scan error: ${e.message}`, 'warn'); }
+  }
+
+  // ── Apply muted states from tree scan ──
+  if (treeOk && trackTree.length > 0 && channels.length > 0) {
+    const treeMuted = trackTree.filter(t => t.muted === 1).map(t => t.name.toLowerCase());
+    if (treeMuted.length > 0) {
+      const mutedSet = new Set(treeMuted);
+      channels.forEach(c => {
+        const baseName = c.name.replace(/ \(\d+\)$/, '').toLowerCase();
+        if (mutedSet.has(c.name.toLowerCase()) || mutedSet.has(baseName)) c.isMuted = true;
+      });
+      _masterChannels = channels.map(c => ({name:c.name,isBus:c.isBus,chType:c.chType,color:c.color,index:c.index,isMuted:c.isMuted}));
+      localStorage.setItem(SK.channels, JSON.stringify(channels));
+      localStorage.setItem('sb4_master_channels', JSON.stringify(_masterChannels));
+      renderChannels();
+      log(`✓ Muted tracks applied: ${treeMuted.length}`, 'ok');
+    }
+  }
 
   if (window._scanCancelled) return;
 
@@ -2212,6 +2246,8 @@ let _masterChannels = (() => {
 let _channelTypeMap = (() => {
   try { return JSON.parse(localStorage.getItem('sb4_channel_type_map') || '{}'); } catch(e) { return {}; }
 })();
+// Track how many channels were present when learning was last done — skip re-learning if unchanged
+let _learnedForChannelCount = parseInt(localStorage.getItem('sb4_learned_ch_count') || '0', 10);
 // Auto-build _channelTypeMap from _masterChannels if empty (e.g. first launch or cleared storage)
 if (Object.keys(_channelTypeMap).length === 0 && _masterChannels.length > 0) {
   const _tg = {};
@@ -6799,7 +6835,7 @@ async function toggleMasterPlugin(index, wantActive) {
   renderMasterPlugins();
   // Pause polling while backend works — adaptive to project speed
   _mpPollPausedUntil = Date.now() + 5000;
-  await window.api.setMasterPlugin(plugin.name, wantActive ? 1 : 0).catch(() => null);
+  await window.api.setMasterPlugin(String(index), wantActive ? 1 : 0).catch(() => null);
   // Don't overwrite optimistic state with backend response (Logic may be slow to reflect)
   // Just resume polling — it will sync to real Logic state once Logic catches up
   _mpPollPausedUntil = 0;
