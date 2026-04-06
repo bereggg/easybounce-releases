@@ -1,6 +1,7 @@
 import Foundation
 import ApplicationServices
 import AppKit
+import Carbon
 
 func axVal(_ e: AXUIElement, _ a: String) -> CFTypeRef? {
     var v: CFTypeRef?; AXUIElementCopyAttributeValue(e, a as CFString, &v); return v
@@ -1230,6 +1231,23 @@ case "metronomeToggle":
     } else {
         jsonOut(["ok": false, "error": "not found"])
     }
+
+case "switchToEnglish":
+    // Switch keyboard input to English (ABC or US) layout
+    let filter = [kTISPropertyInputSourceCategory: kTISCategoryKeyboardInputSource!] as CFDictionary
+    let allSources = TISCreateInputSourceList(filter, false).takeRetainedValue() as! [TISInputSource]
+    var switched = false
+    for src in allSources {
+        let idPtr = TISGetInputSourceProperty(src, kTISPropertyInputSourceID)
+        guard let idPtr = idPtr else { continue }
+        let srcId = Unmanaged<CFString>.fromOpaque(idPtr).takeUnretainedValue() as String
+        if srcId.contains("ABC") || srcId.contains(".US") || srcId.contains("USInternational") {
+            TISSelectInputSource(src)
+            switched = true
+            break
+        }
+    }
+    jsonOut(["ok": switched])
 
 case "maximizeLogic":
     // Exit fullscreen (if active), then resize to fill visible screen

@@ -260,6 +260,7 @@ function bridgeIndependent(...args) {
 }
 
 // ── IPC handlers ──────────────────────────────────────────────────────────────
+ipcMain.handle('switch-to-english', () => bridge('switchToEnglish'));
 ipcMain.handle('scan-channels', () => bridge('scan'));
 ipcMain.handle('scan-master-plugins', () => bridge('scanMasterPlugins'));
 ipcMain.handle('master-plugins', () => bridge('masterPlugins'));

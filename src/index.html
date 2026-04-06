@@ -1851,6 +1851,9 @@ async function scanLogic(isAutoRetry = false) {
 
   window._scanCancelled = false;
 
+  // ── Switch keyboard to English (Logic AX needs English layout) ──
+  try { await window.api.switchToEnglish(); } catch(e) {}
+
   // ── Enter scan badge IMMEDIATELY (shrink window to badge first) ──
   if (window.api && window.api.enterScanBadge) {
     try { await window.api.enterScanBadge(); _scanBadgeActive = true; } catch(e) {}
@@ -6758,7 +6761,7 @@ function openMasterPluginsModal() {
     const dot = document.getElementById('mp-status-dot');
     if (dot) dot.style.background = '#5abf28';
   } else { loadMasterPlugins(); }
-  // Auto-refresh every 1.5s to sync bypass state with Logic
+  // Auto-refresh every 800ms to sync bypass state with Logic
   if (_mpPollInterval) clearInterval(_mpPollInterval);
   _mpPollInterval = setInterval(async () => {
     if (document.getElementById('mp-modal').style.display === 'none') return;
@@ -6834,10 +6837,14 @@ async function toggleMasterPlugin(index, wantActive) {
   _masterPlugins[index].active = wantActive;
   renderMasterPlugins();
   // Pause polling while backend works — adaptive to project speed
-  _mpPollPausedUntil = Date.now() + 5000;
+  _mpPollPausedUntil = Date.now() + 2000;
   await window.api.setMasterPlugin(String(index), wantActive ? 1 : 0).catch(() => null);
-  // Don't overwrite optimistic state with backend response (Logic may be slow to reflect)
-  // Just resume polling — it will sync to real Logic state once Logic catches up
+  // Immediately re-read real state from Logic
+  const freshState = await window.api.masterPluginsQuick().catch(() => null);
+  if (freshState?.ok && freshState.plugins?.length) {
+    _masterPlugins = freshState.plugins;
+    renderMasterPlugins();
+  }
   _mpPollPausedUntil = 0;
   window.api.focusApp();
 }

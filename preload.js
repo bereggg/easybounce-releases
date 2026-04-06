@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('api', {
+  switchToEnglish:   ()    => ipcRenderer.invoke('switch-to-english'),
   scanChannels:      ()    => ipcRenderer.invoke('scan-channels'),
   closePanels:       ()    => ipcRenderer.invoke('close-panels'),
   scrollToBnc:       ()    => ipcRenderer.invoke('scroll-to-bnc'),

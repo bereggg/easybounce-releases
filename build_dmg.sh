@@ -107,6 +107,10 @@ hdiutil convert "$DMG_TMP" -format UDZO -imagekey zlib-level=9 -o "$DMG_OUT"
 rm -f "$DMG_TMP"
 rm -rf "$TMP_DIR"
 
+# ── Sign DMG ──────────────────────────────────────────────────────────────────
+echo "▶ Signing DMG…"
+codesign --sign "$IDENTITY" "$DMG_OUT"
+
 # ── Notarize DMG ─────────────────────────────────────────────────────────────
 echo "▶ Notarizing DMG (this takes ~5–10 min)…"
 xcrun notarytool submit "$DMG_OUT" \
