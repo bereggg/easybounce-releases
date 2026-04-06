@@ -583,7 +583,10 @@ func findStereoOutInMixer(_ logicApp: AXUIElement) -> AXUIElement? {
         }
     }
 
-    // Fallback: rightmost channel (Stereo Out is always last)
+    // Fallback: find by bounce button (reliable regardless of channel name)
+    if let bStrip = smpFindBounceStrip(mixer) { return bStrip }
+
+    // Last resort: rightmost channel (Stereo Out is always last)
     return items.max(by: {
         var p1: CFTypeRef?; AXUIElementCopyAttributeValue($0, kAXPositionAttribute as CFString, &p1)
         var p2: CFTypeRef?; AXUIElementCopyAttributeValue($1, kAXPositionAttribute as CFString, &p2)
@@ -592,6 +595,123 @@ func findStereoOutInMixer(_ logicApp: AXUIElement) -> AXUIElement? {
         if let av = p2 { AXValueGetValue(av as! AXValue, .cgPoint, &pt2) }
         return pt1.x < pt2.x
     })
+}
+
+// ── Find Stereo Out by bounce button (most reliable — button is unique to Output channel) ──────
+func findStereoOutByBounce(_ logicApp: AXUIElement) -> AXUIElement? {
+    guard let wins = axVal(logicApp, kAXWindowsAttribute) as? [AXUIElement] else { return nil }
+    let win = wins.first(where: { (axVal($0, kAXTitleAttribute) as? String ?? "").contains("Tracks") }) ?? wins.first
+    guard let w = win else { return nil }
+    var layouts: [AXUIElement] = []
+    // smpFindAllMixerLayouts defined below — forward call is fine in Swift
+    func _findLayouts(_ el: AXUIElement, depth: Int = 0) {
+        if depth > 6 { return }
+        if axRole(el) == "AXLayoutArea" && (axVal(el, kAXDescriptionAttribute) as? String) == "Mixer" { layouts.append(el) }
+        for kid in axKids(el) { _findLayouts(kid, depth: depth + 1) }
+    }
+    _findLayouts(w)
+    guard let mixer = layouts.max(by: { axSize($0).width < axSize($1).width }) else { return nil }
+    // bounce button = unique to Output/Stereo Out channel
+    for item in axKids(mixer) {
+        for kid in axKids(item) {
+            if axRole(kid) == "AXButton" {
+                let desc  = (axVal(kid, kAXDescriptionAttribute) as? String ?? "").lowercased()
+                let title = (axVal(kid, kAXTitleAttribute)       as? String ?? "").lowercased()
+                if desc == "bounce" || title == "bnc" || title == "bounce" { return item }
+            }
+        }
+    }
+    return nil
+}
+
+// ── Mixer-based master plugin scan helpers ────────────────────────────────────────────────────
+let MIXER_RATIO: Double = 0.60
+func axPos(_ el: AXUIElement) -> CGPoint {
+    var p = CGPoint.zero
+    if let v = axVal(el, kAXPositionAttribute) { AXValueGetValue(v as! AXValue, .cgPoint, &p) }
+    return p
+}
+func axSize(_ el: AXUIElement) -> CGSize {
+    var s = CGSize.zero
+    if let v = axVal(el, kAXSizeAttribute) { AXValueGetValue(v as! AXValue, .cgSize, &s) }
+    return s
+}
+
+func smpPostScroll(at pt: CGPoint, w1: Int32, w2: Int32) {
+    if let ev = CGEvent(scrollWheelEvent2Source: nil, units: .pixel,
+                        wheelCount: 2, wheel1: w1, wheel2: w2, wheel3: 0) {
+        ev.location = pt
+        ev.post(tap: .cghidEventTap)
+    }
+}
+func activateLogicAndFocus(_ win: AXUIElement) {
+    // 1. Activate via NSRunningApplication (faster than osascript)
+    NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.logic10")
+        .first?.activate(options: .activateIgnoringOtherApps)
+    Thread.sleep(forTimeInterval: 0.3)
+    // 2. Raise window via AX
+    AXUIElementPerformAction(win, kAXRaiseAction as CFString)
+    Thread.sleep(forTimeInterval: 0.1)
+    // 3. Real HID click on toolbar (top center) to steal OS focus
+    var posRef: CFTypeRef?; var szRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(win, kAXPositionAttribute as CFString, &posRef)
+    AXUIElementCopyAttributeValue(win, kAXSizeAttribute as CFString, &szRef)
+    var pos = CGPoint.zero; var sz = CGSize.zero
+    if let p = posRef { AXValueGetValue(p as! AXValue, .cgPoint, &pos) }
+    if let s = szRef  { AXValueGetValue(s as! AXValue, .cgSize,  &sz) }
+    let safeClick = CGPoint(x: pos.x + sz.width / 2, y: pos.y + 15)
+    let src = CGEventSource(stateID: .hidSystemState)
+    CGEvent(mouseEventSource: src, mouseType: .leftMouseDown,
+            mouseCursorPosition: safeClick, mouseButton: .left)?.post(tap: .cghidEventTap)
+    CGEvent(mouseEventSource: src, mouseType: .leftMouseUp,
+            mouseCursorPosition: safeClick, mouseButton: .left)?.post(tap: .cghidEventTap)
+    Thread.sleep(forTimeInterval: 0.2)
+}
+
+func smpMoveMouse(_ pt: CGPoint) {
+    CGWarpMouseCursorPosition(pt)
+    CGEvent(mouseEventSource: nil, mouseType: .mouseMoved,
+            mouseCursorPosition: pt, mouseButton: .left)?.post(tap: .cghidEventTap)
+    Thread.sleep(forTimeInterval: 0.08)
+}
+func smpDrag(from s: CGPoint, to e: CGPoint) {
+    CGWarpMouseCursorPosition(s); Thread.sleep(forTimeInterval: 0.2)
+    CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown,
+            mouseCursorPosition: s, mouseButton: .left)?.post(tap: .cghidEventTap)
+    Thread.sleep(forTimeInterval: 0.15)
+    for i in 0...50 {
+        let t = Double(i) / 50.0
+        let p = CGPoint(x: s.x + (e.x - s.x) * t, y: s.y + (e.y - s.y) * t)
+        CGEvent(mouseEventSource: nil, mouseType: .leftMouseDragged,
+                mouseCursorPosition: p, mouseButton: .left)?.post(tap: .cghidEventTap)
+        Thread.sleep(forTimeInterval: 0.014)
+    }
+    CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp,
+            mouseCursorPosition: e, mouseButton: .left)?.post(tap: .cghidEventTap)
+    Thread.sleep(forTimeInterval: 0.4)
+}
+func smpFindMixerGroup(_ el: AXUIElement, depth: Int = 0) -> AXUIElement? {
+    if depth > 6 { return nil }
+    if axRole(el) == "AXGroup" && (axVal(el, kAXDescriptionAttribute) as? String) == "Mixer" { return el }
+    for kid in axKids(el) { if let f = smpFindMixerGroup(kid, depth: depth + 1) { return f } }
+    return nil
+}
+func smpFindAllMixerLayouts(_ el: AXUIElement, depth: Int = 0, results: inout [AXUIElement]) {
+    if depth > 6 { return }
+    if axRole(el) == "AXLayoutArea" && (axVal(el, kAXDescriptionAttribute) as? String) == "Mixer" { results.append(el) }
+    for kid in axKids(el) { smpFindAllMixerLayouts(kid, depth: depth + 1, results: &results) }
+}
+func smpFindBounceStrip(_ mixer: AXUIElement) -> AXUIElement? {
+    for item in axKids(mixer) {
+        for kid in axKids(item) {
+            if axRole(kid) == "AXButton" {
+                let desc  = (axVal(kid, kAXDescriptionAttribute) as? String ?? "").lowercased()
+                let title = (axVal(kid, kAXTitleAttribute)       as? String ?? "").lowercased()
+                if desc == "bounce" || title == "bnc" || title == "bounce" { return item }
+            }
+        }
+    }
+    return nil
 }
 
 // ── Mixer helpers: find AXLayoutArea + named channel, resize+scroll for plugin reading ─────────
@@ -1442,11 +1562,8 @@ end tell
         } else {
             Thread.sleep(forTimeInterval: 0.1)
         }
-        // Step 1: shrink Inspector to minimum width so mixer gets more horizontal room.
-        // When the mixer area is wide enough, Logic switches from dropdown (Mode1) to
-        // inline checkboxes (Mode2) — no menu needed, no focus steal.
+        // Shrink Inspector to minimum width via AXSplitter so mixer gets more horizontal room
         func shrinkInspector() -> Bool {
-            // Search direct children and one level deep for the first AXSplitter
             func findFirstSplitter(_ el: AXUIElement, depth: Int = 0) -> AXUIElement? {
                 if depth > 2 { return nil }
                 for child in axKids(el) {
@@ -1456,8 +1573,6 @@ end tell
                 return nil
             }
             guard let splitter = findFirstSplitter(win) else { return false }
-            // Use Logic's own reported minimum; if absent or tiny, use 220px
-            // (220px keeps the Inspector channel-strip visible but compact)
             var minRef: CFTypeRef?
             AXUIElementCopyAttributeValue(splitter, kAXMinValueAttribute as CFString, &minRef)
             let reported: Double
@@ -1474,9 +1589,6 @@ end tell
             if shrank { Thread.sleep(forTimeInterval: 0.3) }
         }
 
-        // NOTE: Previously this block closed Inspector when mixer couldn't reach
-        // inline mode. Removed because Inspector is required for scanMasterPlugins.
-        // On small screens (e.g. Intel 13") mixer stays in dropdown mode — that's OK.
         // Click "All" radio button
         func findAllRadioBtn(_ el: AXUIElement, depth: Int = 0) -> AXUIElement? {
             if depth > 8 { return nil }
@@ -3050,7 +3162,6 @@ case "scanMasterPlugins":
     if smpMaster == nil {
         fputs("[scanMasterPlugins] Inspector failed, trying Mixer direct…\n", stderr)
         if let mixerChannel = findStereoOutInMixer(logic) {
-            // Read plugins directly from Mixer channel (same as masterPlugins case)
             AXUIElementPerformAction(mixerChannel, "AXScrollToVisible" as CFString)
             Thread.sleep(forTimeInterval: 0.2)
             AXUIElementSetAttributeValue(mixerChannel, kAXSelectedAttribute as CFString, kCFBooleanTrue)
@@ -3061,7 +3172,6 @@ case "scanMasterPlugins":
                 jsonOut(["ok": true, "plugins": mixerPlugins, "channel": "Stereo Out", "source": "mixer"])
                 break
             }
-            // Try Inspector again after selecting Mixer channel
             smpMaster = findInspectorMaster(logic)
         }
     }
@@ -3100,8 +3210,8 @@ case "masterPlugins":
     }
 
 case "masterPluginsQuick":
-    // Quick poll — no scroll, fast lookup
-    if let mqChannel = findStereoOutQuick(logic) ?? findStereoOutInMixer(logic) {
+    // Quick poll — bounce button = unique to Output channel, fastest reliable lookup
+    if let mqChannel = findStereoOutByBounce(logic) ?? findStereoOutInMixer(logic) {
         let mqPlugins = pluginsFromMasterItem(mqChannel)
         jsonOut(["ok": true, "plugins": mqPlugins])
     } else {
@@ -3113,8 +3223,8 @@ case "setMasterPlugin":
     // Usage: setMasterPlugin <pluginName> <0|1>  (1=active, 0=bypassed)
     guard args.count >= 4 else { jsonOut(["ok": false, "error": "Usage: setMasterPlugin <name> <0|1>"]); break }
     let smpName = args[2]; let smpActive = args[3] == "1"
-    // Find Stereo Out — quick first, then full scan
-    guard let smpChannel = findStereoOutQuick(logic) ?? findStereoOutInMixer(logic) else {
+    // Find Stereo Out by bounce button (unique), fallback to name matching
+    guard let smpChannel = findStereoOutByBounce(logic) ?? findStereoOutInMixer(logic) else {
         jsonOut(["ok": false, "error": "Stereo Out not found in Mixer"]); break
     }
     let smpGroups = axKids(smpChannel).filter { kid -> Bool in
@@ -3142,7 +3252,7 @@ case "setAllMasterPlugins":
     // Bypass or restore ALL plugins on Stereo Out / MASTER channel — Mixer direct
     guard args.count >= 3 else { jsonOut(["ok": false, "error": "Usage: setAllMasterPlugins <0|1>"]); break }
     let samAllActive = args[2] == "1"
-    guard let samChannel = findStereoOutQuick(logic) ?? findStereoOutInMixer(logic) else {
+    guard let samChannel = findStereoOutByBounce(logic) ?? findStereoOutInMixer(logic) else {
         jsonOut(["ok": false, "error": "Stereo Out not found in Mixer"]); break
     }
     let samGroups = axKids(samChannel).filter { kid -> Bool in

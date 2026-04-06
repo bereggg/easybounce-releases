@@ -7,7 +7,7 @@ const { validateKey, getMachineId, getTrialInfo, activateTrial, STORAGE_KEY } = 
 const notifications = require('./notifications');
 const path = require('path');
 const fs = require('fs');
-const { exec } = require('child_process');
+const { exec, execFile } = require('child_process');
 const { promisify } = require('util');
 const execAsync = promisify(exec);
 
@@ -18,6 +18,9 @@ let _overlayWindow = null;
 const BRIDGE = app.isPackaged
   ? path.join(process.resourcesPath, 'app.asar.unpacked', 'LogicBridge')
   : path.join(__dirname, 'LogicBridge');
+const MIXER_SCROLL = app.isPackaged
+  ? path.join(process.resourcesPath, 'app.asar.unpacked', 'MixerScroll')
+  : path.join(__dirname, 'MixerScroll');
 let cancelRequested = false;
 let _scanTreeActive = false;
 
@@ -231,6 +234,28 @@ async function bridge(...args) {
       try { resolve(JSON.parse((stdout || '').trim())); }
       catch { resolve({ error: err?.message || 'parse error' }); }
     });
+  });
+}
+
+// Run LogicBridge as an independent process via launchctl asuser so CGEvent
+// scroll events are not intercepted by EasyBounce's own window.
+function bridgeIndependent(...args) {
+  if (!fs.existsSync(BRIDGE)) {
+    return Promise.resolve({ error: 'LogicBridge not found' });
+  }
+  return new Promise((resolve) => {
+    const { spawn } = require('child_process');
+    const uid = process.getuid ? process.getuid() : 501;
+    const proc = spawn('launchctl', ['asuser', String(uid), BRIDGE, ...args], {
+      timeout: 35000
+    });
+    let stdout = '';
+    proc.stdout.on('data', d => { stdout += d; });
+    proc.on('close', () => {
+      try { resolve(JSON.parse(stdout.trim())); }
+      catch { resolve({ error: 'parse error', raw: stdout.slice(0, 200) }); }
+    });
+    proc.on('error', err => resolve({ error: err.message }));
   });
 }
 
@@ -499,7 +524,7 @@ function _createOverlay() {
   if (_overlayWindow && !_overlayWindow.isDestroyed()) { _overlayWindow.showInactive(); return; }
   const { screen } = require('electron');
   const { x: dx, y: dy, width: dw, height: dh } = screen.getPrimaryDisplay().workArea;
-  const W = 300, H = 92;
+  const W = 300, H = 268;
   // Top-left corner — mirrored to mini mode (bottom-right).
   // This area has no critical Logic UI, so blocking clicks there is fine.
   _overlayWindow = new BrowserWindow({
@@ -509,6 +534,7 @@ function _createOverlay() {
     frame: false,
     transparent: true,
     alwaysOnTop: true,
+    focusable: false,
     resizable: false,
     movable: true,
     skipTaskbar: true,
@@ -521,13 +547,8 @@ function _createOverlay() {
   const overlayPath = app.isPackaged
     ? path.join(app.getAppPath(), 'src', 'overlay.html')
     : path.join(__dirname, 'src', 'overlay.html');
-  // did-finish-load is more reliable than ready-to-show for transparent windows
   _overlayWindow.webContents.once('did-finish-load', () => {
-    if (_overlayWindow && !_overlayWindow.isDestroyed()) {
-      _overlayWindow.show();
-      // Re-give Logic the focus we just took
-      require('child_process').exec('osascript -e \'tell application id "com.apple.logic10" to activate\'');
-    }
+    if (_overlayWindow && !_overlayWindow.isDestroyed()) _overlayWindow.showInactive();
   });
   _overlayWindow.loadFile(overlayPath);
   _overlayWindow.on('closed', () => { _overlayWindow = null; });

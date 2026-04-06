@@ -1170,9 +1170,10 @@ body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini
     </div>
     <div class="mp-modal-inner" style="background:var(--card,#1a1a1a);border-radius:10px;overflow:hidden;border:1px solid var(--b,#222);margin-bottom:16px;">
       <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--b,#222);">
-        <div style="width:8px;height:8px;border-radius:50%;background:#ff4757;flex-shrink:0;"></div>
+        <div id="mp-status-dot" style="width:8px;height:8px;border-radius:50%;background:#ff4757;flex-shrink:0;"></div>
         <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;">Master Plugins</span>
-        <button onclick="closeMasterPluginsModal()" style="margin-left:auto;background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0;line-height:1;transition:color .14s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+        <button id="mp-refresh" onclick="loadMasterPlugins()" style="margin-left:auto;display:flex;align-items:center;gap:5px;background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.25);color:#a89fff;font-size:10px;font-weight:700;cursor:pointer;padding:4px 10px;border-radius:6px;letter-spacing:.04em;transition:all .14s;" onmouseover="this.style.background='rgba(108,99,255,.2)'" onmouseout="this.style.background='rgba(108,99,255,.1)'" title="Re-scan Stereo Out channel in Logic">⟳ Reconnect</button>
+        <button onclick="closeMasterPluginsModal()" style="background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0;line-height:1;transition:color .14s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">✕</button>
       </div>
       <div id="mp-grid" style="max-height:300px;overflow-y:auto;">
         <div style="padding:16px 14px;color:var(--muted);font-size:11px;">Plugins are loaded automatically during scan</div>
@@ -1862,7 +1863,6 @@ async function scanLogic(isAutoRetry = false) {
   await window.api.wait(300);
 
   // ── Step 0-pre: Close plugin + editor windows (all Spaces) ──
-  // v5: AXCloseButton + Window menu with hide/show EasyBounce inside binary
   if (window._scanCancelled) return;
   try {
     const clw = await window.api.runShell('/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/CloseLogicWindows');
@@ -1877,7 +1877,6 @@ async function scanLogic(isAutoRetry = false) {
     const mxResult = await window.api.maximizeLogic();
     console.log(`maximizeLogic: ok=${mxResult?.ok} exitedFs=${mxResult?.exitedFullscreen||false}`);
     await window.api.wait(mxResult?.exitedFullscreen ? 500 : 150);
-    // Re-move to Logic space after fullscreen exit (desktop may have changed)
     if (mxResult?.exitedFullscreen) {
       try { await window.api.moveToLogicSpace(); await window.api.wait(150); } catch(e) {}
     }
@@ -1913,7 +1912,6 @@ async function scanLogic(isAutoRetry = false) {
   } catch(e) {}
 
   if (!_scanInitDone) {
-    // Default all filters to ON if not set — don't read from Logic's mixer
     if (Object.keys(_mixerFilters).length === 0) {
       _mixerFilters = Object.fromEntries(MF_ALL_NAMES.map(n => [n, true]));
       saveMixerFilterPrefs(); renderMixerFilters();
@@ -1951,7 +1949,6 @@ async function scanLogic(isAutoRetry = false) {
   if (proj.name) {
     const oldProject = projectName;
     setProjectName(proj.name);
-    // Reset filters to ALL when switching to a different project
     if (oldProject && oldProject !== proj.name) {
       log(`Project changed: "${oldProject}" → "${proj.name}" — resetting filters`, 'warn');
       _mixerFilters = Object.fromEntries(MF_ALL_NAMES.map(n => [n, true]));
@@ -1962,7 +1959,6 @@ async function scanLogic(isAutoRetry = false) {
       localStorage.setItem('sb4_master_channels', '[]');
     }
   }
-  // On first launch (no saved project), also default to all filters ON
   if (!projectName) {
     _mixerFilters = Object.fromEntries(MF_ALL_NAMES.map(n => [n, true]));
     saveMixerFilterPrefs(); renderMixerFilters();
@@ -1972,9 +1968,7 @@ async function scanLogic(isAutoRetry = false) {
   const result = await window.api.scanChannels();
   console.log(`scanChannels raw: channels=${result.channels?.length ?? 'none'} err=${result.error||'—'}`);
   if (result.error || !result.channels || result.channels.length === 0) {
-    if (result.debugInfo) {
-      log(`🔍 AX Debug: ${result.debugInfo}`, 'warn');
-    }
+    if (result.debugInfo) { log(`🔍 AX Debug: ${result.debugInfo}`, 'warn'); }
     return _abort(`Mixer scan failed: ${result.error || 'no channels found'}`);
   }
 
@@ -1982,12 +1976,10 @@ async function scanLogic(isAutoRetry = false) {
 
   channels = (result.channels || []).map((ch, i) => ({
     ...ch, color: getInstrumentColor(ch.name) || COLORS[i % COLORS.length], isBus: !ch.hasMonitoring && !ch.hasRecord,
-    // Channel type from Logic's AX: Audio=monitoring+record, Inst=record only, Bus/Aux=neither
     chType: ch.hasBnc ? 'Output' : ch.hasMonitoring && ch.hasRecord ? 'Audio' : ch.hasRecord && !ch.hasMonitoring ? 'Inst' : 'Bus'
   }));
   localStorage.setItem(SK.channels, JSON.stringify(channels));
 
-  // Auto-build channelTypeMap from AX data as initial guess (self-learning refines it)
   _channelTypeMap = {};
   const _typeGroups = {};
   channels.forEach(c => {
@@ -2004,13 +1996,10 @@ async function scanLogic(isAutoRetry = false) {
   }
   localStorage.setItem('sb4_channel_type_map', JSON.stringify(_channelTypeMap));
 
-  // Don't sync filters from Logic after scan — keep our own state clean
-  // All filters default to ON; user toggles them manually
   if (Object.keys(_mixerFilters).length === 0) {
     _mixerFilters = Object.fromEntries(MF_ALL_NAMES.map(n => [n, true]));
     saveMixerFilterPrefs(); renderMixerFilters();
   }
-  // Save master channel list (all channels with all filters ON)
   _masterChannels = channels.map(c => ({name: c.name, isBus: c.isBus, chType: c.chType, color: c.color, index: c.index}));
   localStorage.setItem('sb4_master_channels', JSON.stringify(_masterChannels));
   if (channelFilter === 'bus' && channels.filter(c => c.isBus).length === 0) setFilter('all');
@@ -2021,7 +2010,7 @@ async function scanLogic(isAutoRetry = false) {
 
   if (window._scanCancelled) return;
 
-  // ── Step 1b: Learn filter types (right after scanChannels while mixer is open!) ──
+  // ── Step 1b: Learn filter types ──────────────────────────────────────────────
   if (channels.length > 0 && window.api && !window._scanCancelled) {
     const filterNames = MF_ALL_NAMES.filter(n => n in _mixerFilters);
     if (filterNames.length > 0) {
@@ -2046,9 +2035,7 @@ async function scanLogic(isAutoRetry = false) {
             if (nowNames.length <= prevNames.length) prevNames = nowNames;
           }
         }
-      } catch(e) {
-        log(`⚠ Learning failed: ${e.message}`, 'warn');
-      }
+      } catch(e) { log(`⚠ Learning failed: ${e.message}`, 'warn'); }
       await window.api.mixerEnableAll();
       await window.api.setAlwaysOnTop(false);
       localStorage.setItem('sb4_channel_type_map', JSON.stringify(_channelTypeMap));
@@ -2059,7 +2046,6 @@ async function scanLogic(isAutoRetry = false) {
       }
       const learned = Object.entries(_channelTypeMap).filter(([k,v])=>v?.length>0);
       log(`✓ Learned ${learned.length} types: ${learned.map(([k,v])=>`${k}(${v.length})`).join(', ')}`, 'ok');
-      // Refresh sidechain dropdown if open — now has accurate filter data
       if (_scDropdownOpen) renderSidechainDropdown();
     }
   }
@@ -2073,7 +2059,6 @@ async function scanLogic(isAutoRetry = false) {
   let treeOk = false;
   if (window.api.scanTree) {
     try {
-      // Restore alwaysOnTop before scan-tree — learning phase set it to false
       await window.api.setAlwaysOnTop(true, 'pop-up-menu').catch(() => {});
       log('Scanning track tree…', 'info');
       const treeResult = await window.api.scanTree();
@@ -2082,12 +2067,10 @@ async function scanLogic(isAutoRetry = false) {
         if (!treeResult.error && treeResult.tracks && treeResult.tracks.length > 0) {
           trackTree = treeResult.tracks;
           localStorage.setItem('sb4_track_tree', JSON.stringify(trackTree));
-          // Collapse all groups by default after fresh scan (mirrors Logic's default state)
           collapsedGroups.clear();
           trackTree.filter(t => t.type === 'group' && trackTree.some(c => c.parent === t.name))
             .forEach(t => collapsedGroups.add(t.name));
           localStorage.setItem('sb4_collapsed_groups', JSON.stringify([...collapsedGroups]));
-          // Extract mute data from tree (scan-tree reads it while tracks are expanded!)
           const treeMuted = treeResult.tracks.filter(t => t.muted === 1).map(t => t.name.toLowerCase());
           if (treeMuted.length > 0) {
             const mutedSet = new Set(treeMuted);
@@ -2133,8 +2116,6 @@ async function scanLogic(isAutoRetry = false) {
     } catch(e) { log(`⚠ Master plugins not found: ${e.message}`, 'warn'); }
   } else { masterOk = true; }
 
-  // ── Channel types are learned on-demand (when user clicks filter button) ──
-  // NOT during scan — toggling Logic's filters one by one is too intrusive.
   if (window._scanCancelled) return;
 
   // ── Cleanup & completion ──────────────────────────────────────────────────
@@ -5742,6 +5723,7 @@ function cancelBounce() {
   // 1. Set flags FIRST — bounceStem/bounceMix check these to skip cleanup
   window._userCancelled = true;
   bouncing = false;
+  if (window.api?.hideBounceOverlay) window.api.hideBounceOverlay().catch(() => {});
   // 2. Signal main.js: sets cancelRequested=true → all wait() calls resolve instantly
   //    Fire-and-forget (no await) — message arrives before next 80ms poll
   if (window.api) window.api.cancelBounce();
@@ -5897,6 +5879,7 @@ async function doBounce() {
   bouncing = true; updateBounceBtn();
   // Enter mini mode first (await so window is fully resized before overlay appears)
   if (!window._miniActive) await showMiniPlayer();
+  if (window.api?.showBounceOverlay) window.api.showBounceOverlay().catch(() => {});
   // Check solo AFTER Logic is activated — avoids triggering wrong Logic dialogs
   if (window.api && window.api.checkSolo) {
     try {
@@ -6041,6 +6024,7 @@ async function doBounce() {
     if (!bouncing) { job.status = 'cancelled'; renderQueue(); continue; }
 
     job.status = 'running'; renderQueue();
+    if (window.api?.updateBounceOverlay) window.api.updateBounceOverlay({ name: job.name, done: totalDone, total: pending.length }).catch(() => {});
     _stemStartTime = Date.now(); // track this stem's start
     // Create reference file for mtime comparison (file newer than this = fresh bounce)
     window.api.runShell('touch /tmp/.eb_stemstart').catch(() => {});
@@ -6336,6 +6320,7 @@ async function doBounce() {
   }
 
   bouncing = false; updateBounceBtn();
+  if (window.api?.hideBounceOverlay) window.api.hideBounceOverlay().catch(() => {});
   clearInterval(_timerInterval);
   document.getElementById('cancel-btn').style.display = 'none';
   document.getElementById('mini-btn').style.display = 'none';
@@ -6728,15 +6713,21 @@ function obSkip() {
 let _masterPlugins = [];
 
 let _mpPollInterval = null;
+let _mpPollPausedUntil = 0;
 function openMasterPluginsModal() {
   document.getElementById('mp-modal').style.display = 'block';
   // If already cached from scan — show immediately; otherwise fetch
-  if (_masterPlugins.length > 0) { renderMasterPlugins(); } else { loadMasterPlugins(); }
+  if (_masterPlugins.length > 0) {
+    renderMasterPlugins();
+    const dot = document.getElementById('mp-status-dot');
+    if (dot) dot.style.background = '#5abf28';
+  } else { loadMasterPlugins(); }
   // Auto-refresh every 1.5s to sync bypass state with Logic
   if (_mpPollInterval) clearInterval(_mpPollInterval);
   _mpPollInterval = setInterval(async () => {
     if (document.getElementById('mp-modal').style.display === 'none') return;
     if (!_masterPlugins.length) return;
+    if (Date.now() < _mpPollPausedUntil) return; // skip poll during user toggle
     const r = await window.api.masterPluginsQuick().catch(() => null);
     if (!r || !r.ok || !r.plugins.length) return;
     if (r.plugins.every(p => p.name === 'audio plug-in')) return;
@@ -6745,6 +6736,8 @@ function openMasterPluginsModal() {
     if (!changed) return;
     _masterPlugins = r.plugins;
     renderMasterPlugins();
+    const dot = document.getElementById('mp-status-dot');
+    if (dot) dot.style.background = '#5abf28';
   }, 500);
 }
 function closeMasterPluginsModal() {
@@ -6753,24 +6746,28 @@ function closeMasterPluginsModal() {
 }
 
 async function loadMasterPlugins() {
-  const refreshBtn = document.getElementById('mp-modal-refresh');
+  const refreshBtn = document.getElementById('mp-refresh');
+  const dot = document.getElementById('mp-status-dot');
   const grid = document.getElementById('mp-grid');
   if (!grid) return;
-  if (refreshBtn) { refreshBtn.style.opacity = '0.4'; refreshBtn.disabled = true; }
+  if (refreshBtn) { refreshBtn.style.opacity = '0.4'; refreshBtn.disabled = true; refreshBtn.textContent = '⟳ Reconnecting…'; }
+  if (dot) dot.style.background = '#ffa94d';
   if (grid) grid.innerHTML = '<span style="color:var(--muted);font-size:10px;grid-column:1/-1;">Reading Master…</span>';
-  // Use full-workflow scan (opens Inspector, clicks first track, reads MASTER, restores)
-  const fn = window.api.scanMasterPlugins || window.api.masterPlugins;
-  const result = await fn().catch(() => null);
-  if (refreshBtn) { refreshBtn.style.opacity = '1'; refreshBtn.disabled = false; }
+  // Use quick read (no mouse/scroll) — just reads AX tree from existing open mixer
+  const result = await window.api.masterPluginsQuick().catch(() => null);
+  if (refreshBtn) { refreshBtn.style.opacity = '1'; refreshBtn.disabled = false; refreshBtn.textContent = '⟳ Reconnect'; }
   if (!result || !result.ok || !result.plugins || result.plugins.length === 0) {
+    if (dot) dot.style.background = '#ff4757';
     grid.innerHTML = '<span style="color:var(--muted);font-size:10px;grid-column:1/-1;">Not found — make sure Logic is open with a track in the Arrange window</span>';
     return;
   }
   const allGeneric = result.plugins.every(p => p.name === 'audio plug-in');
   if (allGeneric) {
+    if (dot) dot.style.background = '#ffa94d';
     grid.innerHTML = '<span style="color:var(--muted);font-size:10px;grid-column:1/-1;">Plugin names not loaded yet — retry ⟳</span>';
     return;
   }
+  if (dot) dot.style.background = '#5abf28';
   _masterPlugins = result.plugins;
   renderMasterPlugins();
 }
@@ -6797,31 +6794,32 @@ function renderMasterPlugins() {
 async function toggleMasterPlugin(index, wantActive) {
   const plugin = _masterPlugins[index];
   if (!plugin) return;
-  // Optimistic update — show change immediately
+  // Optimistic update — show change immediately, keep it until polling confirms
   _masterPlugins[index].active = wantActive;
   renderMasterPlugins();
-  const result = await window.api.setMasterPlugin(plugin.name, wantActive ? 1 : 0).catch(() => null);
+  // Pause polling while backend works — adaptive to project speed
+  _mpPollPausedUntil = Date.now() + 5000;
+  await window.api.setMasterPlugin(plugin.name, wantActive ? 1 : 0).catch(() => null);
+  // Don't overwrite optimistic state with backend response (Logic may be slow to reflect)
+  // Just resume polling — it will sync to real Logic state once Logic catches up
+  _mpPollPausedUntil = 0;
   window.api.focusApp();
-  if (result && result.ok) {
-    _masterPlugins[index].active = result.active;
-    renderMasterPlugins();
-  } else {
-    loadMasterPlugins(); // fallback: reload from Logic
-  }
 }
 
 async function bypassAllMasterPlugins() {
+  _mpPollPausedUntil = Date.now() + 5000; // fallback for many plugins
   _masterPlugins.forEach(p => { p.active = false; });
   renderMasterPlugins();
   await window.api.setAllMasterPlugins(0).catch(() => null);
-  // polling at 500ms will sync state automatically — no focusApp needed
+  _mpPollPausedUntil = 0;
 }
 
 async function restoreAllMasterPlugins() {
+  _mpPollPausedUntil = Date.now() + 5000;
   _masterPlugins.forEach(p => { p.active = true; });
   renderMasterPlugins();
   await window.api.setAllMasterPlugins(1).catch(() => null);
-  // polling at 500ms will sync state automatically — no focusApp needed
+  _mpPollPausedUntil = 0;
 }
 // ───────────────────────────────────────────────────────────
 

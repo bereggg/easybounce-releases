@@ -23,7 +23,9 @@ pkill -x "EasyBounce" 2>/dev/null; sleep 0.5
 # Extract, update files, repack asar
 cd /tmp && rm -rf ea
 npx asar extract "/Applications/EasyBounce.app/Contents/Resources/app.asar" ea
+cp "/Users/dbsound/Desktop/WORK-/EasyBounce/package.json" ea/package.json
 cp "/Users/dbsound/Desktop/WORK-/EasyBounce/LogicBridge" ea/LogicBridge
+cp "/Users/dbsound/Desktop/WORK-/EasyBounce/MixerScroll" ea/MixerScroll
 cp "/Users/dbsound/Desktop/WORK-/EasyBounce/CloseLogicWindows" ea/CloseLogicWindows
 cp "/Users/dbsound/Desktop/WORK-/EasyBounce/main.js" ea/main.js
 cp "/Users/dbsound/Desktop/WORK-/EasyBounce/preload.js" ea/preload.js
@@ -41,6 +43,7 @@ rm -rf ea
 
 # Update unpacked binary
 cp "/Users/dbsound/Desktop/WORK-/EasyBounce/LogicBridge" "/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/LogicBridge"
+cp "/Users/dbsound/Desktop/WORK-/EasyBounce/MixerScroll" "/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/MixerScroll"
 cp "/Users/dbsound/Desktop/WORK-/EasyBounce/CloseLogicWindows" "/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/CloseLogicWindows"
 
 # Also update dist/mac-universal so build_dmg.sh always gets the latest binary
