@@ -496,30 +496,39 @@ ipcMain.handle('exit-mini-mode', () => {
 
 // ── Bounce Overlay — floating always-on-top progress window ─────────────────
 function _createOverlay() {
-  if (_overlayWindow && !_overlayWindow.isDestroyed()) { _overlayWindow.show(); return; }
+  if (_overlayWindow && !_overlayWindow.isDestroyed()) { _overlayWindow.showInactive(); return; }
   const { screen } = require('electron');
-  const { x, y, width, height } = screen.getPrimaryDisplay().workArea;
-  const W = 380, H = 272;
+  const { x: dx, y: dy, width: dw, height: dh } = screen.getPrimaryDisplay().workArea;
+  const W = 300, H = 92;
+  // Top-left corner — mirrored to mini mode (bottom-right).
+  // This area has no critical Logic UI, so blocking clicks there is fine.
   _overlayWindow = new BrowserWindow({
     width: W, height: H,
-    x: Math.round(x + (width  - W) / 2),
-    y: Math.round(y + (height - H) / 2),
+    x: dx,
+    y: dy,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
     resizable: false,
     movable: true,
     skipTaskbar: true,
-    hasShadow: true,
-    vibrancy: 'under-window',
-    visualEffectState: 'active',
+    hasShadow: false,
+    show: false,
     webPreferences: { nodeIntegration: true, contextIsolation: false }
   });
   _overlayWindow.setAlwaysOnTop(true, 'screen-saver');
   _overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   const overlayPath = app.isPackaged
-    ? path.join(process.resourcesPath, 'app.asar.unpacked', 'src', 'overlay.html')
+    ? path.join(app.getAppPath(), 'src', 'overlay.html')
     : path.join(__dirname, 'src', 'overlay.html');
+  // did-finish-load is more reliable than ready-to-show for transparent windows
+  _overlayWindow.webContents.once('did-finish-load', () => {
+    if (_overlayWindow && !_overlayWindow.isDestroyed()) {
+      _overlayWindow.show();
+      // Re-give Logic the focus we just took
+      require('child_process').exec('osascript -e \'tell application id "com.apple.logic10" to activate\'');
+    }
+  });
   _overlayWindow.loadFile(overlayPath);
   _overlayWindow.on('closed', () => { _overlayWindow = null; });
 }
@@ -533,13 +542,20 @@ ipcMain.handle('update-bounce-overlay', (_, data) => {
   return { ok: true };
 });
 
-ipcMain.handle('hide-bounce-overlay', () => {
-  if (_overlayWindow && !_overlayWindow.isDestroyed()) { _overlayWindow.close(); }
+ipcMain.handle('hide-bounce-overlay', async () => {
+  if (_overlayWindow && !_overlayWindow.isDestroyed()) {
+    // Ask renderer to play fade-out, then close
+    _overlayWindow.webContents.send('overlay-fade-out');
+    await new Promise(r => setTimeout(r, 320));
+    if (_overlayWindow && !_overlayWindow.isDestroyed()) _overlayWindow.close();
+  }
   _overlayWindow = null;
   return { ok: true };
 });
 
 ipcMain.handle('overlay-dismiss', () => {
+  // Renderer already plays the fade-out animation before calling this,
+  // so we just close immediately here.
   if (_overlayWindow && !_overlayWindow.isDestroyed()) { _overlayWindow.close(); }
   _overlayWindow = null;
   return { ok: true };
@@ -572,6 +588,8 @@ ipcMain.handle('exit-scan-badge', () => {
     mainWindow.setBounds(_preScan, false);
     _preScan = null;
   }
+  // Reset alwaysOnTop so app doesn't stay above Logic after scan
+  mainWindow.setAlwaysOnTop(false);
   return { ok: true };
 });
 
@@ -1100,6 +1118,23 @@ ipcMain.handle('show-metronome-warning', async () => {
 });
 
 ipcMain.handle('check-cycle', () => bridge('check-cycle'));
+ipcMain.handle('check-solo', () => bridge('readStates'));
+
+ipcMain.handle('show-solo-warning', async () => {
+  const { dialog } = require('electron');
+  const result = await dialog.showMessageBox(mainWindow, {
+    type: 'warning',
+    title: 'Solo is active in Logic',
+    message: '⚠️ One or more tracks are soloed!',
+    detail: 'If you bounce now, only the soloed tracks will be heard in the mix. Remove solo first, or continue anyway.',
+    buttons: ['Remove Solo & Bounce', 'Bounce Anyway', 'Cancel'],
+    defaultId: 0,
+    cancelId: 2
+  });
+  if (result.response === 0) return 'unsolo';
+  if (result.response === 1) return 'bounce';
+  return 'cancel';
+});
 
 ipcMain.handle('show-cycle-warning', async () => {
   const { dialog } = require('electron');

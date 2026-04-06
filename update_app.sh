@@ -30,6 +30,7 @@ cp "/Users/dbsound/Desktop/WORK-/EasyBounce/preload.js" ea/preload.js
 cp "/Users/dbsound/Desktop/WORK-/EasyBounce/license.js" ea/license.js
 cp "/Users/dbsound/Desktop/WORK-/EasyBounce/notifications.js" ea/notifications.js
 cp "/Users/dbsound/Desktop/WORK-/EasyBounce/src/index.html" ea/src/index.html
+cp "/Users/dbsound/Desktop/WORK-/EasyBounce/src/overlay.html" ea/src/overlay.html
 # Sync node_modules (dependencies needed at runtime: @sendgrid, electron-updater)
 mkdir -p ea/node_modules
 # no extra npm packages needed — email uses native fetch

@@ -217,8 +217,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .act-tab.active{background:var(--card);border-color:var(--b);color:var(--text);}
 .act-tab:hover:not(.active){color:var(--t2);}
 /* ── Easy Mode Toggle ──────────────────────────────────── */
-.em-wrap{display:flex;align-items:center;gap:7px;padding:5px 14px 5px 11px;border-radius:20px;border:1.5px solid rgba(108,99,255,.45);background:rgba(108,99,255,.13);cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s;-webkit-app-region:no-drag;user-select:none;position:absolute;left:50%;transform:translateX(-50%);z-index:2;box-shadow:0 0 10px rgba(108,99,255,.15),0 0 0 1px rgba(108,99,255,.08);}
-.em-wrap:hover{border-color:rgba(108,99,255,.65);background:rgba(108,99,255,.2);box-shadow:0 0 16px rgba(108,99,255,.25),0 0 0 1px rgba(108,99,255,.12);}
+.em-wrap{display:flex;align-items:center;gap:7px;padding:5px 14px 5px 11px;border-radius:20px;border:1.5px solid rgba(108,99,255,.62);background:rgba(108,99,255,.13);cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s;-webkit-app-region:no-drag;user-select:none;position:absolute;left:50%;transform:translateX(-50%);z-index:2;box-shadow:0 0 16px rgba(108,99,255,.28),0 0 0 3px rgba(108,99,255,.08),0 0 32px rgba(108,99,255,.1);}
+.em-wrap:hover{border-color:rgba(108,99,255,.82);background:rgba(108,99,255,.2);box-shadow:0 0 24px rgba(108,99,255,.45),0 0 0 3px rgba(108,99,255,.13),0 0 48px rgba(108,99,255,.18);}
 .em-track{width:28px;height:14px;border-radius:7px;background:var(--b2);position:relative;transition:background .22s;flex-shrink:0;}
 .em-thumb{position:absolute;top:2.5px;left:2px;width:9px;height:9px;border-radius:50%;background:var(--t2);opacity:.6;transition:all .22s;}
 .em-lbl{font-size:10px;font-weight:800;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;transition:color .2s;opacity:.85;}
@@ -411,11 +411,32 @@ body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:va
   height:100%;
   cursor:pointer;
   padding-top:8px;
-  gap:4px;
+  gap:0;
 }
 .act-collapsed-strip:hover .act-strip-btn{color:var(--accent);border-color:rgba(108,99,255,.4);background:rgba(108,99,255,.08);}
 .shell.act-collapsed .act-collapsed-strip{display:flex;}
 .act-strip-label{display:none;}
+.act-strip-text{
+  writing-mode:vertical-lr;
+  transform:rotate(180deg);
+  font-size:10.5px;
+  font-weight:800;
+  letter-spacing:.45em;
+  text-transform:uppercase;
+  color:var(--t2);
+  font-family:'Space Grotesk',sans-serif;
+  white-space:nowrap;
+  opacity:.55;
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:opacity .15s, color .15s;
+  pointer-events:none;
+  user-select:none;
+  text-shadow:0 0 18px rgba(108,99,255,.18);
+}
+.act-collapsed-strip:hover .act-strip-text{opacity:1;color:var(--accent);text-shadow:0 0 14px rgba(108,99,255,.35);}
 .act-strip-btn{
   width:24px;height:24px;
   border-radius:6px;
@@ -785,6 +806,7 @@ body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini
     <!-- Collapsed strip (visible only when panel is hidden) -->
     <div class="act-collapsed-strip" onclick="toggleActivityPanel()" title="Open Activity panel">
       <button class="act-strip-btn q-mini-btn" style="width:24px;height:24px;padding:0;font-size:11px;">▶</button>
+      <span class="act-strip-text">Log — Stats — History</span>
     </div>
     <!-- Full panel content -->
     <div class="act-main-content" style="display:flex;flex-direction:column;flex:1;overflow:hidden;min-width:0;">
@@ -798,8 +820,8 @@ body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini
         </div>
         <div class="act-tabs">
           <button class="act-tab active" id="tab-log" onclick="switchActTab('log')">Log</button>
-          <button class="act-tab" id="tab-history" onclick="switchActTab('history')">History</button>
           <button class="act-tab" id="tab-stats" onclick="switchActTab('stats')">Stats</button>
+          <button class="act-tab" id="tab-history" onclick="switchActTab('history')">History</button>
         </div>
       </div>
       <!-- LOG tab -->
@@ -2812,8 +2834,9 @@ function renderChannels() {
             e.dataTransfer.setData('channel-name', ch.name);
             e.dataTransfer.setData('channel-index', String(ch.index));
             e.dataTransfer.setData('channel-color', ch.color || '');
-            // If group is expanded, include visible children so they all drop together
-            if (hasChildren && !collapsedGroups.has(t.name)) {
+            // Include children only when folder is expanded AND not explicitly shift-selected alone.
+            // If the user shift-selected this specific folder, drag only that folder.
+            if (hasChildren && !collapsedGroups.has(t.name) && !selectedIdx.has(ch.index)) {
               const childNames = getVisibleDescendantNames(t.name);
               e.dataTransfer.setData('group-children', JSON.stringify(childNames));
             }
@@ -5719,7 +5742,6 @@ function cancelBounce() {
   // 1. Set flags FIRST — bounceStem/bounceMix check these to skip cleanup
   window._userCancelled = true;
   bouncing = false;
-  if (window.api?.hideBounceOverlay) window.api.hideBounceOverlay().catch(()=>{});
   // 2. Signal main.js: sets cancelRequested=true → all wait() calls resolve instantly
   //    Fire-and-forget (no await) — message arrives before next 80ms poll
   if (window.api) window.api.cancelBounce();
@@ -5768,9 +5790,6 @@ function cancelBounce() {
   queue.forEach(q => { if (q.status === 'running' || q.status === 'pending') q.status = 'cancelled'; });
   renderQueue();
   saveQueue();
-  // ── All Logic operations (Cmd+., close dialogs, activate Logic, unmute/unsolo,
-  //    exitMiniMode, focusApp) run in ORDER inside doBounce's finally block.
-  //    They start automatically once the bounce loop exits (within ~80ms).
 }
 
 async function doBounce() {
@@ -5876,9 +5895,24 @@ async function doBounce() {
   // ──────────────────────────────────────────────────────────────────────────
 
   bouncing = true; updateBounceBtn();
-  // Auto-enter mini mode + show floating overlay
-  if (!window._miniActive) showMiniPlayer();
-  if (window.api?.showBounceOverlay) window.api.showBounceOverlay().catch(()=>{});
+  // Enter mini mode first (await so window is fully resized before overlay appears)
+  if (!window._miniActive) await showMiniPlayer();
+  // Check solo AFTER Logic is activated — avoids triggering wrong Logic dialogs
+  if (window.api && window.api.checkSolo) {
+    try {
+      const soloState = await window.api.checkSolo();
+      if (soloState && soloState.soloed && soloState.soloed.length > 0) {
+        const soloAction = await window.api.showSoloWarning();
+        if (soloAction === 'cancel') { bouncing = false; updateBounceBtn(); await exitMiniMode(); return; }
+        if (soloAction === 'unsolo') {
+          for (const name of soloState.soloed) {
+            try { await window.api.unsoloByName(name); } catch(e) {}
+          }
+          await window.api.wait(200);
+        }
+      }
+    } catch(e) {}
+  }
   // Prevent Mac from sleeping during bounce (caffeinate -dims keeps display + disk + system awake)
   try {
     if (window.api?.exec) {
@@ -5896,7 +5930,6 @@ async function doBounce() {
   document.getElementById('alert-row-full').style.display = 'none';
   document.getElementById('alert-row-mini').style.display = 'none';
   if (document.getElementById('schedule-btn')) document.getElementById('schedule-btn').style.display = 'none';
-  window._miniActive = false;
   if (window.api) await window.api.setAlwaysOnTop(true);
   if (isPinned && window.api && window.api.setAlwaysOnTop) window.api.setAlwaysOnTop(true);
   // Start countdown timer — recalculates based on real completed-stem times
@@ -6008,7 +6041,6 @@ async function doBounce() {
     if (!bouncing) { job.status = 'cancelled'; renderQueue(); continue; }
 
     job.status = 'running'; renderQueue();
-    if (window.api?.updateBounceOverlay) window.api.updateBounceOverlay({ name: job.name, done: totalDone, total: pending.length }).catch(()=>{});
     _stemStartTime = Date.now(); // track this stem's start
     // Create reference file for mtime comparison (file newer than this = fresh bounce)
     window.api.runShell('touch /tmp/.eb_stemstart').catch(() => {});
@@ -6304,7 +6336,6 @@ async function doBounce() {
   }
 
   bouncing = false; updateBounceBtn();
-  if (window.api?.hideBounceOverlay) window.api.hideBounceOverlay().catch(()=>{});
   clearInterval(_timerInterval);
   document.getElementById('cancel-btn').style.display = 'none';
   document.getElementById('mini-btn').style.display = 'none';
@@ -7677,8 +7708,10 @@ async function showMiniPlayer() {
 
 async function exitMiniMode() {
   window._miniActive = false;
-  // Resize first, then reveal full UI so content matches window size
-  if (window.api && window.api.exitMiniMode) await window.api.exitMiniMode();
+  // Resize window — wrapped in try/catch so classList.remove always runs
+  try {
+    if (window.api && window.api.exitMiniMode) await window.api.exitMiniMode();
+  } catch(e) {}
   document.body.classList.remove('mini-mode');
 }
 function resetProg() {
@@ -8542,6 +8575,8 @@ function applySkin(name) {
       .q-item{background:linear-gradient(180deg,#171717,#111)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)!important;}
       .presets-bar{border-top:1px solid rgba(255,255,255,.04)!important;border-bottom:1px solid #0e0e0e!important;}
       input,select{background:linear-gradient(180deg,#1a1a1a,#141414)!important;border-color:#282828!important;box-shadow:inset 0 1px 3px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04)!important;}
+      #scan-btn{background:linear-gradient(160deg,#303030,#1c1c1c)!important;color:#e8e8e8!important;border:1px solid rgba(255,255,255,.18)!important;box-shadow:0 4px 16px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.1)!important;}
+      #scan-btn:hover{background:linear-gradient(160deg,#3e3e3e,#262626)!important;border-color:rgba(255,255,255,.28)!important;box-shadow:0 6px 22px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.14)!important;}
     `,
     luxury: `
       body{
@@ -9784,14 +9819,15 @@ window.addEventListener('load', function(){
     enabled = val;
     if (!val) hideTip();
   };
-  // Init ? button state
+  // Init ? button state — matches toggleTooltips() OFF style exactly
   window.addEventListener('load', function(){
     var qb = document.getElementById('tooltip-toggle-btn');
     if (qb && !enabled) {
-      qb.style.background='var(--card2)';
+      qb.style.background='transparent';
       qb.style.color='var(--muted)';
-      qb.style.border='1px solid var(--b)';
-      qb.style.boxShadow='none';
+      qb.style.border='1.5px dashed var(--b2)';
+      qb.style.boxShadow='0 0 0 2.5px rgba(128,128,128,.18)';
+      qb.style.opacity='1';
     }
   });
 })();

@@ -17,6 +17,8 @@ contextBridge.exposeInMainWorld('api', {
   checkMetronome:    ()    => ipcRenderer.invoke('check-metronome'),
   checkCycle:        ()    => ipcRenderer.invoke('check-cycle'),
   showCycleWarning:  ()    => ipcRenderer.invoke('show-cycle-warning'),
+  checkSolo:         ()    => ipcRenderer.invoke('check-solo'),
+  showSoloWarning:   ()    => ipcRenderer.invoke('show-solo-warning'),
   setFormat:         (f,b,s) => ipcRenderer.invoke('set-format', f, b, s),
   metronomeToggle:   ()    => ipcRenderer.invoke('metronome-toggle'),
   soloIndex:      (i)   => ipcRenderer.invoke('solo-index', i),
@@ -111,7 +113,7 @@ contextBridge.exposeInMainWorld('api', {
   // CLI trigger
   onCliBounce: (cb) => ipcRenderer.on('cli-bounce', () => cb()),
   // Bounce overlay
-  showBounceOverlay:  ()     => ipcRenderer.invoke('show-bounce-overlay'),
-  updateBounceOverlay: (d)   => ipcRenderer.invoke('update-bounce-overlay', d),
-  hideBounceOverlay:  ()     => ipcRenderer.invoke('hide-bounce-overlay'),
+  showBounceOverlay:     ()    => ipcRenderer.invoke('show-bounce-overlay'),
+  updateBounceOverlay:   (d)   => ipcRenderer.invoke('update-bounce-overlay', d),
+  hideBounceOverlay:     ()    => ipcRenderer.invoke('hide-bounce-overlay'),
 });
