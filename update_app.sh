@@ -13,8 +13,17 @@ swiftc LogicBridge.swift -o LogicBridge_arm64 -target arm64-apple-macos10.15 2>&
 swiftc LogicBridge.swift -o LogicBridge_x86 -target x86_64-apple-macos10.15 2>&1 | grep -v warning || true
 lipo -create -output LogicBridge LogicBridge_arm64 LogicBridge_x86
 
+echo "Compiling EscapeLogic…"
+swiftc EscapeLogic.swift -o EscapeLogic_arm64 -target arm64-apple-macos11.0 -framework AppKit 2>&1 | grep -v warning || true
+swiftc EscapeLogic.swift -o EscapeLogic_x86 -target x86_64-apple-macos11.0 -framework AppKit 2>&1 | grep -v warning || true
+lipo -create -output EscapeLogic EscapeLogic_arm64 EscapeLogic_x86
+rm -f EscapeLogic_arm64 EscapeLogic_x86
+
 echo "Compiling CloseLogicWindows…"
-swiftc CloseLogicWindows.swift -o CloseLogicWindows -target arm64-apple-macosx12.0 -framework ApplicationServices -framework AppKit 2>&1 | grep -v warning || true
+swiftc CloseLogicWindows.swift -o CloseLogicWindows_arm64 -target arm64-apple-macos11.0 -framework ApplicationServices -framework AppKit 2>&1 | grep -v warning || true
+swiftc CloseLogicWindows.swift -o CloseLogicWindows_x86 -target x86_64-apple-macos11.0 -framework ApplicationServices -framework AppKit 2>&1 | grep -v warning || true
+lipo -create -output CloseLogicWindows CloseLogicWindows_arm64 CloseLogicWindows_x86
+rm -f CloseLogicWindows_arm64 CloseLogicWindows_x86
 
 # Check if app exists
 if [ ! -d "/Applications/EasyBounce.app" ]; then
@@ -52,6 +61,7 @@ rm -rf ea
 cp "$SRC/LogicBridge" "/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/LogicBridge"
 cp "$SRC/MixerScroll" "/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/MixerScroll"
 cp "$SRC/CloseLogicWindows" "/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/CloseLogicWindows"
+cp "$SRC/EscapeLogic" "/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/EscapeLogic"
 
 # Also update dist/mac-universal so build_dmg.sh always gets the latest binary
 UNIVERSAL_LB="$SRC/dist/mac-universal/EasyBounce.app/Contents/Resources/app.asar.unpacked/LogicBridge"

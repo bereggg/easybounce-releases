@@ -49,11 +49,13 @@
             "src/**",
             "LogicBridge",
             "CloseLogicWindows",
+            "EscapeLogic",
             "assets/**"
         ],
         "asarUnpack": [
             "LogicBridge",
-            "CloseLogicWindows"
+            "CloseLogicWindows",
+            "EscapeLogic"
         ]
     },
     "dependencies": {}
