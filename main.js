@@ -32,6 +32,9 @@ const BRIDGE = app.isPackaged
 const MIXER_SCROLL = app.isPackaged
   ? path.join(process.resourcesPath, 'app.asar.unpacked', 'MixerScroll')
   : path.join(__dirname, 'MixerScroll');
+const ESCAPE_LOGIC = app.isPackaged
+  ? path.join(process.resourcesPath, 'app.asar.unpacked', 'EscapeLogic')
+  : path.join(__dirname, 'EscapeLogic');
 let cancelRequested = false;
 let _scanTreeActive = false;
 
@@ -51,11 +54,11 @@ function createWindow() {
   // Clamp initial window size to available work area (screen minus dock + menu bar)
   const { screen } = require('electron');
   const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize;
-  const winW = Math.min(1200, Math.max(1000, sw - 20));
+  const winW = Math.min(1150, Math.max(1070, sw - 20));
   const winH = Math.min(760,  Math.max(640,  sh - 20));
 
   const saved = _loadBounds();
-  const initW = saved ? Math.max(1220, Math.min(saved.width,  sw))     : winW;
+  const initW = saved ? Math.max(1070, Math.min(saved.width,  sw))     : winW;
   const initH = saved ? Math.max(640,  Math.min(saved.height, sh))     : winH;
   const initX = saved ? saved.x : undefined;
   const initY = saved ? saved.y : undefined;
@@ -67,7 +70,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: initW, height: initH,
     ...(initX !== undefined && initY !== undefined ? { x: initX, y: initY } : {}),
-    minWidth: 1220, minHeight: 640,
+    minWidth: 1070, minHeight: 640,
     maximizable: false,
     fullscreenable: false,
     titleBarStyle: 'hiddenInset',
@@ -132,7 +135,24 @@ function createWindow() {
   const _debounceSave = () => { clearTimeout(_saveBoundsTimer); _saveBoundsTimer = setTimeout(_saveBounds, 500); };
   mainWindow.on('move',   _debounceSave);
   mainWindow.on('resize', _debounceSave);
-  mainWindow.on('close',  _saveBounds);
+  mainWindow.on('close', (e) => {
+    // In mini mode: pressing native close button expands back to full mode instead of closing
+    if (_inMiniMode) {
+      e.preventDefault();
+      _inMiniMode = false;
+      mainWindow.setBackgroundColor('#1C1C1A');
+      mainWindow.setMinimumSize(1070, 640);
+      mainWindow.setResizable(true);
+      if (_preMini) { mainWindow.setBounds(_preMini, true); _preMini = null; }
+      else { mainWindow.setSize(1150, 760, true); mainWindow.center(); }
+      mainWindow.setWindowButtonVisibility(true);
+      mainWindow.setAlwaysOnTop(false);
+      mainWindow.setVisibleOnAllWorkspaces(false);
+      if (!mainWindow.isDestroyed()) mainWindow.webContents.send('force-exit-mini-mode');
+      return;
+    }
+    _saveBounds();
+  });
 
   // Switch to English keyboard when EasyBounce gets focus (returning from another Space/app)
   let _lastEnglishSwitch = 0;
@@ -494,6 +514,12 @@ ipcMain.handle('run-shell', async (_, cmd) => {
     exec(cmd, { timeout: 30000, env: utf8Env }, (err, stdout) => resolve({ ok: !err, stdout: (stdout || '').trim() }));
   });
 });
+ipcMain.handle('escape-logic', () => {
+  const { execFile } = require('child_process');
+  return new Promise(resolve => {
+    execFile(ESCAPE_LOGIC, [], { timeout: 3000 }, (err) => resolve({ ok: !err }));
+  });
+});
 ipcMain.handle('hide-window', () => {
   if (mainWindow && !_inScanBadge && !_inMiniMode) { mainWindow.setAlwaysOnTop(false); mainWindow.hide(); }
   return { ok: true };
@@ -737,6 +763,7 @@ ipcMain.handle('enter-mini-mode', () => {
   const { x: dx, y: dy, width: dw, height: dh } = display.workArea;
   mainWindow.setMinimumSize(200, 80);
   mainWindow.setResizable(false);
+  mainWindow.setWindowButtonVisibility(false);
   mainWindow.setBackgroundColor('#00000000');
   mainWindow.setBounds({ x: dx + dw - 320, y: dy + dh - 108, width: 300, height: 88 }, true);
   mainWindow.setAlwaysOnTop(true, 'screen-saver');
@@ -748,8 +775,9 @@ ipcMain.handle('exit-mini-mode', () => {
   if (!mainWindow) return { ok: false };
   _inMiniMode = false;
   mainWindow.setBackgroundColor('#1C1C1A');
-  mainWindow.setMinimumSize(1120, 640);
+  mainWindow.setMinimumSize(1070, 640);
   mainWindow.setResizable(true);
+  mainWindow.setWindowButtonVisibility(true);
   if (_preMini) {
     mainWindow.setBounds(_preMini, true);
     _preMini = null;
@@ -894,7 +922,7 @@ ipcMain.handle('exit-scan-badge', () => {
   _inScanBadge = false;
   mainWindow.setIgnoreMouseEvents(false); // restore interactivity
   mainWindow.setVisibleOnAllWorkspaces(false);
-  mainWindow.setMinimumSize(1120, 640);
+  mainWindow.setMinimumSize(1070, 640);
   mainWindow.setResizable(true);
   if (_preScan) {
     mainWindow.setBounds(_preScan, false);
@@ -1382,6 +1410,26 @@ ipcMain.handle('notif-test-email', async () => {
       { name: 'Bass', type: 'stem' }, { name: 'Guitars', type: 'stem' },
       { name: 'Strings', type: 'stem' }, { name: 'Vocals', type: 'stem' },
       { name: 'FX', type: 'stem' }, { name: 'Pads', type: 'stem' }
+    ],
+    folder: '/Desktop/Stems/Test/'
+  });
+});
+
+ipcMain.handle('notif-test-discord', async () => {
+  const s = notifications.loadSettings();
+  if (!s.discordWebhookUrl) return { ok: false, reason: 'no webhook' };
+  return notifications.sendDiscordNotification({
+    project: 'Test Project',
+    totalFiles: 8,
+    totalPlanned: 8,
+    errors: 0,
+    duration: '3:45',
+    format: 'WAV 24/48',
+    totalSize: '1.2 GB',
+    stems: [
+      { name: 'Kick' }, { name: 'Snare' }, { name: 'Bass' },
+      { name: 'Guitars' }, { name: 'Strings' }, { name: 'Vocals' },
+      { name: 'FX' }, { name: 'Pads' }
     ],
     folder: '/Desktop/Stems/Test/'
   });

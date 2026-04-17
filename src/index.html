@@ -540,6 +540,15 @@ body.easy #skin-panel{z-index:9000;}
 #scan-done-badge{background:linear-gradient(135deg,#1db954,#17a349);color:#fff;font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;padding:18px 40px;border-radius:16px;box-shadow:0 8px 40px rgba(29,185,84,.5),0 2px 8px rgba(0,0,0,.4);letter-spacing:.02em;opacity:0;transform:scale(.92) translateY(8px);transition:opacity .25s,transform .25s;}
 #scan-done-overlay.show #scan-done-badge{opacity:1;transform:scale(1) translateY(0);}
 #scan-done-overlay.hide #scan-done-badge{opacity:0;transform:scale(.92) translateY(-8px);}
+/* ── Format saved overlay (same style as scan-done) ────── */
+#fmt-saved-overlay{display:none;position:fixed;top:38px;left:0;right:0;bottom:0;z-index:9998;pointer-events:none;align-items:center;justify-content:center;}
+#fmt-saved-overlay.show{display:flex;}
+#fmt-saved-badge{background:linear-gradient(135deg,#1db954,#17a349);color:#fff;font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;padding:18px 40px;border-radius:16px;box-shadow:0 8px 40px rgba(29,185,84,.5),0 2px 8px rgba(0,0,0,.4);letter-spacing:.02em;opacity:0;transform:scale(.92) translateY(8px);transition:opacity .25s,transform .25s;}
+#fmt-saved-overlay.show #fmt-saved-badge{opacity:1;transform:scale(1) translateY(0);}
+#fmt-saved-overlay.hide #fmt-saved-badge{opacity:0;transform:scale(.92) translateY(-8px);}
+/* ── Bounce button "ready" pulse after format saved ─────── */
+@keyframes bbtn-fmt-ready{0%,100%{box-shadow:0 8px 32px rgba(108,99,255,.4),inset 0 1px 0 rgba(255,255,255,.2);}50%{box-shadow:0 10px 44px rgba(108,99,255,.65),0 0 0 3px rgba(108,99,255,.15),inset 0 1px 0 rgba(255,255,255,.25);}}
+.bbtn.fmt-ready:not(.off):not(.running){animation:bbtn-fmt-ready 2s ease-in-out infinite!important;}
 /* ── Mini Mode ─────────────────────────────────────────────── */
 #mini-mode-ui{display:none;position:fixed;inset:0;flex-direction:column;z-index:9999;border-radius:16px;overflow:hidden;}
 body.mini-mode #mini-mode-ui{display:flex;background:var(--mini-bg,linear-gradient(160deg,#6c63ff,#ff6584));box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1px 0 rgba(0,0,0,.25);}
@@ -1056,7 +1065,7 @@ body.mini-mode{background:transparent!important;}
               <span class="fmt-src-dot"></span>💾 Set Format
             </button>
             <button id="fmt-src-logic-btn" class="fmt-src-btn src-logic"
-              onclick="setFmtSource('logic')"
+              onclick="setFmtSource('logic', true)"
               title="Set params manually in Logic — EasyBounce won't override Logic's Bounce settings">
               <span class="fmt-src-dot"></span>🎛 Set in Logic
             </button>
@@ -1786,6 +1795,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (window.api) {
     const home = await window.api.getHome();
     window._homeDir = home;
+  }
+  // Handle native close button pressed during mini mode — main process expands window, we restore UI
+  if (window.api?.onForceExitMiniMode) {
+    window.api.onForceExitMiniMode(() => {
+      window._miniActive = false;
+      document.body.classList.remove('mini-mode');
+    });
   }
   document.getElementById('out-folder').textContent = outputFolder;
   if (outputFolder !== '~/Desktop') document.getElementById('out-folder').classList.add('set');
@@ -2941,7 +2957,7 @@ function _renderChannelsImpl() {
   const el    = document.getElementById('ch-list');
   const query = document.getElementById('ch-search').value.toLowerCase();
   document.getElementById('ch-empty').style.display = channels.length ? 'none' : 'block';
-  el.querySelectorAll('.ch-item,.tree-group,.tree-child').forEach(e => e.remove());
+  el.querySelectorAll('.ch-item,.tree-group,.tree-child,.mixer-ch-sep').forEach(e => e.remove());
 
   // Show/hide toggle-all button and update its arrow direction
   const treeToggleBtn = document.getElementById('tree-toggle-all');
@@ -3295,6 +3311,60 @@ function _renderChannelsImpl() {
         el.appendChild(div);
       }
     });
+    // ── Orphaned channels: in mixer (channels[]) but not in track tree ──
+    // e.g. Bus, Aux, Click, Preview — show below tree with a separator
+    const _treeNameSet = new Set(trackTree.map(t => t.name.toLowerCase()));
+    const _orphaned = channels.filter(ch => {
+      if (_treeNameSet.has(ch.name.toLowerCase())) return false;
+      if (channelFilter === 'hidden') return hiddenChannels.has(ch.index);
+      if (hiddenChannels.has(ch.index)) return false;
+      if (query && !ch.name.toLowerCase().includes(query)) return false;
+      return true;
+    });
+    if (_orphaned.length > 0) {
+      const _orp_sep = document.createElement('div');
+      _orp_sep.className = 'mixer-ch-sep';
+      _orp_sep.style.cssText = 'padding:5px 14px 3px;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);opacity:.45;border-top:1px solid rgba(255,255,255,.05);margin-top:3px;';
+      _orp_sep.textContent = 'Mixer channels';
+      el.appendChild(_orp_sep);
+      _orphaned.forEach(ch => {
+        const sel = selectedIdx.has(ch.index);
+        const div = document.createElement('div');
+        div.className = 'ch-item' + (sel ? ' sel' : '');
+        div.dataset.chIdx = ch.index;
+        div.innerHTML = `
+          <div class="ch-dot" style="background:${ch.color||'#666'}"></div>
+          <div class="ch-name">${ch.name}</div>
+          ${ch.isMuted ? '<span class="ch-mute-badge">M</span>' : ''}
+        `;
+        div.title = 'Click to add to queue • Right-click to hide';
+        div.onmousedown = () => { div._wasDragged = false; };
+        div.onclick = (e) => {
+          if (div._wasDragged) return;
+          e.preventDefault();
+          saveUndo();
+          if (e.shiftKey) { _applyShiftRange(ch.index, _currentVisibleOrder); updateAddStemsBtn(); renderChannels(); return; }
+          _shiftAnchor = null; _shiftPrevRange = null;
+          if (selectedIdx.has(ch.index)) { selectedIdx.delete(ch.index); }
+          else if (selectedIdx.size > 0) { selectedIdx.add(ch.index); }
+          else {
+            const _isDup = (j) => j.type === 'stem' && j.status !== 'done' && j.channelIndex === ch.index;
+            if (queue.find(q => _isDup(q) || (q.type === 'set' && q.jobs.some(_isDup)))) { toast(ch.name + ' already in queue'); return; }
+            hideQueueHint(); saveUndo();
+            queue.push(_mkStemItem(ch));
+            saveQueue(); renderQueue(); updateBounceBtn();
+          }
+          _lastClickedIndex = ch.index;
+          _setAnchor(ch.index, _currentVisibleOrder);
+          updateAddStemsBtn(); renderChannels();
+        };
+        div.oncontextmenu = (e) => { e.preventDefault(); if (!easyMode) toggleHideChannel(ch.name, ch.index); };
+        div.draggable = true;
+        _treeVisibleOrder.push(ch.index);
+        el.appendChild(div);
+      });
+    }
+
     _currentVisibleOrder = _treeVisibleOrder;
     return;
   }
@@ -3303,10 +3373,10 @@ function _renderChannelsImpl() {
 
   const visible = channels.filter(ch => {
     if (channelFilter === 'hidden') {
-      if (!hiddenChannels.has(ch.name)) return false;
+      if (!hiddenChannels.has(ch.index)) return false;
     } else {
       // 'all' and 'bus' modes — never show hidden channels
-      if (hiddenChannels.has(ch.name)) return false;
+      if (hiddenChannels.has(ch.index)) return false;
       if (channelFilter === 'bus' && !ch.isBus) return false;
     }
     if (query && !ch.name.toLowerCase().includes(query)) return false;
@@ -6832,7 +6902,10 @@ function renderQueue() {
           </div>
           ${subPills ? `<div class="qsub">${subPills}</div>` : ''}
         </div>
-        <div class="qst ${item.status || 'pending'}">${item.status || 'pending'}</div>
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+          <div class="qst ${item.status || 'pending'}">${item.status || 'pending'}</div>
+          ${(item.status === 'done' || item.status === 'error' || item.status === 'cancelled') ? `<button onclick="event.stopPropagation();resetQueueItem('${item.id}')" title="Reset to pending" style="width:20px;height:20px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .13s;line-height:1;" onmouseover="this.style.background='rgba(255,255,255,.14)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.55)'">↺</button>` : ''}
+        </div>
         ${grpEditBtn}
         <button class="qdel" onclick="event.stopPropagation();removeQItem('${item.id}')">✕</button>
       `;
@@ -8389,40 +8462,17 @@ async function bounceMix(job, folder, isFirst) {
     } catch(e) { log('Mute verify failed: ' + e.message, 'warn'); }
   }
 
-  // 3. Solo sidechain if enabled — skip for Full Version (nothing muted)
-  if (window._userCancelled) return false;
-  const _scIdx = sidechainIndex; const _scName = sidechainChannel;
-  if (sidechainEnabled && _scName && allIndices.length > 0) {
-    let _mxScR = _scIdx != null ? await window.api.soloIndex(_scIdx) : await window.api.soloByName(_scName);
-    if (!_mxScR?.ok || _mxScR?.error) {
-      await window.api.wait(400);
-      _mxScR = _scIdx != null ? await window.api.soloIndex(_scIdx) : await window.api.soloByName(_scName);
-      if (!_mxScR?.ok || _mxScR?.error) log(`⚠ Sidechain solo unconfirmed for mix: "${_scName}"`, 'warn');
-    }
-    window._cancelSidechainName = _scName; window._cancelSidechainIndex = _scIdx;
-    await window.api.wait(300);
-    log('🔒 Sidechain: ' + _scName, 'info');
-  }
-
-  // 4. Render
+  // 3. Render (sidechain skipped for versions — soling sidechain while channels are muted renders only sidechain)
   if (window._userCancelled) return false;
   window._bouncePhase = 'render';
   const ok = await triggerBounce(job.name, folder, isFirst);
 
-  // 5. Unsolo sidechain + unmute only what WE muted
+  // 4. Unmute only what WE muted
   if (!window._userCancelled) {
     toast('↩ Returning to Logic…');
     await window.api.wait(1500);
     await window.api.moveToLogicSpace().catch(() => {});
     await activateLogicForAX();
-    if (sidechainEnabled && _scName && window._cancelSidechainName) {
-      let _mxsr = _scIdx != null
-        ? await window.api.unsoloIndex(_scIdx)
-        : await window.api.unsoloByName(_scName);
-      if (!_mxsr?.ok) { await window.api.wait(400); _scIdx != null ? await window.api.unsoloIndex(_scIdx) : await window.api.unsoloByName(_scName); }
-      window._cancelSidechainName = null; window._cancelSidechainIndex = null;
-      await window.api.wait(300);
-    }
     if (indicesToMute.length > 0) {
       const unmuteRes = await window.api.unmuteManyByIndex(indicesToMute.join('|'));
       // Retry only indices that weren't processed (out of range or bridge crash)
@@ -8611,30 +8661,38 @@ async function toggleMasterPlugin(index, wantActive) {
   renderMasterPlugins();
   _mpLastToggleAt = Date.now();
   _mpPollPausedUntil = Date.now() + 3000;
-  await window.api.setMasterPlugin(String(index), wantActive ? 1 : 0).catch(() => null);
+  const setResult = await window.api.setMasterPlugin(String(index), wantActive ? 1 : 0).catch(() => null);
   // Re-read real state from Logic
   let freshState = await window.api.masterPluginsQuick().catch(() => null);
   if (freshState?.ok && freshState.plugins?.length) {
     _masterPlugins = freshState.plugins;
     renderMasterPlugins();
   }
-  // Check if operation actually worked — if state didn't change, master channel not accessible
-  // (scrolled off screen or mixer closed) → auto-recover: scroll to master and retry
+  // Check if operation actually worked
   // Skip recovery if another toggle happened within 600ms — mismatch is due to fast clicks, not a real error
   const actualActive = _masterPlugins[index]?.active;
   if (actualActive !== wantActive && Date.now() - _mpLastToggleAt < 600) return;
   if (actualActive !== wantActive) {
+    // Distinguish WHY it failed:
+    // ok:false → BNC not found in mixer (scrolled off screen) → need openMixer + scrollToBnc
+    // ok:true  → BNC was found but Logic was busy (heavy project) → just retry, no scroll needed
+    const bncNotFound = !setResult?.ok;
     await _withRecoveryBadge(
-      'Scrolling to master…',
-      'Master channel not accessible',
+      bncNotFound ? 'Scrolling to master…' : 'Retrying…',
+      bncNotFound ? 'Master channel not visible' : 'Logic is busy',
       async () => {
-        await window.api.openMixer({ skipPanelClose: false });
-        await window.api.wait(300);
-        await window.api.scrollToBnc();
-        await window.api.wait(300);
+        if (bncNotFound) {
+          await window.api.openMixer({ skipPanelClose: false });
+          await window.api.wait(300);
+          await window.api.scrollToBnc();
+          await window.api.wait(300);
+        } else {
+          // Logic was busy — just wait a bit before retry
+          await window.api.wait(400);
+        }
       }
     );
-    // Retry after scroll
+    // Retry after recovery
     await window.api.setMasterPlugin(String(index), wantActive ? 1 : 0).catch(() => null);
     freshState = await window.api.masterPluginsQuick().catch(() => null);
     if (freshState?.ok && freshState.plugins?.length) {
@@ -9647,8 +9705,10 @@ function prog(done, total, text) {
 async function showMiniPlayer() {
   if (!window.api) return;
   window._miniActive = true;
-  // Resize first, then swap CSS so content matches window size
+  // Pre-clear body background so native window corners are transparent before resize
+  document.body.style.background = 'transparent';
   if (window.api.enterMiniMode) await window.api.enterMiniMode();
+  document.body.style.background = '';
   document.body.classList.add('mini-mode');
   try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) { console.warn('[EB]', e); }
 }
@@ -10072,8 +10132,10 @@ async function loadNotifSettings() {
   // Update UI
   const tgToggle = document.getElementById('notif-tg-toggle');
   const emailToggle = document.getElementById('notif-email-toggle');
+  const discordToggle = document.getElementById('notif-discord-toggle');
   if (tgToggle) tgToggle.checked = _notifSettings.telegramEnabled !== false && !!_notifSettings.telegramChatId;
   if (emailToggle) emailToggle.checked = _notifSettings.emailEnabled !== false && !!_notifSettings.notificationEmail;
+  if (discordToggle) discordToggle.checked = _notifSettings.discordEnabled !== false && !!_notifSettings.discordWebhookUrl;
   const emailInput = document.getElementById('notif-email-input');
   if (emailInput && _notifSettings.notificationEmail) emailInput.value = _notifSettings.notificationEmail;
   const fromInput = document.getElementById('notif-from-input');
@@ -10086,6 +10148,12 @@ async function loadNotifSettings() {
     document.getElementById('notif-tg-connected').style.display = 'block';
   }
 
+  // Show correct Discord state
+  if (_notifSettings.discordWebhookUrl) {
+    document.getElementById('notif-discord-disconnected').style.display = 'none';
+    document.getElementById('notif-discord-connected').style.display = 'block';
+  }
+
   // Update button icon
   updateNotifIcon();
 }
@@ -10094,26 +10162,33 @@ function updateNotifIcon() {
   const icon = document.getElementById('notif-btn-icon');
   const btn = document.getElementById('notif-btn');
   if (!icon || !btn) return;
-  const hasTg = _notifSettings.telegramChatId && _notifSettings.telegramEnabled !== false;
-  const hasEmail = _notifSettings.notificationEmail && _notifSettings.emailEnabled !== false;
+  const hasTg      = _notifSettings.telegramChatId    && _notifSettings.telegramEnabled !== false;
+  const hasDiscord = _notifSettings.discordWebhookUrl && _notifSettings.discordEnabled  !== false;
+  const hasEmail   = _notifSettings.notificationEmail && _notifSettings.emailEnabled    !== false;
   if (hasTg) {
     icon.textContent = '✈️';
     btn.style.borderColor = 'rgba(33,150,243,.6)';
-    btn.style.background = 'rgba(33,150,243,.12)';
-    btn.style.color = '#64b5f6';
-    btn.style.boxShadow = '0 0 8px rgba(33,150,243,.25)';
+    btn.style.background  = 'rgba(33,150,243,.12)';
+    btn.style.color       = '#64b5f6';
+    btn.style.boxShadow   = '0 0 8px rgba(33,150,243,.25)';
+  } else if (hasDiscord) {
+    icon.textContent = '🎮';
+    btn.style.borderColor = 'rgba(88,101,242,.6)';
+    btn.style.background  = 'rgba(88,101,242,.12)';
+    btn.style.color       = '#7289da';
+    btn.style.boxShadow   = '0 0 8px rgba(88,101,242,.25)';
   } else if (hasEmail) {
     icon.textContent = '📨';
     btn.style.borderColor = 'rgba(29,158,117,.5)';
-    btn.style.background = 'rgba(29,158,117,.1)';
-    btn.style.color = 'var(--a3)';
-    btn.style.boxShadow = 'none';
+    btn.style.background  = 'rgba(29,158,117,.1)';
+    btn.style.color       = 'var(--a3)';
+    btn.style.boxShadow   = 'none';
   } else {
     icon.textContent = '📨';
     btn.style.borderColor = 'rgba(29,158,117,.35)';
-    btn.style.background = 'rgba(29,158,117,.08)';
-    btn.style.color = 'var(--a3)';
-    btn.style.boxShadow = 'none';
+    btn.style.background  = 'rgba(29,158,117,.08)';
+    btn.style.color       = 'var(--a3)';
+    btn.style.boxShadow   = 'none';
   }
 }
 
@@ -10137,6 +10212,66 @@ async function toggleEmail(enabled) {
   await window.api.notifSaveSettings({ emailEnabled: enabled });
   _notifSettings.emailEnabled = enabled;
   updateNotifIcon();
+}
+
+function openDiscordApp() {
+  if (!window.api?.openExternal) return;
+  // Try Discord app first; after 1s fall back to web (discord.com/app shows the + Create Server button in sidebar)
+  window.api.openExternal('discord://');
+  setTimeout(() => window.api.openExternal('https://discord.com/app'), 1000);
+}
+
+async function toggleDiscord(enabled) {
+  await window.api.notifSaveSettings({ discordEnabled: enabled });
+  _notifSettings.discordEnabled = enabled;
+  updateNotifIcon();
+}
+
+async function saveDiscordWebhook() {
+  const input = document.getElementById('notif-discord-input');
+  const status = document.getElementById('notif-discord-status');
+  const url = input.value.trim();
+  if (!url.startsWith('https://discord.com/api/webhooks/') && !url.startsWith('https://discordapp.com/api/webhooks/')) {
+    status.textContent = 'Invalid webhook URL';
+    status.className = 'notif-status';
+    return;
+  }
+  status.textContent = 'Testing…';
+  status.className = 'notif-status';
+  await window.api.notifSaveSettings({ discordWebhookUrl: url, discordEnabled: true });
+  _notifSettings.discordWebhookUrl = url;
+  _notifSettings.discordEnabled = true;
+  // Send test message immediately
+  const result = await window.api.notifTestDiscord();
+  if (result && result.ok) {
+    document.getElementById('notif-discord-disconnected').style.display = 'none';
+    document.getElementById('notif-discord-connected').style.display = 'block';
+    document.getElementById('notif-discord-toggle').checked = true;
+    status.textContent = '';
+    updateNotifIcon();
+    toast('Discord connected! Test message sent ✓');
+  } else {
+    status.textContent = 'Error: ' + (result?.error || result?.reason || 'Invalid URL?');
+    status.className = 'notif-status';
+  }
+}
+
+async function disconnectDiscord() {
+  await window.api.notifSaveSettings({ discordWebhookUrl: '', discordEnabled: false });
+  _notifSettings.discordWebhookUrl = null;
+  _notifSettings.discordEnabled = false;
+  document.getElementById('notif-discord-connected').style.display = 'none';
+  document.getElementById('notif-discord-disconnected').style.display = 'block';
+  document.getElementById('notif-discord-input').value = '';
+  document.getElementById('notif-discord-toggle').checked = false;
+  document.getElementById('notif-discord-status').textContent = '';
+  updateNotifIcon();
+}
+
+async function testDiscord() {
+  const result = await window.api.notifTestDiscord();
+  if (result && result.ok) toast('Test sent to Discord! ✓');
+  else toast('Discord error: ' + (result?.reason || result?.error || 'unknown'));
 }
 
 function copyTgCode() {
@@ -10910,7 +11045,7 @@ function getEditingFmtPreset() { return formatPresets.find(p => p.id === editing
 let _fmtViewTab = 'wav'; // 'wav' or 'mp3' — which settings panel is shown in modal
 let fmtSource   = localStorage.getItem('sb4_fmt_source') || 'preset'; // 'preset' | 'logic'
 
-function setFmtSource(src) {
+function setFmtSource(src, openDialog = false) {
   fmtSource = src;
   localStorage.setItem('sb4_fmt_source', src);
   if (src === 'preset') window._fmtApplied = false; // re-apply on next bounce
@@ -10919,14 +11054,15 @@ function setFmtSource(src) {
   if (presetBtn) presetBtn.classList.toggle('active-src', src === 'preset');
   if (logicBtn)  logicBtn.classList.toggle('active-src', src === 'logic');
   updateFmtBar();
+  // Open Logic bounce dialog ONLY when user explicitly clicks the button
+  if (src === 'logic' && openDialog) openBounceInLogic();
 }
 function applyFmtSource() {
-  if (fmtSource === 'logic') {
-    openBounceInLogic();
-  } else {
+  if (fmtSource !== 'logic') {
     toast('✓ Format preset saved — will auto-apply on bounce');
     closeFormatModal();
   }
+  // 'logic' case: dialog already opened by setFmtSource — nothing to do here
 }
 
 function updateFmtBar() {
@@ -11490,6 +11626,25 @@ async function applyFmtPreset(p, mode = false) {
   } catch(e) { return false; }
 }
 
+function showFormatSavedBanner() {
+  // Green "Settings saved" banner — same animation as scan-done
+  const ov = document.getElementById('fmt-saved-overlay');
+  if (!ov) return;
+  ov.classList.remove('hide');
+  ov.classList.add('show');
+  setTimeout(() => {
+    ov.classList.add('hide');
+    setTimeout(() => { ov.classList.remove('show', 'hide'); }, 300);
+  }, 1400);
+  // Subtle pulse on Bounce button so user knows what to press next
+  const bbtn = document.getElementById('bbtn');
+  if (bbtn && !bbtn.classList.contains('off') && !bbtn.classList.contains('running')) {
+    bbtn.classList.add('fmt-ready');
+    // Remove pulse after 12s — user probably noticed by then
+    setTimeout(() => bbtn.classList.remove('fmt-ready'), 12000);
+  }
+}
+
 async function openBounceInLogic() {
   // Activate Logic and open Bounce dialog so user can set params manually
   try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) { console.warn('[EB]', e); }
@@ -11501,23 +11656,70 @@ async function openBounceInLogic() {
     await window.api.wait(500);
     try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) { console.warn('[EB]', e); }
   }
-  // Close format modal so user can interact with Logic
+  // Close format modal so user can interact with Logic's dialog
   closeFormatModal();
-  // Watch for Bounce/Output dialog to close — then bring back EasyBounce on Format tab
+
+  // Watch for user clicking OK in format dialog:
+  // Format dialog has "OK" button; Save panel has "Bounce" button — no "OK".
+  // When OK button disappears → user clicked it → Save panel is open → press Escape → return.
+  // When Bounce window disappears entirely → user clicked Cancel → just return.
   (async () => {
-    await window.api.wait(1500);
-    let wasOpen = true;
-    for (let i = 0; i < 120; i++) { // poll up to 60s
-      await window.api.wait(500);
-      const w = await window.api.getWindows().catch(() => null);
-      const nowOpen = w && w.windows && w.windows.some(x => x.includes('Bounce') || x.includes('Output'));
-      if (wasOpen && !nowOpen) {
-        // Dialog closed — return EasyBounce to front and reopen format modal
-        if (window.api.focusApp) await window.api.focusApp();
-        openFormatModal();
-        break;
+    await window.api.wait(300);
+
+    const getBtnCount = async () => {
+      try {
+        const r = await window.api.runScript([
+          'tell application "System Events"',
+          '  tell (first process whose bundle identifier is "com.apple.logic10")',
+          '    try',
+          '      return (count of buttons of window 1) as string',
+          '    on error',
+          '      return "-1"',
+          '    end try',
+          '  end tell',
+          'end tell'
+        ].join('\n'));
+        const n = parseInt(String(r && r.output || '-1').trim(), 10);
+        return isNaN(n) ? -1 : n;
+      } catch { return -1; }
+    };
+
+    const finishWithBanner = async () => {
+      if (window.api.focusApp) await window.api.focusApp();
+      showFormatSavedBanner();
+    };
+
+    // Phase 1: wait up to 6s for format dialog (cnt=2)
+    let seenDialog = false;
+    for (let i = 0; i < 30; i++) {
+      await window.api.wait(200);
+      const c = await getBtnCount();
+      if (c === -1) { await finishWithBanner(); return; }
+      if (c === 2)  { seenDialog = true; break; }
+    }
+    if (!seenDialog) { await finishWithBanner(); return; }
+
+    // Phase 2: poll for Save panel (cnt=3) or cancel (cnt=-1)
+    let sawSave = false;
+    let sawClose = false;
+    for (let i = 0; i < 400; i++) {
+      await window.api.wait(150);
+      const cnt = await getBtnCount();
+
+      if (cnt === -1) { await finishWithBanner(); return; }
+
+      if (cnt === 3 && !sawSave) {
+        sawSave = true;
+        // KEY FIX: hide EasyBounce window so its alwaysOnTop floating panel
+        // releases key focus — then Logic's Bounce dialog can receive the key event.
+        await window.api.hideWindow();
+        await window.api.wait(50);
+        await window.api.escapeLogic(); // NSRunningApplication.activate + CGEventPost(cghidEventTap)
+        await window.api.wait(100);
+        await window.api.showWindow();
+        await finishWithBanner();
+        return;
       }
-      wasOpen = !!nowOpen;
     }
   })();
 }
@@ -11975,6 +12177,7 @@ async function submitFeedback() {
   </div>
 </div>
 <div id="scan-done-overlay"><div id="scan-done-badge">✓ Scan complete</div></div>
+<div id="fmt-saved-overlay"><div id="fmt-saved-badge">✓ Settings saved</div></div>
 <div id="scan-hint"><div id="scan-hint-arrows"><div class="scan-arr-item"><div class="scan-arr-head"></div><div class="scan-arr-shaft"></div></div><div class="scan-arr-item"><div class="scan-arr-head"></div><div class="scan-arr-shaft"></div></div><div class="scan-arr-item"><div class="scan-arr-head"></div><div class="scan-arr-shaft"></div></div></div></div>
 <div id="queue-hint"><div id="queue-hint-arrows"><div class="qarr-item"><div class="qarr-shaft"></div><div class="qarr-head"></div></div><div class="qarr-item"><div class="qarr-shaft"></div><div class="qarr-head"></div></div><div class="qarr-item"><div class="qarr-shaft"></div><div class="qarr-head"></div></div></div></div>
 <div id="cancel-overlay">
@@ -12029,6 +12232,43 @@ async function submitFeedback() {
           <button class="notif-btn danger" onclick="disconnectTelegram()">Disconnect</button>
         </div>
       </div>
+    </div>
+
+    <!-- Discord Section -->
+    <div class="notif-section">
+      <div class="notif-section-hdr">
+        <span>Discord</span>
+        <label class="notif-toggle"><input type="checkbox" id="notif-discord-toggle" onchange="toggleDiscord(this.checked)"><span class="slider"></span></label>
+      </div>
+      <div id="notif-discord-disconnected">
+        <button class="notif-btn" onclick="openDiscordApp()" style="width:100%;margin-bottom:10px;background:linear-gradient(135deg,#5865F2,#4752c4);color:#fff;border:none;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.033.055a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+          Open Discord ↗
+        </button>
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px;">
+          <span style="font-size:11px;color:var(--muted);">Paste webhook URL:</span>
+          <div style="position:relative;display:inline-flex;" onmouseenter="this.querySelector('.dc-tip').style.display='block'" onmouseleave="this.querySelector('.dc-tip').style.display='none'">
+            <span style="width:15px;height:15px;border-radius:50%;background:var(--b2);color:var(--t2);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:default;flex-shrink:0;">ⓘ</span>
+            <div class="dc-tip" style="display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);width:240px;background:#1a1a18;border:1px solid var(--b2);border-radius:8px;padding:10px 12px;font-size:10.5px;color:var(--text);line-height:1.7;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.5);pointer-events:none;">
+              <div style="color:#7289da;font-weight:700;margin-bottom:5px;">No server yet?</div>
+              <span style="color:var(--muted);">In Discord: <b>+</b> in sidebar → Create My Own → For me and my friends</span>
+              <div style="border-top:1px solid var(--b);margin:7px 0;"></div>
+              <div style="color:#7289da;font-weight:700;margin-bottom:5px;">Get webhook URL:</div>
+              <span style="color:var(--muted);">Server name ▼ → Server Settings → Integrations → Webhooks → New Webhook → Copy URL</span>
+            </div>
+          </div>
+        </div>
+        <input type="text" class="notif-input" id="notif-discord-input" placeholder="https://discord.com/api/webhooks/…" style="margin-bottom:6px;">
+        <button class="notif-btn" onclick="saveDiscordWebhook()">Connect</button>
+      </div>
+      <div id="notif-discord-connected" style="display:none;">
+        <div class="notif-status ok">Connected</div>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <button class="notif-btn" onclick="testDiscord()">Test</button>
+          <button class="notif-btn danger" onclick="disconnectDiscord()">Disconnect</button>
+        </div>
+      </div>
+      <div class="notif-status" id="notif-discord-status"></div>
     </div>
 
     <!-- Email Section -->

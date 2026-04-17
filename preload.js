@@ -116,6 +116,7 @@ contextBridge.exposeInMainWorld('api', {
   notifSendBounce:          (d)   => ipcRenderer.invoke('notif-send-bounce', d),
   notifTestTelegram:        ()    => ipcRenderer.invoke('notif-test-telegram'),
   notifTestEmail:           ()    => ipcRenderer.invoke('notif-test-email'),
+  notifTestDiscord:         ()    => ipcRenderer.invoke('notif-test-discord'),
   // CLI trigger
   onCliBounce: (cb) => ipcRenderer.on('cli-bounce', () => cb()),
   // Bounce overlay
@@ -127,5 +128,7 @@ contextBridge.exposeInMainWorld('api', {
   sendFeedback:          (d)   => ipcRenderer.invoke('send-feedback', d),
   writeLog:              (msg, level) => ipcRenderer.invoke('write-log', msg, level),
   setIgnoreMouseEvents:  (ignore, opts) => ipcRenderer.invoke('set-ignore-mouse-events', ignore, opts),
+  escapeLogic:           ()    => ipcRenderer.invoke('escape-logic'),
   startCaffeinate:       ()    => ipcRenderer.invoke('start-caffeinate'),
+  onForceExitMiniMode:   (cb) => ipcRenderer.on('force-exit-mini-mode', () => cb()),
 });

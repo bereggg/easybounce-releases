@@ -385,6 +385,68 @@ async function sendFeedback({ type, email, message, attachment }) {
   }
 }
 
+// ── Discord Webhook ───────────────────────────────────────────────────────────
+async function sendDiscordNotification(bounceData) {
+  const settings = loadSettings();
+  if (!settings.discordWebhookUrl) return { ok: false, reason: 'no webhook' };
+  if (settings.discordEnabled === false) return { ok: false, reason: 'disabled' };
+
+  // Color: green = ok, orange = errors, red = failed
+  const color = bounceData.failed ? 0xFF4757 : (bounceData.errors > 0 ? 0xD4621A : 0x4A8C1C);
+
+  const fields = [
+    {
+      name: '🎚 Stems',
+      value: `**${bounceData.totalFiles}**${bounceData.totalPlanned ? ` of ${bounceData.totalPlanned}` : ''}`,
+      inline: true
+    },
+    { name: '⏱ Time', value: `**${bounceData.duration || '—'}**`, inline: true },
+  ];
+  if (bounceData.totalSize) fields.push({ name: '💾 Size', value: `**${bounceData.totalSize}**`, inline: true });
+  if (bounceData.format)    fields.push({ name: '🎵 Format', value: bounceData.format, inline: true });
+  fields.push({
+    name: '⚠️ Errors',
+    value: (bounceData.errors || 0) > 0 ? `**${bounceData.errors}** failed` : '✔️ 0 — clean',
+    inline: true
+  });
+  if (bounceData.folder) fields.push({ name: '📂 Folder', value: `\`${bounceData.folder}\``, inline: false });
+  if (bounceData.stems && bounceData.stems.length > 0) {
+    const list = bounceData.stems.slice(0, 10).map(s => `• ${s.name}`).join('\n')
+      + (bounceData.stems.length > 10 ? `\n+${bounceData.stems.length - 10} more` : '');
+    fields.push({ name: '📋 Files', value: list, inline: false });
+  }
+
+  const title = bounceData.failed
+    ? '❌ Bounce cancelled / failed!'
+    : (bounceData.errors || 0) > 0
+    ? '⚠️ Bounce finished with errors!'
+    : '✅ Bounce complete!';
+
+  const embed = {
+    title,
+    description: `**${bounceData.project || 'Session'}**`
+      + (bounceData.failed && bounceData.failReason ? `\n> ${bounceData.failReason}` : ''),
+    color,
+    fields,
+    footer: { text: 'EasyBounce' },
+    timestamp: new Date().toISOString()
+  };
+
+  try {
+    const res = await fetch(settings.discordWebhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ embeds: [embed] })
+    });
+    // Discord returns 204 No Content on success
+    if (res.status === 204 || res.ok) return { ok: true };
+    const text = await res.text().catch(() => '');
+    return { ok: false, error: text };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
 // ── Combined: send all enabled notifications ─────────────────────────────────
 async function sendBounceNotification(bounceData) {
   const settings = loadSettings();
@@ -392,6 +454,9 @@ async function sendBounceNotification(bounceData) {
 
   if (settings.telegramChatId && settings.telegramEnabled !== false) {
     results.telegram = await sendTelegramNotification(bounceData);
+  }
+  if (settings.discordWebhookUrl && settings.discordEnabled !== false) {
+    results.discord = await sendDiscordNotification(bounceData);
   }
   if (settings.notificationEmail && settings.emailEnabled !== false) {
     results.email = await sendEmailNotification(bounceData);
@@ -408,6 +473,7 @@ module.exports = {
   startTelegramPolling,
   stopTelegramPolling,
   sendTelegramNotification,
+  sendDiscordNotification,
   sendEmailNotification,
   sendBounceNotification,
   sendFeedback
