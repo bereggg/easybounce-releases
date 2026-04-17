@@ -11800,7 +11800,8 @@ async function checkUpdates() {
     toast('Could not check for updates');
   }
 }
-function highlightUpdateBtn(version) {
+// ── Update / Changelog modal ──────────────────────────────────────────────────
+function _updHighlightBtn(version) {
   const btn = document.getElementById('update-btn');
   if (!btn) return;
   btn.style.opacity = '1';
@@ -11809,27 +11810,99 @@ function highlightUpdateBtn(version) {
   btn.style.boxShadow = '0 0 8px rgba(108,99,255,.3)';
   btn.title = `Update available: v${version}`;
 }
-// Listen for update-available event from main process
-if (window.api?.onUpdateAvailable) {
-  window.api.onUpdateAvailable(ver => highlightUpdateBtn(ver));
+
+function _updParseNotes(md) {
+  if (!md) return '';
+  return md.split('\n').map(line => {
+    line = line.trim();
+    if (!line) return '';
+    if (/^[-*•]\s+/.test(line)) return '<li>' + line.replace(/^[-*•]\s+/, '') + '</li>';
+    if (/^#+\s/.test(line)) return '<b style="color:var(--t2);display:block;margin:10px 0 4px">' + line.replace(/^#+\s*/, '') + '</b>';
+    return ''; // skip plain text (installation instructions etc)
+  }).filter(Boolean).join('');
 }
-// Set current version on button
+
+function showUpdateModal(mode, version, notes, downloadUrl) {
+  // mode: 'update' | 'changelog'
+  if (document.getElementById('upd-modal')) return;
+  const dlUrl = downloadUrl || 'https://github.com/bereggg/easybounce-releases/releases/latest';
+  const isUpdate = mode === 'update';
+  const notesHtml = _updParseNotes(notes);
+
+  const overlay = document.createElement('div');
+  overlay.id = 'upd-modal';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)';
+
+  overlay.innerHTML = `
+    <div style="width:400px;max-width:90vw;background:#141414;border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:32px 28px 24px;box-shadow:0 32px 80px rgba(0,0,0,.8);position:relative;font-family:'JetBrains Mono',monospace;">
+      <div style="font-size:32px;text-align:center;margin-bottom:12px">${isUpdate ? '🆕' : '🎉'}</div>
+      <div style="font-size:17px;font-weight:700;color:#f0f0f0;text-align:center;letter-spacing:-.02em;margin-bottom:4px">
+        ${isUpdate ? 'Update Available' : 'What\'s New'}
+      </div>
+      <div style="font-size:12px;color:var(--accent);text-align:center;margin-bottom:${notesHtml ? '18px' : '24px'}">EasyBounce v${version}</div>
+      ${notesHtml ? `<ul style="list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;border-top:1px solid rgba(255,255,255,.06);padding-top:14px">${notesHtml}</ul>` : ''}
+      <div style="display:flex;gap:10px;${isUpdate ? '' : 'justify-content:center'}">
+        ${isUpdate ? `<button id="upd-later" style="flex:1;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:var(--t2);font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--t2)'">Later</button>` : ''}
+        <button id="upd-action" style="flex:2;padding:10px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent),var(--a2));color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(108,99,255,.35);transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+          ${isUpdate ? 'Download →' : 'OK, got it'}
+        </button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  document.getElementById('upd-action').onclick = () => {
+    if (isUpdate) window.api?.openExternal(dlUrl);
+    overlay.remove();
+  };
+  if (isUpdate) {
+    document.getElementById('upd-later').onclick = () => overlay.remove();
+    overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  }
+}
+
+// Listen for update-available event pushed from main process
+if (window.api?.onUpdateAvailable) {
+  window.api.onUpdateAvailable((ver, notes, url) => {
+    _updHighlightBtn(ver);
+    showUpdateModal('update', ver, notes, url);
+  });
+}
+
+// Set current version label on toolbar button
 (async () => {
   try {
     const r = await window.api?.getCurrentVersion?.();
     if (r?.version) {
       const btn = document.getElementById('update-btn');
-      if (btn) btn.querySelector('svg') && (btn.innerHTML = btn.innerHTML.replace(/v[\d.]+/, 'v' + r.version));
+      if (btn) btn.innerHTML = btn.innerHTML.replace(/v[\d.]+/, 'v' + r.version);
     }
-  } catch(e) { console.warn('[EB]', e); }
+  } catch(e) {}
 })();
-// Auto-check for updates silently on startup (after 5 seconds)
-setTimeout(() => {
-  if (window.api?.checkForUpdatesSilent) {
-    window.api.checkForUpdatesSilent().then(res => {
-      if (res?.hasUpdate) highlightUpdateBtn(res.version);
-    }).catch(() => {});
-  }
+
+// Auto-check on startup (5s delay):
+// 1. Show changelog if this is first launch after update
+// 2. Show update modal if newer version exists
+setTimeout(async () => {
+  if (!window.api?.checkForUpdatesSilent) return;
+  try {
+    const cur = (await window.api.getCurrentVersion?.())?.version || '';
+    // Changelog: first launch after update
+    const lastSeen = localStorage.getItem('eb_last_seen_ver');
+    if (cur && lastSeen && lastSeen !== cur) {
+      const res = await window.api.checkForUpdatesSilent();
+      localStorage.setItem('eb_last_seen_ver', cur);
+      showUpdateModal('changelog', cur, res?.releaseNotes || '');
+      return;
+    }
+    if (cur && !lastSeen) localStorage.setItem('eb_last_seen_ver', cur);
+    // Update available
+    const res = await window.api.checkForUpdatesSilent();
+    if (res?.hasUpdate) {
+      _updHighlightBtn(res.version);
+      showUpdateModal('update', res.version, res.releaseNotes || '', res.downloadUrl || '');
+    }
+  } catch(e) {}
 }, 5000);
 
 async function checkLicenseOnStart() {
@@ -12360,5 +12433,45 @@ async function submitFeedback() {
   </div>
 </div>
 
+<script>
+// ── Analytics: track button clicks per session ───────────────────────────────
+(function () {
+  if (!window.api || !window.api.analyticsTrack) return;
+  const _MAP = {
+    scanLogic:'scan', doBounce:'bounce', cancelBounce:'cancel',
+    retryBounce:'retry', redoAllBounce:'redo_all',
+    addSelAsStems:'add_stems', openMixModal:'add_version',
+    saveAsPreset:'save_preset', openMergeModal:'merge',
+    selectAllChannels:'select_all', clearSel:'clear_sel',
+    openFormatModal:'format_open', openMasterPluginsModal:'master_plugins',
+    pickFolder:'pick_folder', revealStems:'reveal_stems',
+    showNotifModal:'notif', toggleEasyMode:'easy_mode',
+    openSkinPanel:'skin', toggleMetronome:'metronome',
+    checkUpdates:'updates', onHelpClick:'help',
+    toggleMarkersPopup:'markers', saveJobSet:'save_job_set',
+    reloadQueue:'reload_queue', clearDone:'clear_done',
+    clearQueue:'clear_queue', showMiniPlayer:'mini_mode',
+    showScheduleModal:'schedule', toggleFeedbackPopup:'feedback',
+    addFormatPreset:'fmt_preset_add', deleteFormatPreset:'fmt_preset_del',
+    saveMix:'mix_save', saveMixAsPreset:'mix_preset',
+    quickSaveNamePreset:'name_preset', clearLog:'clear_log',
+    clearAllHistory:'clear_history', rescanMarkers:'markers_rescan',
+    exitMiniMode:'mini_expand', toggleBellPopover:'bell',
+    toggleMarkersHidden:'markers_hidden', toggleAllGroups:'expand_all',
+    toggleActivityPanel:'activity_panel',
+  };
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('button,[onclick],[data-track]');
+    if (!el) return;
+    const key = el.dataset.track || (() => {
+      const oc = el.getAttribute('onclick');
+      if (!oc) return null;
+      const fn = oc.match(/^(\w+)\s*\(/)?.[1];
+      return fn ? _MAP[fn] : null;
+    })();
+    if (key) window.api.analyticsTrack(key);
+  }, true);
+})();
+</script>
 </body>
 </html>

@@ -38,6 +38,54 @@ const ESCAPE_LOGIC = app.isPackaged
 let cancelRequested = false;
 let _scanTreeActive = false;
 
+// ── Analytics ────────────────────────────────────────────────────────────────
+const SUPABASE_URL  = 'gormgyzofsyhtamwiwao.supabase.co';
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdvcm1neXpvZnN5aHRhbXdpd2FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODE2NjIsImV4cCI6MjA4OTg1NzY2Mn0.S6Yv05FKEBSvvGu4EL24o143jcR-Nor-GgfeBsQRnHs';
+const _analytics    = { counts: {}, start: Date.now() };
+
+ipcMain.on('analytics-track', (_, key) => {
+  if (key) _analytics.counts[key] = (_analytics.counts[key] || 0) + 1;
+});
+
+async function _postAnalytics() {
+  const crypto   = require('crypto');
+  const machineId = getMachineId();
+  const payload  = {
+    machine_id:   crypto.createHash('sha256').update(machineId).digest('hex').slice(0, 16),
+    app_version:  app.getVersion(),
+    duration_sec: Math.round((Date.now() - _analytics.start) / 1000),
+    buttons:      _analytics.counts,
+  };
+  const body = JSON.stringify(payload);
+  return new Promise(resolve => {
+    const req = require('https').request({
+      hostname: SUPABASE_URL,
+      path:     '/rest/v1/analytics_sessions',
+      method:   'POST',
+      headers: {
+        'Content-Type':   'application/json',
+        'apikey':         SUPABASE_KEY,
+        'Authorization':  `Bearer ${SUPABASE_KEY}`,
+        'Prefer':         'return=minimal',
+        'Content-Length': Buffer.byteLength(body),
+      },
+    }, res => { res.resume(); resolve({ status: res.statusCode }); });
+    req.on('error', () => resolve({ ok: false }));
+    req.setTimeout(3000, () => { req.destroy(); resolve({ timeout: true }); });
+    req.write(body);
+    req.end();
+  });
+}
+
+let _analyticsPosted = false;
+app.on('before-quit', async e => {
+  if (_analyticsPosted) return;
+  _analyticsPosted = true;
+  e.preventDefault();
+  try { await _postAnalytics(); } catch {}
+  app.quit();
+});
+
 const _boundsFile = path.join(app.getPath('userData'), 'window-bounds.json');
 function _loadBounds() {
   try { return JSON.parse(fs.readFileSync(_boundsFile, 'utf8')); } catch { return null; }
@@ -974,15 +1022,17 @@ async function checkForUpdates(silent = false) {
       return false;
     }
 
+    const releaseNotes = (json.body || '').trim();
+
     if (_versionGt(latestVersion, CURRENT_VERSION)) {
-      _updateAvailable = { version: latestVersion, downloadUrl: STABLE_DOWNLOAD_URL };
+      _updateAvailable = { version: latestVersion, downloadUrl: STABLE_DOWNLOAD_URL, releaseNotes };
       if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('update-available', latestVersion);
+        mainWindow.webContents.send('update-available', latestVersion, releaseNotes, STABLE_DOWNLOAD_URL);
       }
-      return { hasUpdate: true, version: latestVersion, downloadUrl: STABLE_DOWNLOAD_URL };
+      return { hasUpdate: true, version: latestVersion, downloadUrl: STABLE_DOWNLOAD_URL, releaseNotes };
     } else {
       _updateAvailable = null;
-      return { hasUpdate: false };
+      return { hasUpdate: false, releaseNotes };
     }
   } catch(e) { return { hasUpdate: false }; }
 }

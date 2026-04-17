@@ -4,7 +4,8 @@
 #   НЕ робить DMG, підпис, нотаризацію або GitHub upload
 # ══════════════════════════════════════════════════════════════════
 export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:$PATH"
-cd "/Users/dbsound/Desktop/WORK-/EasyBounce"
+SRC="/Users/dbsound/Desktop/WORK-/EasyOneAudio/EasyBounce"
+cd "$SRC"
 
 # Compile Swift as universal binary (arm64 + x86_64)
 echo "Compiling LogicBridge…"
@@ -27,35 +28,35 @@ pkill -x "EasyBounce" 2>/dev/null; sleep 0.5
 # Extract, update files, repack asar
 cd /tmp && rm -rf ea
 npx asar extract "/Applications/EasyBounce.app/Contents/Resources/app.asar" ea
-cp "/Users/dbsound/Desktop/WORK-/EasyBounce/package.json" ea/package.json
-cp "/Users/dbsound/Desktop/WORK-/EasyBounce/LogicBridge" ea/LogicBridge
-cp "/Users/dbsound/Desktop/WORK-/EasyBounce/MixerScroll" ea/MixerScroll
-cp "/Users/dbsound/Desktop/WORK-/EasyBounce/CloseLogicWindows" ea/CloseLogicWindows
-cp "/Users/dbsound/Desktop/WORK-/EasyBounce/main.js" ea/main.js
-cp "/Users/dbsound/Desktop/WORK-/EasyBounce/preload.js" ea/preload.js
-cp "/Users/dbsound/Desktop/WORK-/EasyBounce/license.js" ea/license.js
-cp "/Users/dbsound/Desktop/WORK-/EasyBounce/notifications.js" ea/notifications.js
-cp "/Users/dbsound/Desktop/WORK-/EasyBounce/src/index.html" ea/src/index.html
+cp "$SRC/package.json" ea/package.json
+cp "$SRC/LogicBridge" ea/LogicBridge
+cp "$SRC/MixerScroll" ea/MixerScroll
+cp "$SRC/CloseLogicWindows" ea/CloseLogicWindows
+cp "$SRC/main.js" ea/main.js
+cp "$SRC/preload.js" ea/preload.js
+cp "$SRC/license.js" ea/license.js
+cp "$SRC/notifications.js" ea/notifications.js
+cp "$SRC/src/index.html" ea/src/index.html
 mkdir -p ea/src/fonts
-cp /Users/dbsound/Desktop/WORK-/EasyBounce/src/fonts/*.woff2 ea/src/fonts/
-cp "/Users/dbsound/Desktop/WORK-/EasyBounce/src/overlay.html" ea/src/overlay.html
+cp $SRC/src/fonts/*.woff2 ea/src/fonts/
+cp "$SRC/src/overlay.html" ea/src/overlay.html
 # Sync node_modules (dependencies needed at runtime: @sendgrid, electron-updater)
 mkdir -p ea/node_modules
 # no extra npm packages needed — email uses native fetch
 # Copy accessibility page if it exists
-[ -f "/Users/dbsound/Desktop/WORK-/EasyBounce/src/accessibility.html" ] && cp "/Users/dbsound/Desktop/WORK-/EasyBounce/src/accessibility.html" ea/src/accessibility.html
+[ -f "$SRC/src/accessibility.html" ] && cp "$SRC/src/accessibility.html" ea/src/accessibility.html
 npx asar pack ea "/Applications/EasyBounce.app/Contents/Resources/app.asar"
 rm -rf ea
 
 # Update unpacked binary
-cp "/Users/dbsound/Desktop/WORK-/EasyBounce/LogicBridge" "/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/LogicBridge"
-cp "/Users/dbsound/Desktop/WORK-/EasyBounce/MixerScroll" "/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/MixerScroll"
-cp "/Users/dbsound/Desktop/WORK-/EasyBounce/CloseLogicWindows" "/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/CloseLogicWindows"
+cp "$SRC/LogicBridge" "/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/LogicBridge"
+cp "$SRC/MixerScroll" "/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/MixerScroll"
+cp "$SRC/CloseLogicWindows" "/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/CloseLogicWindows"
 
 # Also update dist/mac-universal so build_dmg.sh always gets the latest binary
-UNIVERSAL_LB="/Users/dbsound/Desktop/WORK-/EasyBounce/dist/mac-universal/EasyBounce.app/Contents/Resources/app.asar.unpacked/LogicBridge"
+UNIVERSAL_LB="$SRC/dist/mac-universal/EasyBounce.app/Contents/Resources/app.asar.unpacked/LogicBridge"
 if [ -f "$UNIVERSAL_LB" ]; then
-  cp "/Users/dbsound/Desktop/WORK-/EasyBounce/LogicBridge" "$UNIVERSAL_LB"
+  cp "$SRC/LogicBridge" "$UNIVERSAL_LB"
 fi
 
 # Inject NSAppleEventsUsageDescription into Info.plist (required for Automation permission dialog)

@@ -76,6 +76,24 @@ echo ""
 read -p "  Продовжити? [y/n]: " CONFIRM
 [ "$CONFIRM" != "y" ] && echo "  Скасовано." && exit 0
 
+# ── Changelog ─────────────────────────────────────────────────────
+echo ""
+echo "  ┌─────────────────────────────────────────────────────────┐"
+echo "  │  Що нового в цьому релізі? (англійською)                │"
+echo "  │  Введи по одному пункту, порожній рядок — кінець        │"
+echo "  └─────────────────────────────────────────────────────────┘"
+CHANGELOG_ITEMS=""
+while true; do
+  read -p "  - " ITEM
+  [ -z "$ITEM" ] && break
+  CHANGELOG_ITEMS="${CHANGELOG_ITEMS}- ${ITEM}\\n"
+done
+if [ -z "$CHANGELOG_ITEMS" ]; then
+  RELEASE_BODY="## What's New in ${TAG}"
+else
+  RELEASE_BODY="## What's New\\n\\n${CHANGELOG_ITEMS}"
+fi
+
 # ── 1. Bump version ───────────────────────────────────────────────
 echo ""
 echo "▶  Оновлення версії до ${NEW_VERSION}..."
@@ -152,7 +170,6 @@ fi
 echo ""
 echo "▶  Створення GitHub реліза ${TAG}..."
 
-RELEASE_BODY="## EasyBounce ${TAG}\n\n**Встановлення:**\n- Apple Silicon (M1/M2/M3): завантажте \`EasyBounce-arm64.dmg\`\n- Intel Mac: завантажте \`EasyBounce-x64.dmg\`\n\nВідкрийте DMG і перетягніть у /Applications.\n\n**Вимоги:** macOS 11+ · Logic Pro"
 
 RELEASE_JSON=$(curl -sf -X POST \
   -H "Authorization: token ${GH_TOKEN}" \

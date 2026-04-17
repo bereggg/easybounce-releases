@@ -106,7 +106,7 @@ contextBridge.exposeInMainWorld('api', {
   checkForUpdatesSilent: () => ipcRenderer.invoke('check-for-updates-silent'),
   checkForUpdates:       () => ipcRenderer.invoke('check-for-updates'),
   getCurrentVersion:     () => ipcRenderer.invoke('get-current-version'),
-  onUpdateAvailable: (cb) => ipcRenderer.on('update-available', (_, ver) => cb(ver)),
+  onUpdateAvailable: (cb) => ipcRenderer.on('update-available', (_, ver, notes, url) => cb(ver, notes, url)),
   // Notifications
   notifGetSettings:         ()    => ipcRenderer.invoke('notif-get-settings'),
   notifSaveSettings:        (d)   => ipcRenderer.invoke('notif-save-settings', d),
@@ -131,4 +131,5 @@ contextBridge.exposeInMainWorld('api', {
   escapeLogic:           ()    => ipcRenderer.invoke('escape-logic'),
   startCaffeinate:       ()    => ipcRenderer.invoke('start-caffeinate'),
   onForceExitMiniMode:   (cb) => ipcRenderer.on('force-exit-mini-mode', () => cb()),
+  analyticsTrack:        (k)  => ipcRenderer.send('analytics-track', k),
 });
