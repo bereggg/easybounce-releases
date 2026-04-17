@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; overflow:hidden; background:transparent; -webkit-font-smoothing:antialiased; }
+
+@keyframes appear { from { opacity:0; transform:translateY(-6px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes vanish { to { opacity:0; transform:translateY(-5px) scale(.96); } }
+@keyframes pulse-dot { from { box-shadow:0 0 4px rgba(255,169,77,.3); opacity:.8; } to { box-shadow:0 0 14px rgba(255,169,77,.9); opacity:1; } }
+
+.card {
+  width:100%; height:100%;
+  background: rgba(14,14,22,.96);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  box-shadow: 0 16px 48px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04), inset 0 1px 0 rgba(255,255,255,.08);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  padding: 0 18px 0 20px;
+  -webkit-app-region: drag;
+  user-select: none;
+  animation: appear .28s cubic-bezier(.16,1,.3,1) both;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Syne', -apple-system, sans-serif;
+}
+.card::before {
+  content:'';
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse at 30% 50%, rgba(108,99,255,.07) 0%, transparent 60%);
+  pointer-events:none;
+}
+.card.fading { animation: vanish .22s ease-in forwards; }
+
+.close-btn {
+  position:absolute; top:8px; right:8px;
+  width:20px; height:20px; border-radius:6px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.09);
+  color: rgba(255,255,255,.3);
+  font-size:10px;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  -webkit-app-region: no-drag;
+  transition: all .15s;
+  flex-shrink:0;
+}
+.close-btn:hover { background:rgba(255,255,255,.1); color:#fff; border-color:rgba(255,255,255,.18); }
+
+.icon {
+  width:36px; height:36px; border-radius:10px;
+  background: linear-gradient(135deg, rgba(108,99,255,.2), rgba(255,101,132,.14));
+  border: 1px solid rgba(108,99,255,.25);
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px;
+  box-shadow: 0 3px 12px rgba(108,99,255,.2);
+  position:relative; z-index:1;
+  flex-shrink:0;
+}
+
+.main-col {
+  display:flex; flex-direction:column; gap:2px;
+  flex:1; min-width:0;
+  position:relative; z-index:1;
+}
+
+.title {
+  font-size:13px; font-weight:900;
+  color:#fff; letter-spacing:-.02em;
+  white-space:nowrap;
+}
+
+.status {
+  display:flex; align-items:center; gap:6px;
+  font-family:'DM Mono', monospace;
+  font-size:10px; color:#ffa94d;
+}
+.status-dot {
+  width:5px; height:5px; border-radius:50%;
+  background:#ffa94d;
+  box-shadow: 0 0 7px rgba(255,169,77,.7);
+  animation: pulse-dot .9s ease-in-out infinite alternate;
+  flex-shrink:0;
+}
+.status-text { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:280px; }
+
+.right-col {
+  display:flex; flex-direction:column; align-items:flex-end; gap:2px;
+  position:relative; z-index:1;
+  flex-shrink:0;
+}
+
+.warn-text {
+  font-size:12px; font-weight:700; color:rgba(255,255,255,.7); text-align:right; white-space:nowrap;
+}
+.warn-text strong { color:#e03c3c; font-weight:900; font-size:13px; }
+
+.countdown-text {
+  font-size:11px; font-weight:700; color:#fff; text-align:right; white-space:nowrap; display:none;
+}
+
+.tip-inline {
+  font-size:11px; color:rgba(150,140,255,.85); text-align:right; white-space:nowrap;
+}
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <button class="close-btn" id="close-btn">✕</button>
+  <div class="icon">⚡</div>
+  <div class="main-col">
+    <div class="title">Bouncing in progress</div>
+    <div class="status">
+      <span class="status-text" id="status-text"></span>
+    </div>
+  </div>
+  <div class="right-col">
+    <div class="warn-text" id="warn-normal"><strong>Don't touch</strong> your Mac</div>
+    <div class="countdown-text" id="countdown-text"></div>
+    <div class="tip-inline" id="tip-inline">☕ Grab a coffee</div>
+  </div>
+</div>
+
+<script>
+const card = document.getElementById('card');
+const closeBtn = document.getElementById('close-btn');
+
+function _fadeOut(cb) {
+  card.classList.add('fading');
+  setTimeout(cb, 230);
+}
+
+closeBtn.addEventListener('click', () => {
+  _fadeOut(() => window.overlayBridge.dismiss());
+});
+
+window.overlayBridge.onUpdate((data) => {
+  const st = document.getElementById('status-text');
+  if (st) {
+    const name = data.name || '…';
+    const count = data.total > 0 ? ` — ${data.done + 1} / ${data.total}` : '';
+    st.textContent = name + count;
+  }
+});
+
+window.overlayBridge.onFadeOut(() => {
+  _fadeOut(() => {});
+});
+
+window.overlayBridge.onCountdown((sec) => {
+  const warn = document.getElementById('warn-normal');
+  const countdown = document.getElementById('countdown-text');
+  const tip = document.getElementById('tip-inline');
+  if (sec > 0) {
+    if (warn) warn.style.display = 'none';
+    if (tip) tip.style.display = 'none';
+    if (countdown) {
+      countdown.style.display = '';
+      countdown.innerHTML = `Returning to Logic in <span style="color:#ffa94d;">${sec}</span>…`;
+    }
+  } else {
+    if (warn) warn.style.display = '';
+    if (tip) tip.style.display = '';
+    if (countdown) countdown.style.display = 'none';
+  }
+});
+</script>
+</body>
+</html>

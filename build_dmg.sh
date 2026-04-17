@@ -1,0 +1,146 @@
+#!/bin/bash
+set -e
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+
+# ── Architecture parameter ────────────────────────────────────────────────────
+ARCH="${1:-arm64}"
+if [ "$ARCH" != "arm64" ] && [ "$ARCH" != "x64" ]; then
+  echo "❌ Usage: bash build_dmg.sh [arm64|x64]"
+  echo "   arm64 = Apple Silicon (M1/M2/M3)"
+  echo "   x64   = Intel Mac"
+  exit 1
+fi
+
+VERSION=$(node -p "require('${ROOT}/package.json').version")
+DMG_NAME="EasyBounce-${VERSION}-${ARCH}"
+TMP_DIR="$ROOT/dist/dmg_tmp_${ARCH}"
+DMG_TMP="$ROOT/dist/${DMG_NAME}_tmp.dmg"
+DMG_OUT="$ROOT/dist/${DMG_NAME}.dmg"
+
+IDENTITY="Developer ID Application: Dmytro Berezhnyi (2VKTV5VPVB)"
+NOTARY_PROFILE="notarytool"
+
+# electron-builder outputs mac-arm64 for arm64, but just "mac" for x64
+if [ "$ARCH" = "x64" ]; then
+  APP_SRC="$ROOT/dist/mac/EasyBounce.app"
+else
+  APP_SRC="$ROOT/dist/mac-${ARCH}/EasyBounce.app"
+fi
+
+# ── Build ─────────────────────────────────────────────────────────────────────
+echo "▶ Building app (${ARCH})…"
+cd "$ROOT"
+CSC_IDENTITY_AUTO_DISCOVERY=false npm run build:${ARCH}
+echo "  ✓ Build complete"
+
+# ── Verify build output exists ────────────────────────────────────────────────
+if [ ! -d "$APP_SRC" ]; then
+  echo "❌ Build not found: $APP_SRC"
+  exit 1
+fi
+
+# ── Sign with @electron/osx-sign ─────────────────────────────────────────────
+echo "▶ Signing app (${ARCH})…"
+APP_ARCH=${ARCH} /opt/homebrew/bin/node sign_app.js
+
+echo "▶ Preparing DMG contents…"
+rm -rf "$TMP_DIR"
+mkdir -p "$TMP_DIR"
+
+# ── Copy app + README ─────────────────────────────────────────────────────────
+ditto "$APP_SRC" "$TMP_DIR/EasyBounce.app"
+cp "$ROOT/README.txt" "$TMP_DIR/README.txt"
+ln -s /Applications "$TMP_DIR/Applications"
+
+# Follow symlinks (-L) for accurate size, add 300MB buffer for HFS+ overhead
+APP_SIZE=$(du -smL "$APP_SRC" 2>/dev/null | cut -f1)
+DMG_SIZE=$((APP_SIZE + 300))
+
+# ── Create empty writable DMG ─────────────────────────────────────────────────
+echo "▶ Creating DMG (${DMG_SIZE}MB)…"
+rm -f "$DMG_TMP" "$DMG_OUT"
+hdiutil create -volname "EasyBounce" \
+  -size ${DMG_SIZE}m \
+  -fs HFS+ \
+  -ov \
+  "$DMG_TMP"
+
+# ── Mount ──────────────────────────────────────────────────────────────────────
+echo "▶ Mounting…"
+MOUNT_INFO=$(hdiutil attach -readwrite -noverify -nobrowse "$DMG_TMP")
+MOUNT_DIR=$(echo "$MOUNT_INFO" | grep "/Volumes/" | sed 's/.*\/Volumes\//\/Volumes\//' | tail -1)
+DISK_DEV=$(echo "$MOUNT_INFO" | grep "^/dev/" | head -1 | awk '{print $1}')
+echo "  Mounted at: $MOUNT_DIR"
+sleep 1
+
+# ── Copy files into mounted DMG ───────────────────────────────────────────────
+echo "▶ Copying files…"
+ditto "$TMP_DIR/EasyBounce.app" "$MOUNT_DIR/EasyBounce.app"
+cp "$TMP_DIR/README.txt" "$MOUNT_DIR/"
+ln -s /Applications "$MOUNT_DIR/Applications"
+sleep 1
+
+# ── Copy background ────────────────────────────────────────────────────────────
+mkdir -p "$MOUNT_DIR/.background"
+cp "$ROOT/assets/dmg_bg.png" "$MOUNT_DIR/.background/bg.png"
+
+# ── Set window layout via osascript ───────────────────────────────────────────
+echo "▶ Setting window layout…"
+VOL_NAME=$(basename "$MOUNT_DIR")
+osascript << APPLESCRIPT
+tell application "Finder"
+  tell disk "${VOL_NAME}"
+    open
+    set current view of container window to icon view
+    set toolbar visible of container window to false
+    set statusbar visible of container window to false
+    set bounds of container window to {200, 100, 1020, 580}
+    set theViewOptions to the icon view options of container window
+    set arrangement of theViewOptions to not arranged
+    set icon size of theViewOptions to 72
+    set background picture of theViewOptions to file ".background:bg.png"
+    set position of item "README.txt"   of container window to {220, 184}
+    set position of item "EasyBounce"   of container window to {374, 184}
+    set position of item "Applications" of container window to {528, 184}
+    close
+    open
+    update without registering applications
+    delay 2
+    close
+  end tell
+end tell
+APPLESCRIPT
+
+# ── Unmount ────────────────────────────────────────────────────────────────────
+echo "▶ Finalizing…"
+hdiutil detach "$DISK_DEV" 2>/dev/null || hdiutil detach "$MOUNT_DIR" 2>/dev/null
+sleep 1
+
+# ── Convert to compressed read-only DMG ───────────────────────────────────────
+hdiutil convert "$DMG_TMP" -format UDZO -imagekey zlib-level=9 -o "$DMG_OUT"
+rm -f "$DMG_TMP"
+rm -rf "$TMP_DIR"
+
+# ── Sign DMG ──────────────────────────────────────────────────────────────────
+echo "▶ Signing DMG…"
+codesign --sign "$IDENTITY" "$DMG_OUT"
+
+# ── Notarize DMG ─────────────────────────────────────────────────────────────
+echo "▶ Notarizing DMG (this takes ~5–10 min)…"
+xcrun notarytool submit "$DMG_OUT" \
+  --keychain-profile "$NOTARY_PROFILE" \
+  --wait
+
+# ── Staple ────────────────────────────────────────────────────────────────────
+echo "▶ Stapling notarization ticket…"
+xcrun stapler staple "$DMG_OUT"
+
+echo ""
+echo "✅ Done: $DMG_OUT"
+echo "   Size: $(du -sh "$DMG_OUT" | cut -f1)"
+if [ "$ARCH" = "arm64" ]; then
+  echo "   Arch: Apple Silicon (arm64) — M1/M2/M3"
+else
+  echo "   Arch: Intel (x64)"
+fi
+echo "   Signed + Notarized + Stapled ✓"

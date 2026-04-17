@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>EasyBounce Mini</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:240px;height:90px;overflow:hidden;background:transparent;-webkit-font-smoothing:antialiased;}
+body{font-family:-apple-system,'Inter',sans-serif;-webkit-app-region:drag;user-select:none;}
+.widget{
+  width:240px;height:90px;
+  background:rgba(14,14,20,.92);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:16px;
+  backdrop-filter:blur(40px) saturate(200%);
+  -webkit-backdrop-filter:blur(40px) saturate(200%);
+  box-shadow:0 8px 40px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.06),inset 0 1px 0 rgba(255,255,255,.1);
+  padding:12px 13px 10px;
+  display:flex;flex-direction:column;gap:7px;
+  position:relative;overflow:hidden;
+}
+.widget::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 20% 0%,rgba(108,99,255,.1) 0%,transparent 60%);
+  pointer-events:none;
+}
+/* expand zone — whole widget minus cancel btn */
+.expand-zone{
+  position:absolute;inset:0;right:36px;
+  cursor:pointer;-webkit-app-region:no-drag;
+  z-index:1;
+}
+.top{display:flex;align-items:center;gap:7px;position:relative;z-index:2;}
+.dot{
+  width:7px;height:7px;border-radius:50%;
+  background:#ffa94d;
+  box-shadow:0 0 8px rgba(255,169,77,.7);
+  animation:pulse .9s ease-in-out infinite alternate;
+  flex-shrink:0;
+}
+@keyframes pulse{
+  from{box-shadow:0 0 4px rgba(255,169,77,.3);opacity:.9;}
+  to{box-shadow:0 0 14px rgba(255,169,77,.8),0 0 22px rgba(255,169,77,.3);opacity:1;}
+}
+.stem-name{
+  font-size:12px;font-weight:600;
+  flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:#e2e2f0;letter-spacing:-.01em;min-width:0;
+}
+.counter{
+  font-size:10px;color:rgba(255,255,255,.4);
+  flex-shrink:0;font-variant-numeric:tabular-nums;
+  font-family:'JetBrains Mono','Courier New',monospace;
+}
+.cancel-btn{
+  width:22px;height:22px;border-radius:7px;
+  border:1px solid rgba(255,71,87,.35);
+  background:rgba(255,71,87,.12);
+  color:rgba(255,71,87,.9);
+  font-size:11px;font-weight:700;
+  cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+  -webkit-app-region:no-drag;
+  position:relative;z-index:3;
+}
+.cancel-btn:hover{background:rgba(255,71,87,.28);border-color:rgba(255,71,87,.6);color:#ff4757;}
+.bar{height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;position:relative;z-index:2;}
+.fill{
+  height:100%;
+  background:linear-gradient(90deg,#6c63ff,#ff6584);
+  border-radius:2px;
+  transition:width .5s ease;
+  width:0%;
+  position:relative;
+}
+.fill::after{
+  content:'';position:absolute;right:0;top:0;height:100%;width:6px;
+  background:rgba(255,255,255,.55);
+  border-radius:2px;filter:blur(2px);
+}
+.hint{
+  font-size:8px;color:rgba(255,255,255,.22);
+  text-align:center;letter-spacing:.04em;
+  text-transform:uppercase;position:relative;z-index:2;
+}
+</style>
+</head>
+<body>
+<div class="widget">
+  <!-- invisible expand zone covers left part of widget -->
+  <div class="expand-zone" id="expand-zone"></div>
+  <div class="top">
+    <div class="dot"></div>
+    <div class="stem-name" id="stem-name">Bouncing…</div>
+    <div class="counter" id="counter">—/—</div>
+    <button class="cancel-btn" id="cancel-btn" title="Cancel bounce">✕</button>
+  </div>
+  <div class="bar"><div class="fill" id="fill"></div></div>
+  <div class="hint">click to expand · ✕ to cancel</div>
+</div>
+<script>
+const expandZone = document.getElementById('expand-zone');
+const cancelBtn  = document.getElementById('cancel-btn');
+const stemName   = document.getElementById('stem-name');
+const counter    = document.getElementById('counter');
+const fill       = document.getElementById('fill');
+
+expandZone.addEventListener('click', () => {
+  if (window.api && window.api.expandFromMini) window.api.expandFromMini();
+});
+
+cancelBtn.addEventListener('click', async () => {
+  if (window.api && window.api.cancelFromMini) await window.api.cancelFromMini();
+});
+
+if (window.api && window.api.onMiniUpdate) {
+  window.api.onMiniUpdate((data) => {
+    stemName.textContent = data.stemName || '…';
+    counter.textContent  = `${data.done}/${data.total}`;
+    const pct = data.total > 0 ? Math.round((data.done / data.total) * 100) : 0;
+    fill.style.width = pct + '%';
+    if (data.accent) {
+      fill.style.background = `linear-gradient(90deg,${data.accent},${data.accent2 || '#ff6584'})`;
+    }
+  });
+}
+</script>
+</body>
+</html>

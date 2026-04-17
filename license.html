@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>EasyBounce — Activate</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:#111116;color:#e2e2f0;height:100vh;display:flex;align-items:center;justify-content:center;-webkit-font-smoothing:antialiased;-webkit-app-region:drag;}
+.card{background:linear-gradient(145deg,#17171e,#111116);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:40px 36px;width:400px;text-align:center;box-shadow:0 40px 100px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.06);-webkit-app-region:no-drag;}
+.logo{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#6c63ff,#ff6584);margin:0 auto 20px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(108,99,255,.4);}
+.logo svg{width:32px;height:32px;fill:white;}
+h1{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px;}
+.sub{font-size:13px;color:#666;margin-bottom:24px;line-height:1.6;}
+input{width:100%;background:#0c0c10;border:1px solid #252530;border-radius:12px;color:#e2e2f0;font-family:'JetBrains Mono',monospace;font-size:14px;padding:14px 16px;text-align:center;letter-spacing:.06em;text-transform:uppercase;outline:none;transition:border-color .2s;margin-bottom:8px;}
+input:focus{border-color:rgba(108,99,255,.6);}
+input::placeholder{color:#333;letter-spacing:.02em;text-transform:none;}
+.err{font-size:11px;color:#ff4757;min-height:18px;margin-bottom:12px;}
+.btn{width:100%;height:50px;border-radius:14px;border:none;cursor:pointer;background:linear-gradient(135deg,#6c63ff,#ff6584);color:white;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;letter-spacing:.03em;transition:all .18s;box-shadow:0 6px 24px rgba(108,99,255,.4),inset 0 1px 0 rgba(255,255,255,.2);margin-bottom:12px;}
+.btn:hover{transform:translateY(-1px);box-shadow:0 10px 32px rgba(108,99,255,.55);}
+.btn:disabled{background:#1c1c24;color:#444;box-shadow:none;cursor:not-allowed;transform:none;}
+.divider{display:flex;align-items:center;gap:12px;margin:4px 0 12px;color:#2a2a38;font-size:11px;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#1e1e28;}
+.trial-btn{width:100%;height:46px;border-radius:14px;border:1px solid rgba(99,255,180,.25);cursor:pointer;background:rgba(99,255,180,.06);color:#63ffb4;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;letter-spacing:.02em;transition:all .18s;margin-bottom:16px;}
+.trial-btn:hover{background:rgba(99,255,180,.12);border-color:rgba(99,255,180,.45);}
+.trial-btn:disabled{opacity:.4;cursor:not-allowed;}
+.trial-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(99,255,180,.08);border:1px solid rgba(99,255,180,.2);border-radius:10px;padding:10px 16px;margin-bottom:16px;font-size:12px;color:#63ffb4;font-weight:500;width:100%;justify-content:center;}
+.trial-badge.expired{background:rgba(255,71,87,.06);border-color:rgba(255,71,87,.2);color:#ff4757;}
+.buy{font-size:12px;color:#444;margin-bottom:16px;}
+.offline-badge{display:flex;align-items:center;gap:10px;background:rgba(255,71,87,.06);border:1px solid rgba(255,71,87,.2);border-radius:12px;padding:10px 14px;margin-bottom:16px;width:100%;}
+.offline-icon{font-size:18px;flex-shrink:0;line-height:1;}
+.offline-text{display:flex;flex-direction:column;gap:2px;text-align:left;flex:1;font-size:11px;}
+.offline-text strong{color:#ff6b6b;font-weight:600;}
+.offline-text span{color:#666;}
+.offline-retry{flex-shrink:0;background:rgba(255,71,87,.12);border:1px solid rgba(255,71,87,.3);border-radius:8px;color:#ff6b6b;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;padding:5px 11px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.offline-retry:hover{background:rgba(255,71,87,.22);border-color:rgba(255,71,87,.5);}
+.buy a{color:#6c63ff;text-decoration:none;}
+.machine{margin-top:12px;padding-top:12px;border-top:1px solid #1a1a22;font-family:'JetBrains Mono',monospace;font-size:9px;color:#2a2a3a;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg></div>
+  <h1>EasyBounce</h1>
+  <p class="sub" id="subtitle">Enter your license key to activate.<br>Or start your free 7-day trial.</p>
+
+  <!-- Trial section — shown dynamically -->
+  <div id="trial-section"></div>
+
+  <input type="text" id="key-input" placeholder="EB1-XXXX-XXXX-XXXX-XXXX"
+    oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9-]/g,'')"
+    onkeydown="if(event.key==='Enter')activate()">
+  <div class="err" id="err"></div>
+  <button class="btn" id="btn" onclick="activate()">Activate EasyBounce</button>
+  <div class="buy">Don't have a key? <a href="#" onclick="window.api && window.api.openExternal ? window.api.openExternal('https://project-1z26v.vercel.app') : null">Purchase at easybounce.app →</a></div>
+  <div class="machine">Machine ID: <span id="mid">—</span></div>
+</div>
+<script>
+window.addEventListener('DOMContentLoaded', async () => {
+  if (window.api && window.api.getMachineId) {
+    const id = await window.api.getMachineId();
+    document.getElementById('mid').textContent = id;
+  }
+
+  // Load trial status
+  if (window.api && window.api.getTrialInfo) {
+    try {
+      const trial = await window.api.getTrialInfo();
+      renderTrial(trial);
+    } catch(e) {}
+  }
+});
+
+function renderTrial(trial) {
+  const sec = document.getElementById('trial-section');
+  if (!trial.started) {
+    // Show "Start Free Trial" button
+    sec.innerHTML = `
+      <div class="divider">or</div>
+      <button class="trial-btn" id="trial-btn" onclick="startTrial()">
+        ▶ Start Free Trial — 7 days
+      </button>`;
+  } else if (trial.active) {
+    // Show days remaining badge
+    const days = trial.daysRemaining;
+    sec.innerHTML = `
+      <div class="divider">or</div>
+      <div class="trial-badge">
+        ⏱ Trial active — ${days} day${days !== 1 ? 's' : ''} remaining
+        <button onclick="continueTrial()" style="margin-left:auto;background:rgba(99,255,180,.15);border:1px solid rgba(99,255,180,.3);border-radius:8px;color:#63ffb4;font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;">Continue →</button>
+      </div>`;
+  } else {
+    // Trial expired
+    sec.innerHTML = `
+      <div class="divider">or</div>
+      <div class="trial-badge expired">
+        ✕ Trial expired — purchase to continue
+      </div>`;
+  }
+}
+
+async function startTrial() {
+  const trialBtn = document.getElementById('trial-btn');
+  if (trialBtn) { trialBtn.disabled = true; trialBtn.textContent = 'Starting…'; }
+  try {
+    const trial = await window.api.activateTrial();
+    if (trial.ok && trial.active) {
+      const sec = document.getElementById('trial-section');
+      sec.innerHTML = `<div class="trial-badge">✓ Trial started! Opening EasyBounce…</div>`;
+      // Main window opens automatically after 600ms (handled in main.js)
+    } else if (trial.expired) {
+      const sec = document.getElementById('trial-section');
+      sec.innerHTML = `<div class="trial-badge expired">✕ Trial expired — purchase to continue<br><a href="#" onclick="window.api&&window.api.openExternal&&window.api.openExternal('https://project-1z26v.vercel.app')" style="color:#6c63ff;font-size:11px;">Buy at easybounce.app →</a></div>`;
+    } else if (trial.offline) {
+      const sec = document.getElementById('trial-section');
+      sec.innerHTML = `
+        <div class="divider">or</div>
+        <div class="offline-badge">
+          <span class="offline-icon">⚡</span>
+          <div class="offline-text">
+            <strong>No internet connection</strong>
+            <span>Connect to Wi-Fi to start your trial</span>
+          </div>
+          <button class="offline-retry" onclick="startTrial()">↻ Check Connection</button>
+        </div>`;
+    } else {
+      const err = document.getElementById('err');
+      err.textContent = trial.reason || 'Could not start trial. Try again.';
+      if (trialBtn) { trialBtn.disabled = false; trialBtn.textContent = '↻ Try Again'; }
+    }
+  } catch(e) {
+    if (trialBtn) { trialBtn.disabled = false; trialBtn.textContent = '↻ Try Again'; }
+  }
+}
+
+async function continueTrial() {
+  try {
+    const trial = await window.api.activateTrial();
+    if (trial.ok && trial.active) {
+      const sec = document.getElementById('trial-section');
+      sec.innerHTML = `<div class="trial-badge">✓ Opening EasyBounce…</div>`;
+    }
+  } catch(e) {}
+}
+
+async function activate() {
+  const key = document.getElementById('key-input').value.trim();
+  const err = document.getElementById('err');
+  const btn = document.getElementById('btn');
+  if (!key) { err.textContent = 'Please enter your license key'; return; }
+  btn.disabled = true;
+  btn.textContent = 'Activating…';
+  err.textContent = '';
+  try {
+    const result = await window.api.activateAndLaunch(key);
+    if (result && result.ok) {
+      btn.style.background = 'linear-gradient(135deg,#43e97b,#38f9d7)';
+      btn.textContent = '✓ Activated! Launching…';
+      err.style.color = '#43e97b';
+      err.textContent = 'Welcome to EasyBounce!';
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Activate EasyBounce';
+      err.textContent = (result && result.reason) || 'Invalid license key';
+      document.getElementById('key-input').style.borderColor = '#ff4757';
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Activate EasyBounce';
+    err.textContent = 'Error: ' + e.message;
+  }
+}
+</script>
+</body>
+</html>
