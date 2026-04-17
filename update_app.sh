@@ -13,17 +13,13 @@ swiftc LogicBridge.swift -o LogicBridge_arm64 -target arm64-apple-macos10.15 2>&
 swiftc LogicBridge.swift -o LogicBridge_x86 -target x86_64-apple-macos10.15 2>&1 | grep -v warning || true
 lipo -create -output LogicBridge LogicBridge_arm64 LogicBridge_x86
 
-echo "Compiling EscapeLogic…"
-swiftc EscapeLogic.swift -o EscapeLogic_arm64 -target arm64-apple-macos11.0 -framework AppKit 2>&1 | grep -v warning || true
-swiftc EscapeLogic.swift -o EscapeLogic_x86 -target x86_64-apple-macos11.0 -framework AppKit 2>&1 | grep -v warning || true
-lipo -create -output EscapeLogic EscapeLogic_arm64 EscapeLogic_x86
-rm -f EscapeLogic_arm64 EscapeLogic_x86
+ARCH=$(uname -m)  # arm64 або x86_64
 
-echo "Compiling CloseLogicWindows…"
-swiftc CloseLogicWindows.swift -o CloseLogicWindows_arm64 -target arm64-apple-macos11.0 -framework ApplicationServices -framework AppKit 2>&1 | grep -v warning || true
-swiftc CloseLogicWindows.swift -o CloseLogicWindows_x86 -target x86_64-apple-macos11.0 -framework ApplicationServices -framework AppKit 2>&1 | grep -v warning || true
-lipo -create -output CloseLogicWindows CloseLogicWindows_arm64 CloseLogicWindows_x86
-rm -f CloseLogicWindows_arm64 CloseLogicWindows_x86
+echo "Compiling EscapeLogic ($ARCH)…"
+swiftc EscapeLogic.swift -o EscapeLogic -target ${ARCH}-apple-macos11.0 -framework AppKit 2>&1 | grep -v warning || true
+
+echo "Compiling CloseLogicWindows ($ARCH)…"
+swiftc CloseLogicWindows.swift -o CloseLogicWindows -target ${ARCH}-apple-macos11.0 -framework ApplicationServices -framework AppKit 2>&1 | grep -v warning || true
 
 # Check if app exists
 if [ ! -d "/Applications/EasyBounce.app" ]; then
