@@ -10,8 +10,8 @@ html,body{width:240px;height:90px;overflow:hidden;background:transparent;-webkit
 body{font-family:'Inter',-apple-system,sans-serif;-webkit-app-region:drag;user-select:none;}
 .widget{
   width:240px;height:90px;
-  background:rgba(28,28,26,.92);
-  border:1px solid rgba(255,255,255,.12);
+  background:rgba(14,14,20,.92);
+  border:1px solid rgba(255,255,255,.15);
   border-radius:16px;
   backdrop-filter:blur(40px) saturate(200%);
   -webkit-backdrop-filter:blur(40px) saturate(200%);
@@ -22,7 +22,7 @@ body{font-family:'Inter',-apple-system,sans-serif;-webkit-app-region:drag;user-s
 }
 .widget::before{
   content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at 20% 0%,rgba(123,79,191,.12) 0%,transparent 60%);
+  background:radial-gradient(ellipse at 20% 0%,rgba(108,99,255,.1) 0%,transparent 60%);
   pointer-events:none;
 }
 /* expand zone — whole widget minus cancel btn */
@@ -31,21 +31,17 @@ body{font-family:'Inter',-apple-system,sans-serif;-webkit-app-region:drag;user-s
   cursor:pointer;-webkit-app-region:no-drag;
   z-index:1;
 }
-.top{display:flex;align-items:center;gap:8px;position:relative;z-index:2;}
-.brand-ico{
-  width:18px;height:18px;border-radius:6px;
-  background:linear-gradient(135deg,rgba(123,79,191,.22),rgba(212,98,26,.16));
-  border:1px solid rgba(123,79,191,.28);
-  display:flex;align-items:center;justify-content:center;
-  color:#fff;
-  box-shadow:0 2px 8px rgba(123,79,191,.25);
+.top{display:flex;align-items:center;gap:7px;position:relative;z-index:2;}
+.dot{
+  width:7px;height:7px;border-radius:50%;
+  background:#ffa94d;
+  box-shadow:0 0 8px rgba(255,169,77,.7);
+  animation:pulse .9s ease-in-out infinite alternate;
   flex-shrink:0;
-  animation:brand-breathe 2.4s ease-in-out infinite;
 }
-.brand-ico svg{width:11px;height:11px;}
-@keyframes brand-breathe{
-  0%,100%{opacity:.92;transform:scale(1);}
-  50%{opacity:1;transform:scale(1.06);}
+@keyframes pulse{
+  from{box-shadow:0 0 4px rgba(255,169,77,.3);opacity:.9;}
+  to{box-shadow:0 0 14px rgba(255,169,77,.8),0 0 22px rgba(255,169,77,.3);opacity:1;}
 }
 .stem-name{
   font-size:12px;font-weight:600;
@@ -73,7 +69,7 @@ body{font-family:'Inter',-apple-system,sans-serif;-webkit-app-region:drag;user-s
 .bar{height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;position:relative;z-index:2;}
 .fill{
   height:100%;
-  background:linear-gradient(90deg,#7B4FBF,#D4621A);
+  background:linear-gradient(90deg,#6c63ff,#ff6584);
   border-radius:2px;
   transition:width .5s ease;
   width:0%;
@@ -97,7 +93,7 @@ body{font-family:'Inter',-apple-system,sans-serif;-webkit-app-region:drag;user-s
   <!-- invisible expand zone covers left part of widget -->
   <div class="expand-zone" id="expand-zone"></div>
   <div class="top">
-    <div class="brand-ico"><svg><use href="#ico-bounce"/></svg></div>
+    <div class="dot"></div>
     <div class="stem-name" id="stem-name">Bouncing…</div>
     <div class="counter" id="counter">—/—</div>
     <button class="cancel-btn" id="cancel-btn" title="Cancel bounce"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
