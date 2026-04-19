@@ -2087,6 +2087,73 @@ let _scanRunning = false;
 // ── Targeted mixer-only rescan ─────────────────────────────────────────────
 // Used when mixer was closed but a full scan (tree, markers, plugins) is NOT needed.
 // Only opens mixer, re-applies filter prefs, rescans channels.
+async function _learnFilterTypes() {
+  if (!window.api) return;
+  log('Learning filter types…', 'info');
+  let _baseChannels = [];
+  await _withRecoveryBadge(
+    'Opening Mixer…',
+    'Learning filter types',
+    async () => {
+      await window.api.openMixer({ skipPanelClose: false });
+      await window.api.wait(300);
+      const enRes = await window.api.mixerEnableAll();
+      const enCount = enRes?.enabled?.length || 0;
+      await window.api.wait(enCount > 0 ? 500 + enCount * 80 : 200);
+
+      const baseResult = await window.api.scanChannels();
+      if (!baseResult || baseResult.error || !baseResult.channels || baseResult.channels.length === 0) {
+        log('⚠ Filter learning: no channels found', 'warn');
+        return;
+      }
+      _baseChannels = baseResult.channels.map((ch, i) => ({
+        ...ch,
+        color: getInstrumentColor(ch.name) || COLORS[i % COLORS.length],
+        isBus: !ch.hasMonitoring && !ch.hasRecord,
+        chType: ch.hasBnc ? 'Output' : ch.hasMonitoring && ch.hasRecord ? 'Audio' : ch.hasRecord && !ch.hasMonitoring ? 'Inst' : 'Bus'
+      }));
+      _masterChannels = _baseChannels.map(c => ({name: c.name, isBus: c.isBus, chType: c.chType, color: c.color, index: c.index}));
+      localStorage.setItem('sb4_master_channels', JSON.stringify(_masterChannels));
+
+      const filterNames = MF_ALL_NAMES.filter(n => n in _mixerFilters);
+      _channelTypeMap = {};
+      let prevNames = _baseChannels.map(c => c.name);
+      for (const fname of filterNames) {
+        if (window._scanCancelled) break;
+        _setScanSub(`Checking ${fname}…`);
+        await window.api.mixerFilterToggle(fname);
+        if (window._scanCancelled) break;
+        await window.api.wait(200);
+        if (window._scanCancelled) break;
+        const res = await window.api.scanChannels();
+        if (window._scanCancelled) break;
+        if (res && !res.error && res.channels) {
+          const nowNames = res.channels.map(c => c.name);
+          const nowSet = new Set(nowNames);
+          const gone = prevNames.filter(n => !nowSet.has(n));
+          if (gone.length > 0 && nowNames.length < prevNames.length) {
+            _channelTypeMap[fname] = gone;
+            log(`  ${fname}: ${gone.length} channels`, 'info');
+          }
+          if (nowNames.length <= prevNames.length) prevNames = nowNames;
+        }
+      }
+      await window.api.wait(1350);
+      MF_ALL_NAMES.forEach(n => { if (n in _mixerFilters) _mixerFilters[n] = true; });
+      saveMixerFilterPrefs();
+      localStorage.setItem('sb4_channel_type_map', JSON.stringify(_channelTypeMap));
+    }
+  );
+  if (window._scanCancelled || _baseChannels.length === 0) return;
+  channels = [..._masterChannels];
+  localStorage.setItem(SK.channels, JSON.stringify(channels));
+  renderChannels();
+  renderMixerFilters();
+  const learned = Object.entries(_channelTypeMap).filter(([,v]) => v?.length > 0);
+  log(`✓ Filter types learned: ${learned.map(([k,v]) => `${k}(${v.length})`).join(', ')}`, 'ok');
+  toast('✓ Filter types learned');
+}
+
 async function _quickScanMixer() {
   if (_scanRunning || bouncing || _recoveryBadgeActive) return;
   await _withRecoveryBadge(
@@ -2338,7 +2405,7 @@ async function scanLogic(isAutoRetry = false) {
   // ── Step 1b: Learn filter types ──────────────────────────────────────────────
   // Flow: enableAll → toggle OFF each filter one by one (cumulative, no re-enable)
   // After last (MIDI) Logic auto-restores all filters when all are OFF
-  if (channels.length > 0 && window.api && !window._scanCancelled) {
+  if (channels.length > 0 && window.api && !window._scanCancelled && !_skipFilterScan) {
     const filterNames = MF_ALL_NAMES.filter(n => n in _mixerFilters);
     if (filterNames.length > 0) {
       log('Learning channel types…', 'info');
@@ -2568,6 +2635,7 @@ function loadDemo() {
 // ═══════════════════════════════════════════════════
 let channelFilter = (() => { const v = localStorage.getItem('sb4_ch_filter'); return (v === 'hidden') ? 'hidden' : 'all'; })(); // 'hidden', 'all'
 let _mixerChCollapsed = localStorage.getItem('eb_mixer_ch_collapsed') !== '0'; // default: collapsed
+let _skipFilterScan = localStorage.getItem('eb_skip_filter_scan') === '1'; // skip Step 1b type-learning loop
 let _scanInitDone = false; // mixer check + filter setup only on first scan
 
 // ═══════════════════════════════════════════════════
@@ -2678,7 +2746,8 @@ async function toggleMixerFilter(name) {
     }
   }
 
-  // 3. Toggle in Logic (AX — no focus steal; mixer filter click doesn't need window focus)
+  // 3. Toggle in Logic (AX) — skip when filter scan is disabled (⊘ mode)
+  if (_skipFilterScan) { _mfToggling = false; return; }
   let _mfResult = null;
   try {
     _mfResult = await window.api.mixerFilterToggle(name);
@@ -2799,6 +2868,13 @@ async function enableAllMixerFilters() {
   }
 }
 
+function toggleSkipFilterScan() {
+  _skipFilterScan = !_skipFilterScan;
+  localStorage.setItem('eb_skip_filter_scan', _skipFilterScan ? '1' : '0');
+  renderMixerFilters();
+  if (!_skipFilterScan) _learnFilterTypes();
+}
+
 function renderMixerFilters() {
   const el = document.getElementById('mixer-filters');
   const hint = document.getElementById('mixer-filters-hint');
@@ -2822,13 +2898,15 @@ function renderMixerFilters() {
   const names = [...known, ...extra];
   el.style.display = 'flex';
   if (hint) hint.style.display = 'none';
+  const skipBtn = `<button onclick="toggleSkipFilterScan()" title="${_skipFilterScan ? 'Filter scan disabled — click to re-enable' : 'Click to skip filter type scan (faster)'}" style="margin-left:2px;padding:2px 6px;border-radius:5px;border:1px solid ${_skipFilterScan ? 'rgba(255,100,100,.4)' : 'rgba(255,255,255,.13)'};background:${_skipFilterScan ? 'rgba(255,80,80,.13)' : 'rgba(255,255,255,.05)'};color:${_skipFilterScan ? '#ff6464' : 'rgba(255,255,255,.4)'};font-size:12px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;width:20px;height:20px;flex-shrink:0;transition:all .15s;">${_skipFilterScan ? '⊘' : '🔍'}</button>`;
   el.innerHTML = '<span class="mf-label">MIXER</span>' + names.map(name => {
     const on = _mixerFilters[name];
     return `<button class="mf-btn ${on ? 'on' : 'off'}"
       onclick="toggleMixerFilter('${name.replace(/'/g, "\\'")}')"
-      title="${on ? 'Click to hide' : 'Click to show'} ${name} channels"
+      title="${_skipFilterScan ? 'Enable filter scan (🔍) to use filters' : (on ? 'Click to hide' : 'Click to show') + ' ' + name + ' channels'}"
+      style="${_skipFilterScan ? 'pointer-events:none;opacity:.3;' : ''}"
     >${name}</button>`;
-  }).join('');
+  }).join('') + skipBtn;
   // Also refresh modal filters if mix modal is open
   if (typeof renderMixModalFilters === 'function') renderMixModalFilters();
 }
