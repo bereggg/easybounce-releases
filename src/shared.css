@@ -1,0 +1,345 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   EasyBounce — Shared Design System
+   Single source of truth for: index.html, mini.html, overlay.html, accessibility.html
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ─────────────────────────────────────────────────────────────────
+     COLOR PALETTE
+     ───────────────────────────────────────────────────────────────── */
+
+  /* Surface colors — warm black scale (consistent between main/mini/overlay) */
+  --bg:        #1C1C1A;          /* App background */
+  --s:         #252523;           /* Titlebar, elevated surface */
+  --card:      #2E2E2B;           /* Cards, input fields */
+  --card2:     #3A3A37;           /* Modal backgrounds */
+  --b:         #444441;           /* Borders */
+  --b2:        #4E4E4A;           /* Hover borders */
+
+  /* Primary brand colors (YOUR palette — eggplant + terracotta) */
+  --accent:    #7B4FBF;           /* Primary violet — brand */
+  --a2:        #D4621A;           /* Terracotta — secondary */
+  --a3:        #4A8C1C;           /* Success green */
+  --teal:      #1A7A6E;           /* Teal — stems/groups */
+
+  /* Semantic colors */
+  --warn:      #D4621A;           /* Same as a2 — deliberate: warning = action-color */
+  --red:       #FF4757;           /* Destructive */
+  --success:   #1DB954;           /* Completion (Spotify-style green) */
+
+  /* Text hierarchy */
+  --text:      #D4D2C8;           /* Primary text — warm off-white */
+  --t2:        #8A8A84;           /* Secondary text (fixed: was too close to --muted) */
+  --muted:     #55554F;           /* Muted text (fixed: was same as --b) */
+  --disabled:  #3A3A37;           /* Disabled text */
+
+  /* ─────────────────────────────────────────────────────────────────
+     ALPHA TOKENS — shadows, glows, transparency
+     Each color has pre-calculated rgba values so you never hardcode again
+     ───────────────────────────────────────────────────────────────── */
+
+  /* Accent rgba — violet */
+  --accent-rgb:  123, 79, 191;
+  --accent-a05:  rgba(123, 79, 191, 0.05);
+  --accent-a08:  rgba(123, 79, 191, 0.08);
+  --accent-a12:  rgba(123, 79, 191, 0.12);
+  --accent-a20:  rgba(123, 79, 191, 0.20);
+  --accent-a30:  rgba(123, 79, 191, 0.30);
+  --accent-a40:  rgba(123, 79, 191, 0.40);
+  --accent-a60:  rgba(123, 79, 191, 0.60);
+
+  /* A2 rgba — terracotta */
+  --a2-rgb:      212, 98, 26;
+  --a2-a08:      rgba(212, 98, 26, 0.08);
+  --a2-a12:      rgba(212, 98, 26, 0.12);
+  --a2-a20:      rgba(212, 98, 26, 0.20);
+  --a2-a30:      rgba(212, 98, 26, 0.30);
+  --a2-a40:      rgba(212, 98, 26, 0.40);
+
+  /* Teal rgba — stems */
+  --teal-rgb:    26, 122, 110;
+  --teal-a08:    rgba(26, 122, 110, 0.08);
+  --teal-a20:    rgba(26, 122, 110, 0.20);
+  --teal-a30:    rgba(26, 122, 110, 0.30);
+
+  /* Red rgba — destructive */
+  --red-a08:     rgba(255, 71, 87, 0.08);
+  --red-a15:     rgba(255, 71, 87, 0.15);
+  --red-a30:     rgba(255, 71, 87, 0.30);
+  --red-a50:     rgba(255, 71, 87, 0.50);
+
+  /* Success rgba */
+  --success-a15: rgba(29, 185, 84, 0.15);
+  --success-a40: rgba(29, 185, 84, 0.40);
+
+  /* White overlays — for inner highlights, glass surfaces */
+  --w-a03:       rgba(255, 255, 255, 0.03);
+  --w-a05:       rgba(255, 255, 255, 0.05);
+  --w-a08:       rgba(255, 255, 255, 0.08);
+  --w-a12:       rgba(255, 255, 255, 0.12);
+  --w-a20:       rgba(255, 255, 255, 0.20);
+
+  /* ─────────────────────────────────────────────────────────────────
+     GRADIENTS — exactly 3 functional gradients (reduced from 6)
+     ───────────────────────────────────────────────────────────────── */
+
+  --g-primary:   linear-gradient(135deg, #7B4FBF 0%, #D4621A 100%);  /* CTAs */
+  --g-success:   linear-gradient(135deg, #1DB954 0%, #17A349 100%);  /* Success states */
+  --g-running:   linear-gradient(135deg, #D4621A 0%, #FF6B35 100%);  /* In-progress */
+
+  /* Stem-tag special gradient — violet→teal, used ONLY for group tags */
+  --g-stem:      linear-gradient(135deg, #7B4FBF 0%, #1A7A6E 100%);
+
+  /* ─────────────────────────────────────────────────────────────────
+     TYPOGRAPHY SCALE
+     Relies on locally-loaded fonts (Inter, Space Grotesk, JetBrains Mono)
+     ───────────────────────────────────────────────────────────────── */
+
+  --font-ui:     'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-display:'Space Grotesk', -apple-system, sans-serif;
+  --font-mono:   'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
+
+  /* Size scale — 7 levels, no in-between values */
+  --fs-xxs:  9px;    /* Micro labels (sec-title, stat-lbl) */
+  --fs-xs:   10px;   /* Small labels (tags, metadata) */
+  --fs-sm:   11px;   /* Secondary UI text */
+  --fs-base: 13px;   /* Primary UI text (DEFAULT) */
+  --fs-md:   15px;   /* Emphasized UI */
+  --fs-lg:   18px;   /* Section titles */
+  --fs-xl:   24px;   /* Stat values */
+  --fs-xxl:  32px;   /* Hero numbers */
+
+  /* Weight scale */
+  --fw-normal:   400;
+  --fw-medium:   500;
+  --fw-semi:     600;
+  --fw-bold:     700;
+  --fw-xbold:    800;
+
+  /* Letter-spacing — 2 systems */
+  --ls-tight:    -0.02em;   /* Headlines, large text */
+  --ls-normal:   -0.01em;   /* UI text */
+  --ls-wide:     0.06em;    /* Small caps, badges */
+  --ls-xwide:    0.10em;    /* Emphasized small caps */
+
+  /* Line heights */
+  --lh-tight:    1.2;
+  --lh-normal:   1.5;
+  --lh-relaxed:  1.7;
+
+  /* ─────────────────────────────────────────────────────────────────
+     SPACING, RADIUS, BORDERS
+     ───────────────────────────────────────────────────────────────── */
+
+  --r-xs:    4px;
+  --r-sm:    6px;
+  --r:       10px;
+  --r2:      16px;
+  --r3:      24px;
+  --r-pill:  999px;
+
+  /* ─────────────────────────────────────────────────────────────────
+     SHADOWS — semantic, reusable
+     ───────────────────────────────────────────────────────────────── */
+
+  --sh-card:     0 2px 8px rgba(0,0,0,0.25);
+  --sh-raised:   0 4px 16px rgba(0,0,0,0.35);
+  --sh-float:    0 8px 32px rgba(0,0,0,0.45);
+  --sh-modal:    0 20px 60px rgba(0,0,0,0.60);
+
+  /* Accent glow — 3 intensities */
+  --sh-glow-sm:  0 4px 12px var(--accent-a30);
+  --sh-glow-md:  0 8px 24px var(--accent-a40);
+  --sh-glow-lg:  0 12px 40px var(--accent-a60);
+
+  /* Inner highlight (1px top highlight — the secret to premium feel) */
+  --sh-inset:    inset 0 1px 0 var(--w-a12);
+
+  /* ─────────────────────────────────────────────────────────────────
+     MOTION — timing tokens
+     ───────────────────────────────────────────────────────────────── */
+
+  --t-instant:   0.12s;
+  --t-fast:      0.18s;
+  --t-base:      0.22s;
+  --t-slow:      0.35s;
+  --t-slower:    0.6s;
+
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);      /* Snappy out */
+  --ease-in-out: cubic-bezier(0.25, 0.1, 0.25, 1);   /* Standard */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);  /* Overshoot — use sparingly */
+
+  /* ─────────────────────────────────────────────────────────────────
+     Z-INDEX scale
+     ───────────────────────────────────────────────────────────────── */
+
+  --z-base:      1;
+  --z-dropdown:  100;
+  --z-sticky:    200;
+  --z-overlay:   1000;
+  --z-modal:     5000;
+  --z-toast:     9000;
+  --z-critical:  10000;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UNIFIED KEYFRAMES — use these, delete duplicates in component files
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes eb-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+
+@keyframes eb-pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-a30); }
+  50%      { box-shadow: 0 0 0 6px transparent; }
+}
+
+@keyframes eb-pulse-dot {
+  from { box-shadow: 0 0 4px var(--a2-a30); opacity: 0.85; }
+  to   { box-shadow: 0 0 12px var(--a2-a40), 0 0 20px var(--a2-a20); opacity: 1; }
+}
+
+@keyframes eb-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes eb-fade-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes eb-fade-out {
+  to { opacity: 0; transform: translateY(-5px) scale(0.96); }
+}
+
+@keyframes eb-pop {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+
+@keyframes eb-row-flash {
+  0%   { background: var(--success-a15); }
+  100% { background: transparent; }
+}
+
+/* Mini-widget progress dot — calm breathing, not panic */
+@keyframes eb-breathe {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.05); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILITY CLASSES — reusable, apply-anywhere
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Icon base class ─────────────────────────────────────────────────── */
+.ico {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  vertical-align: -2px;
+  fill: currentColor;
+  stroke: currentColor;
+}
+.ico-sm { width: 11px; height: 11px; }
+.ico-md { width: 16px; height: 16px; }
+.ico-lg { width: 20px; height: 20px; }
+.ico-xl { width: 28px; height: 28px; }
+.ico-hero { width: 48px; height: 48px; }
+
+/* ── Modal close button — unified (replaces all inline ✕ buttons) ────── */
+.eb-close {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--t-fast);
+  padding: 0;
+  -webkit-app-region: no-drag;
+}
+.eb-close:hover {
+  background: var(--red-a15);
+  color: var(--red);
+  border-color: var(--red-a30);
+}
+
+/* ── Success badge — unified (replaces scan-done-badge, fmt-saved-badge) */
+.eb-success-badge {
+  background: var(--g-success);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  padding: 14px 32px;
+  border-radius: var(--r2);
+  box-shadow: 0 8px 40px var(--success-a40), var(--sh-card);
+  letter-spacing: var(--ls-normal);
+}
+
+/* ── Section label (small caps) ──────────────────────────────────────── */
+.eb-label {
+  font-size: var(--fs-xxs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-xwide);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ── Pulse on element requiring attention ────────────────────────────── */
+.eb-needs-attention {
+  animation: eb-pulse-glow 2.2s ease-in-out infinite;
+}
+
+/* ── Small-caps tag/badge ────────────────────────────────────────────── */
+.eb-tag {
+  font-size: var(--fs-xxs);
+  font-weight: var(--fw-bold);
+  padding: 2px 7px;
+  border-radius: var(--r-pill);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.eb-tag--stem    { background: var(--teal-a08);   color: var(--a3);     border-color: var(--teal-a20); }
+.eb-tag--mix     { background: var(--accent-a12); color: var(--accent); border-color: var(--accent-a20); }
+.eb-tag--warn    { background: var(--a2-a12);     color: var(--warn);   border-color: var(--a2-a20); }
+.eb-tag--group   { background: var(--g-stem);     color: #fff;          box-shadow: var(--sh-card); }
+
+/* ── Scroll bars — subtle, consistent ────────────────────────────────── */
+.eb-scroll::-webkit-scrollbar        { width: 4px; height: 4px; }
+.eb-scroll::-webkit-scrollbar-thumb  { background: var(--b2); border-radius: 2px; }
+.eb-scroll::-webkit-scrollbar-track  { background: transparent; }
+
+/* ── Font smoothing — apply to body ──────────────────────────────────── */
+.eb-smooth {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   REDUCED MOTION — accessibility
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

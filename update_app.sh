@@ -49,6 +49,9 @@ cp "$SRC/src/index.html" ea/src/index.html
 mkdir -p ea/src/fonts
 cp $SRC/src/fonts/*.woff2 ea/src/fonts/
 cp "$SRC/src/overlay.html" ea/src/overlay.html
+cp "$SRC/src/mini.html" ea/src/mini.html
+cp "$SRC/src/shared.css" ea/src/shared.css
+cp "$SRC/src/icons-sprite.svg" ea/src/icons-sprite.svg
 # Sync node_modules (dependencies needed at runtime: @sendgrid, electron-updater)
 mkdir -p ea/node_modules
 # no extra npm packages needed — email uses native fetch
