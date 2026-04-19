@@ -203,14 +203,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .bbtn::after{content:'';position:absolute;top:-50%;left:-60%;width:40%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);transform:skewX(-20deg);pointer-events:none;animation:none;}
 .bbtn.ready::after{animation:shimmer 3s ease-in-out infinite;}
 @keyframes shimmer{0%{left:-60%}100%{left:120%}}
-.bbtn:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(108,99,255,.5),inset 0 1px 0 rgba(255,255,255,.25);}
+.bbtn:not(.running):not(.off):hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(108,99,255,.5),inset 0 1px 0 rgba(255,255,255,.25);}
 .bbtn:active{transform:translateY(0);}
 .bbtn.ready{animation:bounce-ready 2s ease-in-out infinite;}
 @keyframes done-flash{0%{background:var(--card)}40%{background:rgba(74,140,28,.2)}100%{background:var(--card)}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 @keyframes bounce-ready{0%,100%{box-shadow:0 8px 32px rgba(108,99,255,.4),inset 0 1px 0 rgba(255,255,255,.2);}50%{box-shadow:0 12px 48px rgba(108,99,255,.7),inset 0 1px 0 rgba(255,255,255,.3);transform:translateY(-1px);}}
-.bbtn.running{background:linear-gradient(160deg,var(--warn),#ff6b35)!important;box-shadow:0 8px 32px rgba(255,169,77,.4),inset 0 1px 0 rgba(255,255,255,.2)!important;animation:pulse-glow .9s ease-in-out infinite alternate;}
-.bbtn.off{background:var(--card)!important;color:var(--muted)!important;box-shadow:none!important;cursor:not-allowed;transform:none!important;border:1px solid var(--b);}
+.bbtn.running{background:linear-gradient(160deg,var(--warn),#ff6b35);box-shadow:0 8px 32px rgba(255,169,77,.4),inset 0 1px 0 rgba(255,255,255,.2);animation:pulse-glow .9s ease-in-out infinite alternate;}
+.bbtn.off{background:var(--card);color:var(--muted);box-shadow:none;cursor:not-allowed;transform:none;border:1px solid var(--b);}
 .bbtn.off::before{display:none;}
 @keyframes pulse-stems{from{box-shadow:0 0 0 rgba(74,140,28,0)}to{box-shadow:0 0 12px rgba(74,140,28,.5)}}
 @keyframes pulse-glow{from{box-shadow:0 4px 16px rgba(255,169,77,.2);}to{box-shadow:0 12px 40px rgba(255,169,77,.55),inset 0 1px 0 rgba(255,255,255,.2);}}
@@ -544,17 +544,12 @@ body.easy #skin-panel{z-index:9000;}
 .qarr-head{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:8px solid var(--accent);filter:drop-shadow(0 0 5px rgba(108,99,255,.8));}
 .qarr-shaft{height:2px;width:26px;background:linear-gradient(to right,rgba(108,99,255,.15),var(--accent));border-radius:2px 0 0 2px;}
 /* ── Scan complete overlay ─────────────────────────────── */
-#scan-done-overlay{display:none;position:fixed;top:38px;left:0;right:0;bottom:0;z-index:9998;pointer-events:none;align-items:center;justify-content:center;}
-#scan-done-overlay.show{display:flex;}
-#scan-done-badge{background:linear-gradient(135deg,#1db954,#17a349);color:#fff;font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;padding:18px 40px;border-radius:16px;box-shadow:0 8px 40px rgba(29,185,84,.5),0 2px 8px rgba(0,0,0,.4);letter-spacing:.02em;opacity:0;transform:scale(.92) translateY(8px);transition:opacity .25s,transform .25s;}
-#scan-done-overlay.show #scan-done-badge{opacity:1;transform:scale(1) translateY(0);}
-#scan-done-overlay.hide #scan-done-badge{opacity:0;transform:scale(.92) translateY(-8px);}
-/* ── Format saved overlay (same style as scan-done) ────── */
-#fmt-saved-overlay{display:none;position:fixed;top:38px;left:0;right:0;bottom:0;z-index:9998;pointer-events:none;align-items:center;justify-content:center;}
-#fmt-saved-overlay.show{display:flex;}
-#fmt-saved-badge{background:linear-gradient(135deg,#1db954,#17a349);color:#fff;font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;padding:18px 40px;border-radius:16px;box-shadow:0 8px 40px rgba(29,185,84,.5),0 2px 8px rgba(0,0,0,.4);letter-spacing:.02em;opacity:0;transform:scale(.92) translateY(8px);transition:opacity .25s,transform .25s;}
-#fmt-saved-overlay.show #fmt-saved-badge{opacity:1;transform:scale(1) translateY(0);}
-#fmt-saved-overlay.hide #fmt-saved-badge{opacity:0;transform:scale(.92) translateY(-8px);}
+/* ── Unified success overlay + badge (used by scan-done and fmt-saved) ── */
+#scan-done-overlay,#fmt-saved-overlay{display:none;position:fixed;top:38px;left:0;right:0;bottom:0;z-index:9998;pointer-events:none;align-items:center;justify-content:center;}
+#scan-done-overlay.show,#fmt-saved-overlay.show{display:flex;}
+#scan-done-badge,#fmt-saved-badge{background:linear-gradient(135deg,#1db954,#17a349);color:#fff;font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;padding:18px 40px;border-radius:16px;box-shadow:0 8px 40px rgba(29,185,84,.5),0 2px 8px rgba(0,0,0,.4);letter-spacing:.02em;opacity:0;transform:scale(.92) translateY(8px);transition:opacity .25s,transform .25s;}
+#scan-done-overlay.show #scan-done-badge,#fmt-saved-overlay.show #fmt-saved-badge{opacity:1;transform:scale(1) translateY(0);}
+#scan-done-overlay.hide #scan-done-badge,#fmt-saved-overlay.hide #fmt-saved-badge{opacity:0;transform:scale(.92) translateY(-8px);}
 /* ── Bounce button "ready" pulse after format saved ─────── */
 @keyframes bbtn-fmt-ready{0%,100%{box-shadow:0 8px 32px rgba(108,99,255,.4),inset 0 1px 0 rgba(255,255,255,.2);}50%{box-shadow:0 10px 44px rgba(108,99,255,.65),0 0 0 3px rgba(108,99,255,.15),inset 0 1px 0 rgba(255,255,255,.25);}}
 .bbtn.fmt-ready:not(.off):not(.running){animation:bbtn-fmt-ready 2s ease-in-out infinite!important;}
@@ -683,7 +678,7 @@ body.mini-mode{background:transparent!important;}
       <div class="mini-time" id="mini-eta">—:——</div>
       <div class="mini-cnt" id="mini-counter">—/—</div>
       <button class="mini-ibtn mini-expand" onclick="exitMiniMode()" title="Expand back">⊞</button>
-      <button class="mini-ibtn mini-cancel" onclick="cancelBounce()" title="Cancel bounce">✕</button>
+      <button class="mini-ibtn mini-cancel" onclick="cancelBounce()" title="Cancel bounce"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
     <div class="mini-bar"><div class="mini-fill-bar" id="mini-fill"></div></div>
   </div>
@@ -735,7 +730,7 @@ body.mini-mode{background:transparent!important;}
     <div class="scroll" id="ch-list"><div class="empty-hint" id="ch-empty">Hit Scan Logic above<br>to load your channels</div></div>
     <div class="ch-footer">
       <button class="foot-btn sm" onclick="selectAllChannels()" title="Select all visible channels">All</button>
-      <button class="foot-btn sm" id="clear-sel-btn" onclick="clearSel()" title="Deselect all" style="display:none;">✕</button>
+      <button class="foot-btn sm" id="clear-sel-btn" onclick="clearSel()" title="Deselect all" style="display:none;"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
       <div class="stems-wrap" id="stems-wrap">
         <button id="merge-btn" title="Bounce 2+ selected channels as one merged file" onclick="openMergeModal()">⊕ Merge</button>
         <button class="foot-btn" id="add-stems-btn" title="Add all selected channels to bounce queue" onclick="addSelAsStems()">+ Stems</button>
@@ -769,7 +764,7 @@ body.mini-mode{background:transparent!important;}
                 <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 7s2-4 6-4 6 4 6 4-2 4-6 4-6-4-6-4z"/><circle cx="7" cy="7" r="1.6"/><line x1="2" y1="2" x2="12" y2="12" class="hidden-slash" style="display:none;"/></svg>
                 Hidden
               </button>
-              <button onclick="toggleMarkersPopup()" title="Close" style="background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0 2px;line-height:1;transition:color .14s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+              <button onclick="toggleMarkersPopup()" title="Close" style="background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0 2px;line-height:1;transition:color .14s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
             </div>
             <div id="markers-popup-list" style="max-height:260px;overflow-y:auto;padding:4px 0;">
               <div style="color:var(--muted);font-size:10px;padding:6px 10px;">No markers scanned yet</div>
@@ -850,12 +845,12 @@ body.mini-mode{background:transparent!important;}
           <button id="reveal-btn-main" onclick="revealStems()" title="Open output folder in Finder" style="flex:1;padding:8px;border-radius:var(--r);border:1px solid rgba(74,140,28,.4);background:rgba(74,140,28,.08);color:var(--a3);font-size:12px;font-weight:600;cursor:pointer;transition:all .16s;font-family:'Space Grotesk',sans-serif;">
             📂 Open folder in Finder
           </button>
-          <button onclick="document.getElementById('reveal-btn').style.display='none'" title="Close" style="padding:8px 10px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:12px;cursor:pointer;flex-shrink:0;">✕</button>
+          <button onclick="document.getElementById('reveal-btn').style.display='none'" title="Close" style="padding:8px 10px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:12px;cursor:pointer;flex-shrink:0;"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
         </div>
       </div>
       <div class="bounce-btns">
         <button class="bbtn off" id="bbtn" title="Start bouncing all items in queue" onclick="doBounce()">Bounce</button>
-        <button class="stop-btn" id="cancel-btn" title="Cancel bounce and stop Logic" onclick="cancelBounce()">✕</button>
+        <button class="stop-btn" id="cancel-btn" title="Cancel bounce and stop Logic" onclick="cancelBounce()"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
         <button id="mini-btn" title="Minimize to floating widget" onclick="showMiniPlayer()" style="display:none;width:54px;height:54px;border-radius:var(--r2);border:1px solid rgba(108,99,255,.3);background:rgba(108,99,255,.08);color:var(--accent);font-size:20px;cursor:pointer;transition:all .16s;flex-shrink:0;align-items:center;justify-content:center;">⊟</button>
         <button id="retry-btn" title="Retry failed or cancelled bounce" onclick="retryBounce()" style="display:none;width:54px;height:54px;border-radius:var(--r2);border:1px solid rgba(255,169,77,.4);background:rgba(255,169,77,.1);color:var(--warn);font-size:22px;cursor:pointer;transition:all .16s;flex-shrink:0;align-items:center;justify-content:center;">↺</button>
         <button id="redo-all-btn" title="Reset all bounced items and bounce again" onclick="redoAllBounce()" style="display:none;height:54px;padding:0 16px;border-radius:var(--r2);border:1px solid rgba(74,140,28,.4);background:rgba(74,140,28,.08);color:var(--a3);font-size:12px;font-weight:700;cursor:pointer;transition:all .16s;flex-shrink:0;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;letter-spacing:.04em;">↻ Redo All</button>
@@ -875,7 +870,7 @@ body.mini-mode{background:transparent!important;}
       <!-- Alert row: mini (easy mode) -->
       <div id="alert-row-mini" style="display:flex;margin-top:6px;position:relative;align-items:center;justify-content:flex-end;gap:4px;">
         <button id="notif-btn" title="Notification settings (Telegram / Email)" onclick="showNotifModal()" style="padding:4px 9px;border-radius:var(--r);border:1px solid rgba(29,158,117,.35);background:rgba(29,158,117,.08);color:var(--a3);font-size:14px;cursor:pointer;display:flex;align-items:center;gap:4px;font-family:'JetBrains Mono',monospace;opacity:.85;transition:all .15s;" onmouseover="this.style.opacity='1';this.style.borderColor='rgba(29,158,117,.6)'" onmouseout="this.style.opacity='.85';this.style.borderColor='rgba(29,158,117,.35)'"><span id="notif-btn-icon" style="font-size:16px;line-height:1;">📨</span></button>
-        <button id="schedule-btn" class="em-hide" title="Schedule bounce for later" onclick="showScheduleModal()" style="padding:3px 7px;border-radius:var(--r);border:1px solid rgba(108,99,255,.25);background:rgba(108,99,255,.06);color:var(--accent);font-size:15px;cursor:pointer;display:flex;align-items:center;gap:3px;font-family:'JetBrains Mono',monospace;opacity:.7;transition:opacity .15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.7'">⏰</button>
+        <button id="schedule-btn" class="em-hide" title="Schedule bounce for later" onclick="showScheduleModal()" style="padding:3px 7px;border-radius:var(--r);border:1px solid rgba(108,99,255,.25);background:rgba(108,99,255,.06);color:var(--accent);cursor:pointer;display:flex;align-items:center;gap:3px;opacity:.7;transition:opacity .15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.7'"><svg class="ico"><use href="#ico-clock"/></svg></button>
         <button onclick="toggleBellPopover()" id="bell-mini-btn" title="Alert sound" style="padding:3px 7px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;gap:3px;font-family:'JetBrains Mono',monospace;opacity:.7;transition:opacity .15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.7'">
           <span id="bell-mini-icon" style="display:flex;align-items:center;"><svg class="ico"><use href="#ico-bell"/></svg></span>
           <span style="font-size:8px;color:var(--muted);">▾</span>
@@ -959,7 +954,7 @@ body.mini-mode{background:transparent!important;}
               <span onclick="switchFmtTabView('mp3')">MP3</span>
             </div>
           </div>
-          <button onclick="closeFormatModal()" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;line-height:1;">✕</button>
+          <button onclick="closeFormatModal()" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;line-height:1;"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
         </div>
         <div class="fmt-modal-body">
           <!-- Left: preset list -->
@@ -967,7 +962,7 @@ body.mini-mode{background:transparent!important;}
             <!-- rendered by JS -->
             <div class="fmt-preset-actions">
               <button onclick="addFormatPreset()" style="flex:1;padding:5px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;cursor:pointer;font-family:'JetBrains Mono',monospace;">+ Preset</button>
-              <button onclick="deleteFormatPreset()" style="flex:1;padding:5px;border-radius:var(--r);border:1px solid rgba(255,77,79,.3);background:rgba(255,77,79,.06);color:rgba(255,77,79,.7);font-size:10px;cursor:pointer;font-family:'JetBrains Mono',monospace;">✕ Del</button>
+              <button onclick="deleteFormatPreset()" style="flex:1;padding:5px;border-radius:var(--r);border:1px solid rgba(255,77,79,.3);background:rgba(255,77,79,.06);color:rgba(255,77,79,.7);font-size:10px;cursor:pointer;font-family:'JetBrains Mono',monospace;display:inline-flex;align-items:center;justify-content:center;gap:5px;"><svg class="ico ico-sm"><use href="#ico-trash"/></svg>Del</button>
             </div>
           </div>
           <!-- Right: settings editor -->
@@ -1095,14 +1090,14 @@ body.mini-mode{background:transparent!important;}
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
       <input id="mix-ch-search" type="text" placeholder="Search…" oninput="renderMixList()" style="min-width:0;width:0;flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:11px;padding:5px 8px;font-family:'JetBrains Mono',monospace;">
       <button id="mix-hidden-tab" onclick="toggleMixHiddenTab()" title="Show only hidden channels" style="padding:4px 10px;border-radius:var(--r2);border:1px solid var(--b2);background:var(--card2);color:var(--t2);font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:all .14s;flex-shrink:0;letter-spacing:.03em;">
-        <span id="mix-hidden-eye" style="font-size:12px;">👁</span><span>Hidden</span>
+        <span id="mix-hidden-eye" style="display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-eye"/></svg></span><span>Hidden</span>
       </button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
       <span style="font-size:10px;color:var(--muted);font-weight:600;flex:1;">Uncheck channels to MUTE for this mix</span>
       <button id="mix-tree-toggle-btn" onclick="mixToggleExpandAll()" style="padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;display:none;" title="Expand / Collapse all groups">▶▶</button>
       <button id="mix-toggle-all-btn" onclick="mixToggleAllNone()" oncontextmenu="event.preventDefault();mixHideShowAll();" style="padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Click: select all/none | Right-click: hide/show all">All</button>
-      <button id="mix-clear-sel-btn" onclick="_mixClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection">✕</button>
+      <button id="mix-clear-sel-btn" onclick="_mixClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
     <div class="tcb-list" id="mix-ch-list" style="flex:1;min-height:80px;max-height:none;"></div>
     <div class="modal-actions">
@@ -1121,14 +1116,14 @@ body.mini-mode{background:transparent!important;}
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-shrink:0;">
       <input id="esp-search" type="text" placeholder="Search channels…" oninput="_renderEspChannels()" style="flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:11px;padding:6px 10px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;">
       <button id="esp-hidden-tab" onclick="_espToggleHidden()" title="Show hidden channels" style="display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:11px;cursor:pointer;flex-shrink:0;white-space:nowrap;transition:all .14s;">
-        <span id="esp-hidden-eye" style="font-size:12px;">👁</span><span>Hidden</span>
+        <span id="esp-hidden-eye" style="display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-eye"/></svg></span><span>Hidden</span>
       </button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-shrink:0;">
       <span style="font-size:10px;color:var(--muted);font-weight:600;flex:1;">In preset: <span id="esp-stems-count" style="color:var(--accent);font-family:'JetBrains Mono',monospace;"></span></span>
       <button id="esp-tree-toggle-btn" onclick="_espToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">▶▶</button>
       <button id="esp-toggle-all-btn" onclick="_espToggleAllNone()" style="padding:2px 9px;border-radius:5px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;cursor:pointer;transition:all .14s;">All</button>
-      <button id="esp-clear-sel-btn" onclick="_espClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection">✕</button>
+      <button id="esp-clear-sel-btn" onclick="_espClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
     <div id="esp-channels-list" style="flex:1;min-height:80px;max-height:none;overflow-y:auto;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:4px 0;" class="scroll"></div>
     <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px;flex-shrink:0;">Add from other presets</div>
@@ -1155,7 +1150,7 @@ body.mini-mode{background:transparent!important;}
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-bottom:5px;">
       <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);flex:1;">Channels <span id="merge-ch-count" style="color:var(--accent);font-family:'JetBrains Mono',monospace;"></span></div>
       <button id="merge-tree-toggle-btn" onclick="_mergeToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">▶▶</button>
-      <button id="merge-clear-sel-btn" onclick="_mergeClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection">✕</button>
+      <button id="merge-clear-sel-btn" onclick="_mergeClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
     <input type="text" id="merge-ch-search" placeholder="Search channels…" oninput="_renderMergeChannelList()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:11px;padding:5px 9px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;flex-shrink:0;margin-bottom:5px;">
     <div id="merge-channels-list" style="flex:1;max-height:200px;overflow-y:auto;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:4px 0;margin-bottom:12px;"></div>
@@ -1197,7 +1192,7 @@ body.mini-mode{background:transparent!important;}
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
       <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);flex:1;">Add channels</div>
       <button id="eset-tree-toggle-btn" onclick="_esetToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">▶▶</button>
-      <button id="eset-clear-sel-btn" onclick="_esetClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection">✕</button>
+      <button id="eset-clear-sel-btn" onclick="_esetClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
     <div id="eset-modal-filters" style="display:none;align-items:center;gap:3px;flex-wrap:wrap;padding:2px 0;margin-bottom:3px;flex-shrink:0;"></div>
     <input type="text" id="eset-ch-search" placeholder="Search channels…" oninput="_esetRenderChannels()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:11px;padding:5px 9px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;flex-shrink:0;">
@@ -1264,7 +1259,7 @@ body.mini-mode{background:transparent!important;}
         <div id="mp-status-dot" style="width:8px;height:8px;border-radius:50%;background:#ff4757;flex-shrink:0;"></div>
         <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;">Master Plugins</span>
         <button id="mp-refresh" onclick="loadMasterPlugins(true)" style="margin-left:auto;display:flex;align-items:center;gap:5px;background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.25);color:#a89fff;font-size:10px;font-weight:700;cursor:pointer;padding:4px 10px;border-radius:6px;letter-spacing:.04em;transition:all .14s;" onmouseover="this.style.background='rgba(108,99,255,.2)'" onmouseout="this.style.background='rgba(108,99,255,.1)'" title="Scroll to master channel in Logic and re-read plugins">⟳ Reconnect</button>
-        <button onclick="closeMasterPluginsModal()" style="background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0;line-height:1;transition:color .14s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+        <button onclick="closeMasterPluginsModal()" style="background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0;line-height:1;transition:color .14s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
       </div>
       <div id="mp-grid" style="max-height:300px;overflow-y:auto;">
         <div style="padding:16px 14px;color:var(--muted);font-size:11px;">Plugins are loaded automatically during scan</div>
@@ -1280,7 +1275,7 @@ body.mini-mode{background:transparent!important;}
 <div id="skin-panel">
   <div class="skin-hdr" style="display:flex;align-items:center;">
     <span style="flex:1;">Choose Theme</span>
-    <button onclick="closeSkinPanel()" title="Close" style="background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0 2px;line-height:1;transition:color .14s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+    <button onclick="closeSkinPanel()" title="Close" style="background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0 2px;line-height:1;transition:color .14s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
   </div>
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;" id="skin-grid" class="skin-grid"></div>
 </div>
@@ -1318,7 +1313,7 @@ body.mini-mode{background:transparent!important;}
 </div>
 <div class="overlay" id="schedule-modal">
   <div class="modal" style="width:380px;">
-    <div class="modal-hdr">⏰ Schedule Bounce</div>
+    <div class="modal-hdr"><svg class="ico" style="vertical-align:-3px;margin-right:6px;"><use href="#ico-clock"/></svg>Schedule Bounce</div>
     <div class="mfield">
       <label>Start at</label>
       <input type="time" id="schedule-time" style="background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:14px;padding:6px 10px;font-family:'JetBrains Mono',monospace;width:100%;box-sizing:border-box;">
@@ -3832,7 +3827,7 @@ function editStemPreset(id) {
   const hBtn = document.getElementById('esp-hidden-tab');
   const hEye = document.getElementById('esp-hidden-eye');
   if (hBtn) { hBtn.style.background='var(--card)'; hBtn.style.color='var(--muted)'; hBtn.style.borderColor='var(--b)'; }
-  if (hEye) hEye.textContent = '👁';
+  if (hEye) hEye.innerHTML = '<svg class="ico ico-sm"><use href="#ico-eye"/></svg>';
   _renderEspFilters();
   _renderEspQuickNames();
   _renderEspStems();
@@ -4320,7 +4315,7 @@ function _espToggleHidden() {
     btn.style.color         = _espShowHiddenOnly ? 'var(--accent)'        : 'var(--muted)';
     btn.style.borderColor   = _espShowHiddenOnly ? 'rgba(108,99,255,.4)'  : 'var(--b)';
   }
-  if (eye) eye.textContent = _espShowHiddenOnly ? '🙈' : '👁';
+  if (eye) eye.innerHTML = _espShowHiddenOnly ? '<svg class="ico ico-sm"><use href="#ico-eye-off"/></svg>' : '<svg class="ico ico-sm"><use href="#ico-eye"/></svg>';
   _renderEspChannels();
 }
 
@@ -5787,7 +5782,7 @@ function _renderEgChannels() {
     `<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid rgba(255,255,255,.03);">
       <div style="width:7px;height:7px;border-radius:50%;background:${c.color || 'var(--t2)'};flex-shrink:0;"></div>
       <span style="flex:1;font-size:12px;color:var(--text);">♪ ${c.name}</span>
-      <button onclick="_egRemoveChannel(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 2px;line-height:1;transition:color .12s;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+      <button onclick="_egRemoveChannel(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 2px;line-height:1;transition:color .12s;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>`
   ).join('');
 }
@@ -5853,7 +5848,7 @@ function editQueueMix(queueId) {
   const _mhBtn = document.getElementById('mix-hidden-tab');
   const _mhEye = document.getElementById('mix-hidden-eye');
   if (_mhBtn) { _mhBtn.style.background = 'var(--card)'; _mhBtn.style.color = 'var(--muted)'; }
-  if (_mhEye) _mhEye.textContent = '👁';
+  if (_mhEye) _mhEye.innerHTML = '<svg class="ico ico-sm"><use href="#ico-eye"/></svg>';
   renderMixList(item.mutedIndices || []); // resets mixMutedSet
   renderVersionNameChips();
   document.getElementById('mix-modal').classList.add('show');
@@ -5887,7 +5882,7 @@ function openMixModal(editId, mutedIndicesOverride) {
   const _mhBtn = document.getElementById('mix-hidden-tab');
   const _mhEye = document.getElementById('mix-hidden-eye');
   if (_mhBtn) { _mhBtn.style.background = 'var(--card)'; _mhBtn.style.color = 'var(--muted)'; }
-  if (_mhEye) _mhEye.textContent = '👁';
+  if (_mhEye) _mhEye.innerHTML = '<svg class="ico ico-sm"><use href="#ico-eye"/></svg>';
   document.getElementById('mix-add-btn').textContent = 'Add to Queue';
   renderMixList(checkedIndices); // resets mixMutedSet from checkedIndices
   renderVersionNameChips();
@@ -6072,7 +6067,7 @@ function toggleMixHiddenTab() {
   const eye = document.getElementById('mix-hidden-eye');
   if (btn) btn.style.background = _versionShowHiddenOnly ? 'rgba(108,99,255,.18)' : 'var(--card)';
   if (btn) btn.style.color = _versionShowHiddenOnly ? 'var(--accent)' : 'var(--muted)';
-  if (eye) eye.textContent = _versionShowHiddenOnly ? '🚫' : '👁';
+  if (eye) eye.innerHTML = _versionShowHiddenOnly ? '<svg class="ico ico-sm"><use href="#ico-eye-off"/></svg>' : '<svg class="ico ico-sm"><use href="#ico-eye"/></svg>';
   renderMixList();
 }
 
@@ -6969,7 +6964,7 @@ function renderQueue() {
         <span style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${item.jobs.length} ${isStemPreset ? 'stems' : 'jobs'}</span>
         <div style="flex:1;"></div>
         <button class="qedit" title="Edit ${isStemPreset ? 'stems preset' : 'set'}" onclick="event.stopPropagation();${isStemPreset ? `_editQueueStemGroup('${item.id}')` : `openEditQueueSetModal('${item.id}')`}"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" width="10" height="10" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.5a1.5 1.5 0 012 2L5 12H2v-3L10 2.5z"/></svg></button>
-        <button class="qdel" title="Remove from queue" onclick="event.stopPropagation();removeQItem('${item.id}')">✕</button>
+        <button class="qdel" title="Remove from queue" onclick="event.stopPropagation();removeQItem('${item.id}')"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
       `;
       hdr.onclick = (e) => { if (e.target.closest('.qdel') || e.target.closest('.qedit')) return; item.expanded = !item.expanded; renderQueue(); };
       _attachQNameEdit(hdr.querySelector('.qname'), () => item.name, v => { item.name = v; });
@@ -7005,7 +7000,7 @@ function renderQueue() {
             </div>
             <div class="qst ${job.status||'pending'}">${job.status||'pending'}</div>
             ${editBtn}
-            <button class="qdel" onclick="event.stopPropagation();_setRemoveJob('${item.id}','${job.id}')">✕</button>
+            <button class="qdel" onclick="event.stopPropagation();_setRemoveJob('${item.id}','${job.id}')"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
           `;
           const jobNameEl = row.querySelector('.qname');
           if (jobNameEl && job.status === 'pending') _attachQNameEdit(jobNameEl, () => job.name, v => { job.name = v; });
@@ -7042,7 +7037,7 @@ function renderQueue() {
           ${(item.status === 'done' || item.status === 'error' || item.status === 'cancelled') ? `<button onclick="event.stopPropagation();resetQueueItem('${item.id}')" title="Reset to pending" style="width:20px;height:20px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .13s;line-height:1;" onmouseover="this.style.background='rgba(255,255,255,.14)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.55)'">↺</button>` : ''}
         </div>
         ${grpEditBtn}
-        <button class="qdel" onclick="event.stopPropagation();removeQItem('${item.id}')">✕</button>
+        <button class="qdel" onclick="event.stopPropagation();removeQItem('${item.id}')"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
       `;
       const grpNameEl = div.querySelector('.qname');
       if (grpNameEl && item.status === 'pending') _attachQNameEdit(grpNameEl, () => item.name, v => { item.name = v; });
@@ -7159,7 +7154,7 @@ function renderQueue() {
         ${(item.status === 'done' || item.status === 'error' || item.status === 'cancelled') ? `<button onclick="event.stopPropagation();resetQueueItem('${item.id}')" title="Reset to pending" style="width:20px;height:20px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .13s;line-height:1;" onmouseover="this.style.background='rgba(255,255,255,.14)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.55)'">↺</button>` : ''}
       </div>
       ${editBtn}
-      <button class="qdel" onclick="event.stopPropagation();removeQItem('${item.id}')">✕</button>
+      <button class="qdel" onclick="event.stopPropagation();removeQItem('${item.id}')"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     `;
     const stemNameEl = div.querySelector('.qname');
     if (stemNameEl && item.status === 'pending') _attachQNameEdit(stemNameEl, () => item.name, v => { item.name = v; });
@@ -10073,7 +10068,7 @@ function renderHistory() {
         <div class="hist-right">
           <span class="hist-arrow">▶</span>
           <button class="hist-repeat" onclick="event.stopPropagation();repeatSession(${s.id})" title="Re-add to queue">↺</button>
-          <button class="hist-del" onclick="event.stopPropagation();deleteHistorySession(${s.id})" title="Delete session">✕</button>
+          <button class="hist-del" onclick="event.stopPropagation();deleteHistorySession(${s.id})" title="Delete session"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
         </div>
       </div>
       <div class="hist-files" id="hf-${s.id}">${fmtHtml}${pluginsHtml}${filesSection}</div>
@@ -10705,7 +10700,18 @@ async function revealStems() {
 }
 
 let tt;
-function toast(msg){clearTimeout(tt);const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');tt=setTimeout(()=>el.classList.remove('show'),2800);}
+function toast(msg){
+  clearTimeout(tt);
+  const el=document.getElementById('toast');
+  let m = String(msg);
+  // Detect prefix emoji/symbol and render as SVG
+  let iconHtml = '';
+  if (m.startsWith('✓ ') || m.startsWith('✓')) { iconHtml = '<svg class="ico ico-sm" style="vertical-align:-2px;margin-right:6px;color:#1db954;"><use href="#ico-check"/></svg>'; m = m.replace(/^✓\s*/, ''); }
+  else if (m.startsWith('⚠ ') || m.startsWith('⚠')) { iconHtml = '<svg class="ico ico-sm" style="vertical-align:-2px;margin-right:6px;color:var(--warn);"><use href="#ico-warn"/></svg>'; m = m.replace(/^⚠\s*/, ''); }
+  el.innerHTML = iconHtml + _esc(m);
+  el.classList.add('show');
+  tt=setTimeout(()=>el.classList.remove('show'),2800);
+}
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 
 
@@ -12482,7 +12488,7 @@ async function submitFeedback() {
 <div id="trial-expired-overlay" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);align-items:center;justify-content:center;flex-direction:column;gap:0;font-family:'Space Grotesk',sans-serif;">
   <div style="width:360px;background:#111;border:1px solid #222;border-radius:20px;padding:36px 32px 28px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.8);position:relative;">
     <!-- Close button → goes to license/activate screen -->
-    <button onclick="document.getElementById('trial-expired-overlay').style.display='none';showLicenseOverlay();" style="position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;border:1px solid #333;background:#1a1a1a;color:#666;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit;line-height:1;" onmouseover="this.style.background='#2a2a2a';this.style.color='#aaa'" onmouseout="this.style.background='#1a1a1a';this.style.color='#666'">✕</button>
+    <button onclick="document.getElementById('trial-expired-overlay').style.display='none';showLicenseOverlay();" style="position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;border:1px solid #333;background:#1a1a1a;color:#666;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit;line-height:1;" onmouseover="this.style.background='#2a2a2a';this.style.color='#aaa'" onmouseout="this.style.background='#1a1a1a';this.style.color='#666'"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     <div style="margin-bottom:16px;color:var(--warn);display:flex;justify-content:center;"><svg class="ico" style="width:48px;height:48px;"><use href="#ico-clock"/></svg></div>
     <div style="font-size:22px;font-weight:700;color:#f0f0f0;margin-bottom:10px;letter-spacing:-.02em;">Your trial has ended</div>
     <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:28px;">7-day free trial is over.<br>Purchase a license to continue using EasyBounce.</div>
@@ -12490,8 +12496,8 @@ async function submitFeedback() {
     <div style="font-size:11px;color:#333;">Already have a key? <a href="#" onclick="document.getElementById('trial-expired-overlay').style.display='none';showLicenseOverlay()" style="color:#6c63ff;text-decoration:none;">Enter license key →</a></div>
   </div>
 </div>
-<div id="scan-done-overlay"><div id="scan-done-badge">✓ Scan complete</div></div>
-<div id="fmt-saved-overlay"><div id="fmt-saved-badge">✓ Settings saved</div></div>
+<div id="scan-done-overlay"><div id="scan-done-badge" style="display:inline-flex;align-items:center;gap:10px;"><svg class="ico ico-md" style="color:#fff;"><use href="#ico-check"/></svg>Scan complete</div></div>
+<div id="fmt-saved-overlay"><div id="fmt-saved-badge" style="display:inline-flex;align-items:center;gap:10px;"><svg class="ico ico-md" style="color:#fff;"><use href="#ico-check"/></svg>Settings saved</div></div>
 <div id="scan-hint"><div id="scan-hint-arrows"><div class="scan-arr-item"><div class="scan-arr-head"></div><div class="scan-arr-shaft"></div></div><div class="scan-arr-item"><div class="scan-arr-head"></div><div class="scan-arr-shaft"></div></div><div class="scan-arr-item"><div class="scan-arr-head"></div><div class="scan-arr-shaft"></div></div></div></div>
 <div id="queue-hint"><div id="queue-hint-arrows"><div class="qarr-item"><div class="qarr-shaft"></div><div class="qarr-head"></div></div><div class="qarr-item"><div class="qarr-shaft"></div><div class="qarr-head"></div></div><div class="qarr-item"><div class="qarr-shaft"></div><div class="qarr-head"></div></div></div></div>
 <div id="cancel-overlay">
@@ -12507,7 +12513,7 @@ async function submitFeedback() {
     <span id="scan-warning-title">Scanning Logic Pro…</span>
     <div id="scan-warning-sub">Don't touch anything — we'll handle it all</div>
   </div>
-  <button id="scan-cancel-btn" onclick="cancelScan()" title="Cancel scan">✕</button>
+  <button id="scan-cancel-btn" onclick="cancelScan()" title="Cancel scan"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
 </div>
 
 <!-- ── Notification Settings Modal ──────────────────────────────────── -->
@@ -12606,7 +12612,7 @@ async function submitFeedback() {
 <div id="feedback-popup">
   <div id="feedback-popup-hdr">
     <h4>Feedback</h4>
-    <button onclick="closeFeedbackPopup()" title="Close">✕</button>
+    <button onclick="closeFeedbackPopup()" title="Close"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
   </div>
 
   <!-- Form -->
@@ -12645,21 +12651,21 @@ async function submitFeedback() {
           <button class="fb-attach-slot" onclick="document.getElementById('fb-file-input-0').click()" title="Attach photo, video or file (max 30MB)">
             <span>📎</span><span class="fb-attach-slot-name">Attach file 1…</span>
           </button>
-          <button class="fb-attach-remove" id="fb-attach-remove-0" onclick="fbRemoveFile(0)" title="Remove" style="display:none">✕</button>
+          <button class="fb-attach-remove" id="fb-attach-remove-0" onclick="fbRemoveFile(0)" title="Remove" style="display:none"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
           <input class="fb-file-input" id="fb-file-input-0" type="file" accept="image/*,video/*,.log,.txt,.zip,.pdf,.wav,.mp3" style="display:none" onchange="fbFileSelected(this,0)">
         </div>
         <div class="fb-attach-row" id="fb-attach-row-1" style="display:none;">
           <button class="fb-attach-slot" onclick="document.getElementById('fb-file-input-1').click()" title="Attach photo, video or file (max 30MB)">
             <span>📎</span><span class="fb-attach-slot-name">Attach file 2…</span>
           </button>
-          <button class="fb-attach-remove" onclick="fbRemoveFile(1)" title="Remove">✕</button>
+          <button class="fb-attach-remove" onclick="fbRemoveFile(1)" title="Remove"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
           <input class="fb-file-input" id="fb-file-input-1" type="file" accept="image/*,video/*,.log,.txt,.zip,.pdf,.wav,.mp3" style="display:none" onchange="fbFileSelected(this,1)">
         </div>
         <div class="fb-attach-row" id="fb-attach-row-2" style="display:none;">
           <button class="fb-attach-slot" onclick="document.getElementById('fb-file-input-2').click()" title="Attach photo, video or file (max 30MB)">
             <span>📎</span><span class="fb-attach-slot-name">Attach file 3…</span>
           </button>
-          <button class="fb-attach-remove" onclick="fbRemoveFile(2)" title="Remove">✕</button>
+          <button class="fb-attach-remove" onclick="fbRemoveFile(2)" title="Remove"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
           <input class="fb-file-input" id="fb-file-input-2" type="file" accept="image/*,video/*,.log,.txt,.zip,.pdf,.wav,.mp3" style="display:none" onchange="fbFileSelected(this,2)">
         </div>
       </div>
