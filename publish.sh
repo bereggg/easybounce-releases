@@ -124,6 +124,7 @@ export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:$PATH"
 echo "   Компіляція Swift (arm64)..."
 swiftc EscapeLogic.swift       -o EscapeLogic       -target arm64-apple-macos11.0 -framework AppKit 2>&1 | grep -v warning || true
 swiftc CloseLogicWindows.swift -o CloseLogicWindows -target arm64-apple-macos11.0 -framework ApplicationServices -framework AppKit 2>&1 | grep -v warning || true
+swiftc BlockInput.swift        -o BlockInput        -target arm64-apple-macos11.0 -framework CoreGraphics -framework Foundation 2>&1 | grep -v warning || true
 swiftc LogicBridge.swift       -o LogicBridge_arm64 -target arm64-apple-macos10.15 2>&1 | grep -v warning || true
 swiftc LogicBridge.swift       -o LogicBridge_x86   -target x86_64-apple-macos10.15 2>&1 | grep -v warning || true
 lipo -create -output LogicBridge LogicBridge_arm64 LogicBridge_x86
@@ -148,6 +149,7 @@ echo "════════════════════════�
 echo "   Компіляція Swift (x64)..."
 swiftc EscapeLogic.swift       -o EscapeLogic       -target x86_64-apple-macos11.0 -framework AppKit 2>&1 | grep -v warning || true
 swiftc CloseLogicWindows.swift -o CloseLogicWindows -target x86_64-apple-macos11.0 -framework ApplicationServices -framework AppKit 2>&1 | grep -v warning || true
+swiftc BlockInput.swift        -o BlockInput        -target x86_64-apple-macos11.0 -framework CoreGraphics -framework Foundation 2>&1 | grep -v warning || true
 
 bash build_dmg.sh x64
 

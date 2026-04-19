@@ -35,6 +35,9 @@ const MIXER_SCROLL = app.isPackaged
 const ESCAPE_LOGIC = app.isPackaged
   ? path.join(process.resourcesPath, 'app.asar.unpacked', 'EscapeLogic')
   : path.join(__dirname, 'EscapeLogic');
+const BLOCK_INPUT = app.isPackaged
+  ? path.join(process.resourcesPath, 'app.asar.unpacked', 'BlockInput')
+  : path.join(__dirname, 'BlockInput');
 let cancelRequested = false;
 let _scanTreeActive = false;
 
@@ -566,6 +569,14 @@ ipcMain.handle('escape-logic', () => {
   const { execFile } = require('child_process');
   return new Promise(resolve => {
     execFile(ESCAPE_LOGIC, [], { timeout: 3000 }, (err) => resolve({ ok: !err }));
+  });
+});
+
+ipcMain.handle('block-input', (_, ms = 2000) => {
+  const { execFile } = require('child_process');
+  const duration = Math.max(500, Math.min(10000, parseInt(ms, 10) || 2000));
+  return new Promise(resolve => {
+    execFile(BLOCK_INPUT, [String(duration)], { timeout: duration + 1000 }, (err) => resolve({ ok: !err }));
   });
 });
 ipcMain.handle('hide-window', () => {

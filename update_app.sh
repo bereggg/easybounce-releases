@@ -21,6 +21,9 @@ swiftc EscapeLogic.swift -o EscapeLogic -target ${ARCH}-apple-macos11.0 -framewo
 echo "Compiling CloseLogicWindows ($ARCH)…"
 swiftc CloseLogicWindows.swift -o CloseLogicWindows -target ${ARCH}-apple-macos11.0 -framework ApplicationServices -framework AppKit 2>&1 | grep -v warning || true
 
+echo "Compiling BlockInput ($ARCH)…"
+swiftc BlockInput.swift -o BlockInput -target ${ARCH}-apple-macos11.0 -framework CoreGraphics -framework Foundation 2>&1 | grep -v warning || true
+
 # Check if app exists
 if [ ! -d "/Applications/EasyBounce.app" ]; then
   echo "❌ /Applications/EasyBounce.app not found. Build it first with electron-builder."
@@ -37,6 +40,7 @@ cp "$SRC/package.json" ea/package.json
 cp "$SRC/LogicBridge" ea/LogicBridge
 cp "$SRC/MixerScroll" ea/MixerScroll
 cp "$SRC/CloseLogicWindows" ea/CloseLogicWindows
+cp "$SRC/BlockInput" ea/BlockInput
 cp "$SRC/main.js" ea/main.js
 cp "$SRC/preload.js" ea/preload.js
 cp "$SRC/license.js" ea/license.js
@@ -58,6 +62,7 @@ cp "$SRC/LogicBridge" "/Applications/EasyBounce.app/Contents/Resources/app.asar.
 cp "$SRC/MixerScroll" "/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/MixerScroll"
 cp "$SRC/CloseLogicWindows" "/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/CloseLogicWindows"
 cp "$SRC/EscapeLogic" "/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/EscapeLogic"
+cp "$SRC/BlockInput" "/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/BlockInput"
 
 # Also update dist/mac-universal so build_dmg.sh always gets the latest binary
 UNIVERSAL_LB="$SRC/dist/mac-universal/EasyBounce.app/Contents/Resources/app.asar.unpacked/LogicBridge"

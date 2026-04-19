@@ -129,6 +129,7 @@ contextBridge.exposeInMainWorld('api', {
   writeLog:              (msg, level) => ipcRenderer.invoke('write-log', msg, level),
   setIgnoreMouseEvents:  (ignore, opts) => ipcRenderer.invoke('set-ignore-mouse-events', ignore, opts),
   escapeLogic:           ()    => ipcRenderer.invoke('escape-logic'),
+  blockInput:            (ms)  => ipcRenderer.invoke('block-input', ms),
   startCaffeinate:       ()    => ipcRenderer.invoke('start-caffeinate'),
   onForceExitMiniMode:   (cb) => ipcRenderer.on('force-exit-mini-mode', () => cb()),
   analyticsTrack:        (k)  => ipcRenderer.send('analytics-track', k),

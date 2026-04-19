@@ -50,12 +50,14 @@
             "LogicBridge",
             "CloseLogicWindows",
             "EscapeLogic",
+            "BlockInput",
             "assets/**"
         ],
         "asarUnpack": [
             "LogicBridge",
             "CloseLogicWindows",
-            "EscapeLogic"
+            "EscapeLogic",
+            "BlockInput"
         ]
     },
     "dependencies": {}

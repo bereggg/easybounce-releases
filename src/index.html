@@ -165,6 +165,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .qset-body{border-left:2px solid rgba(255,169,77,.18);margin:0 0 2px 22px;}
 .qsub{display:flex;flex-wrap:wrap;gap:3px;}
 .qmuted{font-size:9px;padding:1px 6px;border-radius:var(--r);background:rgba(255,71,87,.08);color:var(--red);border:1px solid rgba(255,71,87,.15);}
+.qmuted-h{display:none;}
+.qsub.qm-open .qmuted-h{display:inline-flex;}
+.ch-show-more{display:flex;align-items:center;justify-content:center;padding:7px 0;font-size:10px;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--muted);cursor:pointer;border-top:1px solid var(--b);letter-spacing:.04em;user-select:none;transition:all .14s;}
+.ch-show-more:hover{color:var(--text);background:rgba(255,255,255,.04);}
+.qmuted-tog{font-size:9px;padding:1px 7px;border-radius:var(--r);background:rgba(255,255,255,.05);color:rgba(255,255,255,.38);border:1px solid rgba(255,255,255,.1);cursor:pointer;user-select:none;transition:all .12s;}
+.qmuted-tog:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);}
 .ch-mute-badge{font-size:8px;font-weight:700;padding:1px 5px;border-radius:var(--r);background:rgba(255,71,87,.12);color:var(--red);border:1px solid rgba(255,71,87,.18);margin-left:auto;flex-shrink:0;letter-spacing:.05em;}
 .qst{font-size:8px;font-weight:700;padding:3px 8px;border-radius:var(--r3);flex-shrink:0;margin-top:2px;text-transform:uppercase;letter-spacing:.08em;}
 .qst.pending{color:var(--muted);background:rgba(255,255,255,.04);}
@@ -1665,6 +1671,8 @@ let _lastClickedIndex = null; // for Shift+Click range selection
 let _clickRangeAnchor = null; // anchor for shift+click range (set only on non-shift clicks)
 let _clickRangeAnchorOrder = null; // snapshot of orderedList at the moment anchor was set
 let _pendingDragCount = 1; // stems being dragged (set at dragstart, used by merge drop zone)
+let _qDragAlt = false; // true when Alt/Option held during queue drag → duplicate on drop
+let _altKeyDown = false; // tracks live Alt/Option key state
 let _shiftDragDeselect = false; // true when shift+drag started on an already-selected item
 let _shiftAnchor = null; // anchor point for shift+drag
 
@@ -2559,6 +2567,7 @@ function loadDemo() {
 // CHANNEL LIST
 // ═══════════════════════════════════════════════════
 let channelFilter = (() => { const v = localStorage.getItem('sb4_ch_filter'); return (v === 'hidden') ? 'hidden' : 'all'; })(); // 'hidden', 'all'
+let _mixerChCollapsed = localStorage.getItem('eb_mixer_ch_collapsed') !== '0'; // default: collapsed
 let _scanInitDone = false; // mixer check + filter setup only on first scan
 
 // ═══════════════════════════════════════════════════
@@ -3327,10 +3336,15 @@ function _renderChannelsImpl() {
     if (_orphaned.length > 0) {
       const _orp_sep = document.createElement('div');
       _orp_sep.className = 'mixer-ch-sep';
-      _orp_sep.style.cssText = 'padding:5px 14px 3px;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);opacity:.45;border-top:1px solid rgba(255,255,255,.05);margin-top:3px;';
-      _orp_sep.textContent = 'Mixer channels';
+      _orp_sep.style.cssText = 'padding:5px 14px 3px;display:flex;align-items:center;gap:6px;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);opacity:.55;border-top:1px solid rgba(255,255,255,.05);margin-top:3px;cursor:pointer;user-select:none;';
+      _orp_sep.innerHTML = `<span style="font-size:10px;transition:transform .15s;display:inline-block;transform:${_mixerChCollapsed ? 'rotate(0deg)' : 'rotate(90deg)'}"">▶</span> Mixer channels <span style="opacity:.6">(${_orphaned.length})</span>`;
+      _orp_sep.onclick = () => {
+        _mixerChCollapsed = !_mixerChCollapsed;
+        localStorage.setItem('eb_mixer_ch_collapsed', _mixerChCollapsed ? '1' : '0');
+        renderChannels();
+      };
       el.appendChild(_orp_sep);
-      _orphaned.forEach(ch => {
+      if (!_mixerChCollapsed) _orphaned.forEach(ch => {
         const sel = selectedIdx.has(ch.index);
         const div = document.createElement('div');
         div.className = 'ch-item' + (sel ? ' sel' : '');
@@ -6614,7 +6628,7 @@ function deleteMixEdit() {
 }
 
 function removeQItem(id) {
-  queue = queue.filter(q => q.id !== id);
+  queue = queue.filter(q => String(q.id) !== String(id));
   saveQueue(); renderQueue(); updateBounceBtn();
 }
 
@@ -6751,6 +6765,9 @@ function _espRedoLast() {
   _renderEspChannels(); toast('↪ Redone');
 }
 
+document.addEventListener('keydown', e => { if (e.key === 'Alt') _altKeyDown = true; });
+document.addEventListener('keyup',   e => { if (e.key === 'Alt') _altKeyDown = false; });
+
 document.addEventListener('keydown', e => {
   if ((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='z' && !e.repeat) {
     const tag = (e.target.tagName||'').toLowerCase();
@@ -6810,6 +6827,18 @@ function _attachQNameEdit(nameEl, getVal, setVal) {
   });
 }
 
+function _qIncrName(name) {
+  const m = name.match(/^(.*?)(\s+(\d+))?$/);
+  if (m && m[3]) return m[1] + ' ' + (parseInt(m[3], 10) + 1);
+  return name + ' 1';
+}
+
+function _togMuted(btn, count) {
+  const sub = btn.closest('.qsub');
+  const open = sub.classList.toggle('qm-open');
+  btn.textContent = open ? '▴ less' : `+${count} more`;
+}
+
 function renderQueue() {
   const el = document.getElementById('qlist');
   el.innerHTML = '';
@@ -6862,9 +6891,15 @@ function renderQueue() {
           row.dataset.qid = job.id;
           row.style.cssText = 'display:flex;align-items:flex-start;gap:8px;padding:7px 12px 7px 8px;border-bottom:1px solid rgba(255,255,255,.02);transition:background .1s;';
           const isMix = job.type === 'mix';
-          const muted = isMix && job.mutedNames?.length > 0
-            ? job.mutedNames.slice(0,5).map(n=>`<span class="qmuted">✕ ${n}</span>`).join('')
-            : isMix ? '<span style="color:var(--accent);font-size:9px">✓ All tracks</span>' : '';
+          let muted = '';
+          if (isMix && job.mutedNames?.length > 0) {
+            const _mn = job.mutedNames, _lim = 3;
+            const _shown = _mn.slice(0, _lim).map(n => `<span class="qmuted">✕ ${n}</span>`).join('');
+            if (_mn.length > _lim) {
+              const _hidden = _mn.slice(_lim).map(n => `<span class="qmuted qmuted-h">✕ ${n}</span>`).join('');
+              muted = `${_shown}${_hidden}<span class="qmuted-tog" onclick="event.stopPropagation();_togMuted(this,${_mn.length - _lim})">+${_mn.length - _lim} more</span>`;
+            } else { muted = _shown; }
+          } else if (isMix) { muted = '<span style="color:var(--accent);font-size:9px">✓ All tracks</span>'; }
           const editBtn = isMix && job.status === 'pending'
             ? `<button class="qedit" onclick="event.stopPropagation();editQueueMix('${job.id}')" title="Edit mix"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" width="10" height="10" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.5a1.5 1.5 0 012 2L5 12H2v-3L10 2.5z"/></svg></button>` : '';
           row.innerHTML = `
@@ -6924,9 +6959,9 @@ function renderQueue() {
         div.dataset.qid = item.id;
         div.draggable = true;
         div.style.cursor = 'grab';
-        div.addEventListener('dragstart', e => { e.dataTransfer.setData('qid', item.id); setTimeout(() => div.classList.add('dragging'), 0); });
-        div.addEventListener('dragend', () => { div.classList.remove('dragging'); document.querySelectorAll('.qitem').forEach(el => el.style.borderTop = ''); });
-        div.addEventListener('dragover', e => { if (e.dataTransfer.types.includes('channel-name')) return; e.preventDefault(); div.style.borderTop = '2px solid var(--teal)'; });
+        div.addEventListener('dragstart', e => { _qDragAlt = e.altKey || _altKeyDown; e.dataTransfer.setData('qid', item.id); setTimeout(() => div.classList.add('dragging'), 0); });
+        div.addEventListener('dragend', () => { div.classList.remove('dragging'); _qDragAlt = false; document.querySelectorAll('.qitem').forEach(el => el.style.borderTop = ''); });
+        div.addEventListener('dragover', e => { if (e.dataTransfer.types.includes('channel-name')) return; const isAlt = e.altKey || _altKeyDown || _qDragAlt; if (isAlt) return; e.preventDefault(); div.style.borderTop = '2px solid var(--teal)'; });
         div.addEventListener('dragleave', () => { div.style.borderTop = ''; });
         div.addEventListener('drop', e => {
           e.preventDefault(); div.style.borderTop = '';
@@ -6934,7 +6969,17 @@ function renderQueue() {
           const fromIdx = queue.findIndex(q => q.id === fromId);
           const toIdx = queue.findIndex(q => q.id === item.id);
           if (fromIdx < 0 || toIdx < 0) return;
-          const [moved] = queue.splice(fromIdx, 1); queue.splice(toIdx, 0, moved);
+          if (e.altKey || _altKeyDown || _qDragAlt) {
+            saveUndo();
+            const orig = queue[fromIdx];
+            const copy = JSON.parse(JSON.stringify(orig));
+            copy.id = 'q_' + Date.now() + Math.random();
+            copy.name = _qIncrName(copy.name);
+            copy.status = 'pending';
+            queue.splice(toIdx, 0, copy);
+          } else {
+            const [moved] = queue.splice(fromIdx, 1); queue.splice(toIdx, 0, moved);
+          }
           saveQueue(); renderQueue();
         });
       }
@@ -6947,9 +6992,15 @@ function renderQueue() {
     const div = document.createElement('div');
     div.className = 'qitem ' + (item.status || 'pending');
     const isMix = item.type === 'mix';
-    const pills = isMix && item.mutedNames?.length > 0
-      ? item.mutedNames.map(n => `<span class="qmuted">✕ ${n}</span>`).join('')
-      : isMix ? '<span style="color:var(--accent);font-size:9px">✓ All tracks</span>' : '';
+    let pills = '';
+    if (isMix && item.mutedNames?.length > 0) {
+      const _mn = item.mutedNames, _lim = 3;
+      const _shown = _mn.slice(0, _lim).map(n => `<span class="qmuted">✕ ${n}</span>`).join('');
+      if (_mn.length > _lim) {
+        const _hidden = _mn.slice(_lim).map(n => `<span class="qmuted qmuted-h">✕ ${n}</span>`).join('');
+        pills = `${_shown}${_hidden}<span class="qmuted-tog" onclick="event.stopPropagation();_togMuted(this,${_mn.length - _lim})">+${_mn.length - _lim} more</span>`;
+      } else { pills = _shown; }
+    } else if (isMix) { pills = '<span style="color:var(--accent);font-size:9px">✓ All tracks</span>'; }
 
     const editBtn = isMix && item.status === 'pending'
       ? `<button class="qedit" onclick="editQueueMix('${item.id}')" title="Edit mix"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" width="10" height="10" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.5a1.5 1.5 0 012 2L5 12H2v-3L10 2.5z"/></svg></button>`
@@ -7029,15 +7080,19 @@ function renderQueue() {
       div.draggable = true;
       div.style.cursor = 'grab';
       div.addEventListener('dragstart', e => {
+        _qDragAlt = e.altKey || _altKeyDown;
         e.dataTransfer.setData('qid', item.id);
         setTimeout(() => div.classList.add('dragging'), 0);
       });
       div.addEventListener('dragend', () => {
         div.classList.remove('dragging');
+        _qDragAlt = false;
         document.querySelectorAll('.qitem').forEach(el => el.style.borderTop = '');
       });
       div.addEventListener('dragover', e => {
         if (e.dataTransfer.types.includes('channel-name')) return;
+        const isAlt = e.altKey || _altKeyDown || _qDragAlt;
+        if (isAlt) return; // let qlist container handle Alt+drop
         e.preventDefault();
         div.style.borderTop = '2px solid var(--accent)';
       });
@@ -7051,8 +7106,17 @@ function renderQueue() {
         const toIdx = queue.findIndex(q => q.id === item.id);
         if (fromIdx < 0 || toIdx < 0) return;
         saveUndo();
-        const [moved] = queue.splice(fromIdx, 1);
-        queue.splice(toIdx, 0, moved);
+        if (e.altKey || _altKeyDown || _qDragAlt) {
+          const orig = queue[fromIdx];
+          const copy = JSON.parse(JSON.stringify(orig));
+          copy.id = 'q_' + Date.now() + Math.random();
+          copy.name = _qIncrName(copy.name);
+          copy.status = 'pending';
+          queue.splice(toIdx, 0, copy);
+        } else {
+          const [moved] = queue.splice(fromIdx, 1);
+          queue.splice(toIdx, 0, moved);
+        }
         saveQueue(); renderQueue();
       });
     }
@@ -7157,15 +7221,38 @@ document.getElementById('ch-list').addEventListener('dragstart', (e) => {
 (function() {
   const ql = document.getElementById('qlist');
   ql.addEventListener('dragover', e => {
-    if (e.dataTransfer.types.includes('channel-name')) {
+    const isQid = e.dataTransfer.types.includes('qid');
+    const isCh = e.dataTransfer.types.includes('channel-name');
+    const isAlt = e.altKey || _altKeyDown || _qDragAlt;
+    if (isCh) {
       e.preventDefault();
       ql.style.outline = '2px solid var(--accent)';
       ql.style.outlineOffset = '-2px';
+    } else if (isQid && isAlt) {
+      e.preventDefault();
+      ql.style.outline = '2px solid #ffa94d';
+      ql.style.outlineOffset = '-2px';
     }
   });
-  ql.addEventListener('dragleave', () => { ql.style.outline = ''; });
+  ql.addEventListener('dragleave', e => { if (!ql.contains(e.relatedTarget)) ql.style.outline = ''; });
   ql.addEventListener('drop', e => {
     ql.style.outline = '';
+    const isAlt = e.altKey || _altKeyDown || _qDragAlt;
+    const fromQid = e.dataTransfer.getData('qid');
+    if (fromQid && isAlt) {
+      e.preventDefault();
+      e.stopPropagation();
+      const fromIdx = queue.findIndex(q => String(q.id) === String(fromQid));
+      if (fromIdx < 0) return;
+      saveUndo();
+      const copy = JSON.parse(JSON.stringify(queue[fromIdx]));
+      copy.id = 'q_' + Date.now() + Math.random();
+      copy.name = _qIncrName(copy.name);
+      copy.status = 'pending';
+      queue.splice(fromIdx + 1, 0, copy);
+      saveQueue(); renderQueue();
+      return;
+    }
     const chName = e.dataTransfer.getData('channel-name');
     const chIdx = parseInt(e.dataTransfer.getData('channel-index'));
     const chColor = e.dataTransfer.getData('channel-color');
@@ -8235,6 +8322,7 @@ async function bounceStem(job, folder, isFirst) {
 
   // 1. Solo main stem — use index when available to handle duplicate names
   if (window._userCancelled) return false;
+  if (window.api.blockInput) window.api.blockInput(2000).catch(() => {});
   let r = job.channelIndex != null
     ? await window.api.soloIndex(job.channelIndex)
     : await window.api.soloByName(job.name);
@@ -8292,6 +8380,7 @@ async function bounceStem(job, folder, isFirst) {
   // 4. Unsolo (only on normal completion — cancel handled in doBounce finally)
   if (!window._userCancelled) {
     // Grace period: give Logic time to finish writing the file, warn user before Logic becomes active
+    if (window.api.blockInput) window.api.blockInput(2000).catch(() => {});
     toast('↩ Returning to Logic…');
     await window.api.wait(1500);
     await window.api.moveToLogicSpace().catch(() => {});
@@ -8343,6 +8432,7 @@ async function bounceGroup(job, folder, isFirst) {
 
   // Solo all channels in the group — use index to handle duplicate names
   const chans = job.channels || [];
+  if (window.api.blockInput) window.api.blockInput(2000).catch(() => {});
   for (const ch of chans) {
     if (window._userCancelled) return false;
     let r = ch.channelIndex != null
@@ -8393,6 +8483,7 @@ async function bounceGroup(job, folder, isFirst) {
 
   // Unsolo all (only on normal completion)
   if (!window._userCancelled) {
+    if (window.api.blockInput) window.api.blockInput(2000).catch(() => {});
     toast('↩ Returning to Logic…');
     await window.api.wait(1500);
     await window.api.moveToLogicSpace().catch(() => {});
@@ -8452,6 +8543,7 @@ async function bounceMix(job, folder, isFirst) {
 
   // 2. Mute by index — correct even with duplicate track names
   if (window._userCancelled) return false;
+  if (window.api.blockInput) window.api.blockInput(2000).catch(() => {});
   if (indicesToMute.length > 0) {
     const muteResult = await window.api.muteManyByIndex(indicesToMute.join('|'));
     window._cancelMutedIndices = indicesToMute;
@@ -8477,6 +8569,7 @@ async function bounceMix(job, folder, isFirst) {
 
   // 4. Unmute only what WE muted
   if (!window._userCancelled) {
+    if (window.api.blockInput) window.api.blockInput(2000).catch(() => {});
     toast('↩ Returning to Logic…');
     await window.api.wait(1500);
     await window.api.moveToLogicSpace().catch(() => {});
@@ -9829,7 +9922,9 @@ function renderHistory() {
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   el.innerHTML = history.map(s => {
     const d = new Date(s.date);
-    const dateStr = `${months[d.getMonth()]} ${d.getDate()}`;
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mm = String(d.getMinutes()).padStart(2,'0');
+    const dateStr = `${months[d.getMonth()]} ${d.getDate()}, ${hh}:${mm}`;
     const proj = (s.project || 'Session').replace(/</g,'&lt;');
     const stemCount = (s.files || []).filter(f => f.type !== 'mix').length;
     const mixCount  = (s.files || []).filter(f => f.type === 'mix').length;
@@ -9838,28 +9933,49 @@ function renderHistory() {
       : stemCount > 0 ? `${stemCount} stems`
       : mixCount  > 0 ? `${mixCount} mixes`
       : `${s.totalFiles} files`;
-    const hasBypass = s.masterPlugins && s.masterPlugins.some(p => !p.active);
-    const fmtTag = s.format
-      ? `<span style="padding:2px 7px;border-radius:5px;border:1px solid var(--b2);font-size:9px;font-weight:600;color:var(--t2);font-family:'JetBrains Mono',monospace;">${s.format}</span>`
+
+    // ── Expanded body ─────────────────────────────────────────────────────────
+    const _sep = `<div style="border-top:1px solid var(--b);margin:6px 0;"></div>`;
+
+    // Format row
+    const fmtHtml = s.format
+      ? `<div style="padding:6px 12px 2px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--t2);">${s.format}</div>`
       : '';
-    const bypassTag = hasBypass
-      ? `<span style="padding:2px 7px;border-radius:5px;border:1px solid rgba(255,71,87,.3);background:rgba(255,71,87,.08);font-size:9px;font-weight:600;color:var(--red);font-family:'JetBrains Mono',monospace;">master bypass</span>`
-      : '';
+
+    // Plugin list + restore button
+    let pluginsHtml = '';
+    if (s.masterPlugins && s.masterPlugins.length > 0) {
+      const plugRows = s.masterPlugins.map(p =>
+        `<div style="display:flex;align-items:center;padding:4px 12px;gap:8px;">
+          <span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:11px;color:${p.active ? 'var(--text)' : 'var(--muted)'};">${p.name.replace(/</g,'&lt;')}</span>
+          <span style="font-size:9px;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:20px;${p.active ? 'color:#5abf28;background:rgba(90,191,40,.1);border:1px solid rgba(90,191,40,.25);' : 'color:var(--red);background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.2);'}">${p.active ? 'ACTIVE' : 'BYPASSED'}</span>
+        </div>`
+      ).join('');
+      pluginsHtml = `${_sep}
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 12px 2px;">
+          <span style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Master Chain</span>
+          <button onclick="event.stopPropagation();restorePluginsFromHistory(${s.id})" title="Restore these plugin states in Logic" style="font-size:9px;padding:2px 9px;border-radius:5px;border:1px solid rgba(108,99,255,.35);background:rgba(108,99,255,.1);color:var(--accent);cursor:pointer;font-family:'JetBrains Mono',monospace;font-weight:600;transition:all .13s;" onmouseover="this.style.background='rgba(108,99,255,.22)'" onmouseout="this.style.background='rgba(108,99,255,.1)'">↺ Restore</button>
+        </div>
+        ${plugRows}`;
+    }
+
+    // Files list
     const filesHtml = (s.files || []).map(f =>
       `<div class="hist-file">
         <span class="hist-badge ${f.type}">${f.type === 'mix' ? 'VER' : 'STM'}</span>
         ${f.name.replace(/</g,'&lt;')}
        </div>`).join('');
+    const filesSection = filesHtml ? `${_sep}<div style="padding:0 0 4px;">${filesHtml}</div>` : '';
+
     return `<div class="hist-item" id="hi-${s.id}">
       <div class="hist-hdr" onclick="toggleHistExpand(${s.id})">
         <div class="hist-meta">
           <div style="display:flex;align-items:baseline;gap:8px;">
-            <span style="font-size:9px;font-weight:600;color:var(--muted);font-family:'JetBrains Mono',monospace;flex-shrink:0;">${dateStr}</span>
+            <span style="font-size:9px;font-weight:600;color:var(--muted);font-family:'JetBrains Mono',monospace;flex-shrink:0;white-space:nowrap;">${dateStr}</span>
             <span class="hist-proj">${proj}</span>
           </div>
-          <div style="display:flex;align-items:center;gap:5px;margin-top:5px;flex-wrap:wrap;">
+          <div style="margin-top:4px;">
             <span style="padding:2px 7px;border-radius:5px;border:1px solid var(--b2);font-size:9px;font-weight:600;color:var(--t2);font-family:'JetBrains Mono',monospace;">${countLabel}</span>
-            ${fmtTag}${bypassTag}
           </div>
         </div>
         <div class="hist-right">
@@ -9868,9 +9984,26 @@ function renderHistory() {
           <button class="hist-del" onclick="event.stopPropagation();deleteHistorySession(${s.id})" title="Delete session">✕</button>
         </div>
       </div>
-      <div class="hist-files" id="hf-${s.id}">${filesHtml}</div>
+      <div class="hist-files" id="hf-${s.id}">${fmtHtml}${pluginsHtml}${filesSection}</div>
     </div>`;
   }).join('');
+}
+
+async function restorePluginsFromHistory(id) {
+  if (!window.api?.setMasterPlugin) { toast('Needs Electron'); return; }
+  const history = JSON.parse(localStorage.getItem('sb4_history') || '[]');
+  const session = history.find(s => s.id === id);
+  if (!session?.masterPlugins?.length) { toast('No plugin snapshot saved'); return; }
+  try {
+    for (const p of session.masterPlugins) {
+      await window.api.setMasterPlugin(p.name, p.active);
+      await window.api.wait(120);
+    }
+    // Refresh live plugin list in the app
+    const fresh = await window.api.masterPluginsQuick().catch(() => null);
+    if (fresh?.plugins) { _masterPlugins = fresh.plugins; renderMasterPlugins(); }
+    toast('✓ Plugin states restored');
+  } catch(e) { toast('⚠ Restore failed: ' + (e.message || e)); }
 }
 
 function deleteHistorySession(id) {
@@ -9908,7 +10041,7 @@ function repeatSession(id) {
       const existing = queue.find(q => q.name === resolved.name && q.type === 'stem');
       if (existing) { existing.status = 'pending'; delete existing.error; }
       else {
-        queue.push({ id: Date.now() + Math.random(), name: resolved.name, type: 'stem',
+        queue.push({ id: 'q_' + Date.now() + Math.random(), name: resolved.name, type: 'stem',
           channelIndex: resolved.index, color: resolved.color, status: 'pending' });
       }
     } else if (f.type === 'mix' && f.mutedIndices && channels.length > 0) {
@@ -9920,12 +10053,12 @@ function repeatSession(id) {
       const existing = queue.find(q => q.name === f.name && q.type === 'mix');
       if (existing) { existing.status = 'pending'; existing.mutedIndices = r.validIndices; existing.mutedNames = r.validNames; delete existing.error; }
       else {
-        queue.push({ id: Date.now() + Math.random(), name: f.name, type: 'mix',
+        queue.push({ id: 'q_' + Date.now() + Math.random(), name: f.name, type: 'mix',
           mutedIndices: r.validIndices, mutedNames: r.validNames, status: 'pending' });
       }
     } else {
       // Fallback (no channels scanned yet or unknown type)
-      queue.push({ id: Date.now() + Math.random(), name: f.name, type: f.type,
+      queue.push({ id: 'q_' + Date.now() + Math.random(), name: f.name, type: f.type,
         channelIndex: f.channelIndex, mutedIndices: f.mutedIndices || [], mutedNames: f.mutedNames || [], status: 'pending' });
     }
     added++;
@@ -11911,7 +12044,7 @@ setTimeout(async () => {
       showUpdateModal('update', res.version, res.releaseNotes || '', res.downloadUrl || '');
     }
   } catch(e) {}
-}, 5000);
+}, 1000);
 
 async function checkLicenseOnStart() {
   // Show overlay immediately if no license stored
