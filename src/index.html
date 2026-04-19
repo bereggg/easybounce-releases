@@ -22,13 +22,13 @@
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:13px;height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;}
 .titlebar{height:46px;background:#252523;border-bottom:1px solid #444441;display:flex;align-items:center;padding:0 16px 0 80px;-webkit-app-region:drag;user-select:none;gap:10px;position:relative;z-index:10;}
 .tb-logo{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;letter-spacing:-.03em;color:var(--text);display:flex;align-items:center;gap:9px;}
-.tb-logo-mark{width:28px;height:28px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--a2));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(108,99,255,.4);}
+.tb-logo-mark{width:28px;height:28px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--a2));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(123,79,191,.4);}
 .tb-logo-mark svg{width:14px;height:14px;fill:white;}
 .tb-proj{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);flex:1;padding-left:6px;}
 .tb-proj.live{color:var(--t2);}
 .tb-right{display:flex;align-items:center;gap:8px;-webkit-app-region:no-drag;flex-shrink:0;}
 .tb-pill{display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:var(--r3);background:var(--glass);border:1px solid var(--glass-border);color:var(--t2);font-size:11px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;}
-.tb-pill:hover{border-color:rgba(108,99,255,.5);color:var(--accent);background:rgba(108,99,255,.08);}
+.tb-pill:hover{border-color:rgba(123,79,191,.5);color:var(--accent);background:rgba(123,79,191,.08);}
 .tb-pill.scanning{border-color:var(--accent);color:var(--accent);animation:fade .8s infinite;}
 .tb-pill svg{width:13px;height:13px;flex-shrink:0;}
 .tb-status{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:var(--r3);background:var(--glass);border:1px solid var(--glass-border);}
@@ -45,12 +45,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .panel-resizer{width:7px;cursor:col-resize;background:transparent;border-right:1px solid var(--b);flex-shrink:0;position:relative;z-index:10;transition:background .15s;}
 .panel-resizer::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:3px;height:36px;border-radius:2px;background:var(--t2);opacity:.25;transition:opacity .2s;}
 .panel-resizer:hover::after,.panel-resizer.dragging::after{opacity:.7;}
-.panel-resizer:hover,.panel-resizer.dragging{background:rgba(108,99,255,.15);border-right-color:var(--accent);}
+.panel-resizer:hover,.panel-resizer.dragging{background:rgba(123,79,191,.15);border-right-color:var(--accent);}
 .pr{border-left:1px solid var(--b);}
 .center{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--b);}
 .sec-hdr{padding:10px 14px 9px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .sec-title{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
-.sec-badge{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:var(--accent);background:rgba(108,99,255,.1);padding:2px 8px;border-radius:var(--r3);border:1px solid rgba(108,99,255,.18);}
+.sec-badge{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:var(--accent);background:rgba(123,79,191,.1);padding:2px 8px;border-radius:var(--r3);border:1px solid rgba(123,79,191,.18);}
 .scroll{flex:1;overflow-y:auto;}
 #ch-list{contain:layout style;} /* Opt #2: isolate reflow from rest of page */
 .scroll::-webkit-scrollbar{width:3px;}
@@ -59,10 +59,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .search-bar{padding:6px 10px;border-bottom:1px solid var(--b);display:flex;gap:5px;align-items:center;flex-shrink:0;flex-wrap:wrap;}
 .search-inp{flex:1;min-width:0;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 9px;transition:border-color .18s;}
 .search-inp::placeholder{color:var(--muted);}
-.search-inp:focus{outline:none;border-color:rgba(108,99,255,.6);}
+.search-inp:focus{outline:none;border-color:rgba(123,79,191,.6);}
 .hidden-btn{display:flex;align-items:center;gap:4px;padding:5px 9px;border-radius:var(--r);border:1px solid var(--b);background:transparent;color:var(--muted);font-size:10px;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap;flex-shrink:0;}
-.hidden-btn:hover{border-color:rgba(255,101,132,.4);color:var(--a2);}
-.hidden-btn.on{border-color:rgba(255,101,132,.5);color:var(--a2);background:rgba(255,101,132,.08);}
+.hidden-btn:hover{border-color:rgba(212,98,26,.4);color:var(--a2);}
+.hidden-btn.on{border-color:rgba(212,98,26,.5);color:var(--a2);background:rgba(212,98,26,.08);}
 .hidden-btn svg{width:11px;height:11px;flex-shrink:0;}
 .hidden-btn .hidden-slash{display:none;}
 .hidden-btn.on .hidden-slash{display:block;}
@@ -75,7 +75,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .mf-btn.off{background:color-mix(in srgb,var(--muted) 10%,transparent);border-color:color-mix(in srgb,var(--b2) 70%,transparent);color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--muted) 35%,transparent);}
 .ch-item{display:flex;align-items:center;gap:9px;padding:7px 14px;border-bottom:1px solid rgba(255,255,255,.025);cursor:pointer;transition:all .14s;user-select:none;}
 .ch-item:hover{background:rgba(255,255,255,.03);}
-.ch-item.sel{background:rgba(108,99,255,.08);border-left:2px solid var(--accent);}
+.ch-item.sel{background:rgba(123,79,191,.08);border-left:2px solid var(--accent);}
 /* ── Tree view ── */
 .tree-group{display:flex;align-items:center;gap:7px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.025);cursor:pointer;transition:all .14s;user-select:none;min-height:32px;}
 .tree-group.depth-0{background:rgba(255,255,255,.04);}
@@ -83,7 +83,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .tree-group.depth-2{background:rgba(255,255,255,.015);}
 .tree-group.depth-3{background:rgba(255,255,255,.008);}
 .tree-group:hover{background:rgba(255,255,255,.06);}
-.tree-group.sel{background:rgba(108,99,255,.08);border-left:2px solid var(--accent);}
+.tree-group.sel{background:rgba(123,79,191,.08);border-left:2px solid var(--accent);}
 .tree-toggle{font-size:14px;color:var(--muted);width:20px;min-width:20px;flex-shrink:0;line-height:1;text-align:center;cursor:pointer;user-select:none;}
 .depth-0 .tree-toggle{color:var(--text);opacity:.7;}
 .depth-1 .tree-toggle{color:var(--t2);opacity:.65;}
@@ -94,7 +94,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .tree-group-idx{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);flex-shrink:0;pointer-events:none;}
 .tree-child{display:flex;align-items:center;gap:7px;padding:5px 14px 5px 32px;border-bottom:1px solid rgba(255,255,255,.015);cursor:pointer;transition:all .14s;user-select:none;}
 .tree-child:hover{background:rgba(255,255,255,.03);}
-.tree-child.sel{background:rgba(108,99,255,.07);border-left:2px solid rgba(108,99,255,.5);}
+.tree-child.sel{background:rgba(123,79,191,.07);border-left:2px solid rgba(123,79,191,.5);}
 .tree-child-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;opacity:.8;pointer-events:none;}
 .tree-child-name{flex:1;font-size:11px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--t2);pointer-events:none;}
 .tree-child-idx{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);flex-shrink:0;opacity:.6;}
@@ -103,14 +103,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .ch-idx{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);flex-shrink:0;}
 .ch-footer{border-top:1px solid var(--b);padding:8px 12px;display:flex;gap:5px;flex-shrink:0;}
 .foot-btn{flex:1;padding:7px 4px;border-radius:var(--r);border:1px solid var(--b);background:var(--glass);color:var(--t2);font-size:10px;font-weight:600;cursor:pointer;transition:all .16s;text-align:center;}
-.foot-btn:hover{border-color:rgba(108,99,255,.5);color:var(--accent);background:rgba(108,99,255,.07);}
+.foot-btn:hover{border-color:rgba(123,79,191,.5);color:var(--accent);background:rgba(123,79,191,.07);}
 .foot-btn.green:hover{border-color:rgba(74,140,28,.5);color:var(--a3);background:rgba(74,140,28,.06);}
 .foot-btn.sm{flex:0;padding:7px 10px;}
 .presets-bar{padding:7px 12px;border-bottom:1px solid var(--b);display:flex;gap:5px;flex-wrap:wrap;align-items:center;min-height:44px;flex-shrink:0;}
 .preset-section-lbl{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 4px;white-space:nowrap;align-self:center;}
 .pchip{padding:5px 12px;border-radius:var(--r3);border:1px solid var(--b2);background:var(--card);color:var(--t2);font-size:10px;font-weight:600;cursor:pointer;transition:all .16s;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.04);}
-.pchip:hover{border-color:rgba(108,99,255,.5);color:var(--accent);background:rgba(108,99,255,.07);box-shadow:0 2px 8px rgba(108,99,255,.15);}
-.pchip.mx:hover{border-color:rgba(255,101,132,.5);color:var(--a2);background:rgba(255,101,132,.07);}
+.pchip:hover{border-color:rgba(123,79,191,.5);color:var(--accent);background:rgba(123,79,191,.07);box-shadow:0 2px 8px rgba(123,79,191,.15);}
+.pchip.mx:hover{border-color:rgba(212,98,26,.5);color:var(--a2);background:rgba(212,98,26,.07);}
 .pchip.custom{border-style:dashed;}
 .pchip-del{width:18px;height:18px;border-radius:50%;border:1px solid var(--b2);background:var(--card2);color:var(--muted);font-size:9px;cursor:pointer;transition:all .14s;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;line-height:1;font-weight:700;}
 .pchip-del:hover{background:rgba(255,71,87,.15);border-color:rgba(255,71,87,.5);color:var(--red);}
@@ -139,7 +139,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .qname{font-size:13px;font-weight:600;letter-spacing:-.02em;}
 .qtag{font-size:8px;font-weight:700;padding:2px 7px;border-radius:var(--r3);text-transform:uppercase;letter-spacing:.08em;}
 .qtag.stem{background:rgba(74,140,28,.12);color:var(--a3);border:1px solid rgba(74,140,28,.2);}
-.qtag.mix{background:rgba(108,99,255,.12);color:var(--accent);border:1px solid rgba(108,99,255,.2);}
+.qtag.mix{background:rgba(123,79,191,.12);color:var(--accent);border:1px solid rgba(123,79,191,.2);}
 .qtag.set{background:rgba(255,169,77,.12);color:var(--warn);border:1px solid rgba(255,169,77,.22);}
 .qtag.group{background:linear-gradient(160deg,var(--accent),var(--teal));color:#fff;border:1px solid transparent;box-shadow:0 2px 8px rgba(26,122,110,.25);}
 .qgroup-ch{font-size:9px;padding:1px 7px;border-radius:var(--r);background:rgba(26,122,110,.1);color:var(--teal);border:1px solid rgba(26,122,110,.22);}
@@ -150,11 +150,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 #merge-btn{position:absolute;bottom:calc(100% + 6px);left:0;right:0;padding:7px 4px;border-radius:var(--r);border:1px solid transparent;color:#fff;font-size:10px;font-weight:700;cursor:pointer;text-align:center;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;transform:translateY(8px);z-index:200;background:linear-gradient(160deg,var(--accent),var(--teal));box-shadow:0 4px 16px rgba(26,122,110,.28);}
 .stems-wrap.active:hover #merge-btn.ok,.stems-wrap.active #merge-btn.ok:hover{opacity:1;pointer-events:auto;transform:translateY(0);}
 .mchip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--r3);border:1px solid var(--b2);background:var(--card);color:var(--t2);font-size:10px;font-weight:600;cursor:pointer;transition:all .14s;white-space:nowrap;}
-.mchip:hover{border-color:rgba(108,99,255,.4);color:var(--accent);}
+.mchip:hover{border-color:rgba(123,79,191,.4);color:var(--accent);}
 .mchip .mchip-x{opacity:.5;font-size:11px;line-height:1;transition:opacity .12s;margin-left:2px;}
 .mchip .mchip-x:hover{opacity:1;color:var(--red);}
-.mchip-save{border-style:dashed;border-color:rgba(108,99,255,.4);color:var(--accent);background:rgba(108,99,255,.06);}
-.mchip-save:hover{background:rgba(108,99,255,.12);border-style:solid;}
+.mchip-save{border-style:dashed;border-color:rgba(123,79,191,.4);color:var(--accent);background:rgba(123,79,191,.06);}
+.mchip-save:hover{background:rgba(123,79,191,.12);border-style:solid;}
 .gch-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:var(--r3);border:1px solid rgba(26,122,110,.3);background:rgba(26,122,110,.07);color:var(--teal);font-size:10px;font-weight:500;white-space:nowrap;}
 .gch-pill .gch-x{opacity:.5;cursor:pointer;font-size:11px;line-height:1;transition:opacity .12s;}
 .gch-pill .gch-x:hover{opacity:1;color:var(--red);}
@@ -185,34 +185,34 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .out-row{display:flex;align-items:center;gap:9px;}
 .out-lbl{font-size:9px;font-weight:700;color:var(--muted);width:48px;flex-shrink:0;text-transform:uppercase;letter-spacing:.08em;}
 .out-path{flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--t2);font-family:'JetBrains Mono',monospace;font-size:10px;padding:6px 9px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .16s;}
-.out-path:hover{border-color:rgba(108,99,255,.5);color:var(--accent);}
+.out-path:hover{border-color:rgba(123,79,191,.5);color:var(--accent);}
 .out-path.live{color:var(--text);}
 .out-sel{background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px;padding:5px 7px;cursor:pointer;}
-.out-sel:focus{outline:none;border-color:rgba(108,99,255,.5);}
+.out-sel:focus{outline:none;border-color:rgba(123,79,191,.5);}
 .out-inp{flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px;padding:6px 9px;}
 .out-inp::placeholder{color:var(--muted);}
-.out-inp:focus{outline:none;border-color:rgba(108,99,255,.5);}
+.out-inp:focus{outline:none;border-color:rgba(123,79,191,.5);}
 .bounce-wrap{padding:10px 14px 14px;border-top:1px solid var(--b2);flex-shrink:0;}
 .prog-bar{height:3px;background:var(--b);border-radius:2px;overflow:hidden;margin-bottom:6px;}
 .prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--a2));border-radius:2px;transition:width .4s ease;width:0%;will-change:width;} /* Opt #7 */
 .prog-info{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:10px;}
 .bounce-btns{display:flex;gap:8px;}
-.bbtn{flex:1;height:54px;border-radius:var(--r2);border:none;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:linear-gradient(160deg,var(--accent) 0%,var(--a2) 100%);position:relative;overflow:hidden;transition:transform .18s,box-shadow .18s;box-shadow:0 8px 32px rgba(108,99,255,.4),inset 0 1px 0 rgba(255,255,255,.2);}
+.bbtn{flex:1;height:54px;border-radius:var(--r2);border:none;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:linear-gradient(160deg,var(--accent) 0%,var(--a2) 100%);position:relative;overflow:hidden;transition:transform .18s,box-shadow .18s;box-shadow:0 8px 32px rgba(123,79,191,.4),inset 0 1px 0 rgba(255,255,255,.2);}
 .bbtn::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.15) 0%,transparent 60%);pointer-events:none;}
 .bbtn::after{content:'';position:absolute;top:-50%;left:-60%;width:40%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);transform:skewX(-20deg);animation:shimmer 3s ease-in-out infinite;pointer-events:none;}
 @keyframes shimmer{0%{left:-60%}100%{left:120%}}
-.bbtn:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(108,99,255,.5),inset 0 1px 0 rgba(255,255,255,.25);}
+.bbtn:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(123,79,191,.5),inset 0 1px 0 rgba(255,255,255,.25);}
 .bbtn:active{transform:translateY(0);}
 .bbtn.ready{animation:bounce-ready 2s ease-in-out infinite;}
 @keyframes done-flash{0%{background:var(--card)}40%{background:rgba(74,140,28,.2)}100%{background:var(--card)}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
-@keyframes bounce-ready{0%,100%{box-shadow:0 8px 32px rgba(108,99,255,.4),inset 0 1px 0 rgba(255,255,255,.2);}50%{box-shadow:0 12px 48px rgba(108,99,255,.7),inset 0 1px 0 rgba(255,255,255,.3);transform:translateY(-1px);}}
+@keyframes bounce-ready{0%,100%{box-shadow:0 8px 32px rgba(123,79,191,.4),inset 0 1px 0 rgba(255,255,255,.2);}50%{box-shadow:0 12px 48px rgba(123,79,191,.7),inset 0 1px 0 rgba(255,255,255,.3);transform:translateY(-1px);}}
 .bbtn.running{background:linear-gradient(160deg,var(--warn),#ff6b35)!important;box-shadow:0 8px 32px rgba(255,169,77,.4),inset 0 1px 0 rgba(255,255,255,.2)!important;animation:pulse-glow .9s ease-in-out infinite alternate;}
 .bbtn.off{background:var(--card)!important;color:var(--muted)!important;box-shadow:none!important;cursor:not-allowed;transform:none!important;border:1px solid var(--b);}
 .bbtn.off::before{display:none;}
 @keyframes pulse-stems{from{box-shadow:0 0 0 rgba(74,140,28,0)}to{box-shadow:0 0 12px rgba(74,140,28,.5)}}
 @keyframes pulse-glow{from{box-shadow:0 4px 16px rgba(255,169,77,.2);}to{box-shadow:0 12px 40px rgba(255,169,77,.55),inset 0 1px 0 rgba(255,255,255,.2);}}
-.ch-item.bouncing{background:rgba(108,99,255,.12)!important;border-left:2px solid var(--accent)!important;}
+.ch-item.bouncing{background:rgba(123,79,191,.12)!important;border-left:2px solid var(--accent)!important;}
 @keyframes ch-pulse{0%,100%{opacity:1}50%{opacity:.6}}
 .stop-btn{width:54px;height:54px;border-radius:var(--r2);background:rgba(255,71,87,.12);border:1px solid rgba(255,71,87,.25);color:var(--red);font-size:16px;cursor:pointer;transition:all .16s;display:none;align-items:center;justify-content:center;flex-shrink:0;}
 .stop-btn:hover{background:rgba(255,71,87,.22);border-color:rgba(255,71,87,.5);}
@@ -236,8 +236,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .act-tab.active{background:var(--card);border-color:var(--b);color:var(--text);}
 .act-tab:hover:not(.active){color:var(--t2);}
 /* ── Easy Mode Toggle ──────────────────────────────────── */
-.em-wrap{display:flex;align-items:center;gap:7px;padding:5px 14px 5px 11px;border-radius:20px;border:1.5px solid rgba(108,99,255,.62);background:rgba(108,99,255,.13);cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s;-webkit-app-region:no-drag;user-select:none;position:absolute;left:min(50%,calc(100% - 520px));transform:translateX(-50%);z-index:2;box-shadow:0 0 16px rgba(108,99,255,.28),0 0 0 3px rgba(108,99,255,.08),0 0 32px rgba(108,99,255,.1);}
-.em-wrap:hover{border-color:rgba(108,99,255,.82);background:rgba(108,99,255,.2);box-shadow:0 0 24px rgba(108,99,255,.45),0 0 0 3px rgba(108,99,255,.13),0 0 48px rgba(108,99,255,.18);}
+.em-wrap{display:flex;align-items:center;gap:7px;padding:5px 14px 5px 11px;border-radius:20px;border:1.5px solid rgba(123,79,191,.62);background:rgba(123,79,191,.13);cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s;-webkit-app-region:no-drag;user-select:none;position:absolute;left:min(50%,calc(100% - 520px));transform:translateX(-50%);z-index:2;box-shadow:0 0 16px rgba(123,79,191,.28),0 0 0 3px rgba(123,79,191,.08),0 0 32px rgba(123,79,191,.1);}
+.em-wrap:hover{border-color:rgba(123,79,191,.82);background:rgba(123,79,191,.2);box-shadow:0 0 24px rgba(123,79,191,.45),0 0 0 3px rgba(123,79,191,.13),0 0 48px rgba(123,79,191,.18);}
 .em-track{width:28px;height:14px;border-radius:7px;background:var(--b2);position:relative;transition:background .22s;flex-shrink:0;}
 .em-thumb{position:absolute;top:2.5px;left:2px;width:9px;height:9px;border-radius:50%;background:var(--t2);opacity:.6;transition:all .22s;}
 .em-lbl{font-size:10px;font-weight:800;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;transition:color .2s;opacity:.85;}
@@ -245,7 +245,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 body.easy .em-track{background:linear-gradient(135deg,var(--accent),var(--a2));}
 body.easy .em-thumb{left:15px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);}
 body.easy .em-lbl{color:var(--accent)!important;opacity:1!important;font-weight:900!important;}
-body.easy .em-wrap{border-color:rgba(108,99,255,.7)!important;background:linear-gradient(135deg,rgba(108,99,255,.18),rgba(255,101,132,.12))!important;box-shadow:0 0 20px rgba(108,99,255,.3),inset 0 0 12px rgba(108,99,255,.06)!important;}
+body.easy .em-wrap{border-color:rgba(123,79,191,.7)!important;background:linear-gradient(135deg,rgba(123,79,191,.18),rgba(212,98,26,.12))!important;box-shadow:0 0 20px rgba(123,79,191,.3),inset 0 0 12px rgba(123,79,191,.06)!important;}
 
 /* ── Easy Mode: hide non-essentials ──────────── */
 body.easy .em-hide{display:none!important;}
@@ -289,12 +289,12 @@ body.easy #mix-toggle-all-btn[oncontextmenu]{pointer-events:auto;}
 body.easy #mix-modal-filters{display:none!important;}
 body.easy .tcb-list{border-radius:var(--r)!important;}
 /* ── Version naming presets ── */
-.vnp-chip{padding:4px 11px;border-radius:var(--r3);border:1px solid rgba(108,99,255,.45);background:transparent;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;transition:all .14s;white-space:nowrap;font-family:'Space Grotesk',sans-serif;display:inline-flex;align-items:center;gap:4px;}
-.vnp-chip:hover{border-color:rgba(108,99,255,.8);color:#fff;background:rgba(108,99,255,.12);}
+.vnp-chip{padding:4px 11px;border-radius:var(--r3);border:1px solid rgba(123,79,191,.45);background:transparent;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;transition:all .14s;white-space:nowrap;font-family:'Space Grotesk',sans-serif;display:inline-flex;align-items:center;gap:4px;}
+.vnp-chip:hover{border-color:rgba(123,79,191,.8);color:#fff;background:rgba(123,79,191,.12);}
 .vnp-chip .vnp-x{font-size:9px;opacity:.5;margin-left:2px;transition:opacity .14s;}
 .vnp-chip:hover .vnp-x{opacity:1;color:var(--red);}
-.vnp-add{padding:4px 9px;border-radius:var(--r3);border:1px dashed rgba(108,99,255,.4);background:transparent;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;transition:all .14s;}
-.vnp-add:hover{border-color:rgba(108,99,255,.7);color:#fff;background:rgba(108,99,255,.12);}
+.vnp-add{padding:4px 9px;border-radius:var(--r3);border:1px dashed rgba(123,79,191,.4);background:transparent;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;transition:all .14s;}
+.vnp-add:hover{border-color:rgba(123,79,191,.7);color:#fff;background:rgba(123,79,191,.12);}
 
 /* ── Easy Mode: alert row ── */
 body.easy #alert-row-full{display:none!important;}
@@ -310,7 +310,7 @@ body.easy .em-more-btn{display:inline-flex!important;cursor:pointer;}
 body.easy .bbtn{
   height:64px!important;font-size:18px!important;font-weight:800!important;
   letter-spacing:.18em!important;border-radius:var(--r2)!important;
-  box-shadow:0 4px 20px rgba(108,99,255,.35)!important;
+  box-shadow:0 4px 20px rgba(123,79,191,.35)!important;
 }
 body.easy .stop-btn{
   width:50px!important;height:64px!important;border-radius:var(--r2)!important;font-size:18px!important;
@@ -387,18 +387,18 @@ body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:va
 .hist-empty{text-align:center;padding:32px 16px;color:var(--muted);font-size:11px;line-height:1.6;}
 .hist-item{border:1px solid var(--b);border-radius:var(--r);margin-bottom:6px;overflow:hidden;background:var(--card);}
 .hist-hdr{display:flex;align-items:center;justify-content:space-between;padding:7px 9px;cursor:pointer;transition:background .12s;gap:6px;}
-.hist-hdr:hover{background:rgba(108,99,255,.06);}
+.hist-hdr:hover{background:rgba(123,79,191,.06);}
 .hist-meta{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1;}
 .hist-proj{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .hist-date{font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace;}
 .hist-right{display:flex;align-items:center;gap:5px;flex-shrink:0;}
 .hist-cnt{font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace;white-space:nowrap;}
-.hist-repeat{width:22px;height:22px;border-radius:6px;border:1px solid rgba(108,99,255,.3);background:rgba(108,99,255,.08);color:var(--accent);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
-.hist-repeat:hover{background:rgba(108,99,255,.18);border-color:var(--accent);}
+.hist-repeat{width:22px;height:22px;border-radius:6px;border:1px solid rgba(123,79,191,.3);background:rgba(123,79,191,.08);color:var(--accent);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
+.hist-repeat:hover{background:rgba(123,79,191,.18);border-color:var(--accent);}
 .hist-files{padding:0 9px 8px;display:none;}
 .hist-file{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:9.5px;font-family:'JetBrains Mono',monospace;color:var(--t2);}
 .hist-badge{font-size:8px;font-weight:700;padding:1px 4px;border-radius:4px;flex-shrink:0;}
-.hist-badge.stem{background:rgba(108,99,255,.15);color:var(--accent);}
+.hist-badge.stem{background:rgba(123,79,191,.15);color:var(--accent);}
 .hist-badge.mix{background:rgba(255,169,77,.15);color:var(--warn);}
 .hist-arrow{font-size:9px;color:var(--muted);transition:transform .15s;flex-shrink:0;}
 .hist-item.open .hist-arrow{transform:rotate(90deg);}
@@ -432,7 +432,7 @@ body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:va
   padding-top:8px;
   gap:0;
 }
-.act-collapsed-strip:hover .act-strip-btn{color:var(--accent);border-color:rgba(108,99,255,.4);background:rgba(108,99,255,.08);}
+.act-collapsed-strip:hover .act-strip-btn{color:var(--accent);border-color:rgba(123,79,191,.4);background:rgba(123,79,191,.08);}
 .shell.act-collapsed .act-collapsed-strip{display:flex;}
 .act-strip-label{display:none;}
 .act-strip-text{
@@ -453,9 +453,9 @@ body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:va
   transition:opacity .15s, color .15s;
   pointer-events:none;
   user-select:none;
-  text-shadow:0 0 18px rgba(108,99,255,.18);
+  text-shadow:0 0 18px rgba(123,79,191,.18);
 }
-.act-collapsed-strip:hover .act-strip-text{opacity:1;color:var(--accent);text-shadow:0 0 14px rgba(108,99,255,.35);}
+.act-collapsed-strip:hover .act-strip-text{opacity:1;color:var(--accent);text-shadow:0 0 14px rgba(123,79,191,.35);}
 .act-strip-btn{
   width:24px;height:24px;
   border-radius:6px;
@@ -474,7 +474,7 @@ body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:va
 .modal-hdr{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;letter-spacing:-.02em;}
 .mfield label{display:block;font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;}
 .mfield input[type=text]{width:100%;background:var(--s);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;padding:9px 11px;transition:border-color .16s;}
-.mfield input[type=text]:focus{outline:none;border-color:rgba(108,99,255,.6);}
+.mfield input[type=text]:focus{outline:none;border-color:rgba(123,79,191,.6);}
 .tcb-list{overflow-y:auto;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:4px 0;max-height:240px;flex-shrink:1;}
 .tcb-list::-webkit-scrollbar{width:3px;}
 .tcb-list::-webkit-scrollbar-thumb{background:var(--b2);}
@@ -482,8 +482,8 @@ body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:va
 .tcb-item:hover{background:rgba(255,255,255,.03);}
 .tcb-item input[type=checkbox]{accent-color:var(--accent);}
 .cbox{width:15px;height:15px;border-radius:4px;border:1.5px solid rgba(255,255,255,.18);background:transparent;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;}
-.cbox:hover{border-color:rgba(108,99,255,.6);}
-.cbox.on{background:linear-gradient(135deg,var(--accent),var(--a2));border-color:transparent;box-shadow:0 0 7px rgba(108,99,255,.35);}
+.cbox:hover{border-color:rgba(123,79,191,.6);}
+.cbox.on{background:linear-gradient(135deg,var(--accent),var(--a2));border-color:transparent;box-shadow:0 0 7px rgba(123,79,191,.35);}
 .tcb-idx{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--muted);width:18px;}
 .tcb-dot{width:5px;height:5px;border-radius:2px;flex-shrink:0;}
 .tcb-name{font-size:11px;flex:1;font-weight:400;color:var(--text);}
@@ -491,8 +491,8 @@ body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:va
 .mbtn{flex:1;padding:10px;border-radius:var(--r);font-size:12px;font-weight:700;cursor:pointer;transition:all .16s;text-align:center;}
 .mbtn.cancel{background:var(--glass);border:1px solid var(--b2);color:var(--t2);}
 .mbtn.cancel:hover{color:var(--text);}
-.mbtn.save{background:linear-gradient(135deg,var(--accent),var(--a2));border:none;color:#fff;font-family:'Space Grotesk',sans-serif;box-shadow:0 4px 16px rgba(108,99,255,.3),inset 0 1px 0 rgba(255,255,255,.2);}
-.mbtn.save:hover{box-shadow:0 6px 24px rgba(108,99,255,.45);}
+.mbtn.save{background:linear-gradient(135deg,var(--accent),var(--a2));border:none;color:#fff;font-family:'Space Grotesk',sans-serif;box-shadow:0 4px 16px rgba(123,79,191,.3),inset 0 1px 0 rgba(255,255,255,.2);}
+.mbtn.save:hover{box-shadow:0 6px 24px rgba(123,79,191,.45);}
 .mbtn.del{background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.25);color:var(--red);flex:0;padding:10px 14px;}
 @keyframes savePresetGlow{0%,100%{box-shadow:0 0 6px rgba(74,140,28,.25);}50%{box-shadow:0 0 16px rgba(74,140,28,.55),0 2px 8px rgba(74,140,28,.2);}}
 .mbtn.save-preset{background:rgba(74,140,28,.22)!important;border:1px solid rgba(74,140,28,.55)!important;color:#6ecf3e!important;font-size:12.5px!important;animation:savePresetGlow 2.2s ease-in-out infinite;letter-spacing:.01em;}
@@ -528,8 +528,8 @@ body.easy #skin-panel{z-index:9000;}
 .scan-arr-item:nth-child(1){animation:arrowBounce .52s ease-in-out infinite alternate;}
 .scan-arr-item:nth-child(2){animation:arrowBounce .52s ease-in-out .17s infinite alternate;}
 .scan-arr-item:nth-child(3){animation:arrowBounce .52s ease-in-out .34s infinite alternate;}
-.scan-arr-head{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:8px solid var(--accent);filter:drop-shadow(0 0 5px rgba(108,99,255,.8));}
-.scan-arr-shaft{width:2px;height:26px;background:linear-gradient(to bottom,var(--accent),rgba(108,99,255,.15));border-radius:0 0 2px 2px;}
+.scan-arr-head{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:8px solid var(--accent);filter:drop-shadow(0 0 5px rgba(123,79,191,.8));}
+.scan-arr-shaft{width:2px;height:26px;background:linear-gradient(to bottom,var(--accent),rgba(123,79,191,.15));border-radius:0 0 2px 2px;}
 /* ── Queue hint arrows (post-scan, horizontal →) ──────── */
 #queue-hint{position:fixed;z-index:9990;display:none;pointer-events:none;flex-direction:row;align-items:center;gap:0;}
 #queue-hint.show{display:flex;}
@@ -539,8 +539,8 @@ body.easy #skin-panel{z-index:9000;}
 .qarr-item:nth-child(1){animation:arrowBounceH .52s ease-in-out infinite alternate;}
 .qarr-item:nth-child(2){animation:arrowBounceH .52s ease-in-out .17s infinite alternate;}
 .qarr-item:nth-child(3){animation:arrowBounceH .52s ease-in-out .34s infinite alternate;}
-.qarr-head{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:8px solid var(--accent);filter:drop-shadow(0 0 5px rgba(108,99,255,.8));}
-.qarr-shaft{height:2px;width:26px;background:linear-gradient(to right,rgba(108,99,255,.15),var(--accent));border-radius:2px 0 0 2px;}
+.qarr-head{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:8px solid var(--accent);filter:drop-shadow(0 0 5px rgba(123,79,191,.8));}
+.qarr-shaft{height:2px;width:26px;background:linear-gradient(to right,rgba(123,79,191,.15),var(--accent));border-radius:2px 0 0 2px;}
 /* ── Scan complete overlay ─────────────────────────────── */
 #scan-done-overlay{display:none;position:fixed;top:38px;left:0;right:0;bottom:0;z-index:9998;pointer-events:none;align-items:center;justify-content:center;}
 #scan-done-overlay.show{display:flex;}
@@ -554,11 +554,11 @@ body.easy #skin-panel{z-index:9000;}
 #fmt-saved-overlay.show #fmt-saved-badge{opacity:1;transform:scale(1) translateY(0);}
 #fmt-saved-overlay.hide #fmt-saved-badge{opacity:0;transform:scale(.92) translateY(-8px);}
 /* ── Bounce button "ready" pulse after format saved ─────── */
-@keyframes bbtn-fmt-ready{0%,100%{box-shadow:0 8px 32px rgba(108,99,255,.4),inset 0 1px 0 rgba(255,255,255,.2);}50%{box-shadow:0 10px 44px rgba(108,99,255,.65),0 0 0 3px rgba(108,99,255,.15),inset 0 1px 0 rgba(255,255,255,.25);}}
+@keyframes bbtn-fmt-ready{0%,100%{box-shadow:0 8px 32px rgba(123,79,191,.4),inset 0 1px 0 rgba(255,255,255,.2);}50%{box-shadow:0 10px 44px rgba(123,79,191,.65),0 0 0 3px rgba(123,79,191,.15),inset 0 1px 0 rgba(255,255,255,.25);}}
 .bbtn.fmt-ready:not(.off):not(.running){animation:bbtn-fmt-ready 2s ease-in-out infinite!important;}
 /* ── Mini Mode ─────────────────────────────────────────────── */
 #mini-mode-ui{display:none;position:fixed;inset:0;flex-direction:column;z-index:9999;border-radius:16px;overflow:hidden;}
-body.mini-mode #mini-mode-ui{display:flex;background:var(--mini-bg,linear-gradient(160deg,#6c63ff,#ff6584));box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1px 0 rgba(0,0,0,.25);}
+body.mini-mode #mini-mode-ui{display:flex;background:var(--mini-bg,linear-gradient(160deg,#7B4FBF,#D4621A));box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1px 0 rgba(0,0,0,.25);}
 body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini-mode #skin-panel{display:none!important;}
 body.mini-mode{background:transparent!important;}
 .mini-drag{height:28px;-webkit-app-region:drag;flex-shrink:0;}
@@ -582,11 +582,11 @@ body.mini-mode{background:transparent!important;}
 /* Format Presets */
 .fmt-bar { display:flex; align-items:center; gap:6px; }
 .fmt-main-btn { flex:1; display:flex; align-items:center; gap:8px; padding:5px 10px; border-radius:var(--r); border:1px solid var(--b); background:var(--card); color:var(--text); font-size:10px; font-weight:600; cursor:pointer; font-family:'JetBrains Mono',monospace; transition:all .16s; min-width:0; }
-.fmt-main-btn:hover { border-color:var(--accent); background:rgba(108,99,255,.07); }
+.fmt-main-btn:hover { border-color:var(--accent); background:rgba(123,79,191,.07); }
 .fmt-tag { padding:2px 7px; border-radius:3px; font-size:9px; font-weight:800; letter-spacing:.6px; }
-.fmt-tag-wav { border:1px solid var(--accent); background:rgba(108,99,255,.18); color:var(--accent); }
+.fmt-tag-wav { border:1px solid var(--accent); background:rgba(123,79,191,.18); color:var(--accent); }
 .fmt-tag-wav-off { border:1px solid var(--b); background:transparent; color:var(--muted); }
-.fmt-tag-mp3 { border:1px solid var(--accent); background:rgba(108,99,255,.18); color:var(--accent); }
+.fmt-tag-mp3 { border:1px solid var(--accent); background:rgba(123,79,191,.18); color:var(--accent); }
 .fmt-tag-mp3-off { border:1px solid var(--b); background:transparent; color:var(--muted); }
 .fmt-bar-detail { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--t2); font-size:10px; }
 /* Modal header format checkboxes */
@@ -595,7 +595,7 @@ body.mini-mode{background:transparent!important;}
 .fmt-hdr-fmt input[type=checkbox] { width:13px; height:13px; accent-color:var(--accent); cursor:pointer; flex-shrink:0; }
 .fmt-hdr-fmt span { font-size:10px; font-weight:700; color:var(--muted); cursor:pointer; font-family:'JetBrains Mono',monospace; letter-spacing:.5px; padding:2px 5px; border-radius:4px; transition:color .14s, background .14s; user-select:none; }
 .fmt-hdr-fmt span:hover { color:var(--t2); }
-.fmt-hdr-fmt.active-view span { color:var(--accent); background:rgba(108,99,255,.12); }
+.fmt-hdr-fmt.active-view span { color:var(--accent); background:rgba(123,79,191,.12); }
 /* Legacy */
 .fmt-active-btn { display:none; } .fmt-active-name {} .fmt-edit-btn { display:none; }
 /* Format Modal */
@@ -603,8 +603,8 @@ body.mini-mode{background:transparent!important;}
 .fmt-modal-body { display:grid; grid-template-columns:200px 1fr; gap:0; flex:1; min-height:0; overflow:hidden; }
 .fmt-preset-list { border-right:1px solid var(--b); padding:10px 0; overflow-y:auto; display:flex; flex-direction:column; }
 .fmt-preset-item { padding:8px 14px; font-size:11px; font-weight:600; cursor:pointer; border-left:3px solid transparent; color:var(--t2); transition:all .12s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.fmt-preset-item:hover { background:rgba(108,99,255,.08); color:var(--text); }
-.fmt-preset-item.active { border-left-color:var(--accent); color:var(--accent); background:rgba(108,99,255,.1); }
+.fmt-preset-item:hover { background:rgba(123,79,191,.08); color:var(--text); }
+.fmt-preset-item.active { border-left-color:var(--accent); color:var(--accent); background:rgba(123,79,191,.1); }
 .fmt-preset-actions { padding:8px 10px; border-top:1px solid var(--b); display:flex; gap:6px; margin-top:auto; }
 .fmt-settings { padding:16px; overflow-y:auto; }
 .fmt-field { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
@@ -612,7 +612,7 @@ body.mini-mode{background:transparent!important;}
 .fmt-field select, .fmt-field input[type=text] { flex:1; background:var(--card); border:1px solid var(--b); border-radius:var(--r); color:var(--text); font-size:11px; padding:5px 8px; font-family:'JetBrains Mono',monospace; }
 .fmt-dest-tabs { display:flex; gap:6px; flex:1; }
 .fmt-dest-tab { flex:1; padding:5px; border-radius:var(--r); border:1px solid var(--b); background:var(--card); color:var(--muted); font-size:10px; font-weight:600; cursor:pointer; text-align:center; transition:all .14s; }
-.fmt-dest-tab.active { border-color:var(--accent); background:rgba(108,99,255,.15); color:var(--accent); }
+.fmt-dest-tab.active { border-color:var(--accent); background:rgba(123,79,191,.15); color:var(--accent); }
 .fmt-modal-footer { padding:12px 16px; border-top:1px solid var(--b); display:flex; gap:8px; align-items:center; }
 .fmt-cb-row { display:flex; align-items:center; gap:6px; cursor:pointer; font-size:10px; color:var(--t2); font-weight:600; }
 .fmt-cb-row input[type=checkbox] { accent-color:var(--accent); cursor:pointer; }
@@ -648,7 +648,7 @@ body.mini-mode{background:transparent!important;}
 .fb-attach-slot:hover{border-color:var(--accent);color:var(--text);}
 .fb-attach-slot-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .fb-attach-remove{flex-shrink:0;width:24px;height:24px;border:1px solid var(--b,rgba(255,255,255,.1));border-radius:5px;background:transparent;color:var(--muted);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .15s,color .15s;padding:0;}
-.fb-attach-remove:hover{border-color:#ff6584;color:#ff6584;}
+.fb-attach-remove:hover{border-color:#D4621A;color:#D4621A;}
 #fb-send-btn{width:100%;padding:10px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s,transform .1s;letter-spacing:.02em;}
 #fb-send-btn:hover{opacity:.88;}
 #fb-send-btn:active{transform:scale(.98);}
@@ -697,11 +697,11 @@ body.mini-mode{background:transparent!important;}
     <span class="em-lbl">Easy</span>
   </div>
   <div class="tb-right">
-    <button class="tb-pill" id="scan-btn" onclick="scanLogic()" title="Scan Logic Pro channels. Keep Mixer open!" style="background:linear-gradient(160deg,var(--accent),var(--a2));border-color:transparent;color:#fff;font-weight:700;box-shadow:0 4px 16px rgba(108,99,255,.35),inset 0 1px 0 rgba(255,255,255,.15);">
+    <button class="tb-pill" id="scan-btn" onclick="scanLogic()" title="Scan Logic Pro channels. Keep Mixer open!" style="background:linear-gradient(160deg,var(--accent),var(--a2));border-color:transparent;color:#fff;font-weight:700;box-shadow:0 4px 16px rgba(123,79,191,.35),inset 0 1px 0 rgba(255,255,255,.15);">
       <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg>
       Scan Logic
     </button>
-    <button class="tb-pill" id="skin-btn" title="Choose theme" onclick="openSkinPanel()" style="border-color:rgba(255,101,132,.3);color:var(--a2);">
+    <button class="tb-pill" id="skin-btn" title="Choose theme" onclick="openSkinPanel()" style="border-color:rgba(212,98,26,.3);color:var(--a2);">
       <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5.5"/><circle cx="7" cy="7" r="2"/></svg>
       Theme
     </button>
@@ -712,10 +712,10 @@ body.mini-mode{background:transparent!important;}
       <div class="ldot" id="ldot"></div>
       <span class="llbl" id="llbl">Logic off</span>
     </div>
-    <button class="tb-pill" id="update-btn" onclick="checkUpdates()" style="padding:3px 9px;font-size:10px;border-color:rgba(108,99,255,.3);color:var(--accent);gap:4px;opacity:.85;background:rgba(108,99,255,.07);font-weight:600;" title="Check for updates">
+    <button class="tb-pill" id="update-btn" onclick="checkUpdates()" style="padding:3px 9px;font-size:10px;border-color:rgba(123,79,191,.3);color:var(--accent);gap:4px;opacity:.85;background:rgba(123,79,191,.07);font-weight:600;" title="Check for updates">
       <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" style="width:11px;height:11px;"><path d="M7 1v5l3.5 2" stroke-linecap="round"/><circle cx="7" cy="7" r="6"/></svg>v1.0
     </button>
-    <button class="tb-pill" id="tooltip-toggle-btn" onclick="onHelpClick()" style="width:28px;height:28px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;background:rgba(108,99,255,.1);border:1.5px solid rgba(108,99,255,.35);color:var(--accent);font-size:13px;font-weight:800;flex-shrink:0;box-shadow:0 0 8px rgba(108,99,255,.2);" title="Toggle tips">?</button>
+    <button class="tb-pill" id="tooltip-toggle-btn" onclick="onHelpClick()" style="width:28px;height:28px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;background:rgba(123,79,191,.1);border:1.5px solid rgba(123,79,191,.35);color:var(--accent);font-size:13px;font-weight:800;flex-shrink:0;box-shadow:0 0 8px rgba(123,79,191,.2);" title="Toggle tips">?</button>
   </div>
 </div>
 <div class="shell">
@@ -753,7 +753,7 @@ body.mini-mode{background:transparent!important;}
         <div style="position:relative;margin-left:6px;display:flex;align-items:center;gap:3px;">
           <button id="markers-btn" onclick="toggleMarkersPopup()" title="Bounce by markers — set cycle ranges per bounce pass"
             style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .16s;white-space:nowrap;">
-            <span style="font-size:10px;">📍</span>
+            <span style="display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-pin"/></svg></span>
             <span id="markers-btn-lbl">Markers</span>
           </button>
           <button id="markers-chips-btn" onclick="toggleQueueMarkersChips()" title="Show/hide marker names on queue items"
@@ -775,7 +775,7 @@ body.mini-mode{background:transparent!important;}
           </div>
         </div>
         <div class="q-mini-btns">
-          <button class="q-mini-btn" id="save-job-set-btn" onclick="saveJobSet()" title="Save current queue as a reusable set">💾 Save set</button>
+          <button class="q-mini-btn" id="save-job-set-btn" onclick="saveJobSet()" title="Save current queue as a reusable set"><svg class="ico ico-sm" style="margin-right:4px;vertical-align:-2px;"><use href="#ico-save"/></svg>Save set</button>
           <button class="q-mini-btn" id="reload-queue-btn" onclick="reloadQueue()" title="Reset all items back to pending">↺ Reset all</button>
           <button class="q-mini-btn em-hide" id="clear-done-btn" onclick="clearDone()" title="Remove completed items from queue">Clear done</button>
           <button class="q-mini-btn" onclick="clearQueue()" title="Clear entire queue">Clear all</button>
@@ -826,7 +826,7 @@ body.mini-mode{background:transparent!important;}
       <div class="out-row em-hide" id="mp-row" style="margin-top:2px;">
         <span class="out-lbl"></span>
         <button id="mp-open-btn" onclick="openMasterPluginsModal()" style="flex:1;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--t2);font-size:10px;font-weight:600;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .16s;" title="Check master channel plugins">
-          <span>🎛</span><span style="flex:1;text-align:left;">Master plugins</span><span id="mp-badge" style="display:none;background:rgba(255,169,77,.2);border:1px solid rgba(255,169,77,.5);color:var(--warn);font-size:8px;padding:1px 5px;border-radius:3px;font-weight:800;">BYPASS</span><span style="color:var(--muted);font-size:9px;">⚙</span>
+          <span style="display:inline-flex;align-items:center;"><svg class="ico"><use href="#ico-sliders"/></svg></span><span style="flex:1;text-align:left;">Master plugins</span><span id="mp-badge" style="display:none;background:rgba(255,169,77,.2);border:1px solid rgba(255,169,77,.5);color:var(--warn);font-size:8px;padding:1px 5px;border-radius:3px;font-weight:800;">BYPASS</span><span style="color:var(--muted);display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-gear"/></svg></span>
         </button>
       </div>
       <div class="out-row fmt-bar">
@@ -854,7 +854,7 @@ body.mini-mode{background:transparent!important;}
       <div class="bounce-btns">
         <button class="bbtn off" id="bbtn" title="Start bouncing all items in queue" onclick="doBounce()">Bounce</button>
         <button class="stop-btn" id="cancel-btn" title="Cancel bounce and stop Logic" onclick="cancelBounce()">✕</button>
-        <button id="mini-btn" title="Minimize to floating widget" onclick="showMiniPlayer()" style="display:none;width:54px;height:54px;border-radius:var(--r2);border:1px solid rgba(108,99,255,.3);background:rgba(108,99,255,.08);color:var(--accent);font-size:20px;cursor:pointer;transition:all .16s;flex-shrink:0;align-items:center;justify-content:center;">⊟</button>
+        <button id="mini-btn" title="Minimize to floating widget" onclick="showMiniPlayer()" style="display:none;width:54px;height:54px;border-radius:var(--r2);border:1px solid rgba(123,79,191,.3);background:rgba(123,79,191,.08);color:var(--accent);font-size:20px;cursor:pointer;transition:all .16s;flex-shrink:0;align-items:center;justify-content:center;">⊟</button>
         <button id="retry-btn" title="Retry failed or cancelled bounce" onclick="retryBounce()" style="display:none;width:54px;height:54px;border-radius:var(--r2);border:1px solid rgba(255,169,77,.4);background:rgba(255,169,77,.1);color:var(--warn);font-size:22px;cursor:pointer;transition:all .16s;flex-shrink:0;align-items:center;justify-content:center;">↺</button>
         <button id="redo-all-btn" title="Reset all bounced items and bounce again" onclick="redoAllBounce()" style="display:none;height:54px;padding:0 16px;border-radius:var(--r2);border:1px solid rgba(74,140,28,.4);background:rgba(74,140,28,.08);color:var(--a3);font-size:12px;font-weight:700;cursor:pointer;transition:all .16s;flex-shrink:0;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;letter-spacing:.04em;">↻ Redo All</button>
       </div>
@@ -873,18 +873,18 @@ body.mini-mode{background:transparent!important;}
       <!-- Alert row: mini (easy mode) -->
       <div id="alert-row-mini" style="display:flex;margin-top:6px;position:relative;align-items:center;justify-content:flex-end;gap:4px;">
         <button id="notif-btn" title="Notification settings (Telegram / Email)" onclick="showNotifModal()" style="padding:4px 9px;border-radius:var(--r);border:1px solid rgba(29,158,117,.35);background:rgba(29,158,117,.08);color:var(--a3);font-size:14px;cursor:pointer;display:flex;align-items:center;gap:4px;font-family:'JetBrains Mono',monospace;opacity:.85;transition:all .15s;" onmouseover="this.style.opacity='1';this.style.borderColor='rgba(29,158,117,.6)'" onmouseout="this.style.opacity='.85';this.style.borderColor='rgba(29,158,117,.35)'"><span id="notif-btn-icon" style="font-size:16px;line-height:1;">📨</span></button>
-        <button id="schedule-btn" class="em-hide" title="Schedule bounce for later" onclick="showScheduleModal()" style="padding:3px 7px;border-radius:var(--r);border:1px solid rgba(108,99,255,.25);background:rgba(108,99,255,.06);color:var(--accent);font-size:15px;cursor:pointer;display:flex;align-items:center;gap:3px;font-family:'JetBrains Mono',monospace;opacity:.7;transition:opacity .15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.7'">⏰</button>
+        <button id="schedule-btn" class="em-hide" title="Schedule bounce for later" onclick="showScheduleModal()" style="padding:3px 7px;border-radius:var(--r);border:1px solid rgba(123,79,191,.25);background:rgba(123,79,191,.06);color:var(--accent);font-size:15px;cursor:pointer;display:flex;align-items:center;gap:3px;font-family:'JetBrains Mono',monospace;opacity:.7;transition:opacity .15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.7'">⏰</button>
         <button onclick="toggleBellPopover()" id="bell-mini-btn" title="Alert sound" style="padding:3px 7px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;gap:3px;font-family:'JetBrains Mono',monospace;opacity:.7;transition:opacity .15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.7'">
-          <span id="bell-mini-icon" style="font-size:15px;">🔔</span>
+          <span id="bell-mini-icon" style="display:flex;align-items:center;"><svg class="ico"><use href="#ico-bell"/></svg></span>
           <span style="font-size:8px;color:var(--muted);">▾</span>
         </button>
-        <button title="Send feedback" onclick="toggleFeedbackPopup()" style="padding:3px 7px;border-radius:var(--r);border:1px solid rgba(108,99,255,.2);background:rgba(108,99,255,.06);color:var(--accent);font-size:15px;cursor:pointer;display:flex;align-items:center;font-family:'JetBrains Mono',monospace;opacity:.7;transition:opacity .15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.7'">💬</button>
+        <button title="Send feedback" onclick="toggleFeedbackPopup()" style="padding:3px 7px;border-radius:var(--r);border:1px solid rgba(123,79,191,.2);background:rgba(123,79,191,.06);color:var(--accent);font-size:15px;cursor:pointer;display:flex;align-items:center;font-family:'JetBrains Mono',monospace;opacity:.7;transition:opacity .15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.7'">💬</button>
         <div id="bell-popover">
-          <button onclick="setBellSound('bell')" id="bell-opt-bell" class="bell-active">🔔 Bell</button>
-          <button onclick="setBellSound('chime')" id="bell-opt-chime">🎵 Chime</button>
-          <button onclick="setBellSound('ping')" id="bell-opt-ping">⚡ Ping</button>
-          <button onclick="setBellSound('soft')" id="bell-opt-soft">🌙 Soft</button>
-          <button onclick="setBellSound('none')" id="bell-opt-none">— None</button>
+          <button onclick="setBellSound('bell')" id="bell-opt-bell" class="bell-active"><svg class="ico ico-sm" style="margin-right:6px;vertical-align:-2px;"><use href="#ico-bell"/></svg>Bell</button>
+          <button onclick="setBellSound('chime')" id="bell-opt-chime"><svg class="ico ico-sm" style="margin-right:6px;vertical-align:-2px;"><use href="#ico-music"/></svg>Chime</button>
+          <button onclick="setBellSound('ping')" id="bell-opt-ping"><svg class="ico ico-sm" style="margin-right:6px;vertical-align:-2px;"><use href="#ico-bounce"/></svg>Ping</button>
+          <button onclick="setBellSound('soft')" id="bell-opt-soft"><svg class="ico ico-sm" style="margin-right:6px;vertical-align:-2px;"><use href="#ico-moon"/></svg>Soft</button>
+          <button onclick="setBellSound('none')" id="bell-opt-none"><svg class="ico ico-sm" style="margin-right:6px;vertical-align:-2px;"><use href="#ico-bell-off"/></svg>None</button>
         </div>
       </div>
     </div>
@@ -917,7 +917,7 @@ body.mini-mode{background:transparent!important;}
         <div class="log-body" id="log-body"></div>
         <!-- Trial countdown badge — shown only when trial is active -->
         <div id="trial-countdown" style="display:none;padding:5px 10px;border-top:1px solid var(--b);background:rgba(255,149,0,.06);font-family:'JetBrains Mono',monospace;font-size:10px;color:#ffb340;display:none;align-items:center;gap:8px;flex-shrink:0;">
-          <span style="opacity:.6;">⏱ Trial:</span>
+          <span style="opacity:.6;display:inline-flex;align-items:center;gap:4px;"><svg class="ico ico-sm"><use href="#ico-clock"/></svg> Trial:</span>
           <span id="trial-time-left" style="font-weight:700;letter-spacing:.04em;">—</span>
           <span style="margin-left:auto;opacity:.5;font-size:9px;">remaining</span>
           <a href="#" onclick="if(window.api&&window.api.openExternal)window.api.openExternal('https://project-1z26v.vercel.app')" style="color:#ffb340;font-size:9px;text-decoration:underline;opacity:.7;">Buy →</a>
@@ -1070,12 +1070,12 @@ body.mini-mode{background:transparent!important;}
             <button id="fmt-src-preset-btn" class="fmt-src-btn src-preset active-src"
               onclick="setFmtSource('preset')"
               title="Save format preset — will be applied automatically to Logic's Bounce dialog on each bounce">
-              <span class="fmt-src-dot"></span>💾 Set Format
+              <span class="fmt-src-dot"></span><svg class="ico ico-sm" style="margin-right:4px;vertical-align:-2px;"><use href="#ico-save"/></svg>Set Format
             </button>
             <button id="fmt-src-logic-btn" class="fmt-src-btn src-logic"
               onclick="setFmtSource('logic', true)"
               title="Set params manually in Logic — EasyBounce won't override Logic's Bounce settings">
-              <span class="fmt-src-dot"></span>🎛 Set in Logic
+              <span class="fmt-src-dot"></span><svg class="ico ico-sm" style="margin-right:4px;vertical-align:-2px;"><use href="#ico-sliders"/></svg>Set in Logic
             </button>
             <span style="flex:1;"></span>
             <button onclick="applyFmtSource()" style="padding:7px 22px;border-radius:var(--r);border:1px solid rgba(74,140,28,.5);background:rgba(74,140,28,.2);color:var(--a3);font-size:11px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;box-shadow:0 2px 8px rgba(74,140,28,.2);">Save</button>
@@ -1105,7 +1105,7 @@ body.mini-mode{background:transparent!important;}
     <div class="tcb-list" id="mix-ch-list" style="flex:1;min-height:80px;max-height:none;"></div>
     <div class="modal-actions">
       <button class="mbtn cancel" onclick="closeMixModal()">Cancel</button>
-      <button class="mbtn save save-preset" onclick="saveMixAsPreset()">💾 Save preset</button>
+      <button class="mbtn save save-preset" onclick="saveMixAsPreset()"><svg class="ico ico-sm" style="margin-right:5px;vertical-align:-2px;"><use href="#ico-save"/></svg>Save preset</button>
       <button id="mix-add-btn" class="mbtn save" onclick="saveMix()">Add to Queue</button>
     </div>
   </div>
@@ -1133,7 +1133,7 @@ body.mini-mode{background:transparent!important;}
     <div id="esp-preset-chips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px;min-height:22px;flex-shrink:0;"></div>
     <div class="modal-actions">
       <button class="mbtn cancel" onclick="document.getElementById('edit-stem-preset-modal').classList.remove('show')">Cancel</button>
-      <button class="mbtn save save-preset" onclick="saveEditedStemPreset()">💾 Save preset</button>
+      <button class="mbtn save save-preset" onclick="saveEditedStemPreset()"><svg class="ico ico-sm" style="margin-right:5px;vertical-align:-2px;"><use href="#ico-save"/></svg>Save preset</button>
       <button class="mbtn save" onclick="_espAddToQueue()">Add to Queue</button>
     </div>
   </div>
@@ -1147,7 +1147,7 @@ body.mini-mode{background:transparent!important;}
     <div class="mfield" style="flex-shrink:0;margin-bottom:10px;"><label>Merge Name</label>
       <div style="display:flex;gap:6px;align-items:center;">
         <input type="text" id="merge-name-inp" placeholder="e.g. Brass, Perc, Orchestra…" oninput="_mergeSaveCheck()" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmMerge();}">
-        <button id="merge-save-preset-btn" onclick="_saveMergePreset()" title="Save as preset" style="display:none;flex-shrink:0;padding:6px 11px;border-radius:var(--r);border:1px dashed rgba(108,99,255,.45);background:rgba(108,99,255,.07);color:var(--accent);font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .14s;">+ Save</button>
+        <button id="merge-save-preset-btn" onclick="_saveMergePreset()" title="Save as preset" style="display:none;flex-shrink:0;padding:6px 11px;border-radius:var(--r);border:1px dashed rgba(123,79,191,.45);background:rgba(123,79,191,.07);color:var(--accent);font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .14s;">+ Save</button>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-bottom:5px;">
@@ -1201,11 +1201,11 @@ body.mini-mode{background:transparent!important;}
     <input type="text" id="eset-ch-search" placeholder="Search channels…" oninput="_esetRenderChannels()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:11px;padding:5px 9px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;flex-shrink:0;">
     <div id="eset-channels-list" style="max-height:110px;overflow-y:auto;flex-shrink:0;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:4px 0;"></div>
     <div style="display:flex;gap:6px;flex-shrink:0;">
-      <button onclick="esetCreateVersion()" style="flex:1;padding:5px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:11px;cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--b)';this.style.color='var(--muted)'">🎚 Create version mix…</button>
+      <button onclick="esetCreateVersion()" style="flex:1;padding:5px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:11px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--b)';this.style.color='var(--muted)'"><svg class="ico ico-sm"><use href="#ico-fader"/></svg>Create version mix…</button>
     </div>
     <div class="modal-actions" id="eset-actions" style="flex-shrink:0;margin-top:2px;">
       <button class="mbtn cancel" onclick="closeEditSetModal()">Cancel</button>
-      <button class="mbtn save save-preset" id="eset-save-preset-btn" style="display:none;" onclick="saveEditSetToPreset()">💾 Save to preset</button>
+      <button class="mbtn save save-preset" id="eset-save-preset-btn" style="display:none;" onclick="saveEditSetToPreset()"><svg class="ico ico-sm" style="margin-right:5px;vertical-align:-2px;"><use href="#ico-save"/></svg>Save to preset</button>
       <button class="mbtn save" id="eset-save-btn" onclick="saveEditSet()">Save</button>
     </div>
   </div>
@@ -1217,7 +1217,7 @@ body.mini-mode{background:transparent!important;}
     <div id="stem-name-presets" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:2px 0 10px;min-height:22px;"></div>
     <div class="modal-actions">
       <button class="mbtn cancel" onclick="document.getElementById('preset-name-modal').classList.remove('show')">Cancel</button>
-      <button class="mbtn save save-preset" onclick="confirmSavePreset()">💾 Save Preset</button>
+      <button class="mbtn save save-preset" onclick="confirmSavePreset()"><svg class="ico ico-sm" style="margin-right:5px;vertical-align:-2px;"><use href="#ico-save"/></svg>Save Preset</button>
       <button class="mbtn save" onclick="confirmAddStemsToQueue()">Add to Queue</button>
     </div>
   </div>
@@ -1227,12 +1227,12 @@ body.mini-mode{background:transparent!important;}
   <div style="position:absolute;inset:0;background:rgba(0,0,0,.45);"></div>
   
   <!-- Spotlight ring -->
-  <div id="ob-spotlight" style="position:absolute;border-radius:50%;border:3px solid var(--accent);box-shadow:0 0 0 5000px rgba(0,0,0,.5),0 0 0 6px rgba(108,99,255,.3),0 0 50px rgba(108,99,255,.6);transition:all .4s cubic-bezier(.4,0,.2,1);pointer-events:none;display:none;"></div>
+  <div id="ob-spotlight" style="position:absolute;border-radius:50%;border:3px solid var(--accent);box-shadow:0 0 0 5000px rgba(0,0,0,.5),0 0 0 6px rgba(123,79,191,.3),0 0 50px rgba(123,79,191,.6);transition:all .4s cubic-bezier(.4,0,.2,1);pointer-events:none;display:none;"></div>
 
   <!-- Card -->
-  <div id="ob-card" style="position:absolute;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--accent);border-radius:20px;padding:36px 40px;max-width:420px;width:92%;box-shadow:0 32px 80px rgba(0,0,0,.8),0 0 80px rgba(108,99,255,.2);transition:all .35s cubic-bezier(.4,0,.2,1);">
+  <div id="ob-card" style="position:absolute;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--accent);border-radius:20px;padding:36px 40px;max-width:420px;width:92%;box-shadow:0 32px 80px rgba(0,0,0,.8),0 0 80px rgba(123,79,191,.2);transition:all .35s cubic-bezier(.4,0,.2,1);">
     <div style="text-align:center;margin-bottom:28px;">
-      <div id="ob-icon" style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--a2));display:inline-flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:18px;box-shadow:0 8px 40px rgba(108,99,255,.5);animation:ob-pulse 2s ease-in-out infinite;"></div>
+      <div id="ob-icon" style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--a2));display:inline-flex;align-items:center;justify-content:center;color:#fff;margin-bottom:18px;box-shadow:0 8px 40px rgba(123,79,191,.45);animation:ob-pulse 2s ease-in-out infinite;"></div>
       <div id="ob-title" style="font-size:24px;font-weight:900;color:var(--text);letter-spacing:-.02em;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;"></div>
       <div style="width:40px;height:3px;background:linear-gradient(90deg,var(--accent),var(--a2));border-radius:2px;margin:8px auto 12px;"></div>
       <div id="ob-sub" style="font-size:12px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.1em;"></div>
@@ -1241,12 +1241,12 @@ body.mini-mode{background:transparent!important;}
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <div style="display:flex;gap:6px;" id="ob-dots"></div>
       <div style="display:flex;gap:8px;">
-        <button onclick="obNext()" id="ob-next" style="padding:9px 24px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent),var(--a2));color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 20px rgba(108,99,255,.4);letter-spacing:.02em;">NEXT →</button>
+        <button onclick="obNext()" id="ob-next" style="padding:9px 24px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent),var(--a2));color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 20px rgba(123,79,191,.4);letter-spacing:.02em;">NEXT →</button>
       </div>
     </div>
   </div>
   <style>
-  @keyframes ob-pulse{0%,100%{box-shadow:0 8px 40px rgba(108,99,255,.5)}50%{box-shadow:0 8px 60px rgba(108,99,255,.9),0 0 80px rgba(108,99,255,.3)}}
+  @keyframes ob-pulse{0%,100%{box-shadow:0 8px 40px rgba(123,79,191,.5)}50%{box-shadow:0 8px 60px rgba(123,79,191,.9),0 0 80px rgba(123,79,191,.3)}}
   </style>
 </div>
 
@@ -1261,7 +1261,7 @@ body.mini-mode{background:transparent!important;}
       <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--b,#222);">
         <div id="mp-status-dot" style="width:8px;height:8px;border-radius:50%;background:#ff4757;flex-shrink:0;"></div>
         <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;">Master Plugins</span>
-        <button id="mp-refresh" onclick="loadMasterPlugins(true)" style="margin-left:auto;display:flex;align-items:center;gap:5px;background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.25);color:#a89fff;font-size:10px;font-weight:700;cursor:pointer;padding:4px 10px;border-radius:6px;letter-spacing:.04em;transition:all .14s;" onmouseover="this.style.background='rgba(108,99,255,.2)'" onmouseout="this.style.background='rgba(108,99,255,.1)'" title="Scroll to master channel in Logic and re-read plugins">⟳ Reconnect</button>
+        <button id="mp-refresh" onclick="loadMasterPlugins(true)" style="margin-left:auto;display:flex;align-items:center;gap:5px;background:rgba(123,79,191,.1);border:1px solid rgba(123,79,191,.25);color:#a89fff;font-size:10px;font-weight:700;cursor:pointer;padding:4px 10px;border-radius:6px;letter-spacing:.04em;transition:all .14s;" onmouseover="this.style.background='rgba(123,79,191,.2)'" onmouseout="this.style.background='rgba(123,79,191,.1)'" title="Scroll to master channel in Logic and re-read plugins">⟳ Reconnect</button>
         <button onclick="closeMasterPluginsModal()" style="background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0;line-height:1;transition:color .14s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">✕</button>
       </div>
       <div id="mp-grid" style="max-height:300px;overflow-y:auto;">
@@ -1286,7 +1286,7 @@ body.mini-mode{background:transparent!important;}
   <div id="ch-ctx-name" style="font-size:10px;font-weight:700;color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--b);margin-bottom:2px;"></div>
   <button onclick="hideChannel()" style="width:100%;padding:7px 10px;text-align:left;background:transparent;border:none;color:var(--text);font-size:12px;cursor:pointer;border-radius:var(--r);transition:background .12s;" onmouseover="this.style.background='rgba(255,71,87,.1)';this.style.color='var(--red)'" onmouseout="this.style.background='transparent';this.style.color='var(--text)'">Hide channel</button>
   <button onclick="addCtxAsStems()" style="width:100%;padding:7px 10px;text-align:left;background:transparent;border:none;color:var(--text);font-size:12px;cursor:pointer;border-radius:var(--r);transition:background .12s;" onmouseover="this.style.background='rgba(74,140,28,.1)'" onmouseout="this.style.background='transparent'">+ Add as Stem</button>
-  <button onclick="addCtxAsMix()" style="width:100%;padding:7px 10px;text-align:left;background:transparent;border:none;color:var(--text);font-size:12px;cursor:pointer;border-radius:var(--r);transition:background .12s;" onmouseover="this.style.background='rgba(108,99,255,.1)'" onmouseout="this.style.background='transparent'">+ Add as Mix (muted)</button>
+  <button onclick="addCtxAsMix()" style="width:100%;padding:7px 10px;text-align:left;background:transparent;border:none;color:var(--text);font-size:12px;cursor:pointer;border-radius:var(--r);transition:background .12s;" onmouseover="this.style.background='rgba(123,79,191,.1)'" onmouseout="this.style.background='transparent'">+ Add as Mix (muted)</button>
 </div>
 <!-- JOB SETS MODAL -->
 <div class="overlay" id="job-sets-modal">
@@ -1347,7 +1347,7 @@ body.mini-mode{background:transparent!important;}
     box-shadow:0 40px 100px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.06);
   ">
     <!-- Logo -->
-    <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#6c63ff,#ff6584);margin:0 auto 20px;display:flex;align-items:center;justify-content:center;">
+    <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#7B4FBF,#D4621A);margin:0 auto 20px;display:flex;align-items:center;justify-content:center;">
       <svg width="28" height="28" viewBox="0 0 14 14" fill="white"><circle cx="7" cy="7" r="5"/></svg>
     </div>
     <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#e2e2f0;margin-bottom:6px;letter-spacing:-.02em;">EasyBounce</div>
@@ -1369,10 +1369,10 @@ body.mini-mode{background:transparent!important;}
     <!-- Activate button -->
     <button onclick="activateLicense()" style="
       width:100%;height:48px;border-radius:12px;border:none;cursor:pointer;
-      background:linear-gradient(135deg,#6c63ff,#ff6584);color:white;
+      background:linear-gradient(135deg,#7B4FBF,#D4621A);color:white;
       font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;
       letter-spacing:.03em;transition:all .18s;
-      box-shadow:0 6px 24px rgba(108,99,255,.4),inset 0 1px 0 rgba(255,255,255,.2);
+      box-shadow:0 6px 24px rgba(123,79,191,.4),inset 0 1px 0 rgba(255,255,255,.2);
       margin-bottom:16px;
     " onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
       Activate EasyBounce
@@ -1384,7 +1384,7 @@ body.mini-mode{background:transparent!important;}
     <!-- Buy link -->
     <div style="font-size:11px;color:#444458;">
       Don't have a key?
-      <a href="#" onclick="window.api&&window.api.openExternal?window.api.openExternal('https://project-1z26v.vercel.app'):null;return false;" style="color:#6c63ff;">Purchase at easybounce.app →</a>
+      <a href="#" onclick="window.api&&window.api.openExternal?window.api.openExternal('https://project-1z26v.vercel.app'):null;return false;" style="color:#7B4FBF;">Purchase at easybounce.app →</a>
     </div>
 
     <!-- Machine ID for support -->
@@ -1756,9 +1756,15 @@ function applyEasyMode() {
   document.body.classList.toggle('easy', easyMode);
   // Sync bell mini icon with current sound
   const cur = document.getElementById('bell-sound')?.value || 'bell';
-  const icons = {bell:'🔔',chime:'🎵',ping:'⚡',soft:'🌙',none:'🔕'};
+  const icons = {
+    bell:  '<svg class="ico"><use href="#ico-bell"/></svg>',
+    chime: '<svg class="ico"><use href="#ico-music"/></svg>',
+    ping:  '<svg class="ico"><use href="#ico-bounce"/></svg>',
+    soft:  '<svg class="ico"><use href="#ico-moon"/></svg>',
+    none:  '<svg class="ico"><use href="#ico-bell-off"/></svg>',
+  };
   const iconEl = document.getElementById('bell-mini-icon');
-  if (iconEl) iconEl.textContent = icons[cur] || '🔔';
+  if (iconEl) iconEl.innerHTML = icons[cur] || icons.bell;
   // Auto-collapse activity panel in easy mode
   const pr = document.getElementById('panel-pr');
   const shell = document.querySelector('.shell');
@@ -1930,11 +1936,11 @@ function showTrialExpiredOverlay() {
     ov.id = 'trial-expired-overlay';
     ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;font-family:Inter,sans-serif;backdrop-filter:blur(12px);';
     ov.innerHTML = `
-      <div style="font-size:36px;">⏱</div>
+      <div style="color:var(--warn);display:flex;justify-content:center;"><svg class="ico ico-hero" style="width:44px;height:44px;"><use href="#ico-clock"/></svg></div>
       <div style="font-size:22px;font-weight:700;color:#fff;">Your trial has ended</div>
       <div style="font-size:14px;color:#888;text-align:center;max-width:320px;line-height:1.6;">Get full access to EasyBounce — one-time purchase or monthly subscription.</div>
-      <button onclick="if(window.api&&window.api.openExternal)window.api.openExternal('https://project-1z26v.vercel.app')" style="margin-top:8px;padding:14px 36px;border-radius:12px;border:none;background:linear-gradient(135deg,#6c63ff,#ff6584);color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">Buy EasyBounce →</button>
-      <div style="font-size:12px;color:#555;">Already have a key? <a href="#" onclick="document.getElementById('trial-expired-overlay').remove();showLicenseOverlay()" style="color:#6c63ff;">Enter license key</a></div>
+      <button onclick="if(window.api&&window.api.openExternal)window.api.openExternal('https://project-1z26v.vercel.app')" style="margin-top:8px;padding:14px 36px;border-radius:12px;border:none;background:linear-gradient(135deg,#7B4FBF,#D4621A);color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">Buy EasyBounce →</button>
+      <div style="font-size:12px;color:#555;">Already have a key? <a href="#" onclick="document.getElementById('trial-expired-overlay').remove();showLicenseOverlay()" style="color:#7B4FBF;">Enter license key</a></div>
     `;
     document.body.appendChild(ov);
   }
@@ -2078,7 +2084,7 @@ async function cancelScan() {
   const scanWarn = document.getElementById('scan-warning');
   if (scanWarn) scanWarn.classList.remove('show');
   const btn = document.getElementById('scan-btn');
-  if (btn) { btn.classList.remove('scanning'); btn.innerHTML = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg> Scan Logic'; btn.style.cssText = 'background:linear-gradient(160deg,var(--accent),var(--a2));border-color:transparent;color:#fff;font-weight:700;box-shadow:0 4px 16px rgba(108,99,255,.35),inset 0 1px 0 rgba(255,255,255,.15);'; }
+  if (btn) { btn.classList.remove('scanning'); btn.innerHTML = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg> Scan Logic'; btn.style.cssText = 'background:linear-gradient(160deg,var(--accent),var(--a2));border-color:transparent;color:#fff;font-weight:700;box-shadow:0 4px 16px rgba(123,79,191,.35),inset 0 1px 0 rgba(255,255,255,.15);'; }
   if (window.api && window.api.focusApp) { try { await window.api.focusApp(); } catch(e) { console.warn('[EB]', e); } }
   toast('Scan cancelled');
   log('Scan cancelled by user', 'warn');
@@ -2294,7 +2300,7 @@ async function scanLogic(isAutoRetry = false) {
 
   // Helper: abort current scan and auto-retry (or show final error)
   async function _abort(reason) {
-    btn.classList.remove('scanning'); btn.innerHTML = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg> Scan Logic'; btn.style.cssText = 'background:linear-gradient(160deg,var(--accent),var(--a2));border-color:transparent;color:#fff;font-weight:700;box-shadow:0 4px 16px rgba(108,99,255,.35),inset 0 1px 0 rgba(255,255,255,.15);';
+    btn.classList.remove('scanning'); btn.innerHTML = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg> Scan Logic'; btn.style.cssText = 'background:linear-gradient(160deg,var(--accent),var(--a2));border-color:transparent;color:#fff;font-weight:700;box-shadow:0 4px 16px rgba(123,79,191,.35),inset 0 1px 0 rgba(255,255,255,.15);';
     if (isAutoRetry) {
       _scanRunning = false;
       if (window.api.exitScanBadge) { try { await window.api.exitScanBadge(); _scanBadgeActive = false; } catch(e) { console.warn('[EB]', e); } }
@@ -2354,7 +2360,7 @@ async function scanLogic(isAutoRetry = false) {
 
   btn.classList.remove('scanning');
   btn.innerHTML = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg> Scan Logic';
-  btn.style.cssText = 'background:linear-gradient(160deg,var(--accent),var(--a2));border-color:transparent;color:#fff;font-weight:700;box-shadow:0 4px 16px rgba(108,99,255,.35),inset 0 1px 0 rgba(255,255,255,.15);';
+  btn.style.cssText = 'background:linear-gradient(160deg,var(--accent),var(--a2));border-color:transparent;color:#fff;font-weight:700;box-shadow:0 4px 16px rgba(123,79,191,.35),inset 0 1px 0 rgba(255,255,255,.15);';
   document.getElementById('scan-hint')?.classList.remove('show');
 
   channels = (result.channels || []).map((ch, i) => ({
@@ -3613,7 +3619,7 @@ function updateAddStemsBtn() {
     btn.style.border = '1px solid transparent';
     btn.style.color = '#fff';
     btn.style.fontWeight = '700';
-    btn.style.boxShadow = '0 4px 16px rgba(108,99,255,.35)';
+    btn.style.boxShadow = '0 4px 16px rgba(123,79,191,.35)';
     btn.textContent = `+ Stems (${selectedIdx.size})`;
     // Merge only available when 2+ channels selected
     if (mBtn) {
@@ -3848,7 +3854,7 @@ function _renderEspPresetChips() {
     chip.style.cssText = 'padding:3px 11px;border-radius:var(--r3);border:1px solid var(--b2);background:var(--card);color:var(--t2);font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .14s;';
     chip.textContent = '🎚 ' + p.name;
     chip.title = (p.names||[]).join(', ') || p.name;
-    chip.onmouseover = () => { chip.style.borderColor = 'var(--accent)'; chip.style.color = 'var(--accent)'; chip.style.background = 'rgba(108,99,255,.08)'; };
+    chip.onmouseover = () => { chip.style.borderColor = 'var(--accent)'; chip.style.color = 'var(--accent)'; chip.style.background = 'rgba(123,79,191,.08)'; };
     chip.onmouseout  = () => { chip.style.borderColor = 'var(--b2)'; chip.style.color = 'var(--t2)'; chip.style.background = 'var(--card)'; };
     chip.onclick = () => _espAddFromPreset(p.id);
     cont.appendChild(chip);
@@ -3952,9 +3958,9 @@ function _renderEspChannels() {
     const isInPre = inPreset.has(ch.name);
     const row = document.createElement('div');
     const isSel = _espSelectedChs.has(ch.index);
-    row.style.cssText = `display:flex;align-items:center;gap:8px;padding:4px 8px;padding-left:${indentPx}px;border-radius:5px;cursor:pointer;transition:background .1s;` + (isSel ? 'background:rgba(108,99,255,.12);' : '');
+    row.style.cssText = `display:flex;align-items:center;gap:8px;padding:4px 8px;padding-left:${indentPx}px;border-radius:5px;cursor:pointer;transition:background .1s;` + (isSel ? 'background:rgba(123,79,191,.12);' : '');
     row.onmouseover = () => { if (!_espSelectedChs.has(ch.index)) row.style.background = 'rgba(255,255,255,.04)'; };
-    row.onmouseout  = () => { row.style.background = _espSelectedChs.has(ch.index) ? 'rgba(108,99,255,.12)' : ''; };
+    row.onmouseout  = () => { row.style.background = _espSelectedChs.has(ch.index) ? 'rgba(123,79,191,.12)' : ''; };
     row.oncontextmenu = (e) => e.preventDefault();
     row.addEventListener('mousedown', (e) => { if (e.button !== 2) return; if (e.target.closest('button')) return; e.preventDefault(); e.stopPropagation();
       const targets = (_espSelectedChs.has(ch.index) && _espSelectedChs.size > 1) ? [..._espSelectedChs] : [ch.index];
@@ -4060,9 +4066,9 @@ function _renderEspChannels() {
       if (ch) _espRenderOrder.push(ch.index); // include group in render order for shift+click range
       const isInPreG = ch ? inPreset.has(ch.name) : false;
       const isSelG = ch ? _espSelectedChs.has(ch.index) : false;
-      row.style.cssText = `display:flex;align-items:center;gap:6px;padding:5px 8px;padding-left:${indent}px;cursor:pointer;transition:background .1s;background:${isSelG ? 'rgba(108,99,255,.12)' : baseBg};`;
+      row.style.cssText = `display:flex;align-items:center;gap:6px;padding:5px 8px;padding-left:${indent}px;cursor:pointer;transition:background .1s;background:${isSelG ? 'rgba(123,79,191,.12)' : baseBg};`;
       row.onmouseover = () => { if (!(ch && _espSelectedChs.has(ch.index))) row.style.background = 'rgba(255,255,255,.07)'; };
-      row.onmouseout  = () => { row.style.background = (ch && _espSelectedChs.has(ch.index)) ? 'rgba(108,99,255,.12)' : baseBg; };
+      row.onmouseout  = () => { row.style.background = (ch && _espSelectedChs.has(ch.index)) ? 'rgba(123,79,191,.12)' : baseBg; };
       row.oncontextmenu = (e) => e.preventDefault();
       row.addEventListener('mousedown', (e) => {
         if (e.button === 0 && e.shiftKey && !e.target.closest('.cbox,.esp-tri') && ch) {
@@ -4308,9 +4314,9 @@ function _espToggleHidden() {
   const btn = document.getElementById('esp-hidden-tab');
   const eye = document.getElementById('esp-hidden-eye');
   if (btn) {
-    btn.style.background    = _espShowHiddenOnly ? 'rgba(108,99,255,.12)' : 'var(--card)';
+    btn.style.background    = _espShowHiddenOnly ? 'rgba(123,79,191,.12)' : 'var(--card)';
     btn.style.color         = _espShowHiddenOnly ? 'var(--accent)'        : 'var(--muted)';
-    btn.style.borderColor   = _espShowHiddenOnly ? 'rgba(108,99,255,.4)'  : 'var(--b)';
+    btn.style.borderColor   = _espShowHiddenOnly ? 'rgba(123,79,191,.4)'  : 'var(--b)';
   }
   if (eye) eye.textContent = _espShowHiddenOnly ? '🙈' : '👁';
   _renderEspChannels();
@@ -4596,7 +4602,7 @@ function _esetRenderTabs() {
   tabs.forEach(([key, label]) => {
     const btn = document.createElement('button');
     const active = key === _esetActiveTab;
-    btn.style.cssText = 'padding:4px 10px;border-radius:6px;border:1px solid ' + (active ? 'var(--accent)' : 'var(--b)') + ';background:' + (active ? 'rgba(108,99,255,.12)' : 'var(--card)') + ';color:' + (active ? 'var(--accent)' : 'var(--muted)') + ';font-size:10px;font-weight:600;cursor:pointer;';
+    btn.style.cssText = 'padding:4px 10px;border-radius:6px;border:1px solid ' + (active ? 'var(--accent)' : 'var(--b)') + ';background:' + (active ? 'rgba(123,79,191,.12)' : 'var(--card)') + ';color:' + (active ? 'var(--accent)' : 'var(--muted)') + ';font-size:10px;font-weight:600;cursor:pointer;';
     btn.textContent = label;
     btn.onclick = () => { _esetActiveTab = key; _esetRenderTabs(); _esetRenderTabContent(); };
     cont.appendChild(btn);
@@ -4626,7 +4632,7 @@ function _esetRenderTabContent() {
       const add = document.createElement('button');
       add.style.cssText = 'background:none;border:1px solid var(--b);border-radius:4px;color:var(--muted);cursor:pointer;font-size:10px;padding:2px 8px;flex-shrink:0;';
       add.textContent = '+ Add all';
-      add.onmouseover = () => { add.style.borderColor = 'var(--accent)'; add.style.color = 'var(--accent)'; add.style.background = 'rgba(108,99,255,.08)'; };
+      add.onmouseover = () => { add.style.borderColor = 'var(--accent)'; add.style.color = 'var(--accent)'; add.style.background = 'rgba(123,79,191,.08)'; };
       add.onmouseout  = () => { add.style.borderColor = 'var(--b)'; add.style.color = 'var(--muted)'; add.style.background = 'none'; };
       add.onclick = () => esetAddStemPreset(p.id);
       row.appendChild(nm); row.appendChild(sub); row.appendChild(add);
@@ -4651,7 +4657,7 @@ function _esetRenderTabContent() {
       const add = document.createElement('button');
       add.style.cssText = 'background:none;border:1px solid var(--b);border-radius:4px;color:var(--muted);cursor:pointer;font-size:10px;padding:2px 8px;flex-shrink:0;';
       add.textContent = '+ Add';
-      add.onmouseover = () => { add.style.borderColor = 'var(--accent)'; add.style.color = 'var(--accent)'; add.style.background = 'rgba(108,99,255,.08)'; };
+      add.onmouseover = () => { add.style.borderColor = 'var(--accent)'; add.style.color = 'var(--accent)'; add.style.background = 'rgba(123,79,191,.08)'; };
       add.onmouseout  = () => { add.style.borderColor = 'var(--b)'; add.style.color = 'var(--muted)'; add.style.background = 'none'; };
       add.onclick = () => esetAddVersionPreset(p.id);
       row.appendChild(nm); row.appendChild(sub); row.appendChild(add);
@@ -4700,9 +4706,9 @@ function _esetRenderChannels() {
     const isChecked = inSet.has(ch.index);
     const isSel = _esetSelectedChs.has(ch.index);
     const row = document.createElement('div');
-    row.style.cssText = `display:flex;align-items:center;gap:8px;padding:4px 8px;padding-left:${indentPx}px;border-radius:5px;cursor:pointer;transition:background .1s;` + (isSel ? 'background:rgba(108,99,255,.12);' : '');
+    row.style.cssText = `display:flex;align-items:center;gap:8px;padding:4px 8px;padding-left:${indentPx}px;border-radius:5px;cursor:pointer;transition:background .1s;` + (isSel ? 'background:rgba(123,79,191,.12);' : '');
     row.onmouseover = () => { if (!_esetSelectedChs.has(ch.index)) row.style.background = 'rgba(255,255,255,.04)'; };
-    row.onmouseout  = () => { row.style.background = _esetSelectedChs.has(ch.index) ? 'rgba(108,99,255,.12)' : ''; };
+    row.onmouseout  = () => { row.style.background = _esetSelectedChs.has(ch.index) ? 'rgba(123,79,191,.12)' : ''; };
     const cb = _makeCustomCb(isChecked, (nowOn) => {
       if (_esetSelectedChs.has(ch.index) && _esetSelectedChs.size > 1) {
         // Apply to all selected channels
@@ -4731,7 +4737,7 @@ function _esetRenderChannels() {
       _esetShiftPrevRange = null;
       _esetSelectedChs.add(ch.index);
       if (_esetShiftLast === null) _esetShiftLast = ch.index;
-      row.style.background = 'rgba(108,99,255,.12)';
+      row.style.background = 'rgba(123,79,191,.12)';
       nm.style.color = 'var(--text)';
     };
     // Shift+drag: range-recompute on each enter
@@ -4767,7 +4773,7 @@ function _esetRenderChannels() {
       const nowSel = !_esetSelectedChs.has(ch.index);
       if (nowSel) _esetSelectedChs.add(ch.index); else _esetSelectedChs.delete(ch.index);
       _esetShiftLast = ch.index;
-      row.style.background = nowSel ? 'rgba(108,99,255,.12)' : '';
+      row.style.background = nowSel ? 'rgba(123,79,191,.12)' : '';
       nm.style.color = nowSel ? 'var(--text)' : 'var(--t2)';
       const _esetXBtnT = document.getElementById('eset-clear-sel-btn');
       if (_esetXBtnT) _esetXBtnT.style.display = _esetSelectedChs.size > 0 ? '' : 'none';
@@ -4809,16 +4815,16 @@ function _esetRenderChannels() {
       const row = document.createElement('div');
       const baseBg = `rgba(255,255,255,${depthBg})`;
       const isSel = ch && _esetSelectedChs.has(ch.index);
-      row.style.cssText = `display:flex;align-items:center;gap:6px;padding:4px 8px;padding-left:${indent}px;cursor:pointer;background:${isSel ? 'rgba(108,99,255,.12)' : baseBg};`;
+      row.style.cssText = `display:flex;align-items:center;gap:6px;padding:4px 8px;padding-left:${indent}px;cursor:pointer;background:${isSel ? 'rgba(123,79,191,.12)' : baseBg};`;
       row.onmouseover = () => { if (!(ch && _esetSelectedChs.has(ch.index))) row.style.background = 'rgba(255,255,255,.07)'; };
-      row.onmouseout  = () => { row.style.background = (ch && _esetSelectedChs.has(ch.index)) ? 'rgba(108,99,255,.12)' : baseBg; };
+      row.onmouseout  = () => { row.style.background = (ch && _esetSelectedChs.has(ch.index)) ? 'rgba(123,79,191,.12)' : baseBg; };
       row.onmousedown = (e) => {
         if (e.button !== 0 || !e.shiftKey || e.target.closest('.cbox,.eset-tri') || !ch) return;
         _esetDragAnchor = ch.index;
         _esetShiftPrevRange = null;
         _esetSelectedChs.add(ch.index);
         if (_esetShiftLast === null) _esetShiftLast = ch.index;
-        row.style.background = 'rgba(108,99,255,.12)';
+        row.style.background = 'rgba(123,79,191,.12)';
       };
       row.addEventListener('mouseenter', (e) => {
         if (!e.buttons || !e.shiftKey || !ch || _esetDragAnchor === null) return;
@@ -4853,7 +4859,7 @@ function _esetRenderChannels() {
         const nowSel = !_esetSelectedChs.has(ch.index);
         if (nowSel) _esetSelectedChs.add(ch.index); else _esetSelectedChs.delete(ch.index);
         _esetShiftLast = ch.index;
-        row.style.background = nowSel ? 'rgba(108,99,255,.12)' : baseBg;
+        row.style.background = nowSel ? 'rgba(123,79,191,.12)' : baseBg;
         const _esetXBtnG = document.getElementById('eset-clear-sel-btn');
         if (_esetXBtnG) _esetXBtnG.style.display = _esetSelectedChs.size > 0 ? '' : 'none';
       };
@@ -5504,9 +5510,9 @@ function _renderMergeChannelList() {
     const isChecked = inMerge.has(ch.index);
     const isSel = _mergeSelSet.has(ch.index);
     const row = document.createElement('div');
-    row.style.cssText = `display:flex;align-items:center;gap:8px;padding:4px 8px;padding-left:${indentPx}px;border-radius:5px;cursor:pointer;transition:background .1s;` + (isSel ? 'background:rgba(108,99,255,.12);' : '');
+    row.style.cssText = `display:flex;align-items:center;gap:8px;padding:4px 8px;padding-left:${indentPx}px;border-radius:5px;cursor:pointer;transition:background .1s;` + (isSel ? 'background:rgba(123,79,191,.12);' : '');
     row.onmouseover = () => { if (!_mergeSelSet.has(ch.index)) row.style.background = 'rgba(255,255,255,.04)'; };
-    row.onmouseout  = () => { row.style.background = _mergeSelSet.has(ch.index) ? 'rgba(108,99,255,.12)' : ''; };
+    row.onmouseout  = () => { row.style.background = _mergeSelSet.has(ch.index) ? 'rgba(123,79,191,.12)' : ''; };
     const cb = _makeCustomCb(isChecked, (nowOn) => {
       if (_mergeSelSet.has(ch.index) && _mergeSelSet.size > 1) {
         const targets = [..._mergeSelSet];
@@ -5531,7 +5537,7 @@ function _renderMergeChannelList() {
       window._mergeShiftPrevRange = null;
       _mergeSelSet.add(ch.index);
       if (window._mergeShiftAnchor === null || window._mergeShiftAnchor === undefined) window._mergeShiftAnchor = ch.index;
-      row.style.background = 'rgba(108,99,255,.12)';
+      row.style.background = 'rgba(123,79,191,.12)';
       nm.style.color = 'var(--text)';
     };
     row.addEventListener('mouseenter', (e) => {
@@ -5596,16 +5602,16 @@ function _renderMergeChannelList() {
       const baseBg = `rgba(255,255,255,${[.04,.025,.015,.008][Math.min(depth,3)]})`;
       const row = document.createElement('div');
       const isMrgSel = ch && _mergeSelSet.has(ch.index);
-      row.style.cssText = `display:flex;align-items:center;gap:6px;padding:4px 8px;padding-left:${indent}px;cursor:pointer;background:${isMrgSel ? 'rgba(108,99,255,.12)' : baseBg};`;
+      row.style.cssText = `display:flex;align-items:center;gap:6px;padding:4px 8px;padding-left:${indent}px;cursor:pointer;background:${isMrgSel ? 'rgba(123,79,191,.12)' : baseBg};`;
       row.onmouseover = () => { if (!(ch && _mergeSelSet.has(ch.index))) row.style.background = 'rgba(255,255,255,.07)'; };
-      row.onmouseout  = () => { row.style.background = (ch && _mergeSelSet.has(ch.index)) ? 'rgba(108,99,255,.12)' : baseBg; };
+      row.onmouseout  = () => { row.style.background = (ch && _mergeSelSet.has(ch.index)) ? 'rgba(123,79,191,.12)' : baseBg; };
       row.onmousedown = (e) => {
         if (e.button !== 0 || !e.shiftKey || e.target.closest('.cbox,.mrg-tri') || !ch) return;
         window._mergeDragAnchor = ch.index;
         window._mergeShiftPrevRange = null;
         _mergeSelSet.add(ch.index);
         if (window._mergeShiftAnchor === null || window._mergeShiftAnchor === undefined) window._mergeShiftAnchor = ch.index;
-        row.style.background = 'rgba(108,99,255,.12)';
+        row.style.background = 'rgba(123,79,191,.12)';
       };
       row.addEventListener('mouseenter', (e) => {
         if (!e.buttons || !e.shiftKey || !ch || window._mergeDragAnchor == null) return;
@@ -6060,7 +6066,7 @@ function toggleMixHiddenTab() {
   _versionShowHiddenOnly = !_versionShowHiddenOnly;
   const btn = document.getElementById('mix-hidden-tab');
   const eye = document.getElementById('mix-hidden-eye');
-  if (btn) btn.style.background = _versionShowHiddenOnly ? 'rgba(108,99,255,.18)' : 'var(--card)';
+  if (btn) btn.style.background = _versionShowHiddenOnly ? 'rgba(123,79,191,.18)' : 'var(--card)';
   if (btn) btn.style.color = _versionShowHiddenOnly ? 'var(--accent)' : 'var(--muted)';
   if (eye) eye.textContent = _versionShowHiddenOnly ? '🚫' : '👁';
   renderMixList();
@@ -6171,9 +6177,9 @@ function renderMixList(initIndices) {
       const depthBg = [.04, .025, .015, .008][Math.min(depth, 3)];
       const baseBg = `rgba(255,255,255,${depthBg})`;
       const isSel = ch && _mixSelSet.has(ch.index);
-      row.style.cssText = `display:flex;align-items:center;gap:6px;padding:5px 8px;padding-left:${8 + indent}px;cursor:pointer;background:${isSel ? 'rgba(108,99,255,.13)' : baseBg};`;
+      row.style.cssText = `display:flex;align-items:center;gap:6px;padding:5px 8px;padding-left:${8 + indent}px;cursor:pointer;background:${isSel ? 'rgba(123,79,191,.13)' : baseBg};`;
       row.onmouseover = () => { if (!(ch && _mixSelSet.has(ch.index))) row.style.background = 'rgba(255,255,255,.06)'; };
-      row.onmouseout  = () => { row.style.background = (ch && _mixSelSet.has(ch.index)) ? 'rgba(108,99,255,.13)' : baseBg; };
+      row.onmouseout  = () => { row.style.background = (ch && _mixSelSet.has(ch.index)) ? 'rgba(123,79,191,.13)' : baseBg; };
       row.onclick = (e) => {
         if (e.target.closest('.cbox')) return; // handled by checkbox
         if (e.target.closest('.mix-tri')) return; // handled by triangle
@@ -6201,7 +6207,7 @@ function renderMixList(initIndices) {
           _mixShiftPrevRange = null;
           _mixSelSet.add(ch.index);
           if (_mixSelLast === null) _mixSelLast = ch.index;
-          row.style.background = 'rgba(108,99,255,.13)';
+          row.style.background = 'rgba(123,79,191,.13)';
           return;
         }
         if (e.button !== 2) return;
@@ -6330,7 +6336,7 @@ function renderMixList(initIndices) {
       const lbl = document.createElement('div');
       lbl.className = 'tcb-item';
       lbl.style.paddingLeft = `${12 + indent}px`;
-      if (isSel) lbl.style.background = 'rgba(108,99,255,.13)';
+      if (isSel) lbl.style.background = 'rgba(123,79,191,.13)';
       lbl.oncontextmenu = (e) => e.preventDefault();
       // Right-click: hide/unhide all selected (or just this one)
       lbl.addEventListener('mousedown', (e) => {
@@ -6339,7 +6345,7 @@ function renderMixList(initIndices) {
           _mixShiftPrevRange = null;
           _mixSelSet.add(ch.index);
           if (_mixSelLast === null) _mixSelLast = ch.index;
-          lbl.style.background = 'rgba(108,99,255,.13)';
+          lbl.style.background = 'rgba(123,79,191,.13)';
           return;
         }
         if (e.button !== 2) return; e.preventDefault(); e.stopPropagation();
@@ -7112,7 +7118,7 @@ function renderQueue() {
           // Style: active=colored, excluded=strikethrough, globally-off-but-added=orange outline, globally-off=very dim
           let style, title;
           if (globallyActive && !excluded) {
-            style = 'background:rgba(108,99,255,.18);color:#b8b0ff;border:1.5px solid rgba(108,99,255,.4);';
+            style = 'background:rgba(123,79,191,.18);color:#b8b0ff;border:1.5px solid rgba(123,79,191,.4);';
             title = 'Will bounce — click to skip for this item';
           } else if (globallyActive && excluded) {
             style = 'background:transparent;color:rgba(255,255,255,.35);border:1.5px dashed rgba(255,255,255,.18);';
@@ -8684,9 +8690,9 @@ async function openBounceParams() {
 }
 
 const OB_STEPS = [
-  { icon: "🎛", title: "Step 1 — Scan Logic", sub: "Connect to Logic Pro", body: "Click <b>Scan Logic</b> in the toolbar.<br><br>⚠️ <b>Your Logic project must be open before scanning.</b><br><br>🚫 <b>Don't touch anything during scan</b> — EasyBounce controls Logic automatically.<br><br>✅ After scan: <b>don't close the Mixer</b> in Logic. Keep it open throughout the session." },
-  { icon: "🎚", title: "Step 2 — Build Queue", sub: "Choose what to bounce", body: "Click channels to add them to the bounce queue.<br><br>Use <b>All</b> to select everything, click unwanted to deselect, then press <b>+ Stems</b>.<br><br>Use <b>+ Version</b> to create muted mix versions." },
-  { icon: "🚀", title: "Step 3 — Bounce!", sub: "Let EasyBounce do the work", body: "Choose your output folder and name prefix.<br><br>Hit the big <b>BOUNCE</b> button and relax. EasyBounce automatically solos each stem, bounces, and saves to your folder!" },
+  { icon: '<svg class="ico" style="width:36px;height:36px;vertical-align:middle;"><use href="#ico-sliders"/></svg>', title: "Step 1 — Scan Logic", sub: "Connect to Logic Pro", body: "Click <b>Scan Logic</b> in the toolbar.<br><br>⚠️ <b>Your Logic project must be open before scanning.</b><br><br>🚫 <b>Don't touch anything during scan</b> — EasyBounce controls Logic automatically.<br><br>✅ After scan: <b>don't close the Mixer</b> in Logic. Keep it open throughout the session." },
+  { icon: '<svg class="ico" style="width:36px;height:36px;vertical-align:middle;"><use href="#ico-fader"/></svg>', title: "Step 2 — Build Queue", sub: "Choose what to bounce", body: "Click channels to add them to the bounce queue.<br><br>Use <b>All</b> to select everything, click unwanted to deselect, then press <b>+ Stems</b>.<br><br>Use <b>+ Version</b> to create muted mix versions." },
+  { icon: '<svg class="ico" style="width:36px;height:36px;vertical-align:middle;"><use href="#ico-rocket"/></svg>', title: "Step 3 — Bounce!", sub: "Let EasyBounce do the work", body: "Choose your output folder and name prefix.<br><br>Hit the big <b>BOUNCE</b> button and relax. EasyBounce automatically solos each stem, bounces, and saves to your folder!" },
 ];
 let _obStep = 0;
 
@@ -8966,7 +8972,7 @@ function obNext() {
 }
 function updateObStep() {
   const s = OB_STEPS[_obStep];
-  document.getElementById('ob-icon').textContent = s.icon;
+  document.getElementById('ob-icon').innerHTML = s.icon;
   document.getElementById('ob-title').textContent = s.title;
   document.getElementById('ob-sub').textContent = s.sub;
   document.getElementById('ob-body').innerHTML = s.body;
@@ -10034,7 +10040,7 @@ function renderHistory() {
       pluginsHtml = `${_sep}
         <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 12px 2px;">
           <span style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Master Chain</span>
-          <button onclick="event.stopPropagation();restorePluginsFromHistory(${s.id})" title="Restore these plugin states in Logic" style="font-size:9px;padding:2px 9px;border-radius:5px;border:1px solid rgba(108,99,255,.35);background:rgba(108,99,255,.1);color:var(--accent);cursor:pointer;font-family:'JetBrains Mono',monospace;font-weight:600;transition:all .13s;" onmouseover="this.style.background='rgba(108,99,255,.22)'" onmouseout="this.style.background='rgba(108,99,255,.1)'">↺ Restore</button>
+          <button onclick="event.stopPropagation();restorePluginsFromHistory(${s.id})" title="Restore these plugin states in Logic" style="font-size:9px;padding:2px 9px;border-radius:5px;border:1px solid rgba(123,79,191,.35);background:rgba(123,79,191,.1);color:var(--accent);cursor:pointer;font-family:'JetBrains Mono',monospace;font-weight:600;transition:all .13s;" onmouseover="this.style.background='rgba(123,79,191,.22)'" onmouseout="this.style.background='rgba(123,79,191,.1)'">↺ Restore</button>
         </div>
         ${plugRows}`;
     }
@@ -10271,9 +10277,15 @@ function setBellSound(val) {
   if (sel) { sel.value = val; }
   saveBellSound(val);
   // Update mini icon
-  const icons = {bell:'🔔',chime:'🎵',ping:'⚡',soft:'🌙',none:'🔕'};
+  const icons = {
+    bell:  '<svg class="ico"><use href="#ico-bell"/></svg>',
+    chime: '<svg class="ico"><use href="#ico-music"/></svg>',
+    ping:  '<svg class="ico"><use href="#ico-bounce"/></svg>',
+    soft:  '<svg class="ico"><use href="#ico-moon"/></svg>',
+    none:  '<svg class="ico"><use href="#ico-bell-off"/></svg>',
+  };
   const iconEl = document.getElementById('bell-mini-icon');
-  if (iconEl) iconEl.textContent = icons[val] || '🔔';
+  if (iconEl) iconEl.innerHTML = icons[val] || icons.bell;
   // Update active state
   document.querySelectorAll('#bell-popover button').forEach(b => {
     b.classList.toggle('bell-active', b.id === 'bell-opt-' + val);
@@ -10698,8 +10710,8 @@ let currentSkin = localStorage.getItem('sb_skin') || 'default';
 let isPinned = localStorage.getItem('sb4_pinned') === 'true';
 const SKINS = {
   default: {
-    name:'DARK', preview:['#6c63ff','#0c0c10','#43e97b'],
-    vars:{'--bg':'#0c0c10','--s':'#111116','--card':'#17171e','--card2':'#1c1c24','--b':'#252530','--b2':'#30303e','--accent':'#6c63ff','--a2':'#ff6584','--a3':'#43e97b','--warn':'#ffa94d','--red':'#ff4757','--text':'#e2e2f0','--t2':'#8888a8','--muted':'#444458','--r':'10px','--r2':'16px','--r3':'24px'}
+    name:'DARK', preview:['#7B4FBF','#0c0c10','#43e97b'],
+    vars:{'--bg':'#0c0c10','--s':'#111116','--card':'#17171e','--card2':'#1c1c24','--b':'#252530','--b2':'#30303e','--accent':'#7B4FBF','--a2':'#D4621A','--a3':'#43e97b','--warn':'#ffa94d','--red':'#ff4757','--text':'#e2e2f0','--t2':'#8888a8','--muted':'#444458','--r':'10px','--r2':'16px','--r3':'24px'}
   },
   logic: {
     name:'LOGIC', preview:['#0A84FF','#2A2A2A','#30D158'],
@@ -10724,7 +10736,7 @@ const SKINS = {
 };
 
 const MINI_GRADIENTS = {
-  default:  'linear-gradient(160deg,#6c63ff 0%,#ff6584 100%)',
+  default:  'linear-gradient(160deg,#7B4FBF 0%,#D4621A 100%)',
   logic:    'linear-gradient(160deg,#4A90D9 0%,#5EC43E 100%)',
   matrix:   'linear-gradient(160deg,#0a5fd4 0%,#147efb 50%,#4ca3fc 100%)',
   aurora:   'linear-gradient(160deg,#e879a0 0%,#a855f7 50%,#7c6aff 100%)',
@@ -10746,10 +10758,10 @@ function applySkin(name) {
   s.id = 'skin-dynamic-css';
   const effects = {
     default: `
-      .bbtn:not(.off):not(.running){background:linear-gradient(160deg,#6c63ff,#ff6584)!important;box-shadow:0 6px 24px rgba(108,99,255,.4),inset 0 1px 0 rgba(255,255,255,.2)!important;}
-      .bbtn:not(.off):not(.running):hover{box-shadow:0 12px 40px rgba(108,99,255,.6),inset 0 1px 0 rgba(255,255,255,.25)!important;}
-      .tb-logo-mark{background:linear-gradient(135deg,#6c63ff,#ff6584)!important;}
-      .stat-val{color:#6c63ff!important;}
+      .bbtn:not(.off):not(.running){background:linear-gradient(160deg,#7B4FBF,#D4621A)!important;box-shadow:0 6px 24px rgba(123,79,191,.4),inset 0 1px 0 rgba(255,255,255,.2)!important;}
+      .bbtn:not(.off):not(.running):hover{box-shadow:0 12px 40px rgba(123,79,191,.6),inset 0 1px 0 rgba(255,255,255,.25)!important;}
+      .tb-logo-mark{background:linear-gradient(135deg,#7B4FBF,#D4621A)!important;}
+      .stat-val{color:#7B4FBF!important;}
     `,
     logic: `
       body{background:#292929!important;}
@@ -11520,8 +11532,8 @@ function updateMarkersBtnLabel() {
   const hasAny = _fullActive || activeCount > 0;
   lblEl.textContent = 'Markers';
   btnEl.style.color = hasAny ? 'var(--accent)' : 'var(--muted)';
-  btnEl.style.borderColor = hasAny ? 'rgba(108,99,255,.4)' : 'var(--b)';
-  btnEl.style.background = hasAny ? 'rgba(108,99,255,.08)' : 'var(--card)';
+  btnEl.style.borderColor = hasAny ? 'rgba(123,79,191,.4)' : 'var(--b)';
+  btnEl.style.background = hasAny ? 'rgba(123,79,191,.08)' : 'var(--card)';
 }
 
 function renderMarkersPopupList() {
@@ -11556,7 +11568,7 @@ function renderMarkersPopupList() {
     html += `<div onclick="toggleMarkerActive('${idSafe}',${!isActive})"
       style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px 2px 7px;border-radius:20px;cursor:pointer;transition:all .13s;user-select:none;
         ${isActive
-          ? 'background:rgba(108,99,255,.2);border:1.5px solid rgba(108,99,255,.55);'
+          ? 'background:rgba(123,79,191,.2);border:1.5px solid rgba(123,79,191,.55);'
           : 'background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.2);'}">
       <span style="font-size:10px;font-family:\'JetBrains Mono\',monospace;font-weight:600;
         color:${isActive ? '#b8b0ff' : 'rgba(255,255,255,.7)'};">${m.name}</span>
@@ -11646,7 +11658,7 @@ function _updateMarkersChipsBtn() {
   if (!_queueMarkersChipsVisible) {
     btn.style.borderColor = 'var(--accent)';
     btn.style.color = 'var(--accent)';
-    btn.style.background = 'rgba(108,99,255,.1)';
+    btn.style.background = 'rgba(123,79,191,.1)';
   } else {
     btn.style.borderColor = 'var(--b)';
     btn.style.color = 'var(--muted)';
@@ -12028,7 +12040,7 @@ function _updHighlightBtn(version) {
   btn.style.opacity = '1';
   btn.style.borderColor = 'var(--accent)';
   btn.style.color = 'var(--accent)';
-  btn.style.boxShadow = '0 0 8px rgba(108,99,255,.3)';
+  btn.style.boxShadow = '0 0 8px rgba(123,79,191,.3)';
   btn.title = `Update available: v${version}`;
 }
 
@@ -12064,7 +12076,7 @@ function showUpdateModal(mode, version, notes, downloadUrl) {
       ${notesHtml ? `<ul style="list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;border-top:1px solid rgba(255,255,255,.06);padding-top:14px">${notesHtml}</ul>` : ''}
       <div style="display:flex;gap:10px;${isUpdate ? '' : 'justify-content:center'}">
         ${isUpdate ? `<button id="upd-later" style="flex:1;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:var(--t2);font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--t2)'">Later</button>` : ''}
-        <button id="upd-action" style="flex:2;padding:10px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent),var(--a2));color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(108,99,255,.35);transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+        <button id="upd-action" style="flex:2;padding:10px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent),var(--a2));color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(123,79,191,.35);transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
           ${isUpdate ? 'Download →' : 'OK, got it'}
         </button>
       </div>
@@ -12164,7 +12176,7 @@ function showLicenseOverlay() {
         badge.style.background = 'rgba(99,255,180,.06)';
         badge.style.border = '1px solid rgba(99,255,180,.18)';
         badge.style.color = '#63ffb4';
-        badge.innerHTML = '⏱ Free trial available — <a href="#" onclick="startTrialFromOverlay();return false;" style="color:#63ffb4;font-weight:700;">Start 7-day trial →</a>';
+        badge.innerHTML = '<svg class="ico ico-sm" style="vertical-align:-2px;margin-right:4px;"><use href="#ico-clock"/></svg>Free trial available — <a href="#" onclick="startTrialFromOverlay();return false;" style="color:#63ffb4;font-weight:700;">Start 7-day trial →</a>';
       }
     }).catch(()=>{});
   }
@@ -12463,11 +12475,11 @@ async function submitFeedback() {
   <div style="width:360px;background:#111;border:1px solid #222;border-radius:20px;padding:36px 32px 28px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.8);position:relative;">
     <!-- Close button → goes to license/activate screen -->
     <button onclick="document.getElementById('trial-expired-overlay').style.display='none';showLicenseOverlay();" style="position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;border:1px solid #333;background:#1a1a1a;color:#666;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit;line-height:1;" onmouseover="this.style.background='#2a2a2a';this.style.color='#aaa'" onmouseout="this.style.background='#1a1a1a';this.style.color='#666'">✕</button>
-    <div style="font-size:42px;margin-bottom:16px;">⏱</div>
+    <div style="margin-bottom:16px;color:var(--warn);display:flex;justify-content:center;"><svg class="ico" style="width:48px;height:48px;"><use href="#ico-clock"/></svg></div>
     <div style="font-size:22px;font-weight:700;color:#f0f0f0;margin-bottom:10px;letter-spacing:-.02em;">Your trial has ended</div>
     <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:28px;">7-day free trial is over.<br>Purchase a license to continue using EasyBounce.</div>
-    <button onclick="buyEasyBounce()" style="width:100%;height:50px;border-radius:12px;border:none;background:linear-gradient(135deg,#6c63ff,#ff6584);color:#fff;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:14px;box-shadow:0 8px 24px rgba(108,99,255,.4);">Purchase EasyBounce →</button>
-    <div style="font-size:11px;color:#333;">Already have a key? <a href="#" onclick="document.getElementById('trial-expired-overlay').style.display='none';showLicenseOverlay()" style="color:#6c63ff;text-decoration:none;">Enter license key →</a></div>
+    <button onclick="buyEasyBounce()" style="width:100%;height:50px;border-radius:12px;border:none;background:linear-gradient(135deg,#7B4FBF,#D4621A);color:#fff;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:14px;box-shadow:0 8px 24px rgba(123,79,191,.4);">Purchase EasyBounce →</button>
+    <div style="font-size:11px;color:#333;">Already have a key? <a href="#" onclick="document.getElementById('trial-expired-overlay').style.display='none';showLicenseOverlay()" style="color:#7B4FBF;text-decoration:none;">Enter license key →</a></div>
   </div>
 </div>
 <div id="scan-done-overlay"><div id="scan-done-badge">✓ Scan complete</div></div>
@@ -12515,7 +12527,7 @@ async function submitFeedback() {
       </div>
       <div id="notif-tg-code" style="display:none;">
         <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Tap the code to copy, then send it to <b>@EasyBounceBot</b>:</div>
-        <div class="notif-code" id="notif-tg-code-val" onclick="copyTgCode()" title="Tap to copy" style="cursor:pointer;user-select:all;border-radius:8px;border:1px solid var(--b2);transition:background .15s;" onmouseover="this.style.background='rgba(108,99,255,.1)'" onmouseout="this.style.background='transparent'">—</div>
+        <div class="notif-code" id="notif-tg-code-val" onclick="copyTgCode()" title="Tap to copy" style="cursor:pointer;user-select:all;border-radius:8px;border:1px solid var(--b2);transition:background .15s;" onmouseover="this.style.background='rgba(123,79,191,.1)'" onmouseout="this.style.background='transparent'">—</div>
         <button class="notif-btn" onclick="openTgWithCode()" style="width:100%;margin-top:6px;background:linear-gradient(135deg,#229ED9,#1a8bc4);color:#fff;border:none;">📨 Open Telegram &amp; Send Code</button>
         <div class="notif-status" id="notif-tg-waiting">Waiting for connection…</div>
       </div>
