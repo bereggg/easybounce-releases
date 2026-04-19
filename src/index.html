@@ -2871,11 +2871,14 @@ function toggleHideChannel(name, idx) {
 function toggleHideGroup(groupName, groupCh) {
   saveUndo();
   // Recursively find ALL descendants (tracks + subgroups)
-  function _getAllDescendants(parentName) {
+  function _getAllDescendants(parentName, _seen) {
+    if (!_seen) _seen = new Set();
+    if (_seen.has(parentName)) return [];
+    _seen.add(parentName);
     const result = [];
     trackTree.filter(c => c.parent === parentName).forEach(c => {
       result.push(c);
-      if (c.type === 'group') result.push(..._getAllDescendants(c.name));
+      if (c.type === 'group') result.push(..._getAllDescendants(c.name, _seen));
     });
     return result;
   }
@@ -3941,8 +3944,9 @@ function _renderEspChannels() {
     [...trackTree].sort((a,b) => (a.num||0)-(b.num||0)).forEach(t => { const k=t.name.toLowerCase(); const i=_uc[k]||0; if(chByName[k]?.[i]){chMap[t.num]=chByName[k][i];_uc[k]=i+1;} });
 
     function getDirectChildren(parentName) { return trackTree.filter(k => k.parent === parentName); }
-    function getAllDescendants(parentName) {
-      const r = []; getDirectChildren(parentName).forEach(k => { r.push(k); if(k.type==='group') r.push(...getAllDescendants(k.name)); }); return r;
+    function getAllDescendants(parentName, _seen) {
+      if (!_seen) _seen = new Set(); if (_seen.has(parentName)) return []; _seen.add(parentName);
+      const r = []; getDirectChildren(parentName).forEach(k => { r.push(k); if(k.type==='group') r.push(...getAllDescendants(k.name, _seen)); }); return r;
     }
     function hasVisibleDescendant(groupName) {
       return getAllDescendants(groupName).some(k => { const ch=chMap[k.num]; return ch && chVisible(ch); });
@@ -4691,8 +4695,9 @@ function _esetRenderChannels() {
     [...trackTree].sort((a,b)=>(a.num||0)-(b.num||0)).forEach(t => { const k=t.name.toLowerCase(); const i=_uc[k]||0; if(chByName[k]?.[i]){chMap[t.num]=chByName[k][i];_uc[k]=i+1;} });
 
     function getDirectChildren(parentName) { return trackTree.filter(k => k.parent === parentName); }
-    function getAllDescendants(parentName) {
-      const r=[]; getDirectChildren(parentName).forEach(k => { r.push(k); if(k.type==='group') r.push(...getAllDescendants(k.name)); }); return r;
+    function getAllDescendants(parentName, _seen) {
+      if (!_seen) _seen = new Set(); if (_seen.has(parentName)) return []; _seen.add(parentName);
+      const r=[]; getDirectChildren(parentName).forEach(k => { r.push(k); if(k.type==='group') r.push(...getAllDescendants(k.name, _seen)); }); return r;
     }
     function hasVisibleDescendant(groupName) {
       return getAllDescendants(groupName).some(k => { const ch=chMap[k.num]; return ch && chVisible(ch); });
@@ -5483,7 +5488,7 @@ function _renderMergeChannelList() {
     const _uc = {}; const chMap = {};
     [...trackTree].sort((a,b)=>(a.num||0)-(b.num||0)).forEach(t => { const k=t.name.toLowerCase(); const i=_uc[k]||0; if(chByName[k]?.[i]){chMap[t.num]=chByName[k][i];_uc[k]=i+1;} });
     function getDirectChildren(p) { return trackTree.filter(k => k.parent === p); }
-    function getAllDescendants(p) { const r=[]; getDirectChildren(p).forEach(k=>{r.push(k);if(k.type==='group')r.push(...getAllDescendants(k.name));}); return r; }
+    function getAllDescendants(p, _seen) { if(!_seen)_seen=new Set(); if(_seen.has(p))return []; _seen.add(p); const r=[]; getDirectChildren(p).forEach(k=>{r.push(k);if(k.type==='group')r.push(...getAllDescendants(k.name,_seen));}); return r; }
     function hasVisibleDesc(g) { return getAllDescendants(g).some(k=>{const ch=chMap[k.num];return ch&&chVisible(ch);}); }
     let _mrgExpanded = window._mergeModalExpanded || (window._mergeModalExpanded = new Set());
 
@@ -6032,12 +6037,15 @@ function renderMixList(initIndices) {
       return trackTree.filter(k => k.parent === parentName);
     }
     // Get ALL descendants recursively
-    function getAllDescendants(parentName) {
+    function getAllDescendants(parentName, _seen) {
+      if (!_seen) _seen = new Set();
+      if (_seen.has(parentName)) return [];
+      _seen.add(parentName);
       const result = [];
       const direct = getDirectChildren(parentName);
       direct.forEach(k => {
         result.push(k);
-        if (k.type === 'group') result.push(...getAllDescendants(k.name));
+        if (k.type === 'group') result.push(...getAllDescendants(k.name, _seen));
       });
       return result;
     }
