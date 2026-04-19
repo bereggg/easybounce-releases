@@ -678,7 +678,7 @@ body.mini-mode{background:transparent!important;}
       <div class="mini-time" id="mini-eta">—:——</div>
       <div class="mini-cnt" id="mini-counter">—/—</div>
       <button class="mini-ibtn mini-expand" onclick="exitMiniMode()" title="Expand back">⊞</button>
-      <button class="mini-ibtn mini-cancel" onclick="cancelBounce()" title="Cancel bounce"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+      <button class="mini-ibtn mini-cancel" onclick="cancelBounce()" title="Cancel bounce"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
     <div class="mini-bar"><div class="mini-fill-bar" id="mini-fill"></div></div>
   </div>
@@ -730,7 +730,7 @@ body.mini-mode{background:transparent!important;}
     <div class="scroll" id="ch-list"><div class="empty-hint" id="ch-empty">Hit Scan Logic above<br>to load your channels</div></div>
     <div class="ch-footer">
       <button class="foot-btn sm" onclick="selectAllChannels()" title="Select all visible channels">All</button>
-      <button class="foot-btn sm" id="clear-sel-btn" onclick="clearSel()" title="Deselect all" style="display:none;"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+      <button class="foot-btn sm" id="clear-sel-btn" onclick="clearSel()" title="Deselect all" style="display:none;"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
       <div class="stems-wrap" id="stems-wrap">
         <button id="merge-btn" title="Bounce 2+ selected channels as one merged file" onclick="openMergeModal()">⊕ Merge</button>
         <button class="foot-btn" id="add-stems-btn" title="Add all selected channels to bounce queue" onclick="addSelAsStems()">+ Stems</button>
@@ -764,7 +764,7 @@ body.mini-mode{background:transparent!important;}
                 <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 7s2-4 6-4 6 4 6 4-2 4-6 4-6-4-6-4z"/><circle cx="7" cy="7" r="1.6"/><line x1="2" y1="2" x2="12" y2="12" class="hidden-slash" style="display:none;"/></svg>
                 Hidden
               </button>
-              <button onclick="toggleMarkersPopup()" title="Close" style="background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0 2px;line-height:1;transition:color .14s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+              <button onclick="toggleMarkersPopup()" title="Close" style="background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0 2px;line-height:1;transition:color .14s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
             </div>
             <div id="markers-popup-list" style="max-height:260px;overflow-y:auto;padding:4px 0;">
               <div style="color:var(--muted);font-size:10px;padding:6px 10px;">No markers scanned yet</div>
@@ -833,7 +833,7 @@ body.mini-mode{background:transparent!important;}
           <span class="fmt-tag fmt-tag-mp3-off" id="fmt-bar-mp3-tag">MP3</span>
           <span class="fmt-bar-detail" id="fmt-bar-detail">—</span>
           <span id="fmt-bar-source" class="fmt-source-badge fmt-source-preset">PRESET</span>
-          <span style="color:var(--muted);font-size:9px;margin-left:4px;flex-shrink:0;">⚙</span>
+          <span style="color:var(--muted);margin-left:4px;flex-shrink:0;display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-gear"/></svg></span>
         </button>
       </div>
     </div>
@@ -845,12 +845,12 @@ body.mini-mode{background:transparent!important;}
           <button id="reveal-btn-main" onclick="revealStems()" title="Open output folder in Finder" style="flex:1;padding:8px;border-radius:var(--r);border:1px solid rgba(74,140,28,.4);background:rgba(74,140,28,.08);color:var(--a3);font-size:12px;font-weight:600;cursor:pointer;transition:all .16s;font-family:'Space Grotesk',sans-serif;">
             📂 Open folder in Finder
           </button>
-          <button onclick="document.getElementById('reveal-btn').style.display='none'" title="Close" style="padding:8px 10px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:12px;cursor:pointer;flex-shrink:0;"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+          <button onclick="document.getElementById('reveal-btn').style.display='none'" title="Close" style="padding:8px 10px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:12px;cursor:pointer;flex-shrink:0;"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
         </div>
       </div>
       <div class="bounce-btns">
         <button class="bbtn off" id="bbtn" title="Start bouncing all items in queue" onclick="doBounce()">Bounce</button>
-        <button class="stop-btn" id="cancel-btn" title="Cancel bounce and stop Logic" onclick="cancelBounce()"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+        <button class="stop-btn" id="cancel-btn" title="Cancel bounce and stop Logic" onclick="cancelBounce()"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
         <button id="mini-btn" title="Minimize to floating widget" onclick="showMiniPlayer()" style="display:none;width:54px;height:54px;border-radius:var(--r2);border:1px solid rgba(108,99,255,.3);background:rgba(108,99,255,.08);color:var(--accent);font-size:20px;cursor:pointer;transition:all .16s;flex-shrink:0;align-items:center;justify-content:center;">⊟</button>
         <button id="retry-btn" title="Retry failed or cancelled bounce" onclick="retryBounce()" style="display:none;width:54px;height:54px;border-radius:var(--r2);border:1px solid rgba(255,169,77,.4);background:rgba(255,169,77,.1);color:var(--warn);font-size:22px;cursor:pointer;transition:all .16s;flex-shrink:0;align-items:center;justify-content:center;">↺</button>
         <button id="redo-all-btn" title="Reset all bounced items and bounce again" onclick="redoAllBounce()" style="display:none;height:54px;padding:0 16px;border-radius:var(--r2);border:1px solid rgba(74,140,28,.4);background:rgba(74,140,28,.08);color:var(--a3);font-size:12px;font-weight:700;cursor:pointer;transition:all .16s;flex-shrink:0;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;letter-spacing:.04em;">↻ Redo All</button>
@@ -954,7 +954,7 @@ body.mini-mode{background:transparent!important;}
               <span onclick="switchFmtTabView('mp3')">MP3</span>
             </div>
           </div>
-          <button onclick="closeFormatModal()" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;line-height:1;"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+          <button onclick="closeFormatModal()" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;line-height:1;"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
         </div>
         <div class="fmt-modal-body">
           <!-- Left: preset list -->
@@ -1097,7 +1097,7 @@ body.mini-mode{background:transparent!important;}
       <span style="font-size:10px;color:var(--muted);font-weight:600;flex:1;">Uncheck channels to MUTE for this mix</span>
       <button id="mix-tree-toggle-btn" onclick="mixToggleExpandAll()" style="padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;display:none;" title="Expand / Collapse all groups">▶▶</button>
       <button id="mix-toggle-all-btn" onclick="mixToggleAllNone()" oncontextmenu="event.preventDefault();mixHideShowAll();" style="padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Click: select all/none | Right-click: hide/show all">All</button>
-      <button id="mix-clear-sel-btn" onclick="_mixClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+      <button id="mix-clear-sel-btn" onclick="_mixClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
     <div class="tcb-list" id="mix-ch-list" style="flex:1;min-height:80px;max-height:none;"></div>
     <div class="modal-actions">
@@ -1123,7 +1123,7 @@ body.mini-mode{background:transparent!important;}
       <span style="font-size:10px;color:var(--muted);font-weight:600;flex:1;">In preset: <span id="esp-stems-count" style="color:var(--accent);font-family:'JetBrains Mono',monospace;"></span></span>
       <button id="esp-tree-toggle-btn" onclick="_espToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">▶▶</button>
       <button id="esp-toggle-all-btn" onclick="_espToggleAllNone()" style="padding:2px 9px;border-radius:5px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;cursor:pointer;transition:all .14s;">All</button>
-      <button id="esp-clear-sel-btn" onclick="_espClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+      <button id="esp-clear-sel-btn" onclick="_espClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
     <div id="esp-channels-list" style="flex:1;min-height:80px;max-height:none;overflow-y:auto;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:4px 0;" class="scroll"></div>
     <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px;flex-shrink:0;">Add from other presets</div>
@@ -1150,7 +1150,7 @@ body.mini-mode{background:transparent!important;}
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-bottom:5px;">
       <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);flex:1;">Channels <span id="merge-ch-count" style="color:var(--accent);font-family:'JetBrains Mono',monospace;"></span></div>
       <button id="merge-tree-toggle-btn" onclick="_mergeToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">▶▶</button>
-      <button id="merge-clear-sel-btn" onclick="_mergeClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+      <button id="merge-clear-sel-btn" onclick="_mergeClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
     <input type="text" id="merge-ch-search" placeholder="Search channels…" oninput="_renderMergeChannelList()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:11px;padding:5px 9px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;flex-shrink:0;margin-bottom:5px;">
     <div id="merge-channels-list" style="flex:1;max-height:200px;overflow-y:auto;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:4px 0;margin-bottom:12px;"></div>
@@ -1192,7 +1192,7 @@ body.mini-mode{background:transparent!important;}
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
       <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);flex:1;">Add channels</div>
       <button id="eset-tree-toggle-btn" onclick="_esetToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">▶▶</button>
-      <button id="eset-clear-sel-btn" onclick="_esetClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+      <button id="eset-clear-sel-btn" onclick="_esetClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
     <div id="eset-modal-filters" style="display:none;align-items:center;gap:3px;flex-wrap:wrap;padding:2px 0;margin-bottom:3px;flex-shrink:0;"></div>
     <input type="text" id="eset-ch-search" placeholder="Search channels…" oninput="_esetRenderChannels()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:11px;padding:5px 9px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;flex-shrink:0;">
@@ -1259,7 +1259,7 @@ body.mini-mode{background:transparent!important;}
         <div id="mp-status-dot" style="width:8px;height:8px;border-radius:50%;background:#ff4757;flex-shrink:0;"></div>
         <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;">Master Plugins</span>
         <button id="mp-refresh" onclick="loadMasterPlugins(true)" style="margin-left:auto;display:flex;align-items:center;gap:5px;background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.25);color:#a89fff;font-size:10px;font-weight:700;cursor:pointer;padding:4px 10px;border-radius:6px;letter-spacing:.04em;transition:all .14s;" onmouseover="this.style.background='rgba(108,99,255,.2)'" onmouseout="this.style.background='rgba(108,99,255,.1)'" title="Scroll to master channel in Logic and re-read plugins">⟳ Reconnect</button>
-        <button onclick="closeMasterPluginsModal()" style="background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0;line-height:1;transition:color .14s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+        <button onclick="closeMasterPluginsModal()" style="background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0;line-height:1;transition:color .14s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
       </div>
       <div id="mp-grid" style="max-height:300px;overflow-y:auto;">
         <div style="padding:16px 14px;color:var(--muted);font-size:11px;">Plugins are loaded automatically during scan</div>
@@ -1275,7 +1275,7 @@ body.mini-mode{background:transparent!important;}
 <div id="skin-panel">
   <div class="skin-hdr" style="display:flex;align-items:center;">
     <span style="flex:1;">Choose Theme</span>
-    <button onclick="closeSkinPanel()" title="Close" style="background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0 2px;line-height:1;transition:color .14s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+    <button onclick="closeSkinPanel()" title="Close" style="background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0 2px;line-height:1;transition:color .14s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
   </div>
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;" id="skin-grid" class="skin-grid"></div>
 </div>
@@ -5781,7 +5781,7 @@ function _renderEgChannels() {
     `<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid rgba(255,255,255,.03);">
       <div style="width:7px;height:7px;border-radius:50%;background:${c.color || 'var(--t2)'};flex-shrink:0;"></div>
       <span style="flex:1;font-size:12px;color:var(--text);">♪ ${c.name}</span>
-      <button onclick="_egRemoveChannel(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 2px;line-height:1;transition:color .12s;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+      <button onclick="_egRemoveChannel(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 2px;line-height:1;transition:color .12s;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>`
   ).join('');
 }
@@ -6963,7 +6963,7 @@ function renderQueue() {
         <span style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${item.jobs.length} ${isStemPreset ? 'stems' : 'jobs'}</span>
         <div style="flex:1;"></div>
         <button class="qedit" title="Edit ${isStemPreset ? 'stems preset' : 'set'}" onclick="event.stopPropagation();${isStemPreset ? `_editQueueStemGroup('${item.id}')` : `openEditQueueSetModal('${item.id}')`}"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" width="10" height="10" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.5a1.5 1.5 0 012 2L5 12H2v-3L10 2.5z"/></svg></button>
-        <button class="qdel" title="Remove from queue" onclick="event.stopPropagation();removeQItem('${item.id}')"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+        <button class="qdel" title="Remove from queue" onclick="event.stopPropagation();removeQItem('${item.id}')"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
       `;
       hdr.onclick = (e) => { if (e.target.closest('.qdel') || e.target.closest('.qedit')) return; item.expanded = !item.expanded; renderQueue(); };
       _attachQNameEdit(hdr.querySelector('.qname'), () => item.name, v => { item.name = v; });
@@ -6999,7 +6999,7 @@ function renderQueue() {
             </div>
             <div class="qst ${job.status||'pending'}">${job.status||'pending'}</div>
             ${editBtn}
-            <button class="qdel" onclick="event.stopPropagation();_setRemoveJob('${item.id}','${job.id}')"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+            <button class="qdel" onclick="event.stopPropagation();_setRemoveJob('${item.id}','${job.id}')"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
           `;
           const jobNameEl = row.querySelector('.qname');
           if (jobNameEl && job.status === 'pending') _attachQNameEdit(jobNameEl, () => job.name, v => { job.name = v; });
@@ -7036,7 +7036,7 @@ function renderQueue() {
           ${(item.status === 'done' || item.status === 'error' || item.status === 'cancelled') ? `<button onclick="event.stopPropagation();resetQueueItem('${item.id}')" title="Reset to pending" style="width:20px;height:20px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .13s;line-height:1;" onmouseover="this.style.background='rgba(255,255,255,.14)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.55)'">↺</button>` : ''}
         </div>
         ${grpEditBtn}
-        <button class="qdel" onclick="event.stopPropagation();removeQItem('${item.id}')"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+        <button class="qdel" onclick="event.stopPropagation();removeQItem('${item.id}')"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
       `;
       const grpNameEl = div.querySelector('.qname');
       if (grpNameEl && item.status === 'pending') _attachQNameEdit(grpNameEl, () => item.name, v => { item.name = v; });
@@ -7153,7 +7153,7 @@ function renderQueue() {
         ${(item.status === 'done' || item.status === 'error' || item.status === 'cancelled') ? `<button onclick="event.stopPropagation();resetQueueItem('${item.id}')" title="Reset to pending" style="width:20px;height:20px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .13s;line-height:1;" onmouseover="this.style.background='rgba(255,255,255,.14)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.55)'">↺</button>` : ''}
       </div>
       ${editBtn}
-      <button class="qdel" onclick="event.stopPropagation();removeQItem('${item.id}')"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+      <button class="qdel" onclick="event.stopPropagation();removeQItem('${item.id}')"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     `;
     const stemNameEl = div.querySelector('.qname');
     if (stemNameEl && item.status === 'pending') _attachQNameEdit(stemNameEl, () => item.name, v => { item.name = v; });
@@ -10066,7 +10066,7 @@ function renderHistory() {
         <div class="hist-right">
           <span class="hist-arrow">▶</span>
           <button class="hist-repeat" onclick="event.stopPropagation();repeatSession(${s.id})" title="Re-add to queue">↺</button>
-          <button class="hist-del" onclick="event.stopPropagation();deleteHistorySession(${s.id})" title="Delete session"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+          <button class="hist-del" onclick="event.stopPropagation();deleteHistorySession(${s.id})" title="Delete session"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
         </div>
       </div>
       <div class="hist-files" id="hf-${s.id}">${fmtHtml}${pluginsHtml}${filesSection}</div>
@@ -12488,7 +12488,7 @@ async function submitFeedback() {
 <div id="trial-expired-overlay" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);align-items:center;justify-content:center;flex-direction:column;gap:0;font-family:'Space Grotesk',sans-serif;">
   <div style="width:360px;background:#111;border:1px solid #222;border-radius:20px;padding:36px 32px 28px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.8);position:relative;">
     <!-- Close button → goes to license/activate screen -->
-    <button onclick="document.getElementById('trial-expired-overlay').style.display='none';showLicenseOverlay();" style="position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;border:1px solid #333;background:#1a1a1a;color:#666;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit;line-height:1;" onmouseover="this.style.background='#2a2a2a';this.style.color='#aaa'" onmouseout="this.style.background='#1a1a1a';this.style.color='#666'"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+    <button onclick="document.getElementById('trial-expired-overlay').style.display='none';showLicenseOverlay();" style="position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;border:1px solid #333;background:#1a1a1a;color:#666;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit;line-height:1;" onmouseover="this.style.background='#2a2a2a';this.style.color='#aaa'" onmouseout="this.style.background='#1a1a1a';this.style.color='#666'"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     <div style="margin-bottom:16px;color:var(--warn);display:flex;justify-content:center;"><svg class="ico" style="width:48px;height:48px;"><use href="#ico-clock"/></svg></div>
     <div style="font-size:22px;font-weight:700;color:#f0f0f0;margin-bottom:10px;letter-spacing:-.02em;">Your trial has ended</div>
     <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:28px;">7-day free trial is over.<br>Purchase a license to continue using EasyBounce.</div>
@@ -12513,7 +12513,7 @@ async function submitFeedback() {
     <span id="scan-warning-title">Scanning Logic Pro…</span>
     <div id="scan-warning-sub">Don't touch anything — we'll handle it all</div>
   </div>
-  <button id="scan-cancel-btn" onclick="cancelScan()" title="Cancel scan"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+  <button id="scan-cancel-btn" onclick="cancelScan()" title="Cancel scan"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
 </div>
 
 <!-- ── Notification Settings Modal ──────────────────────────────────── -->
@@ -12542,7 +12542,7 @@ async function submitFeedback() {
       <div id="notif-tg-code" style="display:none;">
         <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Tap the code to copy, then send it to <b>@EasyBounceBot</b>:</div>
         <div class="notif-code" id="notif-tg-code-val" onclick="copyTgCode()" title="Tap to copy" style="cursor:pointer;user-select:all;border-radius:8px;border:1px solid var(--b2);transition:background .15s;" onmouseover="this.style.background='rgba(108,99,255,.1)'" onmouseout="this.style.background='transparent'">—</div>
-        <button class="notif-btn" onclick="openTgWithCode()" style="width:100%;margin-top:6px;background:linear-gradient(135deg,#229ED9,#1a8bc4);color:#fff;border:none;">📨 Open Telegram &amp; Send Code</button>
+        <button class="notif-btn" onclick="openTgWithCode()" style="width:100%;margin-top:6px;background:linear-gradient(135deg,#229ED9,#1a8bc4);color:#fff;border:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><svg class="ico ico-sm"><use href="#ico-bell"/></svg>Open Telegram &amp; Send Code</button>
         <div class="notif-status" id="notif-tg-waiting">Waiting for connection…</div>
       </div>
       <div id="notif-tg-connected" style="display:none;">
@@ -12612,7 +12612,7 @@ async function submitFeedback() {
 <div id="feedback-popup">
   <div id="feedback-popup-hdr">
     <h4>Feedback</h4>
-    <button onclick="closeFeedbackPopup()" title="Close"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+    <button onclick="closeFeedbackPopup()" title="Close"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
   </div>
 
   <!-- Form -->
@@ -12651,21 +12651,21 @@ async function submitFeedback() {
           <button class="fb-attach-slot" onclick="document.getElementById('fb-file-input-0').click()" title="Attach photo, video or file (max 30MB)">
             <span>📎</span><span class="fb-attach-slot-name">Attach file 1…</span>
           </button>
-          <button class="fb-attach-remove" id="fb-attach-remove-0" onclick="fbRemoveFile(0)" title="Remove" style="display:none"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+          <button class="fb-attach-remove" id="fb-attach-remove-0" onclick="fbRemoveFile(0)" title="Remove" style="display:none"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
           <input class="fb-file-input" id="fb-file-input-0" type="file" accept="image/*,video/*,.log,.txt,.zip,.pdf,.wav,.mp3" style="display:none" onchange="fbFileSelected(this,0)">
         </div>
         <div class="fb-attach-row" id="fb-attach-row-1" style="display:none;">
           <button class="fb-attach-slot" onclick="document.getElementById('fb-file-input-1').click()" title="Attach photo, video or file (max 30MB)">
             <span>📎</span><span class="fb-attach-slot-name">Attach file 2…</span>
           </button>
-          <button class="fb-attach-remove" onclick="fbRemoveFile(1)" title="Remove"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+          <button class="fb-attach-remove" onclick="fbRemoveFile(1)" title="Remove"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
           <input class="fb-file-input" id="fb-file-input-1" type="file" accept="image/*,video/*,.log,.txt,.zip,.pdf,.wav,.mp3" style="display:none" onchange="fbFileSelected(this,1)">
         </div>
         <div class="fb-attach-row" id="fb-attach-row-2" style="display:none;">
           <button class="fb-attach-slot" onclick="document.getElementById('fb-file-input-2').click()" title="Attach photo, video or file (max 30MB)">
             <span>📎</span><span class="fb-attach-slot-name">Attach file 3…</span>
           </button>
-          <button class="fb-attach-remove" onclick="fbRemoveFile(2)" title="Remove"<svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+          <button class="fb-attach-remove" onclick="fbRemoveFile(2)" title="Remove"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
           <input class="fb-file-input" id="fb-file-input-2" type="file" accept="image/*,video/*,.log,.txt,.zip,.pdf,.wav,.mp3" style="display:none" onchange="fbFileSelected(this,2)">
         </div>
       </div>
@@ -12675,7 +12675,7 @@ async function submitFeedback() {
 
   <!-- Success state -->
   <div id="feedback-success">
-    <div class="fb-ok-icon">✅</div>
+    <div class="fb-ok-icon" style="color:var(--success,#1DB954);display:flex;justify-content:center;"><svg class="ico" style="width:40px;height:40px;"><use href="#ico-check-circle"/></svg></div>
     <p>Thank you! We got your feedback.<span>We'll get back to you if you left an email.</span></p>
   </div>
 </div>
