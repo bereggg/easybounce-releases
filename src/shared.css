@@ -3,6 +3,11 @@
    Single source of truth for: index.html, mini.html, overlay.html, accessibility.html
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Local fonts — available to every HTML that links shared.css */
+@font-face { font-family:'Inter';          font-style:normal; font-weight:300 700; font-display:swap; src:url(fonts/Inter-latin.woff2) format('woff2'); }
+@font-face { font-family:'Space Grotesk';  font-style:normal; font-weight:400 700; font-display:swap; src:url(fonts/SpaceGrotesk-latin.woff2) format('woff2'); }
+@font-face { font-family:'JetBrains Mono'; font-style:normal; font-weight:300 500; font-display:swap; src:url(fonts/JetBrainsMono-latin.woff2) format('woff2'); }
+
 :root {
   /* ─────────────────────────────────────────────────────────────────
      COLOR PALETTE
