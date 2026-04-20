@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="shared.css">
 <style>
   *{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none;}
-  html,body{width:360px;height:580px;overflow:hidden;font-family:'Inter',-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;background:#161616;color:#fff;-webkit-app-region:drag;}
+  html,body{width:360px;min-height:580px;height:auto;overflow:hidden;font-family:var(--font-ui);background:var(--bg);color:var(--text);-webkit-app-region:drag;}
   .drag-bar{height:34px;-webkit-app-region:drag;}
 
   .card{padding:0 20px 18px;display:flex;flex-direction:column;align-items:center;}
@@ -29,8 +29,8 @@
   .icon-finder{background:linear-gradient(145deg,#1a6ad4,#2a90f0);}
 
   .row-body{flex:1;min-width:0;}
-  .row-name{font-size:12.5px;font-weight:500;color:#e8e8e8;}
-  .row-hint{font-size:9.5px;color:rgba(255,255,255,.32);margin-top:1px;}
+  .row-name{font-size:12px;font-weight:500;color:var(--text);}
+  .row-hint{font-size:10px;color:var(--t2);margin-top:2px;}
 
   .row-right{display:flex;align-items:center;gap:7px;flex-shrink:0;}
   .arrow{font-size:10px;color:rgba(255,255,255,.22);transition:color .15s;}
@@ -50,14 +50,14 @@
   .perm-row.just-on{animation:rowFlash .6s ease-out;}
 
   /* ── Bottom hint ── */
-  .bottom-hint{font-size:10.5px;color:rgba(255,255,255,.28);text-align:center;line-height:1.6;margin-bottom:4px;}
-  .bottom-hint b{color:rgba(255,255,255,.55);}
+  .bottom-hint{font-size:10px;color:rgba(255,255,255,.32);text-align:center;line-height:1.6;margin-bottom:4px;}
+  .bottom-hint b{color:rgba(255,255,255,.6);}
 
   /* ── Restart hint (shown if AX granted but not detected) ── */
   .restart-hint{width:100%;background:rgba(255,71,87,.1);border:1.5px solid rgba(255,71,87,.35);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:none;-webkit-app-region:no-drag;}
   .restart-hint.show{display:block;}
   .restart-hint p{font-size:11px;color:#ff4757;line-height:1.6;margin:0;pointer-events:none;}
-  .btn-restart{width:100%;padding:9px;border-radius:8px;border:none;background:rgba(255,193,7,.2);color:rgba(255,193,7,1);font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;-webkit-app-region:no-drag;}
+  .btn-restart{width:100%;padding:9px;border-radius:var(--r-sm);border:none;background:rgba(255,193,7,.2);color:rgba(255,193,7,1);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;-webkit-app-region:no-drag;}
   .btn-restart:hover{background:rgba(255,193,7,.32);}
 
   /* ── Row opening flash ── */
@@ -76,7 +76,7 @@
   .check-circle{width:64px;height:64px;border-radius:50%;background:linear-gradient(145deg,#1db954,#30d158);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(48,209,88,.4);animation:pop .4s cubic-bezier(.34,1.56,.64,1);}
   @keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
   .success-title{font-size:19px;font-weight:700;}
-  .success-sub{font-size:11.5px;color:rgba(255,255,255,.45);text-align:center;line-height:1.6;}
+  .success-sub{font-size:11px;color:var(--t2);text-align:center;line-height:1.6;}
 </style>
 </head>
 <body>
@@ -328,6 +328,8 @@
   // ── Polling ──────────────────────────────────────────────────────────────────
 
   let _fastPollInterval = null;
+  let _fastPollStartedAt = 0;
+  let _fastPollDowngradeTimer = null;
   function startPolling() {
     setInterval(async () => {
       await checkAll();
@@ -335,9 +337,18 @@
   }
   function startFastPolling() {
     if (_fastPollInterval) return;
+    _fastPollStartedAt = Date.now();
     _fastPollInterval = setInterval(async () => {
       await checkAll();
     }, 300);
+    // Auto-downgrade to normal polling after 30s to save IPC resources
+    if (_fastPollDowngradeTimer) clearTimeout(_fastPollDowngradeTimer);
+    _fastPollDowngradeTimer = setTimeout(() => {
+      if (_fastPollInterval) {
+        clearInterval(_fastPollInterval);
+        _fastPollInterval = null;
+      }
+    }, 30000);
   }
 
   // ── Restart app ──────────────────────────────────────────────────────────────

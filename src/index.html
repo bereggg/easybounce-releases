@@ -13,14 +13,13 @@
 *{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none;}
 #log-body,#log-body *{user-select:text;-webkit-user-select:text;}
 :root{
-  --bg:#1C1C1A;--s:#252523;--card:#2E2E2B;--card2:#3A3A37;--b:#444441;--b2:#4e4e4a;
-  --accent:#6c63ff;--a2:#ff6584;--a3:#4A8C1C;--warn:#ff6584;--red:#ff4757;
-  --text:#D4D2C8;--t2:#6B6B67;--muted:#55554F;--teal:#1A7A6E;
-  --r:10px;--r2:16px;--r3:24px;
-  --glass:rgba(255,255,255,.03);--glass-border:rgba(255,255,255,.05);
+  /* Colors, radius, typography, motion — from shared.css */
+  /* Only local-only variables that don't exist in shared.css: */
+  --glass:rgba(255,255,255,.03);
+  --glass-border:rgba(255,255,255,.05);
 }
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:13px;height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;}
-.titlebar{height:46px;background:#252523;border-bottom:1px solid #444441;display:flex;align-items:center;padding:0 16px 0 80px;-webkit-app-region:drag;user-select:none;gap:10px;position:relative;z-index:10;}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size:var(--fs-base);height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;}
+.titlebar{height:46px;background:var(--s);border-bottom:1px solid var(--b);display:flex;align-items:center;padding:0 16px 0 80px;-webkit-app-region:drag;user-select:none;gap:10px;position:relative;z-index:10;}
 .tb-logo{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;letter-spacing:-.03em;color:var(--text);display:flex;align-items:center;gap:9px;}
 .tb-logo-mark{width:28px;height:28px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--a2));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(108,99,255,.4);}
 .tb-logo-mark svg{width:14px;height:14px;fill:white;}

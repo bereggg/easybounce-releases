@@ -13,59 +13,66 @@
      COLOR PALETTE
      ───────────────────────────────────────────────────────────────── */
 
-  /* Surface colors — warm black scale (consistent between main/mini/overlay) */
-  --bg:        #1C1C1A;          /* App background */
-  --s:         #252523;           /* Titlebar, elevated surface */
-  --card:      #2E2E2B;           /* Cards, input fields */
-  --card2:     #3A3A37;           /* Modal backgrounds */
-  --b:         #444441;           /* Borders */
-  --b2:        #4E4E4A;           /* Hover borders */
+  /* Surface colors — cool blue-black scale (from your DARK theme) */
+  --bg:        #0c0c10;           /* App background */
+  --s:         #111116;           /* Titlebar, elevated surface */
+  --card:      #17171e;           /* Cards, input fields */
+  --card2:     #1c1c24;           /* Modal backgrounds */
+  --b:         #252530;           /* Borders */
+  --b2:        #30303e;           /* Hover borders */
 
-  /* Primary brand colors (YOUR palette — eggplant + terracotta) */
-  --accent:    #7B4FBF;           /* Primary violet — brand */
-  --a2:        #D4621A;           /* Terracotta — secondary */
-  --a3:        #4A8C1C;           /* Success green */
-  --teal:      #1A7A6E;           /* Teal — stems/groups */
+  /* Primary brand colors (YOUR palette — indigo-violet + pink-coral) */
+  --accent:    #6c63ff;           /* Primary indigo-violet — brand */
+  --a2:        #ff6584;           /* Pink-coral — secondary */
+  --a3:        #43e97b;           /* Fresh lime-green — success */
+  --teal:      #38f9d7;           /* Mint aqua — stems/groups */
 
   /* Semantic colors */
-  --warn:      #D4621A;           /* Same as a2 — deliberate: warning = action-color */
-  --red:       #FF4757;           /* Destructive */
-  --success:   #1DB954;           /* Completion (Spotify-style green) */
+  --warn:      #ffa94d;           /* Peach — warning/running state */
+  --red:       #ff4757;           /* Destructive */
+  --success:   #43e97b;           /* Completion */
 
   /* Text hierarchy */
-  --text:      #D4D2C8;           /* Primary text — warm off-white */
-  --t2:        #8A8A84;           /* Secondary text (fixed: was too close to --muted) */
-  --muted:     #55554F;           /* Muted text (fixed: was same as --b) */
-  --disabled:  #3A3A37;           /* Disabled text */
+  --text:      #e2e2f0;           /* Primary text — cool off-white with blue-tint */
+  --t2:        #8888a8;           /* Secondary text — blue-grey */
+  --muted:     #444458;           /* Muted text */
+  --disabled:  #1c1c24;           /* Disabled text */
 
   /* ─────────────────────────────────────────────────────────────────
      ALPHA TOKENS — shadows, glows, transparency
      Each color has pre-calculated rgba values so you never hardcode again
      ───────────────────────────────────────────────────────────────── */
 
-  /* Accent rgba — violet */
-  --accent-rgb:  123, 79, 191;
-  --accent-a05:  rgba(123, 79, 191, 0.05);
-  --accent-a08:  rgba(123, 79, 191, 0.08);
-  --accent-a12:  rgba(123, 79, 191, 0.12);
-  --accent-a20:  rgba(123, 79, 191, 0.20);
-  --accent-a30:  rgba(123, 79, 191, 0.30);
-  --accent-a40:  rgba(123, 79, 191, 0.40);
-  --accent-a60:  rgba(123, 79, 191, 0.60);
+  /* Accent rgba — indigo-violet #6c63ff */
+  --accent-rgb:  108, 99, 255;
+  --accent-a05:  rgba(108, 99, 255, 0.05);
+  --accent-a08:  rgba(108, 99, 255, 0.08);
+  --accent-a12:  rgba(108, 99, 255, 0.12);
+  --accent-a20:  rgba(108, 99, 255, 0.20);
+  --accent-a30:  rgba(108, 99, 255, 0.30);
+  --accent-a40:  rgba(108, 99, 255, 0.40);
+  --accent-a60:  rgba(108, 99, 255, 0.60);
 
-  /* A2 rgba — terracotta */
-  --a2-rgb:      212, 98, 26;
-  --a2-a08:      rgba(212, 98, 26, 0.08);
-  --a2-a12:      rgba(212, 98, 26, 0.12);
-  --a2-a20:      rgba(212, 98, 26, 0.20);
-  --a2-a30:      rgba(212, 98, 26, 0.30);
-  --a2-a40:      rgba(212, 98, 26, 0.40);
+  /* A2 rgba — pink-coral #ff6584 */
+  --a2-rgb:      255, 101, 132;
+  --a2-a08:      rgba(255, 101, 132, 0.08);
+  --a2-a12:      rgba(255, 101, 132, 0.12);
+  --a2-a20:      rgba(255, 101, 132, 0.20);
+  --a2-a30:      rgba(255, 101, 132, 0.30);
+  --a2-a40:      rgba(255, 101, 132, 0.40);
 
-  /* Teal rgba — stems */
-  --teal-rgb:    26, 122, 110;
-  --teal-a08:    rgba(26, 122, 110, 0.08);
-  --teal-a20:    rgba(26, 122, 110, 0.20);
-  --teal-a30:    rgba(26, 122, 110, 0.30);
+  /* Warn rgba — peach #ffa94d */
+  --warn-rgb:    255, 169, 77;
+  --warn-a08:    rgba(255, 169, 77, 0.08);
+  --warn-a12:    rgba(255, 169, 77, 0.12);
+  --warn-a20:    rgba(255, 169, 77, 0.20);
+  --warn-a30:    rgba(255, 169, 77, 0.30);
+
+  /* Teal/mint rgba — aqua #38f9d7 */
+  --teal-rgb:    56, 249, 215;
+  --teal-a08:    rgba(56, 249, 215, 0.08);
+  --teal-a20:    rgba(56, 249, 215, 0.20);
+  --teal-a30:    rgba(56, 249, 215, 0.30);
 
   /* Red rgba — destructive */
   --red-a08:     rgba(255, 71, 87, 0.08);
@@ -73,9 +80,9 @@
   --red-a30:     rgba(255, 71, 87, 0.30);
   --red-a50:     rgba(255, 71, 87, 0.50);
 
-  /* Success rgba */
-  --success-a15: rgba(29, 185, 84, 0.15);
-  --success-a40: rgba(29, 185, 84, 0.40);
+  /* Success rgba — lime #43e97b */
+  --success-a15: rgba(67, 233, 123, 0.15);
+  --success-a40: rgba(67, 233, 123, 0.40);
 
   /* White overlays — for inner highlights, glass surfaces */
   --w-a03:       rgba(255, 255, 255, 0.03);
@@ -88,12 +95,12 @@
      GRADIENTS — exactly 3 functional gradients (reduced from 6)
      ───────────────────────────────────────────────────────────────── */
 
-  --g-primary:   linear-gradient(135deg, #7B4FBF 0%, #D4621A 100%);  /* CTAs */
-  --g-success:   linear-gradient(135deg, #1DB954 0%, #17A349 100%);  /* Success states */
-  --g-running:   linear-gradient(135deg, #D4621A 0%, #FF6B35 100%);  /* In-progress */
+  --g-primary:   linear-gradient(135deg, #6c63ff 0%, #ff6584 100%);  /* CTAs */
+  --g-success:   linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);  /* Success states */
+  --g-running:   linear-gradient(135deg, #ffa94d 0%, #ff6584 100%);  /* In-progress */
 
-  /* Stem-tag special gradient — violet→teal, used ONLY for group tags */
-  --g-stem:      linear-gradient(135deg, #7B4FBF 0%, #1A7A6E 100%);
+  /* Stem-tag special gradient — violet→mint, used ONLY for group tags */
+  --g-stem:      linear-gradient(135deg, #6c63ff 0%, #43e97b 100%);
 
   /* ─────────────────────────────────────────────────────────────────
      TYPOGRAPHY SCALE
@@ -202,8 +209,8 @@
 }
 
 @keyframes eb-pulse-dot {
-  from { box-shadow: 0 0 4px var(--a2-a30); opacity: 0.85; }
-  to   { box-shadow: 0 0 12px var(--a2-a40), 0 0 20px var(--a2-a20); opacity: 1; }
+  from { box-shadow: 0 0 4px var(--warn-a30); opacity: 0.85; }
+  to   { box-shadow: 0 0 12px var(--warn-a30), 0 0 20px var(--warn-a20); opacity: 1; }
 }
 
 @keyframes eb-shimmer {
@@ -320,7 +327,7 @@
 }
 .eb-tag--stem    { background: var(--teal-a08);   color: var(--a3);     border-color: var(--teal-a20); }
 .eb-tag--mix     { background: var(--accent-a12); color: var(--accent); border-color: var(--accent-a20); }
-.eb-tag--warn    { background: var(--a2-a12);     color: var(--warn);   border-color: var(--a2-a20); }
+.eb-tag--warn    { background: var(--warn-a12);   color: var(--warn);   border-color: var(--warn-a20); }
 .eb-tag--group   { background: var(--g-stem);     color: #fff;          box-shadow: var(--sh-card); }
 
 /* ── Scroll bars — subtle, consistent ────────────────────────────────── */
@@ -334,6 +341,70 @@
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
+
+/* ── Unified toolbar mini-buttons (notif / schedule / alert / feedback) ── */
+.tb-mini-btn {
+  padding: 4px 8px;
+  border-radius: var(--r);
+  border: 1px solid var(--accent-a20);
+  background: var(--accent-a05);
+  color: var(--accent);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  opacity: 0.75;
+  transition: opacity var(--t-fast), border-color var(--t-fast);
+  -webkit-app-region: no-drag;
+}
+.tb-mini-btn:hover { opacity: 1; border-color: var(--accent-a40); }
+.tb-mini-btn.active { opacity: 1; border-color: var(--accent-a60); background: var(--accent-a12); }
+
+/* ── Custom tooltip — premium replacement for native title ──
+   Usage: <span class="eb-tt" data-tt="Your text here">…</span>
+   Appears above element on hover, styled, fast (150ms).
+*/
+.eb-tt { position: relative; }
+.eb-tt::after {
+  content: attr(data-tt);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--card2);
+  border: 1px solid var(--b);
+  color: var(--text);
+  font-size: var(--fs-sm);
+  font-family: var(--font-ui);
+  padding: 6px 10px;
+  border-radius: var(--r-sm);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  box-shadow: var(--sh-raised);
+  z-index: var(--z-toast);
+}
+.eb-tt:hover::after { opacity: 1; }
+.eb-tt.eb-tt--below::after { bottom: auto; top: calc(100% + 6px); }
+.eb-tt.eb-tt--wide::after { white-space: normal; max-width: 220px; text-align: center; }
+
+/* ── Modal close button class (replaces inline-style close buttons) ── */
+.modal-close-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  border-radius: var(--r-sm);
+  transition: color var(--t-fast), background var(--t-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-app-region: no-drag;
+}
+.modal-close-btn:hover { color: var(--text); background: var(--w-a05); }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    REDUCED MOTION — accessibility
