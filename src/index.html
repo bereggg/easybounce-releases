@@ -194,6 +194,11 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .qst.cancelled{color:var(--muted);background:var(--w-a05);text-decoration:line-through;}
 .qdel{width:20px;height:20px;border-radius:var(--r-sm);border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .14s;flex-shrink:0;}
 .qdel:hover{background:var(--red-a15);border-color:var(--red-a30);color:var(--red);}
+.qedit{width:22px;height:22px;border-radius:var(--r-sm);border:1px solid transparent;background:transparent;color:var(--t2, #c8cbd1);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .14s;flex-shrink:0;padding:0;opacity:.85;}
+.qedit:hover{background:var(--a3-a15, rgba(120,180,255,.12));border-color:var(--a3-a30, rgba(120,180,255,.28));color:var(--a3, #7fb4ff);opacity:1;}
+svg.ico{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;display:inline-block;vertical-align:middle;}
+svg.ico.ico-sm{width:14px;height:14px;}
+svg.ico.ico-lg{width:20px;height:20px;}
 .out-wrap{padding:10px 14px;border-top:1px solid var(--b);flex-shrink:0;display:flex;flex-direction:column;gap:6px;}
 .out-row{display:flex;align-items:center;gap:9px;}
 .out-lbl{font-size:var(--fs-xxs);font-weight:700;color:var(--muted);width:48px;flex-shrink:0;text-transform:uppercase;letter-spacing:.08em;}
@@ -1650,10 +1655,30 @@ let outputFolder = localStorage.getItem(SK.folder)  || '~/Desktop';
 let projectName  = localStorage.getItem(SK.project) || null;
 let busOnly      = localStorage.getItem(SK.busOnly) !== 'false';
 let sessionName  = localStorage.getItem('sb4_session') || '';
-// hiddenChannels stores channel indices (numbers). Migration from old name-based format handled after scan.
-let hiddenChannels = new Set(_safeLocalJSON('sb4_hidden', []).filter(v => typeof v === 'number'));
-// Separate hidden set for versions modal — stores indices (numbers)
-let _versionHiddenChannels = new Set(_safeLocalJSON('sb4_version_hidden', []).filter(v => typeof v === 'number'));
+// hiddenChannels — global Set<string> of "index::name" keys.
+// A channel is hidden only if BOTH its mixer index AND its name match a stored entry.
+function _hKey(ch)      { return ch.index + '::' + ch.name; }
+function _isHidden(ch)  { return !!ch && hiddenChannels.has(_hKey(ch)); }
+function _hideAdd(ch)   { if (ch) hiddenChannels.add(_hKey(ch)); }
+function _hideDelete(ch){ if (ch) hiddenChannels.delete(_hKey(ch)); }
+function _saveHidden()  { localStorage.setItem('sb4_hidden', JSON.stringify([...hiddenChannels])); }
+function _loadHiddenFromStorage() {
+  const raw = _safeLocalJSON('sb4_hidden', []);
+  return new Set(raw.filter(v => typeof v === 'string' && v.includes('::')));
+}
+let hiddenChannels = _loadHiddenFromStorage();
+
+function _vhKey(ch)           { return ch.index + '::' + ch.name; }
+function _isVersionHidden(ch) { return !!ch && _versionHiddenChannels.has(_vhKey(ch)); }
+function _vHideAdd(ch)        { if (ch) _versionHiddenChannels.add(_vhKey(ch)); }
+function _vHideDelete(ch)     { if (ch) _versionHiddenChannels.delete(_vhKey(ch)); }
+function _saveVersionHidden() { localStorage.setItem('sb4_version_hidden', JSON.stringify([..._versionHiddenChannels])); }
+function _loadVersionHiddenFromStorage() {
+  const raw = _safeLocalJSON('sb4_version_hidden', []);
+  return new Set(raw.filter(v => typeof v === 'string' && v.includes('::')));
+}
+// Separate hidden set for versions modal
+let _versionHiddenChannels = _loadVersionHiddenFromStorage();
 let _versionRestoredChannels = new Set(_safeLocalJSON('sb4_version_restored', []));
 let _versionShowHiddenOnly = false; // true = show only hidden channels in version modal
 // ── Format Presets ──────────────────────────────────────────────────────────
@@ -2410,17 +2435,12 @@ async function scanLogic(isAutoRetry = false) {
   }
   _masterChannels = channels.map(c => ({name: c.name, isBus: c.isBus, chType: c.chType, color: c.color, index: c.index}));
   localStorage.setItem('sb4_master_channels', JSON.stringify(_masterChannels));
-  // Migrate old name-based hidden → index-based, or apply DEFAULT_HIDDEN on first scan
-  { const _rawHidden = _safeLocalJSON('sb4_hidden', []);
-    const _oldNames = _rawHidden.filter(v => typeof v === 'string');
-    if (_oldNames.length > 0) {
-      _oldNames.forEach(name => channels.filter(c => c.name === name).forEach(c => hiddenChannels.add(c.index)));
-    } else if (hiddenChannels.size === 0 && !localStorage.getItem('sb4_hidden_applied')) {
-      DEFAULT_HIDDEN.forEach(name => channels.filter(c => c.name === name).forEach(c => hiddenChannels.add(c.index)));
-    }
-    localStorage.setItem('sb4_hidden', JSON.stringify([...hiddenChannels]));
-    localStorage.setItem('sb4_hidden_applied', '1');
+  // Apply DEFAULT_HIDDEN on first ever scan (no stored entries yet)
+  if (hiddenChannels.size === 0 && !localStorage.getItem('sb4_hidden_applied')) {
+    DEFAULT_HIDDEN.forEach(name => channels.filter(c => c.name === name).forEach(c => _hideAdd(c)));
+    _saveHidden();
   }
+  localStorage.setItem('sb4_hidden_applied', '1');
   if (channelFilter === 'bus' && channels.filter(c => c.isBus).length === 0) setFilter('all');
   else renderChannelsNow(); // immediate: just scanned — user expects to see channels right away
   renderPresets();
@@ -2961,12 +2981,12 @@ function toggleHideChannel(name, idx) {
   if (!ch) return;
   // If there are selected channels and the clicked channel is one of them — hide/show all selected
   if (selectedIdx.has(ch.index) && selectedIdx.size > 1) {
-    const isHiding = !hiddenChannels.has(ch.index);
+    const isHiding = !_isHidden(ch);
     for (const selIdx of selectedIdx) {
-      if (isHiding) hiddenChannels.add(selIdx);
-      else hiddenChannels.delete(selIdx);
+      const _sc = channels.find(x => x.index === selIdx);
+      if (_sc) { if (isHiding) _hideAdd(_sc); else _hideDelete(_sc); }
     }
-    localStorage.setItem('sb4_hidden', JSON.stringify([...hiddenChannels]));
+    _saveHidden();
     selectedIdx.clear();
     renderChannels();
     updateAddStemsBtn();
@@ -2974,14 +2994,14 @@ function toggleHideChannel(name, idx) {
     return;
   }
   // Single channel toggle
-  if (hiddenChannels.has(ch.index)) {
-    hiddenChannels.delete(ch.index);
+  if (_isHidden(ch)) {
+    _hideDelete(ch);
     toast(`Unhidden: ${name}`);
   } else {
-    hiddenChannels.add(ch.index);
+    _hideAdd(ch);
     toast(`Hidden: ${name}`);
   }
-  localStorage.setItem('sb4_hidden', JSON.stringify([...hiddenChannels]));
+  _saveHidden();
   renderChannels();
 }
 
@@ -3010,17 +3030,17 @@ function toggleHideGroup(groupName, groupCh) {
   // In hidden tab: always restore only what's hidden (never hide more)
   // In normal mode: hide if any are visible, otherwise unhide all
   const inHiddenTab = channelFilter === 'hidden';
-  const isHiding = !inHiddenTab && allTargets.some(c => !hiddenChannels.has(c.index));
+  const isHiding = !inHiddenTab && allTargets.some(c => !_isHidden(c));
 
   if (isHiding) {
-    for (const c of allTargets) hiddenChannels.add(c.index);
+    for (const c of allTargets) _hideAdd(c);
     toast(`Hidden: ${groupName} (${allTargets.length})`);
   } else {
-    const wasHidden = allTargets.filter(c => hiddenChannels.has(c.index));
-    for (const c of wasHidden) hiddenChannels.delete(c.index);
+    const wasHidden = allTargets.filter(c => _isHidden(c));
+    for (const c of wasHidden) _hideDelete(c);
     toast(`Restored: ${groupName} (${wasHidden.length})`);
   }
-  localStorage.setItem('sb4_hidden', JSON.stringify([...hiddenChannels]));
+  _saveHidden();
   renderChannels();
 }
 
@@ -3108,9 +3128,9 @@ function _renderChannelsImpl() {
 
     // Helper: check if a channel passes the current filter
     function treeItemVisible(ch) {
-      if (channelFilter === 'hidden') return !!(ch && hiddenChannels.has(ch.index));
+      if (channelFilter === 'hidden') return !!(ch && _isHidden(ch));
       if (!ch) return false;
-      if (hiddenChannels.has(ch.index)) return false;
+      if (_isHidden(ch)) return false;
       if (channelFilter === 'bus' && !ch.isBus) return false;
       return true;
     }
@@ -3251,7 +3271,7 @@ function _renderChannelsImpl() {
       if (t.type === 'group') {
         const groupSelfVisible = treeItemVisible(ch);
         // In normal view: completely skip hidden groups (children still render on their own)
-        if (channelFilter !== 'hidden' && ch && hiddenChannels.has(ch.index)) return;
+        if (channelFilter !== 'hidden' && ch && _isHidden(ch)) return;
         if (channelFilter === 'hidden' && !groupSelfVisible) return;
         if (!groupSelfVisible && !hasVisibleDescendant(t.name)) return;
 
@@ -3437,8 +3457,8 @@ function _renderChannelsImpl() {
     const _treeNameSet = new Set(trackTree.map(t => t.name.toLowerCase()));
     const _orphaned = channels.filter(ch => {
       if (_treeNameSet.has(ch.name.toLowerCase())) return false;
-      if (channelFilter === 'hidden') return hiddenChannels.has(ch.index);
-      if (hiddenChannels.has(ch.index)) return false;
+      if (channelFilter === 'hidden') return _isHidden(ch);
+      if (_isHidden(ch)) return false;
       if (query && !ch.name.toLowerCase().includes(query)) return false;
       return true;
     });
@@ -3499,10 +3519,10 @@ function _renderChannelsImpl() {
 
   const visible = channels.filter(ch => {
     if (channelFilter === 'hidden') {
-      if (!hiddenChannels.has(ch.index)) return false;
+      if (!_isHidden(ch)) return false;
     } else {
       // 'all' and 'bus' modes — never show hidden channels
-      if (hiddenChannels.has(ch.index)) return false;
+      if (_isHidden(ch)) return false;
       if (channelFilter === 'bus' && !ch.isBus) return false;
     }
     if (query && !ch.name.toLowerCase().includes(query)) return false;
@@ -3594,8 +3614,8 @@ function selectAllChannels() {
 
     function itemVisible(ch) {
       if (!ch) return false;
-      if (channelFilter === 'hidden') return hiddenChannels.has(ch.index);
-      if (hiddenChannels.has(ch.index)) return false;
+      if (channelFilter === 'hidden') return _isHidden(ch);
+      if (_isHidden(ch)) return false;
       if (channelFilter === 'bus' && !ch.isBus) return false;
       return true;
     }
@@ -3617,9 +3637,9 @@ function selectAllChannels() {
     });
   } else {
     visible = channels.filter(ch => {
-      if (hiddenChannels.has(ch.index) && channelFilter !== 'hidden') return false;
+      if (_isHidden(ch) && channelFilter !== 'hidden') return false;
       if (channelFilter === 'bus' && !ch.isBus) return false;
-      if (channelFilter === 'hidden' && !hiddenChannels.has(ch.index)) return false;
+      if (channelFilter === 'hidden' && !_isHidden(ch)) return false;
       if (query && !ch.name.toLowerCase().includes(query)) return false;
       return true;
     });
@@ -3680,18 +3700,18 @@ function hideOrShowSelected() {
       if (!node) return;
       trackTree.filter(c => c.type === 'track' && c.parent === node.name).forEach(child => {
         const cch = channels.find(c => c.name.toLowerCase() === child.name.toLowerCase());
-        if (cch) { if (hide) hiddenChannels.add(cch.index); else hiddenChannels.delete(cch.index); }
+        if (cch) { if (hide) _hideAdd(cch); else _hideDelete(cch); }
       });
     };
     if (isHidden) {
-      hiddenChannels.delete(ch.index);
+      _hideDelete(ch);
       cascadeGroup(ch, false); // restore children too
     } else {
-      hiddenChannels.add(ch.index);
+      _hideAdd(ch);
       cascadeGroup(ch, true);  // hide children too
     }
   }
-  localStorage.setItem('sb4_hidden', JSON.stringify([...hiddenChannels]));
+  _saveHidden();
   selectedIdx.clear();
   renderChannels();
   updateAddStemsBtn();
@@ -3952,7 +3972,7 @@ function _renderEspChannels() {
     const _espLocalHiddenBtn = new Set((_safeLocalJSON('sb4_esp_hidden', [])).filter(v => typeof v === 'number'));
     const _espAllCh = _masterChannels.length > 0 ? _masterChannels : channels;
     const _espVisBtn = _espAllCh.filter(ch => {
-      const isH = _espLocalHiddenBtn.has(ch.index) || hiddenChannels.has(ch.index);
+      const isH = _espLocalHiddenBtn.has(ch.index) || _isHidden(ch);
       if (!_espShowHiddenOnly && isH) return false;
       if (_espShowHiddenOnly && !isH) return false;
       if (search && !ch.name.toLowerCase().includes(search)) return false;
@@ -3973,7 +3993,7 @@ function _renderEspChannels() {
   // ESP-local hidden: separate set, right-click in ESP writes only here (doesn't affect main panel)
   const espLocalHidden = new Set((_safeLocalJSON('sb4_esp_hidden', [])).filter(v => typeof v === 'number'));
   // isEspHidden: takes channel object, checks by index
-  const isEspHidden = (ch) => espLocalHidden.has(ch.index) || hiddenChannels.has(ch.index);
+  const isEspHidden = (ch) => espLocalHidden.has(ch.index) || _isHidden(ch);
   const allCh = channels.length === 0 ? [] : (_masterChannels.length > 0 ? _masterChannels : channels);
 
   if (allCh.length === 0) {
@@ -4376,7 +4396,7 @@ function _espToggleAllNone() {
   const espLocalHidden = new Set((_safeLocalJSON('sb4_esp_hidden', [])).filter(v => typeof v === 'number'));
   const allCh = _masterChannels.length > 0 ? _masterChannels : channels;
   const visible = allCh.filter(ch => {
-    const isHidden = espLocalHidden.has(ch.index) || hiddenChannels.has(ch.index);
+    const isHidden = espLocalHidden.has(ch.index) || _isHidden(ch);
     if (!_espShowHiddenOnly && isHidden) return false;
     if (_espShowHiddenOnly && !isHidden) return false;
     if (search && !ch.name.toLowerCase().includes(search)) return false;
@@ -5991,9 +6011,9 @@ function _isMixChVisible(ch) {
   if (!_mixModalChMatchesFilter(ch.name)) return false;
   const isRestoredForVersion = _versionRestoredChannels.has(ch.name);
   if (isRestoredForVersion) return !_versionShowHiddenOnly;
-  const hidden = _versionHiddenChannels.has(ch.index); // only version-specific hiding
+  const hidden = _isVersionHidden(ch); // only version-specific hiding
   if (_versionShowHiddenOnly) {
-    return _versionHiddenChannels.has(ch.index);
+    return _isVersionHidden(ch);
   }
   return !hidden;
 }
@@ -6026,16 +6046,16 @@ function mixSelectNone() { mixMutedSet.clear(); renderMixList(); }
 function mixHideShowAll() {
   // Right-click All: if any visible channels are version-hidden, show all; otherwise hide all
   const allCh = _masterChannels.length > 0 ? _masterChannels : channels;
-  const anyHidden = allCh.some(ch => _versionHiddenChannels.has(ch.index));
+  const anyHidden = allCh.some(ch => _isVersionHidden(ch));
   if (anyHidden) {
     // Show all — clear version hidden
     _versionHiddenChannels.clear();
     _versionRestoredChannels.clear();
   } else {
     // Hide all visible channels
-    allCh.forEach(ch => { if (!hiddenChannels.has(ch.index)) _versionHiddenChannels.add(ch.index); });
+    allCh.forEach(ch => { if (!_isHidden(ch)) _vHideAdd(ch); });
   }
-  localStorage.setItem('sb4_version_hidden', JSON.stringify([..._versionHiddenChannels]));
+  _saveVersionHidden();
   localStorage.setItem('sb4_version_restored', JSON.stringify([..._versionRestoredChannels]));
   renderMixList();
 }
@@ -6055,12 +6075,10 @@ function updateMixToggleBtn() {
 function toggleHideInMix(e, idx) {
   if (easyMode) return; // no hide in easy mode
   _mixSaveUndo();
-  if (_versionHiddenChannels.has(idx)) {
-    _versionHiddenChannels.delete(idx);
-  } else {
-    _versionHiddenChannels.add(idx);
-  }
-  localStorage.setItem('sb4_version_hidden', JSON.stringify([..._versionHiddenChannels]));
+  const _vhCh = channels.find(c => c.index === idx);
+  if (!_vhCh) return;
+  if (_isVersionHidden(_vhCh)) { _vHideDelete(_vhCh); } else { _vHideAdd(_vhCh); }
+  _saveVersionHidden();
   renderMixList();
 }
 
@@ -6165,13 +6183,13 @@ function renderMixList(initIndices) {
   const query = (document.getElementById('mix-ch-search')?.value || '').toLowerCase();
   // Channel is "version-hidden" if in _versionHiddenChannels (local) or in main hiddenChannels
   function isMixHidden(ch) {
-    return _versionHiddenChannels.has(ch.index);
+    return _isVersionHidden(ch);
   }
   function isMixVisible(ch) {
     // Apply local type filter (doesn't affect Logic mixer)
     if (!_mixModalChMatchesFilter(ch.name)) return false;
     if (_versionShowHiddenOnly) {
-      return _versionHiddenChannels.has(ch.index);
+      return _isVersionHidden(ch);
     }
     return !isMixHidden(ch);
   }
@@ -6286,16 +6304,16 @@ function renderMixList(initIndices) {
         _mixSaveUndo();
         if (ch && _mixSelSet.has(ch.index) && _mixSelSet.size > 1) {
           // Multi-select: hide/unhide all selected channels
-          if (_versionShowHiddenOnly) { [..._mixSelSet].forEach(idx => _versionHiddenChannels.delete(idx)); }
-          else { [..._mixSelSet].forEach(idx => _versionHiddenChannels.add(idx)); }
+          if (_versionShowHiddenOnly) { [..._mixSelSet].forEach(idx => { const _c = channels.find(c => c.index === idx); if (_c) _vHideDelete(_c); }); }
+          else { [..._mixSelSet].forEach(idx => { const _c = channels.find(c => c.index === idx); if (_c) _vHideAdd(_c); }); }
           _mixSelSet.clear();
         } else {
           const allKids = getAllDescendants(t.name);
           const allKidChs = [...(ch ? [ch] : []), ...allKids.map(k => chMap[k.num]).filter(Boolean)];
-          if (_versionShowHiddenOnly) { allKidChs.filter(c => _versionHiddenChannels.has(c.index)).forEach(c => { _versionHiddenChannels.delete(c.index); }); }
-          else { allKidChs.filter(c => !_versionHiddenChannels.has(c.index)).forEach(c => { _versionHiddenChannels.add(c.index); }); }
+          if (_versionShowHiddenOnly) { allKidChs.filter(c => _isVersionHidden(c)).forEach(c => { _vHideDelete(c); }); }
+          else { allKidChs.filter(c => !_isVersionHidden(c)).forEach(c => { _vHideAdd(c); }); }
         }
-        localStorage.setItem('sb4_version_hidden', JSON.stringify([..._versionHiddenChannels]));
+        _saveVersionHidden();
         renderMixList();
       });
       // Shift+drag: range-recompute on each enter (group rows)
@@ -6430,10 +6448,10 @@ function renderMixList(initIndices) {
         if (e.button !== 2) return; e.preventDefault(); e.stopPropagation();
         const targets = (_mixSelSet.has(ch.index) && _mixSelSet.size > 0) ? [..._mixSelSet] : [ch.index];
         _mixSaveUndo();
-        if (_versionShowHiddenOnly) { targets.forEach(idx => _versionHiddenChannels.delete(idx)); }
-        else                        { targets.forEach(idx => _versionHiddenChannels.add(idx)); }
+        if (_versionShowHiddenOnly) { targets.forEach(idx => { const _c = channels.find(c => c.index === idx); if (_c) _vHideDelete(_c); }); }
+        else                        { targets.forEach(idx => { const _c = channels.find(c => c.index === idx); if (_c) _vHideAdd(_c); }); }
         _mixSelSet.clear();
-        localStorage.setItem('sb4_version_hidden', JSON.stringify([..._versionHiddenChannels]));
+        _saveVersionHidden();
         renderMixList();
       });
       // Shift+drag: range-recompute on each enter
@@ -6849,7 +6867,7 @@ function _restoreState(s) {
   hiddenChannels = new Set(JSON.parse(s.hidden));
   if (s.versionHidden !== undefined) {
     _versionHiddenChannels = new Set(JSON.parse(s.versionHidden));
-    localStorage.setItem('sb4_version_hidden', s.versionHidden);
+    _saveVersionHidden();
   }
   if (s.espHidden !== undefined) localStorage.setItem('sb4_esp_hidden', s.espHidden);
   if (s.selected) selectedIdx = new Set(JSON.parse(s.selected));
@@ -6861,7 +6879,7 @@ function _restoreState(s) {
     _clickRangeAnchor = s.clickRangeAnchor;
     _clickRangeAnchorOrder = s.clickRangeAnchorOrder || null;
   }
-  localStorage.setItem('sb4_hidden', JSON.stringify([...hiddenChannels]));
+  _saveHidden();
   saveQueue(); renderChannelsNow(); renderQueue(); updateBounceBtn(); updateAddStemsBtn();
   if (document.getElementById('mix-modal')?.classList.contains('show')) renderMixList();
   if (document.getElementById('edit-stem-preset-modal')?.classList.contains('show')) _renderEspChannels();
@@ -6898,14 +6916,14 @@ function _mixUndoLast() {
   if (_mixModalUndoStack.length === 0) { toast('Nothing to undo'); return; }
   _mixModalRedoStack.push(JSON.stringify([..._versionHiddenChannels]));
   _versionHiddenChannels = new Set(JSON.parse(_mixModalUndoStack.pop()));
-  localStorage.setItem('sb4_version_hidden', JSON.stringify([..._versionHiddenChannels]));
+  _saveVersionHidden();
   renderMixList(); toast('↩ Undone');
 }
 function _mixRedoLast() {
   if (_mixModalRedoStack.length === 0) { toast('Nothing to redo'); return; }
   _mixModalUndoStack.push(JSON.stringify([..._versionHiddenChannels]));
   _versionHiddenChannels = new Set(JSON.parse(_mixModalRedoStack.pop()));
-  localStorage.setItem('sb4_version_hidden', JSON.stringify([..._versionHiddenChannels]));
+  _saveVersionHidden();
   renderMixList(); toast('↪ Redone');
 }
 
