@@ -57,8 +57,10 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .sec-badge{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:var(--accent);background:rgba(108,99,255,.1);padding:2px 8px;border-radius:var(--r3);border:1px solid rgba(108,99,255,.18);}
 .scroll{flex:1;overflow-y:auto;}
 #ch-list{contain:layout style;} /* Opt #2: isolate reflow from rest of page */
-.scroll::-webkit-scrollbar{width:3px;}
-.scroll::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+.scroll::-webkit-scrollbar{width:6px;height:6px;}
+.scroll::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px;border:1px solid transparent;background-clip:content-box;}
+.scroll::-webkit-scrollbar-thumb:hover{background:var(--t2);background-clip:content-box;}
+.scroll::-webkit-scrollbar-track{background:transparent;}
 .empty-hint{padding:28px 16px;text-align:center;color:var(--muted);font-size:11px;line-height:1.9;}
 .q-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 16px;gap:18px;min-height:220px;}
 .q-empty-arrow{width:72px;height:72px;color:var(--accent);opacity:.35;animation:eb-breathe 3.2s ease-in-out infinite;}
@@ -738,7 +740,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
     <div class="sec-hdr"><span class="sec-title">Channels</span><span class="sec-badge" id="ch-count"></span></div>
     <div class="search-bar">
       <input class="search-inp" id="ch-search" title="Filter channels by name" placeholder="Search…" oninput="renderChannels()" style="max-width:120px;">
-      <button class="tb-pill" id="tree-toggle-all" onclick="toggleAllGroups()" title="Expand / Collapse all groups" style="display:none;padding:4px 8px;font-size:10px;opacity:.7;letter-spacing:.05em;">▶▶</button>
+      <button class="tb-pill" id="tree-toggle-all" onclick="toggleAllGroups()" title="Expand / Collapse all groups" style="display:none;padding:3px 7px;font-size:11px;opacity:.7;letter-spacing:-.02em;">⇅</button>
       <button class="hidden-btn" id="hidden-toggle" title="Show channels you've hidden" onclick="setFilter('hidden')">
         <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 7s2-4 6-4 6 4 6 4-2 4-6 4-6-4-6-4z"/><circle cx="7" cy="7" r="1.6"/><line x1="2" y1="2" x2="12" y2="12" class="hidden-slash"/></svg>
         Hidden
@@ -1113,7 +1115,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
     </div>
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
       <span style="font-size:10px;color:var(--muted);font-weight:600;flex:1;">Uncheck channels to MUTE for this mix</span>
-      <button id="mix-tree-toggle-btn" onclick="mixToggleExpandAll()" style="padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;display:none;" title="Expand / Collapse all groups">▶▶</button>
+      <button id="mix-tree-toggle-btn" onclick="mixToggleExpandAll()" style="padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;display:none;" title="Expand / Collapse all groups">⇅</button>
       <button id="mix-toggle-all-btn" onclick="mixToggleAllNone()" oncontextmenu="event.preventDefault();mixHideShowAll();" style="padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Click: select all/none | Right-click: hide/show all">All</button>
       <button id="mix-clear-sel-btn" onclick="_mixClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
@@ -1139,7 +1141,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
     </div>
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-shrink:0;">
       <span style="font-size:10px;color:var(--muted);font-weight:600;flex:1;">In preset: <span id="esp-stems-count" style="color:var(--accent);font-family:'JetBrains Mono',monospace;"></span></span>
-      <button id="esp-tree-toggle-btn" onclick="_espToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">▶▶</button>
+      <button id="esp-tree-toggle-btn" onclick="_espToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">⇅</button>
       <button id="esp-toggle-all-btn" onclick="_espToggleAllNone()" style="padding:2px 9px;border-radius:5px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;cursor:pointer;transition:all .14s;">All</button>
       <button id="esp-clear-sel-btn" onclick="_espClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
@@ -1167,7 +1169,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
     </div>
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-bottom:5px;">
       <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);flex:1;">Channels <span id="merge-ch-count" style="color:var(--accent);font-family:'JetBrains Mono',monospace;"></span></div>
-      <button id="merge-tree-toggle-btn" onclick="_mergeToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">▶▶</button>
+      <button id="merge-tree-toggle-btn" onclick="_mergeToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">⇅</button>
       <button id="merge-clear-sel-btn" onclick="_mergeClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
     <input type="text" id="merge-ch-search" placeholder="Search channels…" oninput="_renderMergeChannelList()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:11px;padding:5px 9px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;flex-shrink:0;margin-bottom:5px;">
@@ -1209,7 +1211,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
     <div id="eset-tab-content" style="max-height:75px;overflow-y:auto;flex-shrink:0;border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:3px 5px;"></div>
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
       <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);flex:1;">Add channels</div>
-      <button id="eset-tree-toggle-btn" onclick="_esetToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">▶▶</button>
+      <button id="eset-tree-toggle-btn" onclick="_esetToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">⇅</button>
       <button id="eset-clear-sel-btn" onclick="_esetClearSel()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Clear selection"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
     <div id="eset-modal-filters" style="display:none;align-items:center;gap:3px;flex-wrap:wrap;padding:2px 0;margin-bottom:3px;flex-shrink:0;"></div>
