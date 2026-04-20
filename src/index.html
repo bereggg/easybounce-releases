@@ -26,7 +26,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .tb-proj{font-family:var(--font-mono);font-size:var(--fs-sm);color:var(--muted);flex:1;padding-left:6px;transition:color .2s;}
 .tb-proj.live{color:var(--text);}
 .tb-right{display:flex;align-items:center;gap:8px;-webkit-app-region:no-drag;flex-shrink:0;}
-.tb-pill{display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:var(--r3);background:var(--glass);border:1px solid var(--glass-border);color:var(--t2);font-size:11px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.tb-pill{display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:var(--r3);background:var(--glass);border:1px solid var(--glass-border);color:var(--t2);font-size:var(--fs-sm);font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;}
 .tb-pill:hover{border-color:var(--accent-a40);color:var(--accent);background:var(--accent-a08);}
 .tb-pill.scanning{border-color:var(--accent);color:var(--accent);animation:tb-pulse 1.6s ease-in-out infinite;}
 @keyframes tb-pulse{0%,100%{opacity:1;border-color:var(--accent);}50%{opacity:.55;border-color:var(--accent-a30);}}
@@ -39,7 +39,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .ldot{width:7px;height:7px;border-radius:50%;background:var(--muted);transition:all .4s;flex-shrink:0;}
 .ldot.live{background:var(--a3);box-shadow:0 0 0 3px var(--success-a15),0 0 8px var(--success-a40);}
 .ldot.warn{background:var(--warn);}
-.llbl{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--t2);}
+.llbl{font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);color:var(--t2);}
 @keyframes fade{0%,100%{opacity:1;}50%{opacity:.4;}}
 @keyframes scanPulse{0%,100%{box-shadow:0 8px 48px rgba(185,28,28,.45),0 0 0 1px rgba(239,68,68,.18),0 0 0 0 rgba(239,68,68,.3);}50%{box-shadow:0 8px 48px rgba(185,28,28,.7),0 0 0 1px rgba(239,68,68,.5),0 0 0 6px rgba(239,68,68,.0);}}
 .shell{display:grid;grid-template-columns:var(--pl-w,252px) 5px 1fr 208px;height:calc(100vh - 50px);transition:grid-template-columns .22s ease;}
@@ -53,25 +53,25 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .pr{border-left:1px solid var(--b);}
 .center{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--b);}
 .sec-hdr{padding:10px 14px 9px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.sec-title{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
-.sec-badge{font-family:var(--font-mono);font-size:10px;font-weight:500;color:var(--accent);background:var(--accent-a08);padding:2px 8px;border-radius:var(--r-pill);border:1px solid var(--accent-a20);}
+.sec-title{font-size:var(--fs-xxs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+.sec-badge{font-family:var(--font-mono);font-size:var(--fs-xs);font-weight:500;color:var(--accent);background:var(--accent-a08);padding:2px 8px;border-radius:var(--r-pill);border:1px solid var(--accent-a20);}
 .scroll{flex:1;overflow-y:auto;}
 #ch-list{contain:layout style;} /* Opt #2: isolate reflow from rest of page */
 .scroll::-webkit-scrollbar{width:6px;height:6px;}
 .scroll::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px;border:1px solid transparent;background-clip:content-box;}
 .scroll::-webkit-scrollbar-thumb:hover{background:var(--t2);background-clip:content-box;}
 .scroll::-webkit-scrollbar-track{background:transparent;}
-.empty-hint{padding:28px 16px;text-align:center;color:var(--muted);font-size:11px;line-height:1.9;}
+.empty-hint{padding:28px 16px;text-align:center;color:var(--muted);font-size:var(--fs-sm);line-height:1.9;}
 .q-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 16px;gap:18px;min-height:220px;}
-.q-empty-arrow{width:72px;height:72px;color:var(--accent);opacity:.35;animation:eb-breathe 3.2s ease-in-out infinite;}
+.q-empty-arrow{width:72px;height:72px;color:var(--accent);opacity:.35;animation:eb-breathe 2.4s ease-in-out infinite;}
 .q-empty-title{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.01em;}
-.q-empty-sub{font-size:11px;color:var(--muted);text-align:center;line-height:1.6;}
+.q-empty-sub{font-size:var(--fs-sm);color:var(--muted);text-align:center;line-height:1.6;}
 .q-empty-sub b{color:var(--t2);font-weight:600;}
 .search-bar{padding:6px 10px;border-bottom:1px solid var(--b);display:flex;gap:5px;align-items:center;flex-shrink:0;flex-wrap:wrap;}
-.search-inp{flex:1;min-width:0;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:var(--font-mono);font-size:11px;padding:5px 9px;transition:border-color .18s,box-shadow .18s;}
+.search-inp{flex:1;min-width:0;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:var(--font-mono);font-size:var(--fs-sm);padding:5px 9px;transition:border-color .18s,box-shadow .18s;}
 .search-inp::placeholder{color:var(--muted);}
 .search-inp:focus{outline:none;border-color:var(--accent-a60);box-shadow:0 0 0 3px var(--accent-a12);}
-.hidden-btn{display:flex;align-items:center;gap:4px;padding:5px 9px;border-radius:var(--r);border:1px solid var(--b);background:transparent;color:var(--muted);font-size:10px;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap;flex-shrink:0;}
+.hidden-btn{display:flex;align-items:center;gap:4px;padding:5px 9px;border-radius:var(--r);border:1px solid var(--b);background:transparent;color:var(--muted);font-size:var(--fs-xs);font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap;flex-shrink:0;}
 .hidden-btn:hover{border-color:rgba(255,101,132,.4);color:var(--a2);}
 .hidden-btn.on{border-color:rgba(255,101,132,.5);color:var(--a2);background:rgba(255,101,132,.08);}
 .hidden-btn svg{width:11px;height:11px;flex-shrink:0;}
@@ -79,8 +79,8 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .hidden-btn.on .hidden-slash{display:block;}
 /* ── Mixer channel-type filters ─────────────────────────── */
 #mixer-filters{display:none;align-items:center;gap:4px;padding:5px 10px;border-bottom:1px solid var(--b);flex-shrink:0;flex-wrap:wrap;}
-.mf-label{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-right:4px;flex-shrink:0;}
-.mf-btn{padding:3px 8px;border-radius:5px;border:1px solid transparent;font-size:10px;font-weight:600;letter-spacing:.02em;cursor:pointer;transition:all .13s;font-family:'Space Grotesk',sans-serif;}
+.mf-label{font-size:var(--fs-xxs);font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-right:4px;flex-shrink:0;}
+.mf-btn{padding:3px 8px;border-radius:var(--r-sm);border:1px solid transparent;font-size:var(--fs-xs);font-weight:var(--fw-semi);letter-spacing:.02em;cursor:pointer;transition:all .13s;font-family:var(--font-display);}
 .mf-btn:hover{filter:brightness(1.15);}
 .mf-btn.on{background:color-mix(in srgb,var(--accent) 18%,transparent);border-color:color-mix(in srgb,var(--accent) 45%,transparent);color:var(--accent);}
 .mf-btn.off{background:color-mix(in srgb,var(--muted) 10%,transparent);border-color:color-mix(in srgb,var(--b2) 70%,transparent);color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--muted) 35%,transparent);}
@@ -102,23 +102,23 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .depth-3 .tree-toggle{color:var(--muted);opacity:.5;}
 .tree-group-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;pointer-events:none;}
 .tree-group-name{flex:1;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;pointer-events:none;}
-.tree-group-idx{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);flex-shrink:0;pointer-events:none;}
+.tree-group-idx{font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);color:var(--muted);flex-shrink:0;pointer-events:none;}
 .tree-child{display:flex;align-items:center;gap:7px;padding:5px 14px 5px 32px;border-bottom:1px solid rgba(255,255,255,.015);cursor:pointer;transition:all .14s;user-select:none;}
 .tree-child:hover{background:rgba(255,255,255,.03);}
 .tree-child.sel{background:rgba(108,99,255,.07);border-left:2px solid rgba(108,99,255,.5);}
 .tree-child-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;opacity:.8;pointer-events:none;}
-.tree-child-name{flex:1;font-size:11px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--t2);pointer-events:none;}
-.tree-child-idx{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);flex-shrink:0;opacity:.6;}
+.tree-child-name{flex:1;font-size:var(--fs-sm);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--t2);pointer-events:none;}
+.tree-child-idx{font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);color:var(--muted);flex-shrink:0;opacity:.6;}
 .ch-bar{width:3px;height:24px;border-radius:2px;flex-shrink:0;opacity:.85;}
 .ch-name{flex:1;font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;}
-.ch-idx{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);flex-shrink:0;}
+.ch-idx{font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);color:var(--muted);flex-shrink:0;}
 .ch-footer{border-top:1px solid var(--b);padding:8px 12px;display:flex;gap:5px;flex-shrink:0;}
-.foot-btn{flex:1;padding:7px 4px;border-radius:var(--r);border:1px solid var(--b);background:var(--glass);color:var(--t2);font-size:10px;font-weight:600;cursor:pointer;transition:all .16s;text-align:center;}
+.foot-btn{flex:1;padding:7px 4px;border-radius:var(--r);border:1px solid var(--b);background:var(--glass);color:var(--t2);font-size:var(--fs-xs);font-weight:600;cursor:pointer;transition:all .16s;text-align:center;}
 .foot-btn:hover{border-color:var(--accent-a40);color:var(--accent);background:var(--accent-a08);}
 .foot-btn.green:hover{border-color:var(--success-a40);color:var(--a3);background:var(--success-a15);}
 .foot-btn.sm{flex:0;padding:7px 10px;}
 .presets-bar{padding:7px 12px;border-bottom:1px solid var(--b);display:flex;gap:5px;flex-wrap:wrap;align-items:center;min-height:44px;flex-shrink:0;}
-.preset-section-lbl{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 4px;white-space:nowrap;align-self:center;}
+.preset-section-lbl{font-size:var(--fs-xxs);font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 4px;white-space:nowrap;align-self:center;}
 .pchip{padding:5px 12px;border-radius:var(--r-pill);border:1px solid var(--b2);background:var(--card);color:var(--t2);font-size:var(--fs-xs);font-weight:var(--fw-semi);cursor:pointer;transition:all .16s;white-space:nowrap;box-shadow:var(--sh-card),var(--sh-inset);}
 .pchip:hover{border-color:rgba(108,99,255,.5);color:var(--accent);background:rgba(108,99,255,.07);box-shadow:0 2px 8px rgba(108,99,255,.15);}
 .pchip.mx:hover{border-color:rgba(255,101,132,.5);color:var(--a2);background:rgba(255,101,132,.07);}
@@ -129,15 +129,15 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .queue-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .queue-hdr{padding:9px 14px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .q-mini-btns{display:flex;gap:4px;margin-left:auto;}
-.q-mini-btn{padding:4px 11px;border-radius:var(--r);border:1px solid var(--b2);background:var(--card);color:var(--t2);font-size:10px;font-weight:600;cursor:pointer;transition:all .14s;letter-spacing:.01em;}
+.q-mini-btn{padding:4px 11px;border-radius:var(--r);border:1px solid var(--b2);background:var(--card);color:var(--t2);font-size:var(--fs-xs);font-weight:600;cursor:pointer;transition:all .14s;letter-spacing:.01em;}
 .q-mini-btn:hover{color:var(--text);border-color:var(--accent);background:var(--card2);}
 .qlist{flex:1;overflow-y:auto;padding:2px 0;}
 .qlist::-webkit-scrollbar{width:3px;}
 .qlist::-webkit-scrollbar-thumb{background:var(--b2);}
-#merge-drop-zone{display:none;align-items:center;justify-content:center;gap:7px;margin:4px 4px 8px;border:2px dashed color-mix(in srgb,var(--accent) 40%,transparent);border-radius:var(--r);padding:11px 15px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:color-mix(in srgb,var(--accent) 65%,transparent);background:color-mix(in srgb,var(--accent) 6%,transparent);transition:border-color .13s,background .13s,color .13s,opacity .13s;flex-shrink:0;pointer-events:auto;}
+#merge-drop-zone{display:none;align-items:center;justify-content:center;gap:7px;margin:4px 4px 8px;border:2px dashed color-mix(in srgb,var(--accent) 40%,transparent);border-radius:var(--r);padding:11px 15px;font-size:var(--fs-sm);font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:color-mix(in srgb,var(--accent) 65%,transparent);background:color-mix(in srgb,var(--accent) 6%,transparent);transition:border-color .13s,background .13s,color .13s,opacity .13s;flex-shrink:0;pointer-events:auto;}
 #merge-drop-zone.drag-over{border-color:var(--accent);background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 18%,transparent),color-mix(in srgb,var(--teal) 18%,transparent));color:color-mix(in srgb,var(--accent) 90%,white);}
 #merge-drop-zone.inactive{opacity:.22;pointer-events:none;}
-#version-drop-zone{display:none;align-items:center;justify-content:center;gap:7px;margin:4px 4px 4px;border:2px dashed color-mix(in srgb,var(--teal) 40%,transparent);border-radius:var(--r);padding:11px 15px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:color-mix(in srgb,var(--teal) 65%,transparent);background:color-mix(in srgb,var(--teal) 6%,transparent);transition:border-color .13s,background .13s,color .13s,opacity .13s;flex-shrink:0;pointer-events:auto;}
+#version-drop-zone{display:none;align-items:center;justify-content:center;gap:7px;margin:4px 4px 4px;border:2px dashed color-mix(in srgb,var(--teal) 40%,transparent);border-radius:var(--r);padding:11px 15px;font-size:var(--fs-sm);font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:color-mix(in srgb,var(--teal) 65%,transparent);background:color-mix(in srgb,var(--teal) 6%,transparent);transition:border-color .13s,background .13s,color .13s,opacity .13s;flex-shrink:0;pointer-events:auto;}
 #version-drop-zone.drag-over{border-color:var(--teal);background:linear-gradient(160deg,color-mix(in srgb,var(--teal) 18%,transparent),color-mix(in srgb,var(--accent) 12%,transparent));color:color-mix(in srgb,var(--teal) 90%,white);}
 #version-drop-zone.inactive{opacity:.22;pointer-events:none;}
 #qlist-wrap{flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column;}
@@ -148,42 +148,42 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .qbody{flex:1;min-width:0;}
 .qrow1{display:flex;align-items:center;gap:7px;margin-bottom:3px;}
 .qname{font-size:var(--fs-base);font-weight:var(--fw-semi);letter-spacing:var(--ls-tight);}
-.qtag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:var(--r-pill);text-transform:uppercase;letter-spacing:.08em;}
+.qtag{font-size:var(--fs-xxs);font-weight:700;padding:2px 7px;border-radius:var(--r-pill);text-transform:uppercase;letter-spacing:.08em;}
 .qtag.stem{background:var(--success-a15);color:var(--a3);border:1px solid var(--success-a40);}
 .qtag.mix{background:var(--accent-a12);color:var(--accent);border:1px solid var(--accent-a20);}
 .qtag.set{background:rgba(255,169,77,.12);color:var(--warn);border:1px solid rgba(255,169,77,.22);}
 .qtag.group{background:var(--g-stem);color:#fff;border:1px solid transparent;box-shadow:0 2px 8px var(--accent-a30);}
-.qgroup-ch{font-size:9px;padding:1px 7px;border-radius:var(--r);background:rgba(56,249,215,.1);color:var(--teal);border:1px solid rgba(56,249,215,.22);}
+.qgroup-ch{font-size:var(--fs-xxs);padding:1px 7px;border-radius:var(--r);background:rgba(56,249,215,.1);color:var(--teal);border:1px solid rgba(56,249,215,.22);}
 .stems-wrap{position:relative;flex:1;display:none;}
 .stems-wrap.active{display:flex;}
 .stems-wrap.active::before{content:'';position:absolute;bottom:100%;left:0;right:0;height:12px;z-index:199;}
 .stems-wrap #add-stems-btn{flex:1;width:100%;}
-#merge-btn{position:absolute;bottom:calc(100% + 6px);left:0;right:0;padding:7px 4px;border-radius:var(--r);border:1px solid transparent;color:#fff;font-size:10px;font-weight:700;cursor:pointer;text-align:center;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;transform:translateY(8px);z-index:200;background:linear-gradient(160deg,var(--accent),var(--teal));box-shadow:0 4px 16px rgba(56,249,215,.28);}
+#merge-btn{position:absolute;bottom:calc(100% + 6px);left:0;right:0;padding:7px 4px;border-radius:var(--r);border:1px solid transparent;color:#fff;font-size:var(--fs-xs);font-weight:700;cursor:pointer;text-align:center;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;transform:translateY(8px);z-index:200;background:linear-gradient(160deg,var(--accent),var(--teal));box-shadow:0 4px 16px rgba(56,249,215,.28);}
 .stems-wrap.active:hover #merge-btn.ok,.stems-wrap.active #merge-btn.ok:hover{opacity:1;pointer-events:auto;transform:translateY(0);}
 .mchip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--r-pill);border:1px solid var(--b2);background:var(--card);color:var(--t2);font-size:var(--fs-xs);font-weight:var(--fw-semi);cursor:pointer;transition:all .14s;white-space:nowrap;}
 .mchip:hover{border-color:rgba(108,99,255,.4);color:var(--accent);}
-.mchip .mchip-x{opacity:.5;font-size:11px;line-height:1;transition:opacity .12s;margin-left:2px;}
+.mchip .mchip-x{opacity:.5;font-size:var(--fs-sm);line-height:1;transition:opacity .12s;margin-left:2px;}
 .mchip .mchip-x:hover{opacity:1;color:var(--red);}
 .mchip-save{border-style:dashed;border-color:rgba(108,99,255,.4);color:var(--accent);background:rgba(108,99,255,.06);}
 .mchip-save:hover{background:rgba(108,99,255,.12);border-style:solid;}
-.gch-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:var(--r3);border:1px solid rgba(56,249,215,.3);background:rgba(56,249,215,.07);color:var(--teal);font-size:10px;font-weight:500;white-space:nowrap;}
-.gch-pill .gch-x{opacity:.5;cursor:pointer;font-size:11px;line-height:1;transition:opacity .12s;}
+.gch-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:var(--r3);border:1px solid rgba(56,249,215,.3);background:rgba(56,249,215,.07);color:var(--teal);font-size:var(--fs-xs);font-weight:500;white-space:nowrap;}
+.gch-pill .gch-x{opacity:.5;cursor:pointer;font-size:var(--fs-sm);line-height:1;transition:opacity .12s;}
 .gch-pill .gch-x:hover{opacity:1;color:var(--red);}
 .qset-row{border-bottom:1px solid rgba(255,255,255,.03);}
 .qset-hdr{display:flex;align-items:center;gap:8px;padding:9px 14px;cursor:pointer;transition:background .12s;background:rgba(255,169,77,.025);}
 .qset-hdr:hover{background:rgba(255,169,77,.06);}
-.qset-toggle{font-size:9px;color:var(--muted);width:12px;flex-shrink:0;transition:transform .15s;display:inline-block;line-height:1;}
+.qset-toggle{font-size:var(--fs-xxs);color:var(--muted);width:12px;flex-shrink:0;transition:transform .15s;display:inline-block;line-height:1;}
 .qset-toggle.open{transform:rotate(90deg);}
 .qset-body{border-left:2px solid rgba(255,169,77,.18);margin:0 0 2px 22px;}
 .qsub{display:flex;flex-wrap:wrap;gap:3px;}
-.qmuted{font-size:9px;padding:1px 6px;border-radius:var(--r);background:rgba(255,71,87,.08);color:var(--red);border:1px solid rgba(255,71,87,.15);}
+.qmuted{font-size:var(--fs-xxs);padding:1px 6px;border-radius:var(--r);background:rgba(255,71,87,.08);color:var(--red);border:1px solid rgba(255,71,87,.15);}
 .qmuted-h{display:none;}
 .qsub.qm-open .qmuted-h{display:inline-flex;}
-.ch-show-more{display:flex;align-items:center;justify-content:center;padding:7px 0;font-size:10px;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--muted);cursor:pointer;border-top:1px solid var(--b);letter-spacing:.04em;user-select:none;transition:all .14s;}
+.ch-show-more{display:flex;align-items:center;justify-content:center;padding:7px 0;font-size:var(--fs-xs);font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--muted);cursor:pointer;border-top:1px solid var(--b);letter-spacing:.04em;user-select:none;transition:all .14s;}
 .ch-show-more:hover{color:var(--text);background:rgba(255,255,255,.04);}
-.qmuted-tog{font-size:9px;padding:1px 7px;border-radius:var(--r);background:rgba(255,255,255,.05);color:rgba(255,255,255,.38);border:1px solid rgba(255,255,255,.1);cursor:pointer;user-select:none;transition:all .12s;}
+.qmuted-tog{font-size:var(--fs-xxs);padding:1px 7px;border-radius:var(--r);background:rgba(255,255,255,.05);color:rgba(255,255,255,.38);border:1px solid rgba(255,255,255,.1);cursor:pointer;user-select:none;transition:all .12s;}
 .qmuted-tog:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);}
-.ch-mute-badge{font-size:8px;font-weight:700;padding:1px 5px;border-radius:var(--r);background:rgba(255,71,87,.12);color:var(--red);border:1px solid rgba(255,71,87,.18);margin-left:auto;flex-shrink:0;letter-spacing:.05em;}
+.ch-mute-badge{font-size:var(--fs-xxs);font-weight:700;padding:1px 5px;border-radius:var(--r);background:rgba(255,71,87,.12);color:var(--red);border:1px solid rgba(255,71,87,.18);margin-left:auto;flex-shrink:0;letter-spacing:.05em;}
 .qst{font-size:var(--fs-xxs);font-weight:var(--fw-bold);padding:3px 8px;border-radius:var(--r-pill);flex-shrink:0;margin-top:2px;text-transform:uppercase;letter-spacing:var(--ls-wide);}
 .qst.pending{color:var(--muted);background:var(--w-a05);}
 .qst.running{color:var(--warn);background:var(--warn-a12);animation:eb-pulse 1.6s infinite;}
@@ -194,19 +194,19 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .qdel:hover{background:var(--red-a15);border-color:var(--red-a30);color:var(--red);}
 .out-wrap{padding:10px 14px;border-top:1px solid var(--b);flex-shrink:0;display:flex;flex-direction:column;gap:6px;}
 .out-row{display:flex;align-items:center;gap:9px;}
-.out-lbl{font-size:9px;font-weight:700;color:var(--muted);width:48px;flex-shrink:0;text-transform:uppercase;letter-spacing:.08em;}
-.out-path{flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--t2);font-family:'JetBrains Mono',monospace;font-size:10px;padding:6px 9px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .16s;direction:rtl;text-align:left;unicode-bidi:plaintext;}
+.out-lbl{font-size:var(--fs-xxs);font-weight:700;color:var(--muted);width:48px;flex-shrink:0;text-transform:uppercase;letter-spacing:.08em;}
+.out-path{flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--t2);font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);padding:6px 9px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .16s;direction:rtl;text-align:left;unicode-bidi:plaintext;}
 .out-path:hover{border-color:rgba(108,99,255,.5);color:var(--accent);}
 .out-path.live{color:var(--text);}
-.out-sel{background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px;padding:5px 7px;cursor:pointer;}
+.out-sel{background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);padding:5px 7px;cursor:pointer;}
 .out-sel:focus{outline:none;border-color:rgba(108,99,255,.5);}
-.out-inp{flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:var(--font-mono);font-size:10px;padding:6px 9px;transition:border-color .18s,box-shadow .18s;}
+.out-inp{flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:var(--font-mono);font-size:var(--fs-xs);padding:6px 9px;transition:border-color .18s,box-shadow .18s;}
 .out-inp::placeholder{color:var(--muted);}
 .out-inp:focus{outline:none;border-color:var(--accent-a60);box-shadow:0 0 0 3px var(--accent-a12);}
 .bounce-wrap{padding:10px 14px 14px;border-top:1px solid var(--b2);flex-shrink:0;}
 .prog-bar{height:3px;background:var(--b);border-radius:2px;overflow:hidden;margin-bottom:6px;}
 .prog-fill{height:100%;background:var(--g-primary);border-radius:2px;transition:width .18s linear;width:0%;will-change:width;}
-.prog-info{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:10px;}
+.prog-info{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);color:var(--muted);margin-bottom:10px;}
 .bounce-btns{display:flex;gap:8px;}
 .bbtn{flex:1;height:54px;border-radius:var(--r2);border:none;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:linear-gradient(160deg,var(--accent) 0%,var(--a2) 100%);position:relative;overflow:hidden;transition:transform .18s,box-shadow .18s;box-shadow:0 8px 32px rgba(108,99,255,.4),inset 0 1px 0 rgba(255,255,255,.2);}
 .bbtn::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.15) 0%,transparent 60%);pointer-events:none;}
@@ -228,7 +228,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 @keyframes ch-pulse{0%,100%{opacity:1}50%{opacity:.6}}
 .stop-btn{width:54px;height:54px;border-radius:var(--r2);background:var(--red-a08);border:1px solid var(--red-a30);color:var(--red);cursor:pointer;transition:all .16s;display:none;align-items:center;justify-content:center;flex-shrink:0;}
 .stop-btn:hover{background:var(--red-a15);border-color:var(--red-a50);}
-.log-body{flex:1;overflow-y:auto;padding:6px 12px;font-family:var(--font-mono);font-size:10px;}
+.log-body{flex:1;overflow-y:auto;padding:6px 12px;font-family:var(--font-mono);font-size:var(--fs-xs);}
 .log-body::-webkit-scrollbar{width:3px;}
 .log-body::-webkit-scrollbar-thumb{background:var(--b2);}
 .ll{line-height:1.85;display:flex;gap:7px;}
@@ -245,7 +245,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .stat-cur{font-size:var(--fs-sm);font-weight:var(--fw-semi);color:var(--text);line-height:1.3;font-family:var(--font-display);letter-spacing:var(--ls-normal);}
 /* ── Activity panel tabs ───────────────────────────────────── */
 .act-tabs{display:flex;gap:2px;padding:0 10px 8px;flex-shrink:0;}
-.act-tab{flex:1;padding:6px 0;border-radius:var(--r-sm) var(--r-sm) 0 0;border:none;background:transparent;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:color .18s;font-family:'Space Grotesk',sans-serif;position:relative;}
+.act-tab{flex:1;padding:6px 0;border-radius:var(--r-sm) var(--r-sm) 0 0;border:none;background:transparent;color:var(--muted);font-size:var(--fs-xxs);font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:color .18s;font-family:'Space Grotesk',sans-serif;position:relative;}
 .act-tab::after{content:'';position:absolute;left:14%;right:14%;bottom:0;height:2px;background:var(--accent);border-radius:2px;opacity:0;transform:scaleX(0);transition:opacity .2s,transform .2s var(--ease-out);transform-origin:center;}
 .act-tab.active{color:var(--text);background:transparent;}
 .act-tab.active::after{opacity:1;transform:scaleX(1);}
@@ -253,7 +253,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 /* ── Easy Mode Toggle ──────────────────────────────────── */
 .em-wrap{display:flex;align-items:center;gap:8px;padding:5px 12px;border-radius:var(--r-pill);border:1.5px solid var(--accent-a30);background:var(--accent-a05);cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s;-webkit-app-region:no-drag;user-select:none;position:absolute;left:min(50%,calc(100% - 520px));transform:translateX(-50%);z-index:2;}
 .em-wrap:hover{border-color:var(--accent-a60);background:var(--accent-a08);box-shadow:0 0 16px var(--accent-a20);}
-.em-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;transition:color .2s,opacity .2s;color:var(--t2);opacity:.55;}
+.em-lbl{font-size:var(--fs-xs);font-weight:600;letter-spacing:.1em;text-transform:uppercase;transition:color .2s,opacity .2s;color:var(--t2);opacity:.55;}
 /* Default (no body.easy) = Pro mode is active → PRO bright, EASY dim */
 .em-lbl.em-lbl-pro{color:var(--accent);opacity:1;}
 /* body.easy → Easy mode active → EASY bright, PRO dim */
@@ -300,7 +300,7 @@ body.easy .shell.act-collapsed{grid-template-columns:var(--pl-w,240px) 5px 1fr 0
 body.easy .search-bar{padding:5px 10px!important;border-bottom:1px solid var(--b)!important;}
 body.easy .search-bar .hidden-btn{display:none!important;}
 body.easy .search-bar #tree-toggle-all{display:none!important;}
-body.easy .search-inp{font-size:11px!important;padding:5px 8px!important;max-width:100%!important;flex:1!important;}
+body.easy .search-inp{font-size:var(--fs-sm)!important;padding:5px 8px!important;max-width:100%!important;flex:1!important;}
 /* Version modal — hide Hidden tab in easy mode */
 body.easy #mix-hidden-tab{display:none!important;}
 body.easy #mix-toggle-all-btn[oncontextmenu]{pointer-events:auto;}
@@ -310,7 +310,7 @@ body.easy .tcb-list{border-radius:var(--r)!important;}
 /* ── Version naming presets ── */
 .vnp-chip{padding:4px 11px;border-radius:var(--r-pill);border:1px solid var(--accent-a60);background:transparent;color:var(--accent);font-size:var(--fs-sm);font-weight:var(--fw-bold);cursor:pointer;transition:all .14s;white-space:nowrap;font-family:var(--font-display);display:inline-flex;align-items:center;gap:4px;}
 .vnp-chip:hover{border-color:rgba(108,99,255,.8);color:#fff;background:rgba(108,99,255,.12);}
-.vnp-chip .vnp-x{font-size:9px;opacity:.5;margin-left:2px;transition:opacity .14s;}
+.vnp-chip .vnp-x{font-size:var(--fs-xxs);opacity:.5;margin-left:2px;transition:opacity .14s;}
 .vnp-chip:hover .vnp-x{opacity:1;color:var(--red);}
 .vnp-add{padding:4px 9px;border-radius:var(--r3);border:1px dashed rgba(108,99,255,.4);background:transparent;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;transition:all .14s;}
 .vnp-add:hover{border-color:rgba(108,99,255,.7);color:#fff;background:rgba(108,99,255,.12);}
@@ -339,33 +339,33 @@ body.easy .bounce-wrap{padding:10px 12px 14px!important;gap:10px!important;}
 body.easy .prog-bar{height:12px!important;border-radius:6px!important;position:relative!important;}
 body.easy .prog-fill{border-radius:6px!important;}
 body.easy .prog-info{font-size:12px!important;font-weight:700!important;letter-spacing:.03em!important;}
-body.easy #ppct{font-size:13px!important;font-weight:800!important;color:var(--accent)!important;}
-body.easy #eta{font-size:10px!important;}
+body.easy #ppct{font-size:var(--fs-base)!important;font-weight:800!important;color:var(--accent)!important;}
+body.easy #eta{font-size:var(--fs-xs)!important;}
 body.easy .fmt-main-btn{
-  padding:12px 14px!important;font-size:11px!important;min-height:44px!important;
+  padding:12px 14px!important;font-size:var(--fs-sm)!important;min-height:44px!important;
   border-radius:var(--r)!important;font-weight:700!important;
 }
-body.easy .fmt-tag{font-size:10px!important;padding:3px 8px!important;}
+body.easy .fmt-tag{font-size:var(--fs-xs)!important;padding:3px 8px!important;}
 body.easy .out-path,body.easy .out-inp{
-  font-size:11px!important;padding:8px 10px!important;border-radius:var(--r)!important;
+  font-size:var(--fs-sm)!important;padding:8px 10px!important;border-radius:var(--r)!important;
 }
-body.easy .out-lbl{font-size:10px!important;font-weight:800!important;width:52px!important;letter-spacing:.08em!important;}
+body.easy .out-lbl{font-size:var(--fs-xs)!important;font-weight:800!important;width:52px!important;letter-spacing:.08em!important;}
 body.easy .out-row{margin-bottom:3px!important;}
 body.easy .out-wrap{gap:5px!important;padding:6px 12px!important;}
 body.easy .qitem{padding:10px 14px!important;border-radius:var(--r)!important;margin-bottom:4px!important;}
 body.easy .qitem-name{font-size:12px!important;font-weight:700!important;}
-body.easy .qitem-badge{font-size:9px!important;padding:2px 7px!important;}
+body.easy .qitem-badge{font-size:var(--fs-xxs)!important;padding:2px 7px!important;}
 body.easy .ch-item,body.easy .tree-child,body.easy .tree-group{padding:6px 10px!important;}
-body.easy .ch-name,body.easy .tree-child-name,body.easy .tree-group-name{font-size:10px!important;font-weight:600!important;}
+body.easy .ch-name,body.easy .tree-child-name,body.easy .tree-group-name{font-size:var(--fs-xs)!important;font-weight:600!important;}
 body.easy .ch-footer{padding:6px 10px!important;gap:4px!important;}
-body.easy .foot-btn{padding:8px 7px!important;font-size:10px!important;font-weight:800!important;border-radius:var(--r)!important;}
-body.easy .foot-btn.green{padding:8px 10px!important;font-size:11px!important;}
+body.easy .foot-btn{padding:8px 7px!important;font-size:var(--fs-xs)!important;font-weight:800!important;border-radius:var(--r)!important;}
+body.easy .foot-btn.green{padding:8px 10px!important;font-size:var(--fs-sm)!important;}
 body.easy .sec-hdr{padding:10px 12px!important;}
-body.easy .sec-title{font-size:11px!important;letter-spacing:.14em!important;font-weight:800!important;}
+body.easy .sec-title{font-size:var(--fs-sm)!important;letter-spacing:.14em!important;font-weight:800!important;}
 body.easy .queue-hdr{padding:10px 14px!important;}
-body.easy .q-mini-btn{padding:5px 10px!important;font-size:10px!important;font-weight:700!important;}
-body.easy .pchip{padding:8px 16px!important;font-size:11px!important;font-weight:700!important;border-radius:var(--r2)!important;}
-body.easy .pchip-del{width:22px!important;height:22px!important;font-size:11px!important;}
+body.easy .q-mini-btn{padding:5px 10px!important;font-size:var(--fs-xs)!important;font-weight:700!important;}
+body.easy .pchip{padding:8px 16px!important;font-size:var(--fs-sm)!important;font-weight:700!important;border-radius:var(--r2)!important;}
+body.easy .pchip-del{width:22px!important;height:22px!important;font-size:var(--fs-sm)!important;}
 body.easy #panel-pr{transition:all .3s;}
 body.easy #redo-all-btn{height:80px!important;font-size:14px!important;padding:0 20px!important;border-radius:var(--r2)!important;}
 body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:var(--r2)!important;font-size:24px!important;}
@@ -389,9 +389,9 @@ body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:va
 .notif-toggle .slider:before{content:'';position:absolute;height:16px;width:16px;left:2px;bottom:2px;background:#fff;border-radius:50%;transition:.2s;}
 .notif-toggle input:checked+.slider{background:var(--accent);}
 .notif-toggle input:checked+.slider:before{transform:translateX(16px);}
-.notif-status{font-size:10px;color:var(--muted);margin-top:4px;}
+.notif-status{font-size:var(--fs-xs);color:var(--muted);margin-top:4px;}
 .notif-status.ok{color:var(--a3);}
-.notif-btn{padding:6px 12px;border-radius:var(--r);border:1px solid var(--b);background:var(--card2);color:var(--t2);font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .15s;}
+.notif-btn{padding:6px 12px;border-radius:var(--r);border:1px solid var(--b);background:var(--card2);color:var(--t2);font-size:var(--fs-sm);cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .15s;}
 .notif-btn:hover{border-color:var(--accent);color:var(--accent);}
 .notif-btn.danger{border-color:rgba(255,80,80,.3);color:#f55;}
 .notif-btn.danger:hover{border-color:#f55;background:rgba(255,80,80,.08);}
@@ -403,28 +403,28 @@ body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:va
 .hist-body{flex:1;overflow-y:auto;padding:6px 8px;}
 .hist-body::-webkit-scrollbar{width:3px;}
 .hist-body::-webkit-scrollbar-thumb{background:var(--b2);}
-.hist-empty{text-align:center;padding:32px 16px;color:var(--muted);font-size:11px;line-height:1.6;}
+.hist-empty{text-align:center;padding:32px 16px;color:var(--muted);font-size:var(--fs-sm);line-height:1.6;}
 .hist-item{border:1px solid var(--b);border-radius:var(--r);margin-bottom:6px;overflow:hidden;background:var(--card);}
 .hist-hdr{display:flex;align-items:center;justify-content:space-between;padding:7px 9px;cursor:pointer;transition:background .12s;gap:6px;}
 .hist-hdr:hover{background:var(--w-a05);}
 .hist-meta{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1;}
-.hist-proj{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.hist-date{font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.hist-proj{font-family:'Space Grotesk',sans-serif;font-size:var(--fs-sm);font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hist-date{font-size:var(--fs-xxs);color:var(--muted);font-family:'JetBrains Mono',monospace;}
 .hist-right{display:flex;align-items:center;gap:5px;flex-shrink:0;}
-.hist-cnt{font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace;white-space:nowrap;}
-.hist-repeat{width:22px;height:22px;border-radius:6px;border:1px solid rgba(108,99,255,.3);background:rgba(108,99,255,.08);color:var(--accent);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
+.hist-cnt{font-size:var(--fs-xxs);color:var(--muted);font-family:'JetBrains Mono',monospace;white-space:nowrap;}
+.hist-repeat{width:22px;height:22px;border-radius:6px;border:1px solid rgba(108,99,255,.3);background:rgba(108,99,255,.08);color:var(--accent);font-size:var(--fs-base);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
 .hist-repeat:hover{background:rgba(108,99,255,.18);border-color:var(--accent);}
 .hist-files{padding:0 9px 8px;display:none;}
-.hist-file{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:10px;font-family:var(--font-mono);color:var(--t2);}
-.hist-badge{font-size:8px;font-weight:700;padding:1px 4px;border-radius:4px;flex-shrink:0;}
+.hist-file{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:var(--fs-xs);font-family:var(--font-mono);color:var(--t2);}
+.hist-badge{font-size:var(--fs-xxs);font-weight:700;padding:1px 4px;border-radius:4px;flex-shrink:0;}
 .hist-badge.stem{background:rgba(108,99,255,.15);color:var(--accent);}
 .hist-badge.mix{background:rgba(255,169,77,.15);color:var(--warn);}
-.hist-arrow{font-size:9px;color:var(--muted);transition:transform .15s;flex-shrink:0;}
+.hist-arrow{font-size:var(--fs-xxs);color:var(--muted);transition:transform .15s;flex-shrink:0;}
 .hist-item.open .hist-arrow{transform:rotate(90deg);}
 .hist-del{width:20px;height:20px;border-radius:var(--r-sm);border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .13s;flex-shrink:0;}
 .hist-del:hover{background:var(--red-a15);border-color:var(--red-a30);color:var(--red);}
 .hist-toolbar{display:flex;align-items:center;justify-content:flex-end;padding:5px 9px;border-bottom:1px solid var(--b);flex-shrink:0;}
-.hist-clear-all{padding:3px 10px;border-radius:var(--r3);border:1px solid var(--b2);background:transparent;color:var(--muted);font-size:9px;font-weight:600;letter-spacing:.04em;cursor:pointer;transition:all .15s;}
+.hist-clear-all{padding:3px 10px;border-radius:var(--r3);border:1px solid var(--b2);background:transparent;color:var(--muted);font-size:var(--fs-xxs);font-weight:600;letter-spacing:.04em;cursor:pointer;transition:all .15s;}
 .hist-clear-all:hover{border-color:rgba(255,71,87,.4);color:var(--red);background:rgba(255,71,87,.06);}
 /* ── Stats tab ────────────────────────────────────────────── */
 .stats-pane{flex:1;overflow-y:auto;padding:16px 12px;display:flex;flex-direction:column;gap:10px;}
@@ -435,7 +435,7 @@ body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:va
 .st-sessions{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 /* ── Panel collapse toggle ────────────────────────────────── */
 .pr{border-left:1px solid var(--b);overflow:hidden;transition:all .22s ease;}
-.pr-collapse-btn{position:absolute;top:50%;right:0;transform:translateY(-50%);width:14px;height:40px;background:var(--card);border:1px solid var(--b);border-right:none;border-radius:6px 0 0 6px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:9px;transition:all .15s;}
+.pr-collapse-btn{position:absolute;top:50%;right:0;transform:translateY(-50%);width:14px;height:40px;background:var(--card);border:1px solid var(--b);border-right:none;border-radius:6px 0 0 6px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:var(--fs-xxs);transition:all .15s;}
 .pr-collapse-btn:hover{color:var(--text);background:var(--b2);}
 /* Activity panel collapsed state */
 .shell.act-collapsed .act-main-content{display:none!important;}
@@ -481,7 +481,7 @@ body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:va
   border:1px solid var(--b);
   background:var(--card);
   color:var(--muted);
-  font-size:11px;
+  font-size:var(--fs-sm);
   cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   transition:all .15s;
@@ -491,7 +491,7 @@ body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:va
 .overlay.show{display:flex;}
 .modal{background:var(--card2);border:1px solid var(--b);border-radius:var(--r2);padding:24px;width:400px;box-shadow:var(--sh-modal),var(--sh-inset);max-height:86vh;display:flex;flex-direction:column;gap:14px;overflow:hidden;}
 .modal-hdr{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;letter-spacing:-.02em;}
-.mfield label{display:block;font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;}
+.mfield label{display:block;font-size:var(--fs-xxs);font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;}
 .mfield input[type=text]{width:100%;background:var(--s);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;padding:9px 11px;transition:border-color .16s;}
 .mfield input[type=text]:focus{outline:none;border-color:rgba(108,99,255,.6);}
 .tcb-list{overflow-y:auto;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:4px 0;max-height:240px;flex-shrink:1;}
@@ -503,9 +503,9 @@ body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:va
 .cbox{width:15px;height:15px;border-radius:4px;border:1.5px solid rgba(255,255,255,.18);background:transparent;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;}
 .cbox:hover{border-color:rgba(108,99,255,.6);}
 .cbox.on{background:linear-gradient(135deg,var(--accent),var(--a2));border-color:transparent;box-shadow:0 0 7px rgba(108,99,255,.35);}
-.tcb-idx{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--muted);width:18px;}
+.tcb-idx{font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);color:var(--muted);width:18px;}
 .tcb-dot{width:5px;height:5px;border-radius:2px;flex-shrink:0;}
-.tcb-name{font-size:11px;flex:1;font-weight:400;color:var(--text);}
+.tcb-name{font-size:var(--fs-sm);flex:1;font-weight:400;color:var(--text);}
 .modal-actions{display:flex;gap:8px;}
 .mbtn{flex:1;padding:10px;border-radius:var(--r);font-size:12px;font-weight:700;cursor:pointer;transition:all .16s;text-align:center;}
 .mbtn.cancel{background:var(--glass);border:1px solid var(--b2);color:var(--t2);}
@@ -513,12 +513,12 @@ body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:va
 .mbtn.save{background:var(--g-primary);border:none;color:#fff;font-family:var(--font-display);box-shadow:var(--sh-glow-sm),var(--sh-inset);}
 .mbtn.save:hover{box-shadow:0 6px 24px rgba(108,99,255,.45);}
 .mbtn.del{background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.25);color:var(--red);flex:0;padding:10px 14px;}
-@keyframes savePresetGlow{0%,100%{box-shadow:0 0 6px rgba(67,233,123,.25);}50%{box-shadow:0 0 16px rgba(67,233,123,.55),0 2px 8px rgba(67,233,123,.2);}}
-.mbtn.save-preset{background:var(--success-a15)!important;border:1px solid var(--success-a40)!important;color:var(--a3)!important;font-size:12px!important;animation:savePresetGlow 2.2s ease-in-out infinite;letter-spacing:.01em;}
+@keyframes savePresetGlow{0%,100%{box-shadow:0 0 6px var(--success-a15);}50%{box-shadow:0 0 16px var(--success-a40),0 2px 8px var(--success-a15);}}
+.mbtn.save-preset{background:var(--success-a15)!important;border:1px solid var(--success-a40)!important;color:var(--a3)!important;font-size:12px!important;animation:savePresetGlow 2.4s ease-in-out infinite;letter-spacing:.01em;}
 .mbtn.save-preset:hover{background:rgba(67,233,123,.35)!important;box-shadow:0 0 20px rgba(67,233,123,.5)!important;}
 #skin-panel{display:none;position:fixed;top:58px;right:12px;z-index:200;background:var(--card);border:1px solid var(--glass-border);border-radius:var(--r2);padding:18px;width:312px;box-shadow:0 24px 64px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.06);}
 body.easy #skin-panel{z-index:9000;}
-.skin-hdr{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:14px;}
+.skin-hdr{font-size:var(--fs-xs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:14px;}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--card2);border:1px solid var(--b2);color:var(--text);font-family:var(--font-mono);font-size:var(--fs-sm);padding:9px 20px;border-radius:var(--r3);box-shadow:var(--sh-float);opacity:0;transition:all .28s var(--ease-out);pointer-events:none;z-index:var(--z-toast);white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 /* ── Cancel overlay ─────────────────────────────────── */
@@ -530,14 +530,14 @@ body.easy #skin-panel{z-index:9000;}
 @keyframes cancelShimmer{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
 #cancel-overlay-inner{color:#fff;font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;text-align:center;letter-spacing:.01em;text-shadow:0 2px 8px rgba(0,0,0,.3);animation:cancelPulseText 1.2s ease-in-out infinite alternate;}
 @keyframes cancelPulseText{from{opacity:.7;transform:scale(.97);}to{opacity:1;transform:scale(1);}}
-#cancel-overlay-sub{margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:400;opacity:.8;}
+#cancel-overlay-sub{margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:var(--fs-sm);font-weight:400;opacity:.8;}
 /* ── Scan in-progress overlay ────────────────────────── */
 #scan-warning{display:none;position:fixed;top:0;left:0;right:0;height:80px;z-index:9999;pointer-events:none;align-items:center;justify-content:center;background:linear-gradient(135deg,#8b0000,#c62828,#e53935,#c62828,#b71c1c);background-size:300% 300%;animation:scanOverlayPulse 2.5s ease-in-out infinite;border-radius:0 0 12px 12px;overflow:hidden;}
 #scan-warning.show{display:flex;}
 @keyframes scanOverlayPulse{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
 #scan-warning-inner{position:relative;color:#fff;font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;padding:0 50px;text-align:center;letter-spacing:.01em;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:0;transform:translateY(-4px);transition:opacity .22s,transform .22s;will-change:opacity,transform;} /* Opt #7 */
 #scan-warning.show #scan-warning-inner{opacity:1;transform:translateY(0);}
-#scan-warning-sub{font-family:'Inter','Space Grotesk',sans-serif;font-size:13px;font-weight:400;opacity:.8;letter-spacing:0;}
+#scan-warning-sub{font-family:'Inter','Space Grotesk',sans-serif;font-size:var(--fs-base);font-weight:400;opacity:.8;letter-spacing:0;}
 #scan-cancel-btn{position:absolute;top:8px;right:14px;pointer-events:auto;}
 /* ── Scan hint arrows ─────────────────────────────────── */
 #scan-hint{position:fixed;z-index:9990;display:none;pointer-events:none;flex-direction:column;align-items:center;gap:0;}
@@ -583,10 +583,10 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
 .mini-row{display:flex;align-items:center;gap:7px;-webkit-app-region:no-drag;}
 .mini-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 0 8px rgba(255,255,255,.8);animation:mini-pulse .9s ease-in-out infinite alternate;flex-shrink:0;}
 @keyframes mini-pulse{from{opacity:.7;box-shadow:0 0 4px rgba(255,255,255,.4);}to{opacity:1;box-shadow:0 0 12px rgba(255,255,255,.9);}}
-.mini-sname{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;letter-spacing:-.02em;min-width:0;text-shadow:0 1px 3px rgba(0,0,0,.2);}
+.mini-sname{font-family:'Space Grotesk',sans-serif;font-size:var(--fs-base);font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;letter-spacing:-.02em;min-width:0;text-shadow:0 1px 3px rgba(0,0,0,.2);}
 .mini-time{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:rgba(255,255,255,.9);flex-shrink:0;letter-spacing:-.01em;text-shadow:0 1px 3px rgba(0,0,0,.2);}
-.mini-cnt{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,.55);flex-shrink:0;}
-.mini-ibtn{width:24px;height:24px;border-radius:8px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+.mini-cnt{font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);color:rgba(255,255,255,.55);flex-shrink:0;}
+.mini-ibtn{width:24px;height:24px;border-radius:var(--r-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
 .mini-expand{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);}
 .mini-expand:hover{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.5);}
 .mini-cancel{border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.2);color:rgba(255,255,255,.9);}
@@ -598,19 +598,19 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
 #format-modal .modal-hdr{position:relative;}
 /* Format Presets */
 .fmt-bar { display:flex; align-items:center; gap:6px; }
-.fmt-main-btn { flex:1; display:flex; align-items:center; gap:8px; padding:5px 10px; border-radius:var(--r); border:1px solid var(--b); background:var(--card); color:var(--text); font-size:10px; font-weight:600; cursor:pointer; font-family:'JetBrains Mono',monospace; transition:all .16s; min-width:0; }
+.fmt-main-btn { flex:1; display:flex; align-items:center; gap:8px; padding:5px 10px; border-radius:var(--r); border:1px solid var(--b); background:var(--card); color:var(--text); font-size:var(--fs-xs); font-weight:600; cursor:pointer; font-family:'JetBrains Mono',monospace; transition:all .16s; min-width:0; }
 .fmt-main-btn:hover { border-color:var(--accent); background:rgba(108,99,255,.07); }
-.fmt-tag { padding:2px 7px; border-radius:3px; font-size:9px; font-weight:800; letter-spacing:.6px; }
+.fmt-tag { padding:2px 7px; border-radius:3px; font-size:var(--fs-xxs); font-weight:800; letter-spacing:.6px; }
 .fmt-tag-wav { border:1px solid var(--accent); background:var(--accent-a20); color:var(--accent); }
 .fmt-tag-wav-off { border:1px solid var(--b); background:transparent; color:var(--muted); }
 .fmt-tag-mp3 { border:1px solid var(--accent); background:var(--accent-a20); color:var(--accent); }
 .fmt-tag-mp3-off { border:1px solid var(--b); background:transparent; color:var(--muted); }
-.fmt-bar-detail { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--t2); font-size:10px; }
+.fmt-bar-detail { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--t2); font-size:var(--fs-xs); }
 /* Modal header format checkboxes */
 .fmt-hdr-fmts { display:flex; gap:10px; }
 .fmt-hdr-fmt { display:flex; align-items:center; gap:5px; }
 .fmt-hdr-fmt input[type=checkbox] { width:13px; height:13px; accent-color:var(--accent); cursor:pointer; flex-shrink:0; }
-.fmt-hdr-fmt span { font-size:10px; font-weight:700; color:var(--muted); cursor:pointer; font-family:'JetBrains Mono',monospace; letter-spacing:.5px; padding:2px 5px; border-radius:4px; transition:color .14s, background .14s; user-select:none; }
+.fmt-hdr-fmt span { font-size:var(--fs-xs); font-weight:700; color:var(--muted); cursor:pointer; font-family:'JetBrains Mono',monospace; letter-spacing:.5px; padding:2px 5px; border-radius:4px; transition:color .14s, background .14s; user-select:none; }
 .fmt-hdr-fmt span:hover { color:var(--t2); }
 .fmt-hdr-fmt.active-view span { color:var(--accent); background:rgba(108,99,255,.12); }
 /* Legacy */
@@ -619,30 +619,30 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
 #format-modal .modal { width:640px; max-width:96vw; max-height:85vh; display:flex; flex-direction:column; }
 .fmt-modal-body { display:grid; grid-template-columns:200px 1fr; gap:0; flex:1; min-height:0; overflow:hidden; }
 .fmt-preset-list { border-right:1px solid var(--b); padding:10px 0; overflow-y:auto; display:flex; flex-direction:column; }
-.fmt-preset-item { padding:8px 14px; font-size:11px; font-weight:600; cursor:pointer; border-left:3px solid transparent; color:var(--t2); transition:all .12s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.fmt-preset-item { padding:8px 14px; font-size:var(--fs-sm); font-weight:600; cursor:pointer; border-left:3px solid transparent; color:var(--t2); transition:all .12s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .fmt-preset-item:hover { background:rgba(108,99,255,.08); color:var(--text); }
 .fmt-preset-item.active { border-left-color:var(--accent); color:var(--accent); background:rgba(108,99,255,.1); }
 .fmt-preset-actions { padding:8px 10px; border-top:1px solid var(--b); display:flex; gap:6px; margin-top:auto; }
 .fmt-settings { padding:16px; overflow-y:auto; }
 .fmt-field { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
-.fmt-field label { font-size:10px; font-weight:700; color:var(--muted); min-width:90px; text-transform:uppercase; }
-.fmt-field select, .fmt-field input[type=text] { flex:1; background:var(--card); border:1px solid var(--b); border-radius:var(--r); color:var(--text); font-size:11px; padding:5px 8px; font-family:'JetBrains Mono',monospace; }
+.fmt-field label { font-size:var(--fs-xs); font-weight:700; color:var(--muted); min-width:90px; text-transform:uppercase; }
+.fmt-field select, .fmt-field input[type=text] { flex:1; background:var(--card); border:1px solid var(--b); border-radius:var(--r); color:var(--text); font-size:var(--fs-sm); padding:5px 8px; font-family:'JetBrains Mono',monospace; }
 .fmt-dest-tabs { display:flex; gap:6px; flex:1; }
-.fmt-dest-tab { flex:1; padding:5px; border-radius:var(--r); border:1px solid var(--b); background:var(--card); color:var(--muted); font-size:10px; font-weight:600; cursor:pointer; text-align:center; transition:all .14s; }
+.fmt-dest-tab { flex:1; padding:5px; border-radius:var(--r); border:1px solid var(--b); background:var(--card); color:var(--muted); font-size:var(--fs-xs); font-weight:600; cursor:pointer; text-align:center; transition:all .14s; }
 .fmt-dest-tab.active { border-color:var(--accent); background:rgba(108,99,255,.15); color:var(--accent); }
 .fmt-modal-footer { padding:12px 16px; border-top:1px solid var(--b); display:flex; gap:8px; align-items:center; }
-.fmt-cb-row { display:flex; align-items:center; gap:6px; cursor:pointer; font-size:10px; color:var(--t2); font-weight:600; }
+.fmt-cb-row { display:flex; align-items:center; gap:6px; cursor:pointer; font-size:var(--fs-xs); color:var(--t2); font-weight:600; }
 .fmt-cb-row input[type=checkbox] { accent-color:var(--accent); cursor:pointer; }
 /* Source mode buttons */
 .fmt-src-btns { display:flex; gap:6px; width:100%; }
-.fmt-src-btn { padding:7px 13px; border-radius:var(--r); border:1px solid var(--b); background:var(--card); color:var(--muted); font-size:11px; font-weight:700; cursor:pointer; font-family:'Space Grotesk',sans-serif; transition:all .16s; display:flex; align-items:center; gap:7px; }
+.fmt-src-btn { padding:7px 13px; border-radius:var(--r); border:1px solid var(--b); background:var(--card); color:var(--muted); font-size:var(--fs-sm); font-weight:700; cursor:pointer; font-family:'Space Grotesk',sans-serif; transition:all .16s; display:flex; align-items:center; gap:7px; }
 .fmt-src-btn:hover { border-color:var(--b2); color:var(--t2); }
 .fmt-src-dot { width:8px; height:8px; border-radius:50%; border:1.5px solid currentColor; flex-shrink:0; transition:background .14s; }
 .fmt-src-btn.active-src .fmt-src-dot { background:currentColor; }
 .fmt-src-btn.active-src.src-preset { border-color:rgba(67,233,123,.5); background:rgba(67,233,123,.09); color:var(--a3); }
 .fmt-src-btn.active-src.src-logic  { border-color:rgba(255,169,77,.5); background:rgba(255,169,77,.09); color:var(--warn); }
 /* Format bar source badge */
-.fmt-source-badge { font-size:8px; font-weight:800; padding:2px 6px; border-radius:3px; letter-spacing:.5px; flex-shrink:0; }
+.fmt-source-badge { font-size:var(--fs-xxs); font-weight:800; padding:2px 6px; border-radius:3px; letter-spacing:.5px; flex-shrink:0; }
 .fmt-source-preset { color:var(--a3); background:rgba(67,233,123,.1); border:1px solid rgba(67,233,123,.3); }
 .fmt-source-logic  { color:var(--warn); background:rgba(255,169,77,.1); border:1px solid rgba(255,169,77,.3); }
 /* Legacy apply/open btn (kept for backward compat, now hidden) */
@@ -655,31 +655,31 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
 #feedback-popup-hdr h4{margin:0;font-size:var(--fs-base);font-weight:var(--fw-bold);letter-spacing:var(--ls-tight);color:var(--text);font-family:var(--font-display);}
 /* feedback-popup close button uses .eb-close from shared.css */
 #feedback-popup-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
-.fb-label{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
+.fb-label{font-size:var(--fs-xs);font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
 .fb-select,.fb-input,.fb-textarea{width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--b);border-radius:var(--r-sm);color:var(--text);font-family:var(--font-mono);font-size:12px;padding:8px 10px;outline:none;transition:border-color .15s,box-shadow .15s;resize:none;}
 .fb-select:focus,.fb-input:focus,.fb-textarea:focus{border-color:var(--accent-a60);box-shadow:0 0 0 3px var(--accent-a12);}
 .fb-textarea{height:96px;overflow-y:auto;line-height:1.5;}
 .fb-attach-row{display:flex;align-items:center;gap:6px;}
-.fb-attach-slot{flex:1;display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--b);border-radius:var(--r-sm);color:var(--muted);font-family:var(--font-mono);font-size:11px;padding:7px 10px;cursor:pointer;transition:border-color .15s,color .15s;text-align:left;min-width:0;}
+.fb-attach-slot{flex:1;display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--b);border-radius:var(--r-sm);color:var(--muted);font-family:var(--font-mono);font-size:var(--fs-sm);padding:7px 10px;cursor:pointer;transition:border-color .15s,color .15s;text-align:left;min-width:0;}
 .fb-attach-slot:hover{border-color:var(--accent);color:var(--text);}
 .fb-attach-slot-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .fb-attach-remove{flex-shrink:0;}
-#fb-send-btn{width:100%;padding:10px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s,transform .1s;letter-spacing:.02em;}
+#fb-send-btn{width:100%;padding:10px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-family:'JetBrains Mono',monospace;font-size:var(--fs-base);font-weight:700;cursor:pointer;transition:opacity .15s,transform .1s;letter-spacing:.02em;}
 #fb-send-btn:hover{opacity:.88;}
 #fb-send-btn:active{transform:scale(.98);}
 #fb-send-btn:disabled{opacity:.45;cursor:default;}
 #feedback-success{padding:30px 16px;display:none;flex-direction:column;align-items:center;gap:8px;text-align:center;}
 #feedback-success.show{display:flex;}
 #feedback-success .fb-ok-icon{font-size:32px;}
-#feedback-success p{margin:0;font-size:13px;color:var(--text);line-height:1.5;}
-#feedback-success p span{color:var(--muted);font-size:11px;display:block;margin-top:2px;}
+#feedback-success p{margin:0;font-size:var(--fs-base);color:var(--text);line-height:1.5;}
+#feedback-success p span{color:var(--muted);font-size:var(--fs-sm);display:block;margin-top:2px;}
 /* stars */
 #fb-stars{display:none;flex-direction:column;gap:6px;}
 #fb-stars.show{display:flex;}
 .fb-star-row{display:flex;gap:6px;justify-content:center;}
 .fb-star{font-size:26px;cursor:pointer;opacity:.3;transition:opacity .1s,transform .1s;line-height:1;user-select:none;}
 .fb-star.active,.fb-star:hover{opacity:1;transform:scale(1.15);}
-#fb-star-desc{font-size:11px;color:var(--muted);text-align:center;min-height:16px;transition:opacity .15s;}
+#fb-star-desc{font-size:var(--fs-sm);color:var(--muted);text-align:center;min-height:16px;transition:opacity .15s;}
 </style>
 <style id="base-tooltip-style"></style>
 
@@ -728,7 +728,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
       <div class="ldot" id="ldot"></div>
       <span class="llbl" id="llbl">Logic off</span>
     </div>
-    <button id="update-btn" onclick="checkUpdates()" style="padding:3px 9px;font-size:10px;border:1px solid transparent;border-radius:var(--r);background:none;color:var(--muted);font-family:'JetBrains Mono',monospace;cursor:pointer;opacity:.7;transition:all .15s;" onmouseover="this.style.opacity='1';this.style.color='var(--t2)'" onmouseout="this.style.opacity=(this.classList.contains('has-update')?'1':'.7');this.style.color=(this.classList.contains('has-update')?'var(--accent)':'var(--muted)')" title="Check for updates">
+    <button id="update-btn" onclick="checkUpdates()" style="padding:3px 9px;font-size:var(--fs-xs);border:1px solid transparent;border-radius:var(--r);background:none;color:var(--muted);font-family:'JetBrains Mono',monospace;cursor:pointer;opacity:.7;transition:all .15s;" onmouseover="this.style.opacity='1';this.style.color='var(--t2)'" onmouseout="this.style.opacity=(this.classList.contains('has-update')?'1':'.7');this.style.color=(this.classList.contains('has-update')?'var(--accent)':'var(--muted)')" title="Check for updates">
       <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" style="width:11px;height:11px;"><path d="M7 1v5l3.5 2" stroke-linecap="round"/><circle cx="7" cy="7" r="6"/></svg>v1.0
     </button>
     <button id="tooltip-toggle-btn" onclick="onHelpClick()" style="width:26px;height:26px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;background:none;border:1px solid var(--b);color:var(--muted);font-size:12px;font-weight:700;flex-shrink:0;cursor:pointer;transition:color .15s,border-color .15s;" onmouseover="this.style.color='var(--t2)';this.style.borderColor='var(--b2)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--b)'" title="Toggle tips">?</button>
@@ -739,7 +739,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
     <div class="sec-hdr"><span class="sec-title">Channels</span><span class="sec-badge" id="ch-count"></span></div>
     <div class="search-bar">
       <input class="search-inp" id="ch-search" title="Filter channels by name" placeholder="Search…" oninput="renderChannels()" style="max-width:120px;">
-      <button class="tb-pill" id="tree-toggle-all" onclick="toggleAllGroups()" title="Expand / Collapse all groups" style="display:none;padding:3px 7px;font-size:11px;opacity:.7;letter-spacing:-.02em;">⇅</button>
+      <button class="tb-pill" id="tree-toggle-all" onclick="toggleAllGroups()" title="Expand / Collapse all groups" style="display:none;padding:3px 7px;font-size:var(--fs-sm);opacity:.7;letter-spacing:-.02em;">⇅</button>
       <button class="hidden-btn" id="hidden-toggle" title="Show channels you've hidden" onclick="setFilter('hidden')">
         <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 7s2-4 6-4 6 4 6 4-2 4-6 4-6-4-6-4z"/><circle cx="7" cy="7" r="1.6"/><line x1="2" y1="2" x2="12" y2="12" class="hidden-slash"/></svg>
         Hidden
@@ -764,20 +764,20 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
     <div class="queue-wrap">
       <div class="queue-hdr">
         <span class="sec-title">Bounce Queue</span>
-        <span id="q-total-lbl" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--t2);margin-left:4px;"></span>
+        <span id="q-total-lbl" style="font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);color:var(--t2);margin-left:4px;"></span>
         <!-- Markers button -->
         <div style="position:relative;margin-left:6px;display:flex;align-items:center;gap:3px;">
           <button id="markers-btn" onclick="toggleMarkersPopup()" title="Bounce by markers — set cycle ranges per bounce pass"
-            style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .16s;white-space:nowrap;">
+            style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-xs);cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .16s;white-space:nowrap;">
             <span style="display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-pin"/></svg></span>
             <span id="markers-btn-lbl">Markers</span>
           </button>
           <button id="markers-chips-btn" onclick="toggleQueueMarkersChips()" title="Show/hide marker names on queue items"
-            style="padding:2px 7px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .14s;line-height:1.4;">–</button>
+            style="padding:2px 7px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-sm);cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .14s;line-height:1.4;">–</button>
           <!-- Markers popup -->
           <div id="markers-popup" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;min-width:480px;background:var(--card2);border:1px solid var(--b2);border-radius:var(--r);box-shadow:var(--sh-float);z-index:var(--z-dropdown);padding:6px 0;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);">
             <div style="padding:4px 10px 6px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:6px;">
-              <span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);flex:1;">Bounce Ranges</span>
+              <span style="font-size:var(--fs-xxs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);flex:1;">Bounce Ranges</span>
               <button onclick="rescanMarkers()" title="Re-scan markers from Logic" id="markers-rescan-btn" style="padding:3px 9px;border-radius:5px;border:1px solid var(--b2);background:var(--card2);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .13s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">↺ Rescan</button>
               <button class="hidden-btn" id="markers-showhidden-btn" onclick="toggleMarkersHidden()" title="Show/hide hidden markers">
                 <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 7s2-4 6-4 6 4 6 4-2 4-6 4-6-4-6-4z"/><circle cx="7" cy="7" r="1.6"/><line x1="2" y1="2" x2="12" y2="12" class="hidden-slash" style="display:none;"/></svg>
@@ -786,7 +786,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
               <button class="eb-close" onclick="toggleMarkersPopup()" title="Close"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
             </div>
             <div id="markers-popup-list" style="max-height:260px;overflow-y:auto;padding:4px 0;">
-              <div style="color:var(--muted);font-size:10px;padding:6px 10px;">No markers scanned yet</div>
+              <div style="color:var(--muted);font-size:var(--fs-xs);padding:6px 10px;">No markers scanned yet</div>
             </div>
           </div>
         </div>
@@ -815,8 +815,8 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
           <input class="out-inp" id="name-template" placeholder="Name_Project_bpm_Cmaj_"
             title="Prefix added before each file name. Example: Artist_Track_120bpm_Amaj_ → Artist_Track_120bpm_Amaj_DRUMS.wav"
             oninput="saveNameTemplate();updateNamePresetUI()" style="flex:1;">
-          <button id="name-preset-arrow" onclick="toggleNamePresetDropdown()" style="background:none;border:none;color:var(--muted);font-size:11px;padding:2px 4px;cursor:pointer;transition:color .15s;" title="Saved prefix presets">▼</button>
-          <button id="name-preset-save-btn" onclick="quickSaveNamePreset()" style="display:none;background:rgba(67,233,123,.15);border:1px solid rgba(67,233,123,.4);border-radius:var(--r);color:var(--a3);font-size:9px;padding:2px 8px;cursor:pointer;white-space:nowrap;" title="Save current prefix as preset">Save</button>
+          <button id="name-preset-arrow" onclick="toggleNamePresetDropdown()" style="background:none;border:none;color:var(--muted);font-size:var(--fs-sm);padding:2px 4px;cursor:pointer;transition:color .15s;" title="Saved prefix presets">▼</button>
+          <button id="name-preset-save-btn" onclick="quickSaveNamePreset()" style="display:none;background:rgba(67,233,123,.15);border:1px solid rgba(67,233,123,.4);border-radius:var(--r);color:var(--a3);font-size:var(--fs-xxs);padding:2px 8px;cursor:pointer;white-space:nowrap;" title="Save current prefix as preset">Save</button>
           <div id="name-preset-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;margin-top:4px;background:var(--card2);border:1px solid var(--b2);border-radius:var(--r);box-shadow:var(--sh-raised);padding:4px;max-height:180px;overflow-y:auto;z-index:var(--z-dropdown);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);">
             <div id="name-preset-list"></div>
           </div>
@@ -825,9 +825,9 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
       <div class="out-row" id="sidechain-row" style="align-items:center;gap:8px;">
         <input type="checkbox" id="sidechain-toggle" title="Include a sidechain channel with every stem bounce" style="width:14px;height:14px;cursor:pointer;accent-color:var(--warn);" onchange="toggleSidechain(this.checked)">
         <span class="eb-tt eb-tt--wide eb-tt--below" data-tt="Sidechain channel — bounced together with each stem. Click to change." style="color:var(--warn);display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-lock"/></svg></span>
-        <span style="font-size:10px;font-weight:600;color:var(--t2);">Sidechain</span>
+        <span style="font-size:var(--fs-xs);font-weight:600;color:var(--t2);">Sidechain</span>
         <div style="flex:1;position:relative;">
-          <button id="sidechain-picker-btn" onclick="toggleSidechainDropdown()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--t2);font-size:10px;padding:4px 8px;font-family:'JetBrains Mono',monospace;cursor:not-allowed;opacity:0.5;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" disabled>— select channel —</button>
+          <button id="sidechain-picker-btn" onclick="toggleSidechainDropdown()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--t2);font-size:var(--fs-xs);padding:4px 8px;font-family:'JetBrains Mono',monospace;cursor:not-allowed;opacity:0.5;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" disabled>— select channel —</button>
           <div id="sidechain-dropdown" style="display:none;position:absolute;bottom:100%;left:0;right:0;margin-bottom:4px;background:var(--card2);border:1px solid var(--b2);border-radius:var(--r);box-shadow:0 -8px 32px rgba(0,0,0,.5);z-index:600;max-height:260px;overflow:hidden;display:none;flex-direction:column;">
             <input id="sidechain-search" type="text" placeholder="Search channel…" oninput="renderSidechainDropdown()" style="background:var(--card);border:none;border-bottom:1px solid var(--b);color:var(--text);font-size:var(--fs-xs);padding:6px 8px;font-family:var(--font-mono);width:100%;box-sizing:border-box;outline:none;flex-shrink:0;">
             <div id="sidechain-filters" style="display:flex;gap:3px;padding:4px 6px;border-bottom:1px solid var(--b);flex-wrap:wrap;flex-shrink:0;"></div>
@@ -841,8 +841,8 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
       </div>
       <div class="out-row em-hide" id="mp-row" style="margin-top:2px;">
         <span class="out-lbl"></span>
-        <button id="mp-open-btn" onclick="openMasterPluginsModal()" style="flex:1;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--t2);font-size:10px;font-weight:600;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .16s;" title="Check master channel plugins">
-          <span style="display:inline-flex;align-items:center;"><svg class="ico"><use href="#ico-sliders"/></svg></span><span style="flex:1;text-align:left;">Master plugins</span><span id="mp-badge" style="display:none;background:rgba(255,169,77,.2);border:1px solid rgba(255,169,77,.5);color:var(--warn);font-size:8px;padding:1px 5px;border-radius:3px;font-weight:800;">BYPASS</span><span style="color:var(--muted);display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-gear"/></svg></span>
+        <button id="mp-open-btn" onclick="openMasterPluginsModal()" style="flex:1;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--t2);font-size:var(--fs-xs);font-weight:600;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .16s;" title="Check master channel plugins">
+          <span style="display:inline-flex;align-items:center;"><svg class="ico"><use href="#ico-sliders"/></svg></span><span style="flex:1;text-align:left;">Master plugins</span><span id="mp-badge" style="display:none;background:rgba(255,169,77,.2);border:1px solid rgba(255,169,77,.5);color:var(--warn);font-size:var(--fs-xxs);padding:1px 5px;border-radius:3px;font-weight:800;">BYPASS</span><span style="color:var(--muted);display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-gear"/></svg></span>
         </button>
       </div>
       <div class="out-row fmt-bar">
@@ -858,7 +858,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
     </div>
     <div class="bounce-wrap">
       <div class="prog-bar"><div class="prog-fill" id="pfill"></div></div>
-      <div class="prog-info"><span id="ptext">Ready</span><span id="ppct"></span><span id="eta" style="font-size:9px;color:var(--muted);margin-left:auto;"></span></div>
+      <div class="prog-info"><span id="ptext">Ready</span><span id="ppct"></span><span id="eta" style="font-size:var(--fs-xxs);color:var(--muted);margin-left:auto;"></span></div>
       <div id="reveal-btn" style="display:none;margin-bottom:8px;">
         <div style="display:flex;gap:6px;align-items:center;">
           <button id="reveal-btn-main" onclick="revealStems()" title="Open output folder in Finder" style="flex:1;padding:8px;border-radius:var(--r);border:1px solid var(--success-a40);background:var(--success-a15);color:var(--a3);font-size:12px;font-weight:var(--fw-semi);cursor:pointer;transition:all .16s;font-family:var(--font-display);">
@@ -876,15 +876,15 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
       </div>
       <!-- Alert row: full (normal mode) -->
       <div id="alert-row-full" style="margin-top:6px;display:none;align-items:center;gap:6px;">
-        <span style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;">Alert</span>
-        <select id="bell-sound" title="Sound that plays when all bouncing is complete" style="flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--t2);font-family:'JetBrains Mono',monospace;font-size:10px;padding:4px 6px;" onchange="saveBellSound(this.value)">
+        <span style="font-size:var(--fs-xxs);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;">Alert</span>
+        <select id="bell-sound" title="Sound that plays when all bouncing is complete" style="flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--t2);font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);padding:4px 6px;" onchange="saveBellSound(this.value)">
           <option value="bell">🔔 Bell</option>
           <option value="chime">🎵 Chime</option>
           <option value="ping">⚡ Ping</option>
           <option value="soft">🌙 Soft</option>
           <option value="none">— None</option>
         </select>
-        <button onclick="previewBell()" id="bell-preview-btn" style="padding:4px 10px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--t2);font-size:10px;cursor:pointer;">▶</button>
+        <button onclick="previewBell()" id="bell-preview-btn" style="padding:4px 10px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--t2);font-size:var(--fs-xs);cursor:pointer;">▶</button>
       </div>
       <!-- Alert row: mini (easy mode) -->
       <div id="alert-row-mini" style="display:flex;margin-top:6px;position:relative;align-items:center;justify-content:flex-end;gap:4px;">
@@ -892,7 +892,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
         <button id="schedule-btn" class="tb-mini-btn em-hide" title="Schedule bounce for later" onclick="showScheduleModal()"><svg class="ico"><use href="#ico-clock"/></svg></button>
         <button onclick="toggleBellPopover()" id="bell-mini-btn" class="tb-mini-btn" title="Alert sound">
           <span id="bell-mini-icon" style="display:flex;align-items:center;"><svg class="ico"><use href="#ico-volume"/></svg></span>
-          <span style="font-size:8px;color:var(--accent);opacity:.7;">▾</span>
+          <span style="font-size:var(--fs-xxs);color:var(--accent);opacity:.7;">▾</span>
         </button>
         <button class="tb-mini-btn" title="Send feedback" onclick="toggleFeedbackPopup()"><svg class="ico"><use href="#ico-chat"/></svg></button>
         <div id="bell-popover">
@@ -908,7 +908,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
   <div class="panel pr" id="panel-pr" style="position:relative;">
     <!-- Collapsed strip (visible only when panel is hidden) -->
     <div class="act-collapsed-strip" onclick="toggleActivityPanel()" title="Open Activity panel">
-      <button class="act-strip-btn q-mini-btn" style="width:24px;height:24px;padding:0;font-size:11px;">▶</button>
+      <button class="act-strip-btn q-mini-btn" style="width:24px;height:24px;padding:0;font-size:var(--fs-sm);">▶</button>
       <span class="act-strip-text">Log — Stats — History</span>
     </div>
     <!-- Full panel content -->
@@ -919,7 +919,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
           <div style="display:flex;gap:4px;align-items:center;">
             <button class="q-mini-btn" id="act-clear-btn" onclick="clearLog()" style="display:none;">Clear</button>
             <button class="q-mini-btn" id="act-logs-btn" onclick="window.api?.openLogsFolder?.()" title="Open system logs folder (~/Library/Logs/EasyBounce)" style="display:none;font-size:12px;">📁</button>
-            <button class="q-mini-btn" onclick="toggleActivityPanel()" title="Hide panel" style="font-size:11px;">◀</button>
+            <button class="q-mini-btn" onclick="toggleActivityPanel()" title="Hide panel" style="font-size:var(--fs-sm);">◀</button>
           </div>
         </div>
         <div class="act-tabs">
@@ -932,11 +932,11 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
       <div class="act-pane" id="act-log">
         <div class="log-body" id="log-body"></div>
         <!-- Trial countdown badge — shown only when trial is active -->
-        <div id="trial-countdown" style="display:none;padding:5px 10px;border-top:1px solid var(--b);background:rgba(255,149,0,.06);font-family:'JetBrains Mono',monospace;font-size:10px;color:#ffb340;display:none;align-items:center;gap:8px;flex-shrink:0;">
+        <div id="trial-countdown" style="display:none;padding:5px 10px;border-top:1px solid var(--b);background:rgba(255,149,0,.06);font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);color:#ffb340;display:none;align-items:center;gap:8px;flex-shrink:0;">
           <span style="opacity:.6;display:inline-flex;align-items:center;gap:4px;"><svg class="ico ico-sm"><use href="#ico-clock"/></svg> Trial:</span>
           <span id="trial-time-left" style="font-weight:700;letter-spacing:.04em;">—</span>
-          <span style="margin-left:auto;opacity:.5;font-size:9px;">remaining</span>
-          <a href="#" onclick="if(window.api&&window.api.openExternal)window.api.openExternal('https://project-1z26v.vercel.app')" style="color:#ffb340;font-size:9px;text-decoration:underline;opacity:.7;">Buy →</a>
+          <span style="margin-left:auto;opacity:.5;font-size:var(--fs-xxs);">remaining</span>
+          <a href="#" onclick="if(window.api&&window.api.openExternal)window.api.openExternal('https://project-1z26v.vercel.app')" style="color:#ffb340;font-size:var(--fs-xxs);text-decoration:underline;opacity:.7;">Buy →</a>
         </div>
       </div>
       <!-- HISTORY tab -->
@@ -980,8 +980,8 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
           <div class="fmt-preset-list" id="fmt-preset-list">
             <!-- rendered by JS -->
             <div class="fmt-preset-actions">
-              <button onclick="addFormatPreset()" style="flex:1;padding:5px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;cursor:pointer;font-family:'JetBrains Mono',monospace;">+ Preset</button>
-              <button onclick="deleteFormatPreset()" style="flex:1;padding:5px;border-radius:var(--r);border:1px solid rgba(255,77,79,.3);background:rgba(255,77,79,.06);color:rgba(255,77,79,.7);font-size:10px;cursor:pointer;font-family:'JetBrains Mono',monospace;display:inline-flex;align-items:center;justify-content:center;gap:5px;"><svg class="ico ico-sm"><use href="#ico-trash"/></svg>Del</button>
+              <button onclick="addFormatPreset()" style="flex:1;padding:5px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-xs);cursor:pointer;font-family:'JetBrains Mono',monospace;">+ Preset</button>
+              <button onclick="deleteFormatPreset()" style="flex:1;padding:5px;border-radius:var(--r);border:1px solid rgba(255,77,79,.3);background:rgba(255,77,79,.06);color:rgba(255,77,79,.7);font-size:var(--fs-xs);cursor:pointer;font-family:'JetBrains Mono',monospace;display:inline-flex;align-items:center;justify-content:center;gap:5px;"><svg class="ico ico-sm"><use href="#ico-trash"/></svg>Del</button>
             </div>
           </div>
           <!-- Right: settings editor -->
@@ -1094,7 +1094,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
               <span class="fmt-src-dot"></span><svg class="ico ico-sm" style="margin-right:4px;vertical-align:-2px;"><use href="#ico-sliders"/></svg>Set in Logic
             </button>
             <span style="flex:1;"></span>
-            <button onclick="applyFmtSource()" style="padding:7px 22px;border-radius:var(--r);border:1px solid rgba(67,233,123,.5);background:rgba(67,233,123,.2);color:var(--a3);font-size:11px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;box-shadow:0 2px 8px rgba(67,233,123,.2);">Save</button>
+            <button onclick="applyFmtSource()" style="padding:7px 22px;border-radius:var(--r);border:1px solid rgba(67,233,123,.5);background:rgba(67,233,123,.2);color:var(--a3);font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;box-shadow:0 2px 8px rgba(67,233,123,.2);">Save</button>
             <span style="flex:1;"></span>
           </div>
         </div>
@@ -1107,15 +1107,15 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
     <div class="mfield"><label>Mix Name</label><input type="text" id="mix-name-inp" placeholder="e.g. NO Drums" onkeydown="if(event.key==='Enter'){event.preventDefault();saveMix();}"></div>
     <div id="mix-name-presets" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:2px 0 0;min-height:22px;flex-shrink:0;"></div>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-      <input id="mix-ch-search" type="text" placeholder="Search…" oninput="renderMixList()" style="min-width:0;width:0;flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:11px;padding:5px 8px;font-family:'JetBrains Mono',monospace;">
-      <button id="mix-hidden-tab" onclick="toggleMixHiddenTab()" title="Show only hidden channels" style="padding:4px 10px;border-radius:var(--r2);border:1px solid var(--b2);background:var(--card2);color:var(--t2);font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:all .14s;flex-shrink:0;letter-spacing:.03em;">
+      <input id="mix-ch-search" type="text" placeholder="Search…" oninput="renderMixList()" style="min-width:0;width:0;flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:var(--fs-sm);padding:5px 8px;font-family:'JetBrains Mono',monospace;">
+      <button id="mix-hidden-tab" onclick="toggleMixHiddenTab()" title="Show only hidden channels" style="padding:4px 10px;border-radius:var(--r2);border:1px solid var(--b2);background:var(--card2);color:var(--t2);font-size:var(--fs-xs);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:all .14s;flex-shrink:0;letter-spacing:.03em;">
         <span id="mix-hidden-eye" style="display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-eye"/></svg></span><span>Hidden</span>
       </button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-      <span style="font-size:10px;color:var(--muted);font-weight:600;flex:1;">Uncheck channels to MUTE for this mix</span>
-      <button id="mix-tree-toggle-btn" onclick="mixToggleExpandAll()" style="padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;display:none;" title="Expand / Collapse all groups">⇅</button>
-      <button id="mix-toggle-all-btn" onclick="mixToggleAllNone()" oncontextmenu="event.preventDefault();mixHideShowAll();" style="padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Click: select all/none | Right-click: hide/show all">All</button>
+      <span style="font-size:var(--fs-xs);color:var(--muted);font-weight:600;flex:1;">Uncheck channels to MUTE for this mix</span>
+      <button id="mix-tree-toggle-btn" onclick="mixToggleExpandAll()" style="padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-xs);font-weight:700;cursor:pointer;display:none;" title="Expand / Collapse all groups">⇅</button>
+      <button id="mix-toggle-all-btn" onclick="mixToggleAllNone()" oncontextmenu="event.preventDefault();mixHideShowAll();" style="padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-xs);font-weight:700;cursor:pointer;" title="Click: select all/none | Right-click: hide/show all">All</button>
       <button id="mix-clear-sel-btn" onclick="_mixClearSel()" class="clear-sel-btn" title="Clear selection"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
     <div class="tcb-list" id="mix-ch-list" style="flex:1;min-height:80px;max-height:none;"></div>
@@ -1133,19 +1133,19 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
     <div class="mfield" style="flex-shrink:0;"><label>Preset Name</label><input type="text" id="esp-name-inp" onkeydown="if(event.key==='Enter'){event.preventDefault();saveEditedStemPreset();}"></div>
     <div id="esp-name-presets" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:4px 0 8px;min-height:26px;flex-shrink:0;"></div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-shrink:0;">
-      <input id="esp-search" type="text" placeholder="Search channels…" oninput="_renderEspChannels()" style="flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:11px;padding:6px 10px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;">
-      <button id="esp-hidden-tab" onclick="_espToggleHidden()" title="Show hidden channels" style="display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:11px;cursor:pointer;flex-shrink:0;white-space:nowrap;transition:all .14s;">
+      <input id="esp-search" type="text" placeholder="Search channels…" oninput="_renderEspChannels()" style="flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:var(--fs-sm);padding:6px 10px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;">
+      <button id="esp-hidden-tab" onclick="_espToggleHidden()" title="Show hidden channels" style="display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-sm);cursor:pointer;flex-shrink:0;white-space:nowrap;transition:all .14s;">
         <span id="esp-hidden-eye" style="display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-eye"/></svg></span><span>Hidden</span>
       </button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-shrink:0;">
-      <span style="font-size:10px;color:var(--muted);font-weight:600;flex:1;">In preset: <span id="esp-stems-count" style="color:var(--accent);font-family:'JetBrains Mono',monospace;"></span></span>
-      <button id="esp-tree-toggle-btn" onclick="_espToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">⇅</button>
-      <button id="esp-toggle-all-btn" onclick="_espToggleAllNone()" style="padding:2px 9px;border-radius:5px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;cursor:pointer;transition:all .14s;">All</button>
+      <span style="font-size:var(--fs-xs);color:var(--muted);font-weight:600;flex:1;">In preset: <span id="esp-stems-count" style="color:var(--accent);font-family:'JetBrains Mono',monospace;"></span></span>
+      <button id="esp-tree-toggle-btn" onclick="_espToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-xs);font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">⇅</button>
+      <button id="esp-toggle-all-btn" onclick="_espToggleAllNone()" style="padding:2px 9px;border-radius:5px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-xs);cursor:pointer;transition:all .14s;">All</button>
       <button id="esp-clear-sel-btn" onclick="_espClearSel()" class="clear-sel-btn" title="Clear selection"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
     <div id="esp-channels-list" style="flex:1;min-height:80px;max-height:none;overflow-y:auto;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:4px 0;" class="scroll"></div>
-    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px;flex-shrink:0;">Add from other presets</div>
+    <div style="font-size:var(--fs-xxs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px;flex-shrink:0;">Add from other presets</div>
     <div id="esp-preset-chips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px;min-height:22px;flex-shrink:0;"></div>
     <div class="modal-actions">
       <button class="mbtn cancel" onclick="document.getElementById('edit-stem-preset-modal').classList.remove('show')">Cancel</button>
@@ -1158,20 +1158,20 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
 <div class="overlay" id="merge-modal" onclick="if(event.target===this)closeMergeModal()">
   <div class="modal" style="width:440px;max-width:96vw;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;gap:0;padding:16px;">
     <div class="modal-hdr" style="flex-shrink:0;">Merge Stems</div>
-    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:7px;flex-shrink:0;">Quick names</div>
+    <div style="font-size:var(--fs-xxs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:7px;flex-shrink:0;">Quick names</div>
     <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:13px;min-height:26px;flex-shrink:0;" id="merge-preset-chips"></div>
     <div class="mfield" style="flex-shrink:0;margin-bottom:10px;"><label>Merge Name</label>
       <div style="display:flex;gap:6px;align-items:center;">
         <input type="text" id="merge-name-inp" placeholder="e.g. Brass, Perc, Orchestra…" oninput="_mergeSaveCheck()" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmMerge();}">
-        <button id="merge-save-preset-btn" onclick="_saveMergePreset()" title="Save as preset" style="display:none;flex-shrink:0;padding:6px 11px;border-radius:var(--r);border:1px dashed rgba(108,99,255,.45);background:rgba(108,99,255,.07);color:var(--accent);font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .14s;">+ Save</button>
+        <button id="merge-save-preset-btn" onclick="_saveMergePreset()" title="Save as preset" style="display:none;flex-shrink:0;padding:6px 11px;border-radius:var(--r);border:1px dashed rgba(108,99,255,.45);background:rgba(108,99,255,.07);color:var(--accent);font-size:var(--fs-xs);font-weight:700;cursor:pointer;white-space:nowrap;transition:all .14s;">+ Save</button>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-bottom:5px;">
-      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);flex:1;">Channels <span id="merge-ch-count" style="color:var(--accent);font-family:'JetBrains Mono',monospace;"></span></div>
-      <button id="merge-tree-toggle-btn" onclick="_mergeToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">⇅</button>
+      <div style="font-size:var(--fs-xxs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);flex:1;">Channels <span id="merge-ch-count" style="color:var(--accent);font-family:'JetBrains Mono',monospace;"></span></div>
+      <button id="merge-tree-toggle-btn" onclick="_mergeToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-xs);font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">⇅</button>
       <button id="merge-clear-sel-btn" onclick="_mergeClearSel()" class="clear-sel-btn" title="Clear selection"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
-    <input type="text" id="merge-ch-search" placeholder="Search channels…" oninput="_renderMergeChannelList()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:11px;padding:5px 9px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;flex-shrink:0;margin-bottom:5px;">
+    <input type="text" id="merge-ch-search" placeholder="Search channels…" oninput="_renderMergeChannelList()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:var(--fs-sm);padding:5px 9px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;flex-shrink:0;margin-bottom:5px;">
     <div id="merge-channels-list" style="flex:1;max-height:200px;overflow-y:auto;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:4px 0;margin-bottom:12px;"></div>
     <div class="modal-actions" style="flex-shrink:0;margin-top:0;">
       <button class="mbtn cancel" onclick="closeMergeModal()">Cancel</button>
@@ -1184,11 +1184,11 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
     <div class="modal-hdr" style="flex-shrink:0;">Edit Merge</div>
     <div class="mfield" style="flex-shrink:0;margin-bottom:12px;"><label>Merge Name</label><input type="text" id="eg-name-inp" onkeydown="if(event.key==='Enter')saveEditGroup()"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;flex-shrink:0;">
-      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);">Channels in merge <span id="eg-ch-count" style="color:var(--accent);font-family:'JetBrains Mono',monospace;"></span></div>
+      <div style="font-size:var(--fs-xxs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);">Channels in merge <span id="eg-ch-count" style="color:var(--accent);font-family:'JetBrains Mono',monospace;"></span></div>
     </div>
     <div id="eg-channels-list" style="flex-shrink:0;max-height:130px;overflow-y:auto;border:1px solid rgba(255,255,255,.07);border-radius:var(--r);margin-bottom:10px;min-height:36px;"></div>
-    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px;flex-shrink:0;">Add channels</div>
-    <input type="text" id="eg-search" placeholder="Search channels…" oninput="_renderEgSearch()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:11px;padding:5px 9px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;flex-shrink:0;margin-bottom:5px;">
+    <div style="font-size:var(--fs-xxs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px;flex-shrink:0;">Add channels</div>
+    <input type="text" id="eg-search" placeholder="Search channels…" oninput="_renderEgSearch()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:var(--fs-sm);padding:5px 9px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;flex-shrink:0;margin-bottom:5px;">
     <div id="eg-search-results" style="flex:1;max-height:140px;overflow-y:auto;border:1px solid rgba(255,255,255,.07);border-radius:var(--r);margin-bottom:12px;"></div>
     <div class="modal-actions" style="flex-shrink:0;margin-top:0;">
       <button class="mbtn cancel" onclick="closeEditGroupModal()">Cancel</button>
@@ -1201,23 +1201,23 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
     <div class="modal-hdr" style="flex-shrink:0;">Edit Set</div>
     <div class="mfield" style="flex-shrink:0;margin-bottom:0;"><label>Set Name</label><input type="text" id="eset-name-inp" placeholder="Set name"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);">Jobs in set &nbsp;<span id="eset-jobs-count" style="color:var(--accent);font-family:'JetBrains Mono',monospace;"></span></div>
-      <button id="eset-clear-all-btn" onclick="esetClearAllJobs()" style="display:none;padding:2px 8px;border-radius:5px;border:1px solid var(--b);background:transparent;color:var(--muted);font-size:9px;font-weight:700;cursor:pointer;letter-spacing:.04em;" onmouseover="this.style.borderColor='rgba(255,71,87,.4)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--b)';this.style.color='var(--muted)'">Clear all</button>
+      <div style="font-size:var(--fs-xxs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);">Jobs in set &nbsp;<span id="eset-jobs-count" style="color:var(--accent);font-family:'JetBrains Mono',monospace;"></span></div>
+      <button id="eset-clear-all-btn" onclick="esetClearAllJobs()" style="display:none;padding:2px 8px;border-radius:5px;border:1px solid var(--b);background:transparent;color:var(--muted);font-size:var(--fs-xxs);font-weight:700;cursor:pointer;letter-spacing:.04em;" onmouseover="this.style.borderColor='rgba(255,71,87,.4)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--b)';this.style.color='var(--muted)'">Clear all</button>
     </div>
     <div id="eset-jobs-list" style="max-height:150px;overflow-y:auto;flex-shrink:0;border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:3px;min-height:40px;font-size:12px;"></div>
-    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);flex-shrink:0;">Add presets</div>
+    <div style="font-size:var(--fs-xxs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);flex-shrink:0;">Add presets</div>
     <div id="eset-tabs" style="display:flex;gap:4px;flex-wrap:wrap;flex-shrink:0;"></div>
     <div id="eset-tab-content" style="max-height:75px;overflow-y:auto;flex-shrink:0;border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:3px 5px;"></div>
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);flex:1;">Add channels</div>
-      <button id="eset-tree-toggle-btn" onclick="_esetToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">⇅</button>
+      <div style="font-size:var(--fs-xxs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);flex:1;">Add channels</div>
+      <button id="eset-tree-toggle-btn" onclick="_esetToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-xs);font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">⇅</button>
       <button id="eset-clear-sel-btn" onclick="_esetClearSel()" class="clear-sel-btn" title="Clear selection"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
     <div id="eset-modal-filters" style="display:none;align-items:center;gap:3px;flex-wrap:wrap;padding:2px 0;margin-bottom:3px;flex-shrink:0;"></div>
-    <input type="text" id="eset-ch-search" placeholder="Search channels…" oninput="_esetRenderChannels()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:11px;padding:5px 9px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;flex-shrink:0;">
+    <input type="text" id="eset-ch-search" placeholder="Search channels…" oninput="_esetRenderChannels()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:var(--fs-sm);padding:5px 9px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;flex-shrink:0;">
     <div id="eset-channels-list" style="max-height:110px;overflow-y:auto;flex-shrink:0;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:4px 0;"></div>
     <div style="display:flex;gap:6px;flex-shrink:0;">
-      <button onclick="esetCreateVersion()" style="flex:1;padding:5px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:11px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--b)';this.style.color='var(--muted)'"><svg class="ico ico-sm"><use href="#ico-fader"/></svg>Create version mix…</button>
+      <button onclick="esetCreateVersion()" style="flex:1;padding:5px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-sm);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--b)';this.style.color='var(--muted)'"><svg class="ico ico-sm"><use href="#ico-fader"/></svg>Create version mix…</button>
     </div>
     <div class="modal-actions" id="eset-actions" style="flex-shrink:0;margin-top:2px;">
       <button class="mbtn cancel" onclick="closeEditSetModal()">Cancel</button>
@@ -1248,12 +1248,12 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
   <!-- Card -->
   <div id="ob-card" style="position:absolute;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--accent);border-radius:20px;padding:36px 40px;max-width:420px;width:92%;box-shadow:0 32px 80px rgba(0,0,0,.8),0 0 80px rgba(108,99,255,.2);transition:all .35s cubic-bezier(.4,0,.2,1);">
     <div style="text-align:center;margin-bottom:28px;">
-      <div id="ob-icon" style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--a2));display:inline-flex;align-items:center;justify-content:center;color:#fff;margin-bottom:18px;box-shadow:0 8px 40px rgba(108,99,255,.45);animation:ob-pulse 2s ease-in-out infinite;"></div>
+      <div id="ob-icon" style="width:80px;height:80px;border-radius:50%;background:var(--g-primary);display:inline-flex;align-items:center;justify-content:center;color:#fff;margin-bottom:18px;box-shadow:0 8px 40px var(--accent-a40);animation:ob-pulse 2.4s ease-in-out infinite;"></div>
       <div id="ob-title" style="font-size:24px;font-weight:900;color:var(--text);letter-spacing:-.02em;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;"></div>
       <div style="width:40px;height:3px;background:linear-gradient(90deg,var(--accent),var(--a2));border-radius:2px;margin:8px auto 12px;"></div>
       <div id="ob-sub" style="font-size:12px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.1em;"></div>
     </div>
-    <div id="ob-body" style="font-size:13px;color:var(--t2);line-height:1.8;margin-bottom:28px;text-align:center;"></div>
+    <div id="ob-body" style="font-size:var(--fs-base);color:var(--t2);line-height:1.8;margin-bottom:28px;text-align:center;"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <div style="display:flex;gap:6px;" id="ob-dots"></div>
       <div style="display:flex;gap:8px;">
@@ -1271,22 +1271,22 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
   <div class="mp-modal-box" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:420px;background:var(--card2);border:1px solid var(--b2);border-radius:var(--r2);padding:24px;box-shadow:var(--sh-modal);">
     <div style="margin-bottom:20px;">
       <div style="font-size:20px;font-weight:700;color:var(--text);letter-spacing:-.02em;">Master Plugin Control</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5;">View &amp; bypass all master bus plugins before bouncing stems. One-click bypass/restore for the entire chain.</div>
+      <div style="font-size:var(--fs-sm);color:var(--muted);margin-top:5px;line-height:1.5;">View &amp; bypass all master bus plugins before bouncing stems. One-click bypass/restore for the entire chain.</div>
     </div>
     <div class="mp-modal-inner" style="background:var(--card);border-radius:var(--r);overflow:hidden;border:1px solid var(--b);margin-bottom:16px;">
       <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--b);">
         <div id="mp-status-dot" style="width:8px;height:8px;border-radius:50%;background:#ff4757;flex-shrink:0;"></div>
-        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;">Master Plugins</span>
-        <button id="mp-refresh" onclick="loadMasterPlugins(true)" style="margin-left:auto;display:flex;align-items:center;gap:5px;background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.25);color:#a89fff;font-size:10px;font-weight:700;cursor:pointer;padding:4px 10px;border-radius:6px;letter-spacing:.04em;transition:all .14s;" onmouseover="this.style.background='rgba(108,99,255,.2)'" onmouseout="this.style.background='rgba(108,99,255,.1)'" title="Scroll to master channel in Logic and re-read plugins">⟳ Reconnect</button>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;">Master Plugins</span>
+        <button id="mp-refresh" onclick="loadMasterPlugins(true)" style="margin-left:auto;display:flex;align-items:center;gap:5px;background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.25);color:#a89fff;font-size:var(--fs-xs);font-weight:700;cursor:pointer;padding:4px 10px;border-radius:6px;letter-spacing:.04em;transition:all .14s;" onmouseover="this.style.background='rgba(108,99,255,.2)'" onmouseout="this.style.background='rgba(108,99,255,.1)'" title="Scroll to master channel in Logic and re-read plugins">⟳ Reconnect</button>
         <button class="eb-close" onclick="closeMasterPluginsModal()" title="Close"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
       </div>
       <div id="mp-grid" style="max-height:300px;overflow-y:auto;">
-        <div style="padding:16px 14px;color:var(--muted);font-size:11px;">Plugins are loaded automatically during scan</div>
+        <div style="padding:16px 14px;color:var(--muted);font-size:var(--fs-sm);">Plugins are loaded automatically during scan</div>
       </div>
     </div>
     <div style="display:flex;gap:10px;">
-      <button class="mp-bypass-btn" onclick="bypassAllMasterPlugins()" style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,71,87,.4);background:rgba(255,71,87,.09);color:#ff4757;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.06em;text-transform:uppercase;transition:all .14s;" onmouseover="this.style.background='rgba(255,71,87,.16)'" onmouseout="this.style.background='rgba(255,71,87,.09)'">Bypass All</button>
-      <button class="mp-restore-btn" onclick="restoreAllMasterPlugins()" style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(67,233,123,.4);background:rgba(67,233,123,.09);color:#5abf28;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.06em;text-transform:uppercase;transition:all .14s;" onmouseover="this.style.background='rgba(67,233,123,.16)'" onmouseout="this.style.background='rgba(67,233,123,.09)'">Restore All</button>
+      <button class="mp-bypass-btn" onclick="bypassAllMasterPlugins()" style="flex:1;padding:10px;border-radius:var(--r-sm);border:1px solid var(--red-a30);background:var(--red-a08);color:var(--red);font-size:var(--fs-sm);font-weight:var(--fw-bold);cursor:pointer;letter-spacing:var(--ls-wide);text-transform:uppercase;transition:all .14s;" onmouseover="this.style.background='var(--red-a15)'" onmouseout="this.style.background='var(--red-a08)'">Bypass All</button>
+      <button class="mp-restore-btn" onclick="restoreAllMasterPlugins()" style="flex:1;padding:10px;border-radius:var(--r-sm);border:1px solid var(--success-a40);background:var(--success-a15);color:var(--a3);font-size:var(--fs-sm);font-weight:var(--fw-bold);cursor:pointer;letter-spacing:var(--ls-wide);text-transform:uppercase;transition:all .14s;">Restore All</button>
     </div>
   </div>
 </div>
@@ -1299,7 +1299,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;" id="skin-grid" class="skin-grid"></div>
 </div>
 <div id="ch-ctx-menu" style="display:none;position:fixed;z-index:500;background:var(--card);border:1px solid var(--b2);border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,.6);padding:4px;min-width:160px;">
-  <div id="ch-ctx-name" style="font-size:10px;font-weight:700;color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--b);margin-bottom:2px;"></div>
+  <div id="ch-ctx-name" style="font-size:var(--fs-xs);font-weight:700;color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--b);margin-bottom:2px;"></div>
   <button onclick="hideChannel()" style="width:100%;padding:7px 10px;text-align:left;background:transparent;border:none;color:var(--text);font-size:12px;cursor:pointer;border-radius:var(--r);transition:background .12s;" onmouseover="this.style.background='rgba(255,71,87,.1)';this.style.color='var(--red)'" onmouseout="this.style.background='transparent';this.style.color='var(--text)'">Hide channel</button>
   <button onclick="addCtxAsStems()" style="width:100%;padding:7px 10px;text-align:left;background:transparent;border:none;color:var(--text);font-size:12px;cursor:pointer;border-radius:var(--r);transition:background .12s;" onmouseover="this.style.background='rgba(67,233,123,.1)'" onmouseout="this.style.background='transparent'">+ Add as Stem</button>
   <button onclick="addCtxAsMix()" style="width:100%;padding:7px 10px;text-align:left;background:transparent;border:none;color:var(--text);font-size:12px;cursor:pointer;border-radius:var(--r);transition:background .12s;" onmouseover="this.style.background='rgba(108,99,255,.1)'" onmouseout="this.style.background='transparent'">+ Add as Mix (muted)</button>
@@ -1308,7 +1308,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
 <div class="overlay" id="job-sets-modal">
   <div class="modal" style="width:420px;">
     <div class="modal-hdr">Job Sets</div>
-    <div style="font-size:10px;color:var(--muted);font-weight:600;">Saved queue templates</div>
+    <div style="font-size:var(--fs-xs);color:var(--muted);font-weight:600;">Saved queue templates</div>
     <div id="job-sets-list" style="overflow-y:auto;max-height:280px;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:4px 0;"></div>
     <div class="modal-actions">
       <button class="mbtn cancel" onclick="document.getElementById('job-sets-modal').classList.remove('show')">Close</button>
@@ -1337,10 +1337,10 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
       <label>Start at</label>
       <input type="time" id="schedule-time" style="background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:14px;padding:6px 10px;font-family:var(--font-mono);width:100%;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;" onfocus="this.style.borderColor='var(--accent-a60)';this.style.boxShadow='0 0 0 3px var(--accent-a12)'" onblur="this.style.borderColor='var(--b)';this.style.boxShadow='none'">
     </div>
-    <div id="schedule-info" style="font-size:11px;color:var(--muted);padding:6px 0;"></div>
+    <div id="schedule-info" style="font-size:var(--fs-sm);color:var(--muted);padding:6px 0;"></div>
     <div id="schedule-active" style="display:none;text-align:center;padding:12px 0;">
       <div style="font-size:var(--fs-xxl);font-weight:var(--fw-bold);color:var(--accent);font-family:var(--font-mono);letter-spacing:var(--ls-tight);" id="schedule-countdown">--:--:--</div>
-      <div style="font-size:10px;color:var(--warn);margin-top:8px;">⚠ Don't close lid or put Mac to sleep</div>
+      <div style="font-size:var(--fs-xs);color:var(--warn);margin-top:8px;">⚠ Don't close lid or put Mac to sleep</div>
     </div>
     <div class="modal-actions">
       <button class="mbtn cancel" onclick="cancelSchedule()">Cancel</button>
@@ -1380,7 +1380,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
       oninput="this.value=this.value.toUpperCase()"
       onkeydown="if(event.key==='Enter')activateLicense()"
     />
-    <div id="license-error" style="font-size:11px;color:#ff4757;min-height:16px;margin-bottom:16px;"></div>
+    <div id="license-error" style="font-size:var(--fs-sm);color:#ff4757;min-height:16px;margin-bottom:16px;"></div>
 
     <!-- Activate button -->
     <button onclick="activateLicense()" style="
@@ -1398,14 +1398,14 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
     <div id="license-trial-badge" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:10px;font-size:12px;font-weight:500;text-align:center;"></div>
 
     <!-- Buy link -->
-    <div style="font-size:11px;color:#444458;">
+    <div style="font-size:var(--fs-sm);color:#444458;">
       Don't have a key?
       <a href="#" onclick="window.api&&window.api.openExternal?window.api.openExternal('https://project-1z26v.vercel.app'):null;return false;" style="color:#6c63ff;">Purchase at easybounce.app →</a>
     </div>
 
     <!-- Machine ID for support -->
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid #1e1e2a;">
-      <div style="font-size:9px;color:#333;font-family:'JetBrains Mono',monospace;">
+      <div style="font-size:var(--fs-xxs);color:#333;font-family:'JetBrains Mono',monospace;">
         Machine ID: <span id="machine-id-display">—</span>
       </div>
     </div>
@@ -1605,7 +1605,7 @@ function getInstrumentColor(name) {
 // Format channel name — show duplicate suffix "(2)" as small gray text
 function formatChName(name) {
   const m = name.match(/^(.+?)( \(\d+\))$/);
-  if (m) return `${m[1]}<span style="font-size:9px;color:var(--muted);font-weight:400;">${m[2]}</span>`;
+  if (m) return `${m[1]}<span style="font-size:var(--fs-xxs);color:var(--muted);font-weight:400;">${m[2]}</span>`;
   return name;
 }
 
@@ -2230,7 +2230,7 @@ async function scanLogic(isAutoRetry = false) {
   document.getElementById('scan-hint')?.classList.remove('show');
   btn.classList.add('scanning');
   btn.textContent = isAutoRetry ? '⟳ Retrying…' : '⟳ Scanning…';
-  btn.style.cssText = 'height:auto;padding:6px 16px;font-size:11px;border-radius:var(--r3);opacity:.6;';
+  btn.style.cssText = 'height:auto;padding:6px 16px;font-size:var(--fs-sm);border-radius:var(--r3);opacity:.6;';
   const scanWarn = document.getElementById('scan-warning');
   if (scanWarn) scanWarn.classList.add('show');
   let _scanBadgeActive = false;
@@ -3438,8 +3438,8 @@ function _renderChannelsImpl() {
     if (_orphaned.length > 0) {
       const _orp_sep = document.createElement('div');
       _orp_sep.className = 'mixer-ch-sep';
-      _orp_sep.style.cssText = 'padding:12px 14px 5px;display:flex;align-items:center;gap:6px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t2);border-top:1px solid var(--b);margin-top:8px;cursor:pointer;user-select:none;';
-      _orp_sep.innerHTML = `<span style="font-size:10px;transition:transform .15s;display:inline-block;transform:${_mixerChCollapsed ? 'rotate(0deg)' : 'rotate(90deg)'}">▶</span> Plugin instances <span style="color:var(--muted);font-weight:600;">(${_orphaned.length})</span>`;
+      _orp_sep.style.cssText = 'padding:12px 14px 5px;display:flex;align-items:center;gap:6px;font-size:var(--fs-xxs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t2);border-top:1px solid var(--b);margin-top:8px;cursor:pointer;user-select:none;';
+      _orp_sep.innerHTML = `<span style="font-size:var(--fs-xs);transition:transform .15s;display:inline-block;transform:${_mixerChCollapsed ? 'rotate(0deg)' : 'rotate(90deg)'}">▶</span> Plugin instances <span style="color:var(--muted);font-weight:600;">(${_orphaned.length})</span>`;
       _orp_sep.onclick = () => {
         _mixerChCollapsed = !_mixerChCollapsed;
         localStorage.setItem('eb_mixer_ch_collapsed', _mixerChCollapsed ? '1' : '0');
@@ -3862,12 +3862,12 @@ function _renderEspPresetChips() {
   // Show all other stem presets as chips (exclude the one being edited)
   const others = stemPresets.filter(x => x.id !== _editingStemPresetId);
   if (others.length === 0) {
-    cont.innerHTML = '<span style="font-size:10px;color:var(--muted);">No other presets yet</span>';
+    cont.innerHTML = '<span style="font-size:var(--fs-xs);color:var(--muted);">No other presets yet</span>';
     return;
   }
   others.forEach(p => {
     const chip = document.createElement('button');
-    chip.style.cssText = 'padding:3px 11px;border-radius:var(--r3);border:1px solid var(--b2);background:var(--card);color:var(--t2);font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .14s;';
+    chip.style.cssText = 'padding:3px 11px;border-radius:var(--r3);border:1px solid var(--b2);background:var(--card);color:var(--t2);font-size:var(--fs-xs);font-weight:600;cursor:pointer;white-space:nowrap;transition:all .14s;';
     chip.innerHTML = '<svg class="ico ico-sm" style="vertical-align:-2px;margin-right:4px;"><use href="#ico-fader"/></svg>' + _esc(p.name);
     chip.title = (p.names||[]).join(', ') || p.name;
     chip.onmouseover = () => { chip.style.borderColor = 'var(--accent)'; chip.style.color = 'var(--accent)'; chip.style.background = 'rgba(108,99,255,.08)'; };
@@ -3947,7 +3947,7 @@ function _renderEspChannels() {
   const allCh = channels.length === 0 ? [] : (_masterChannels.length > 0 ? _masterChannels : channels);
 
   if (allCh.length === 0) {
-    cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:11px;padding:14px;">Scan Logic first</div>';
+    cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:var(--fs-sm);padding:14px;">Scan Logic first</div>';
     return;
   }
 
@@ -4046,7 +4046,7 @@ function _renderEspChannels() {
     const dot = document.createElement('div');
     dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:' + (ch.color || '#666') + ';flex-shrink:0;' + (isHidden ? 'opacity:.4;' : '');
     const nm = document.createElement('span');
-    nm.style.cssText = 'flex:1;font-size:11px;color:' + (isHidden ? 'var(--muted)' : isInPre ? 'var(--text)' : 'var(--t2)') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' + (isHidden ? 'text-decoration:line-through;' : '');
+    nm.style.cssText = 'flex:1;font-size:var(--fs-sm);color:' + (isHidden ? 'var(--muted)' : isInPre ? 'var(--text)' : 'var(--t2)') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' + (isHidden ? 'text-decoration:line-through;' : '');
     nm.textContent = ch.name;
     row.appendChild(cbEl); row.appendChild(dot); row.appendChild(nm);
     return row;
@@ -4177,7 +4177,7 @@ function _renderEspChannels() {
       nm.textContent = t.name;
       row.appendChild(nm);
       const kidCount = getAllDescendants(t.name).filter(k=>k.type==='track').length;
-      if (kidCount > 0) { const c=document.createElement('span'); c.style.cssText='font-size:9px;color:var(--muted);flex-shrink:0;'; c.textContent=kidCount; row.appendChild(c); }
+      if (kidCount > 0) { const c=document.createElement('span'); c.style.cssText='font-size:var(--fs-xxs);color:var(--muted);flex-shrink:0;'; c.textContent=kidCount; row.appendChild(c); }
       cont.appendChild(row);
       if (expanded) {
         getDirectChildren(t.name).forEach(kid => {
@@ -4210,7 +4210,7 @@ function _renderEspChannels() {
 
     if (cont.children.length === 0) {
       const empty = document.createElement('div');
-      empty.style.cssText = 'text-align:center;color:var(--muted);font-size:11px;padding:10px;';
+      empty.style.cssText = 'text-align:center;color:var(--muted);font-size:var(--fs-sm);padding:10px;';
       empty.textContent = channels.length === 0 ? 'Scan project first' : 'All channels in preset';
       cont.appendChild(empty);
     }
@@ -4219,7 +4219,7 @@ function _renderEspChannels() {
     const toShow = allCh.filter(ch => chVisible(ch));
     if (toShow.length === 0) {
       const empty = document.createElement('div');
-      empty.style.cssText = 'text-align:center;color:var(--muted);font-size:11px;padding:10px;';
+      empty.style.cssText = 'text-align:center;color:var(--muted);font-size:var(--fs-sm);padding:10px;';
       empty.textContent = search ? 'No channels match' : (channels.length === 0 ? 'Scan project first' : 'All channels already in preset');
       cont.appendChild(empty);
       _espUpdateAddBtn(); return;
@@ -4313,7 +4313,7 @@ function _renderEspFilters() {
   el.style.display = 'flex';
   el.innerHTML = '<span class="mf-label">FILTER</span>' + MF_ALL_NAMES.map(name => {
     const active = _espActiveFilters.has(name);
-    if (active) return `<button style="padding:3px 8px;border-radius:5px;border:1px solid rgba(67,233,123,.5);background:rgba(67,233,123,.15);color:var(--a3);font-size:10px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;" onclick="_espToggleFilter('${name.replace(/'/g,"\\'")}')">${name}</button>`;
+    if (active) return `<button style="padding:3px 8px;border-radius:5px;border:1px solid rgba(67,233,123,.5);background:rgba(67,233,123,.15);color:var(--a3);font-size:var(--fs-xs);font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;" onclick="_espToggleFilter('${name.replace(/'/g,"\\'")}')">${name}</button>`;
     return `<button class="mf-btn" style="color:var(--t2);border:1px solid var(--b2);background:var(--card);" onclick="_espToggleFilter('${name.replace(/'/g,"\\'")}')">${name}</button>`;
   }).join('');
 }
@@ -4377,7 +4377,7 @@ function _renderEspQuickNames() {
   cont.innerHTML = '';
   const chips = _loadStemChips();
   const lbl = document.createElement('span');
-  lbl.style.cssText = 'font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:2px;white-space:nowrap;';
+  lbl.style.cssText = 'font-size:var(--fs-xxs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:2px;white-space:nowrap;';
   lbl.textContent = 'Quick names:';
   cont.appendChild(lbl);
   chips.forEach((name, i) => {
@@ -4455,7 +4455,7 @@ function _esetRenderFilters() {
   el.style.display = 'flex';
   el.innerHTML = '<span class="mf-label">FILTER</span>' + MF_ALL_NAMES.map(name => {
     const active = _esetActiveFilters.has(name);
-    if (active) return `<button style="padding:3px 8px;border-radius:5px;border:1px solid rgba(67,233,123,.5);background:rgba(67,233,123,.15);color:var(--a3);font-size:10px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;" onclick="_esetToggleFilter('${name.replace(/'/g,"\\'")}')">${name}</button>`;
+    if (active) return `<button style="padding:3px 8px;border-radius:5px;border:1px solid rgba(67,233,123,.5);background:rgba(67,233,123,.15);color:var(--a3);font-size:var(--fs-xs);font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;" onclick="_esetToggleFilter('${name.replace(/'/g,"\\'")}')">${name}</button>`;
     return `<button class="mf-btn" style="color:var(--t2);border:1px solid var(--b2);background:var(--card);" onclick="_esetToggleFilter('${name.replace(/'/g,"\\'")}')">${name}</button>`;
   }).join('');
 }
@@ -4541,7 +4541,7 @@ function _esetRenderJobs() {
   if (cnt) cnt.textContent = _editSetTempJobs.length ? '(' + _editSetTempJobs.length + ')' : '';
   if (clrBtn) clrBtn.style.display = _editSetTempJobs.length ? '' : 'none';
   if (_editSetTempJobs.length === 0) {
-    cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:11px;padding:10px;">No jobs yet — add from below</div>';
+    cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:var(--fs-sm);padding:10px;">No jobs yet — add from below</div>';
     return;
   }
   _editSetTempJobs.forEach((job, i) => {
@@ -4576,7 +4576,7 @@ function _esetRenderJobs() {
     });
     const handle = document.createElement('span');
     handle.textContent = '⠿';
-    handle.style.cssText = 'color:var(--muted);font-size:13px;flex-shrink:0;opacity:0.4;cursor:grab;';
+    handle.style.cssText = 'color:var(--muted);font-size:var(--fs-base);flex-shrink:0;opacity:0.4;cursor:grab;';
     const icon = document.createElement('span');
     icon.style.cssText = 'flex-shrink:0;display:inline-flex;align-items:center;color:var(--muted);';
     icon.innerHTML = job.type === 'mix'
@@ -4588,7 +4588,7 @@ function _esetRenderJobs() {
     nm.style.cssText = 'flex:1;font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
     nm.textContent = job.name;
     const type = document.createElement('span');
-    type.style.cssText = 'font-size:9px;color:var(--muted);flex-shrink:0;font-family:"JetBrains Mono",monospace;letter-spacing:.04em;';
+    type.style.cssText = 'font-size:var(--fs-xxs);color:var(--muted);flex-shrink:0;font-family:"JetBrains Mono",monospace;letter-spacing:.04em;';
     type.textContent = job.type === 'mix' ? 'version' : 'stem';
     const rm = document.createElement('button');
     rm.style.cssText = 'background:none;border:none;color:var(--muted);cursor:pointer;font-size:17px;padding:0 5px;line-height:1;flex-shrink:0;';
@@ -4620,7 +4620,7 @@ function _esetRenderTabs() {
   tabs.forEach(([key, label]) => {
     const btn = document.createElement('button');
     const active = key === _esetActiveTab;
-    btn.style.cssText = 'padding:4px 10px;border-radius:6px;border:1px solid ' + (active ? 'var(--accent)' : 'var(--b)') + ';background:' + (active ? 'rgba(108,99,255,.12)' : 'var(--card)') + ';color:' + (active ? 'var(--accent)' : 'var(--muted)') + ';font-size:10px;font-weight:600;cursor:pointer;';
+    btn.style.cssText = 'padding:4px 10px;border-radius:6px;border:1px solid ' + (active ? 'var(--accent)' : 'var(--b)') + ';background:' + (active ? 'rgba(108,99,255,.12)' : 'var(--card)') + ';color:' + (active ? 'var(--accent)' : 'var(--muted)') + ';font-size:var(--fs-xs);font-weight:600;cursor:pointer;';
     btn.textContent = label;
     btn.onclick = () => { _esetActiveTab = key; _esetRenderTabs(); _esetRenderTabContent(); };
     cont.appendChild(btn);
@@ -4633,7 +4633,7 @@ function _esetRenderTabContent() {
   cont.innerHTML = '';
   if (_esetActiveTab === 'stems') {
     if (stemPresets.length === 0) {
-      cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:11px;padding:10px;">No stem presets saved yet</div>';
+      cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:var(--fs-sm);padding:10px;">No stem presets saved yet</div>';
       return;
     }
     stemPresets.forEach(p => {
@@ -4642,13 +4642,13 @@ function _esetRenderTabContent() {
       row.onmouseover = () => row.style.background = 'rgba(255,255,255,.04)';
       row.onmouseout  = () => row.style.background = '';
       const nm = document.createElement('span');
-      nm.style.cssText = 'flex:1;font-size:11px;color:var(--text);display:inline-flex;align-items:center;gap:5px;';
+      nm.style.cssText = 'flex:1;font-size:var(--fs-sm);color:var(--text);display:inline-flex;align-items:center;gap:5px;';
       nm.innerHTML = '<svg class="ico ico-sm"><use href="#ico-music"/></svg>' + _esc(p.name);
       const sub = document.createElement('span');
-      sub.style.cssText = 'font-size:9px;color:var(--muted);font-family:"JetBrains Mono",monospace;';
+      sub.style.cssText = 'font-size:var(--fs-xxs);color:var(--muted);font-family:"JetBrains Mono",monospace;';
       sub.textContent = (p.names||[]).length + ' ch';
       const add = document.createElement('button');
-      add.style.cssText = 'background:none;border:1px solid var(--b);border-radius:4px;color:var(--muted);cursor:pointer;font-size:10px;padding:2px 8px;flex-shrink:0;';
+      add.style.cssText = 'background:none;border:1px solid var(--b);border-radius:4px;color:var(--muted);cursor:pointer;font-size:var(--fs-xs);padding:2px 8px;flex-shrink:0;';
       add.textContent = '+ Add all';
       add.onmouseover = () => { add.style.borderColor = 'var(--accent)'; add.style.color = 'var(--accent)'; add.style.background = 'rgba(108,99,255,.08)'; };
       add.onmouseout  = () => { add.style.borderColor = 'var(--b)'; add.style.color = 'var(--muted)'; add.style.background = 'none'; };
@@ -4658,7 +4658,7 @@ function _esetRenderTabContent() {
     });
   } else if (_esetActiveTab === 'versions') {
     if (presets.length === 0) {
-      cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:11px;padding:10px;">No version presets saved yet</div>';
+      cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:var(--fs-sm);padding:10px;">No version presets saved yet</div>';
       return;
     }
     presets.forEach(p => {
@@ -4667,13 +4667,13 @@ function _esetRenderTabContent() {
       row.onmouseover = () => row.style.background = 'rgba(255,255,255,.04)';
       row.onmouseout  = () => row.style.background = '';
       const nm = document.createElement('span');
-      nm.style.cssText = 'flex:1;font-size:11px;color:var(--text);display:inline-flex;align-items:center;gap:5px;';
+      nm.style.cssText = 'flex:1;font-size:var(--fs-sm);color:var(--text);display:inline-flex;align-items:center;gap:5px;';
       nm.innerHTML = '<svg class="ico ico-sm"><use href="#ico-fader"/></svg>' + _esc(p.name);
       const sub = document.createElement('span');
-      sub.style.cssText = 'font-size:9px;color:var(--muted);font-family:"JetBrains Mono",monospace;';
+      sub.style.cssText = 'font-size:var(--fs-xxs);color:var(--muted);font-family:"JetBrains Mono",monospace;';
       sub.textContent = (p.mutedIndices||[]).length + ' muted';
       const add = document.createElement('button');
-      add.style.cssText = 'background:none;border:1px solid var(--b);border-radius:4px;color:var(--muted);cursor:pointer;font-size:10px;padding:2px 8px;flex-shrink:0;';
+      add.style.cssText = 'background:none;border:1px solid var(--b);border-radius:4px;color:var(--muted);cursor:pointer;font-size:var(--fs-xs);padding:2px 8px;flex-shrink:0;';
       add.textContent = '+ Add';
       add.onmouseover = () => { add.style.borderColor = 'var(--accent)'; add.style.color = 'var(--accent)'; add.style.background = 'rgba(108,99,255,.08)'; };
       add.onmouseout  = () => { add.style.borderColor = 'var(--b)'; add.style.color = 'var(--muted)'; add.style.background = 'none'; };
@@ -4694,7 +4694,7 @@ function _esetRenderChannels() {
   const allCh = channels.length === 0 ? [] : (_masterChannels.length > 0 ? _masterChannels : channels);
 
   if (allCh.length === 0) {
-    cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:11px;padding:14px;">Scan Logic first</div>';
+    cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:var(--fs-sm);padding:14px;">Scan Logic first</div>';
     return;
   }
 
@@ -4799,7 +4799,7 @@ function _esetRenderChannels() {
     const dot = document.createElement('div');
     dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:' + (ch.color || '#666') + ';flex-shrink:0;';
     const nm = document.createElement('span');
-    nm.style.cssText = 'flex:1;font-size:11px;color:' + (isSel ? 'var(--text)' : 'var(--t2)') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    nm.style.cssText = 'flex:1;font-size:var(--fs-sm);color:' + (isSel ? 'var(--text)' : 'var(--t2)') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
     nm.textContent = ch.name;
     row.appendChild(cb); row.appendChild(dot); row.appendChild(nm);
     return row;
@@ -4883,7 +4883,7 @@ function _esetRenderChannels() {
       };
       const tri = document.createElement('span');
       tri.className = 'eset-tri';
-      tri.style.cssText = 'font-size:11px;color:var(--muted);min-width:13px;flex-shrink:0;user-select:none;line-height:1;';
+      tri.style.cssText = 'font-size:var(--fs-sm);color:var(--muted);min-width:13px;flex-shrink:0;user-select:none;line-height:1;';
       tri.textContent = expanded ? '▼' : '▶';
       tri.onclick = (e) => { e.stopPropagation(); if(!expanded) _esetModalExpanded.add(t.name); else _esetModalExpanded.delete(t.name); _esetRenderChannels(); };
       row.appendChild(tri);
@@ -4914,11 +4914,11 @@ function _esetRenderChannels() {
       dot.style.cssText = `width:7px;height:7px;border-radius:50%;background:${(ch||{}).color||'var(--muted)'};flex-shrink:0;`;
       row.appendChild(dot);
       const nm = document.createElement('span');
-      nm.style.cssText = 'flex:1;font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+      nm.style.cssText = 'flex:1;font-size:var(--fs-sm);font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
       nm.textContent = t.name;
       row.appendChild(nm);
       const kidCount = getAllDescendants(t.name).filter(k=>k.type==='track').length;
-      if (kidCount > 0) { const c=document.createElement('span'); c.style.cssText='font-size:9px;color:var(--muted);flex-shrink:0;'; c.textContent=kidCount; row.appendChild(c); }
+      if (kidCount > 0) { const c=document.createElement('span'); c.style.cssText='font-size:var(--fs-xxs);color:var(--muted);flex-shrink:0;'; c.textContent=kidCount; row.appendChild(c); }
       cont.appendChild(row);
       if (expanded) {
         getDirectChildren(t.name).forEach(kid => {
@@ -4934,13 +4934,13 @@ function _esetRenderChannels() {
     });
 
     if (cont.children.length === 0) {
-      cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:11px;padding:10px;">No channels match</div>';
+      cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:var(--fs-sm);padding:10px;">No channels match</div>';
     }
   } else {
     // ── Flat list (search mode or no tree data) ──
     const toShow = allCh.filter(ch => chVisible(ch));
     if (toShow.length === 0) {
-      cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:11px;padding:10px;">No channels match</div>';
+      cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:var(--fs-sm);padding:10px;">No channels match</div>';
       return;
     }
     toShow.forEach(ch => cont.appendChild(makeTrackRow(ch, 8)));
@@ -5152,7 +5152,7 @@ function renderPresets() {
   function addLabel(text) {
     const lbl = document.createElement('span');
     lbl.className = 'em-presets-label';
-    lbl.style.cssText = 'font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:DM Mono,monospace;align-self:center;margin-right:2px;';
+    lbl.style.cssText = 'font-size:var(--fs-xxs);font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:DM Mono,monospace;align-self:center;margin-right:2px;';
     lbl.textContent = text;
     bar.appendChild(lbl);
   }
@@ -5211,7 +5211,7 @@ function renderPresets() {
     if (!isEasy) {
       const sep = document.createElement('span');
       sep.className = 'em-presets-label';
-      sep.style.cssText = 'font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:DM Mono,monospace;align-self:center;margin-left:6px;margin-right:2px;';
+      sep.style.cssText = 'font-size:var(--fs-xxs);font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:DM Mono,monospace;align-self:center;margin-left:6px;margin-right:2px;';
       sep.textContent = 'STEMS:';
       bar.appendChild(sep);
     }
@@ -5244,7 +5244,7 @@ function renderPresets() {
     if (!isEasy) {
       const setSep = document.createElement('span');
       setSep.className = 'em-presets-label';
-      setSep.style.cssText = 'font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:DM Mono,monospace;align-self:center;margin-left:6px;margin-right:2px;';
+      setSep.style.cssText = 'font-size:var(--fs-xxs);font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:DM Mono,monospace;align-self:center;margin-left:6px;margin-right:2px;';
       setSep.textContent = 'SETS:';
       bar.appendChild(setSep);
     }
@@ -5323,7 +5323,7 @@ function renderPresets() {
   if (isEasy && _easyOverflow.length > 0) {
     const more = document.createElement('button');
     more.className = 'pchip em-more-btn';
-    more.style.cssText = 'font-size:10px;opacity:.7;padding:6px 12px;display:none;cursor:pointer;border-style:dashed;';
+    more.style.cssText = 'font-size:var(--fs-xs);opacity:.7;padding:6px 12px;display:none;cursor:pointer;border-style:dashed;';
     more.textContent = '▸ +' + _easyOverflow.length;
     more.title = 'Show all presets';
     let expanded = false;
@@ -5497,7 +5497,7 @@ function _renderMergeChannelList() {
   const allCh = channels.length === 0 ? [] : (_masterChannels.length > 0 ? _masterChannels : channels);
 
   if (allCh.length === 0) {
-    cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:11px;padding:14px;">Scan Logic first</div>';
+    cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:var(--fs-sm);padding:14px;">Scan Logic first</div>';
     return;
   }
 
@@ -5592,7 +5592,7 @@ function _renderMergeChannelList() {
     const dot = document.createElement('div');
     dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:' + (ch.color || '#666') + ';flex-shrink:0;';
     const nm = document.createElement('span');
-    nm.style.cssText = 'flex:1;font-size:11px;color:' + (isSel ? 'var(--text)' : 'var(--t2)') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    nm.style.cssText = 'flex:1;font-size:var(--fs-sm);color:' + (isSel ? 'var(--text)' : 'var(--t2)') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
     nm.textContent = ch.name;
     row.appendChild(cb); row.appendChild(dot); row.appendChild(nm);
     return row;
@@ -5666,7 +5666,7 @@ function _renderMergeChannelList() {
       };
       const tri = document.createElement('span');
       tri.className = 'mrg-tri';
-      tri.style.cssText = 'font-size:11px;color:var(--muted);min-width:13px;flex-shrink:0;user-select:none;line-height:1;';
+      tri.style.cssText = 'font-size:var(--fs-sm);color:var(--muted);min-width:13px;flex-shrink:0;user-select:none;line-height:1;';
       tri.textContent = expanded ? '▼' : '▶';
       tri.onclick = (e) => { e.stopPropagation(); if(!expanded) _mrgExpanded.add(t.name); else _mrgExpanded.delete(t.name); _renderMergeChannelList(); };
       row.appendChild(tri);
@@ -5696,11 +5696,11 @@ function _renderMergeChannelList() {
       dot.style.cssText = `width:7px;height:7px;border-radius:50%;background:${(ch||{}).color||'var(--muted)'};flex-shrink:0;`;
       row.appendChild(dot);
       const nm = document.createElement('span');
-      nm.style.cssText = 'flex:1;font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+      nm.style.cssText = 'flex:1;font-size:var(--fs-sm);font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
       nm.textContent = t.name;
       row.appendChild(nm);
       const kc = getAllDescendants(t.name).filter(k=>k.type==='track').length;
-      if (kc > 0) { const c=document.createElement('span'); c.style.cssText='font-size:9px;color:var(--muted);flex-shrink:0;'; c.textContent=kc; row.appendChild(c); }
+      if (kc > 0) { const c=document.createElement('span'); c.style.cssText='font-size:var(--fs-xxs);color:var(--muted);flex-shrink:0;'; c.textContent=kc; row.appendChild(c); }
       cont.appendChild(row);
       if (expanded) {
         getDirectChildren(t.name).forEach(kid => {
@@ -5713,11 +5713,11 @@ function _renderMergeChannelList() {
       if (t.type==='group') renderGroupRow(t, 0);
       else { const ch=chMap[t.num]; if(ch&&chVisible(ch)) cont.appendChild(makeTrackRow(ch, 6)); }
     });
-    if (cont.children.length === 0) cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:11px;padding:10px;">No channels match</div>';
+    if (cont.children.length === 0) cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:var(--fs-sm);padding:10px;">No channels match</div>';
   } else {
     // ── Flat list ──
     const toShow = allCh.filter(ch => chVisible(ch));
-    if (toShow.length === 0) { cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:11px;padding:10px;">No channels match</div>'; return; }
+    if (toShow.length === 0) { cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:var(--fs-sm);padding:10px;">No channels match</div>'; return; }
     toShow.forEach(ch => cont.appendChild(makeTrackRow(ch, 8)));
   }
   const mergeSel = window._mergeSelSet;
@@ -5794,7 +5794,7 @@ function _renderEgChannels() {
   if (!el) return;
   if (cnt) cnt.textContent = _editGroupChannels.length ? `(${_editGroupChannels.length})` : '';
   if (_editGroupChannels.length === 0) {
-    el.innerHTML = '<div style="padding:10px 12px;font-size:10px;color:var(--muted);">No channels — add some below</div>'; return;
+    el.innerHTML = '<div style="padding:10px 12px;font-size:var(--fs-xs);color:var(--muted);">No channels — add some below</div>'; return;
   }
   el.innerHTML = _editGroupChannels.map((c, i) =>
     `<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid rgba(255,255,255,.03);">
@@ -5818,14 +5818,14 @@ function _renderEgSearch() {
   const existing = new Set(_editGroupChannels.map(c => c.channelIndex));
   const visible = channels.filter(c => !existing.has(c.index) && (!q || c.name.toLowerCase().includes(q))).slice(0, 30);
   if (visible.length === 0) {
-    el.innerHTML = `<div style="padding:10px 12px;font-size:10px;color:var(--muted);">${q ? 'No matches' : 'All channels added'}</div>`;
+    el.innerHTML = `<div style="padding:10px 12px;font-size:var(--fs-xs);color:var(--muted);">${q ? 'No matches' : 'All channels added'}</div>`;
     return;
   }
   el.innerHTML = visible.map(c =>
     `<div onclick="_egAddChannel(${c.index})" style="display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.03);transition:background .1s;" onmouseover="this.style.background='rgba(56,249,215,.08)'" onmouseout="this.style.background=''">
       <div style="width:7px;height:7px;border-radius:50%;background:${c.color || 'var(--t2)'};flex-shrink:0;"></div>
-      <span style="flex:1;font-size:11px;color:var(--text);">${c.name}</span>
-      <span style="font-size:10px;color:var(--teal);font-weight:600;">+ Add</span>
+      <span style="flex:1;font-size:var(--fs-sm);color:var(--text);">${c.name}</span>
+      <span style="font-size:var(--fs-xs);color:var(--teal);font-weight:600;">+ Add</span>
     </div>`
   ).join('');
 }
@@ -6073,7 +6073,7 @@ function renderMixModalFilters() {
   el.innerHTML = '<span class="mf-label">FILTER</span>' + MF_ALL_NAMES.map(name => {
     const active = _mixModalActiveFilters.has(name);
     if (active) {
-      return `<button style="padding:3px 8px;border-radius:5px;border:1px solid rgba(67,233,123,.5);background:rgba(67,233,123,.15);color:var(--a3);font-size:10px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .13s;" onclick="_mixModalToggleFilter('${name.replace(/'/g,"\\'")}')">${name}</button>`;
+      return `<button style="padding:3px 8px;border-radius:5px;border:1px solid rgba(67,233,123,.5);background:rgba(67,233,123,.15);color:var(--a3);font-size:var(--fs-xs);font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .13s;" onclick="_mixModalToggleFilter('${name.replace(/'/g,"\\'")}')">${name}</button>`;
     }
     return `<button class="mf-btn" style="color:var(--t2);border:1px solid var(--b2);background:var(--card);" onclick="_mixModalToggleFilter('${name.replace(/'/g,"\\'")}')">${name}</button>`;
   }).join('');
@@ -6125,7 +6125,7 @@ function renderMixList(initIndices) {
   list.innerHTML = '';
   renderMixModalFilters();
   if (channels.length === 0) {
-    list.innerHTML = '<div style="padding:10px;color:var(--muted);font-size:11px;">Scan Logic first</div>';
+    list.innerHTML = '<div style="padding:10px;color:var(--muted);font-size:var(--fs-sm);">Scan Logic first</div>';
     return;
   }
 
@@ -6261,7 +6261,7 @@ function renderMixList(initIndices) {
 
       const tri = document.createElement('span');
       tri.className = 'mix-tri';
-      tri.style.cssText = 'font-size:13px;color:var(--muted);min-width:16px;flex-shrink:0;user-select:none;line-height:1;';
+      tri.style.cssText = 'font-size:var(--fs-base);color:var(--muted);min-width:16px;flex-shrink:0;user-select:none;line-height:1;';
       tri.textContent = expanded ? '▼' : '▶';
       tri.onclick = (e) => {
         e.stopPropagation();
@@ -6317,7 +6317,7 @@ function renderMixList(initIndices) {
       if (_childTrackCount > 0) {
         const cntEl = document.createElement('span');
         cntEl.textContent = _childTrackCount;
-        cntEl.style.cssText = 'font-size:9px;color:var(--muted);';
+        cntEl.style.cssText = 'font-size:var(--fs-xxs);color:var(--muted);';
         row.appendChild(cntEl);
       }
       if (ch && ch.isMuted) {
@@ -6486,7 +6486,7 @@ function renderVersionNameChips() {
   if (chips.length === 0 && !document.getElementById('mix-name-inp')) return;
 
   const lbl = document.createElement('span');
-  lbl.style.cssText = 'font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:2px;white-space:nowrap;';
+  lbl.style.cssText = 'font-size:var(--fs-xxs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:2px;white-space:nowrap;';
   lbl.textContent = 'Quick names:';
   cont.appendChild(lbl);
 
@@ -6551,7 +6551,7 @@ function renderStemNameChips() {
   const chips = _loadStemChips();
 
   const lbl = document.createElement('span');
-  lbl.style.cssText = 'font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:2px;white-space:nowrap;';
+  lbl.style.cssText = 'font-size:var(--fs-xxs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:2px;white-space:nowrap;';
   lbl.textContent = 'Quick names:';
   cont.appendChild(lbl);
 
@@ -6977,9 +6977,9 @@ function renderQueue() {
       hdr.className = 'qset-hdr';
       hdr.innerHTML = `
         <span class="qset-toggle ${item.expanded ? 'open' : ''}">▶</span>
-        <span class="qname" style="font-size:13px;">${item.name}</span>
+        <span class="qname" style="font-size:var(--fs-base);">${item.name}</span>
         <span class="qtag ${isStemPreset ? 'stem' : 'set'}">${isStemPreset ? 'stems' : 'set'}</span>
-        <span style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${item.jobs.length} ${isStemPreset ? 'stems' : 'jobs'}</span>
+        <span style="font-size:var(--fs-xs);color:var(--muted);font-family:'JetBrains Mono',monospace;">${item.jobs.length} ${isStemPreset ? 'stems' : 'jobs'}</span>
         <div style="flex:1;"></div>
         <button class="qedit" title="Edit ${isStemPreset ? 'stems preset' : 'set'}" onclick="event.stopPropagation();${isStemPreset ? `_editQueueStemGroup('${item.id}')` : `openEditQueueSetModal('${item.id}')`}"><svg class="ico ico-sm"><use href="#ico-edit"/></svg></button>
         <button class="qdel" title="Remove from queue" onclick="event.stopPropagation();removeQItem('${item.id}')"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
@@ -7004,7 +7004,7 @@ function renderQueue() {
               const _hidden = _mn.slice(_lim).map(n => `<span class="qmuted qmuted-h">✕ ${n}</span>`).join('');
               muted = `${_shown}${_hidden}<span class="qmuted-tog" onclick="event.stopPropagation();_togMuted(this,${_mn.length - _lim})">+${_mn.length - _lim} more</span>`;
             } else { muted = _shown; }
-          } else if (isMix) { muted = '<span style="color:var(--accent);font-size:9px">✓ All tracks</span>'; }
+          } else if (isMix) { muted = '<span style="color:var(--accent);font-size:var(--fs-xxs)">✓ All tracks</span>'; }
           const editBtn = isMix && job.status === 'pending'
             ? `<button class="qedit" onclick="event.stopPropagation();editQueueMix('${job.id}')" title="Edit mix"><svg class="ico ico-sm"><use href="#ico-edit"/></svg></button>` : '';
           row.innerHTML = `
@@ -7052,7 +7052,7 @@ function renderQueue() {
         </div>
         <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
           <div class="qst ${item.status || 'pending'}">${item.status || 'pending'}</div>
-          ${(item.status === 'done' || item.status === 'error' || item.status === 'cancelled') ? `<button onclick="event.stopPropagation();resetQueueItem('${item.id}')" title="Reset to pending" style="width:20px;height:20px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .13s;line-height:1;" onmouseover="this.style.background='rgba(255,255,255,.14)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.55)'">↺</button>` : ''}
+          ${(item.status === 'done' || item.status === 'error' || item.status === 'cancelled') ? `<button onclick="event.stopPropagation();resetQueueItem('${item.id}')" title="Reset to pending" style="width:20px;height:20px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);font-size:var(--fs-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .13s;line-height:1;" onmouseover="this.style.background='rgba(255,255,255,.14)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.55)'">↺</button>` : ''}
         </div>
         ${grpEditBtn}
         <button class="qdel" onclick="event.stopPropagation();removeQItem('${item.id}')"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
@@ -7105,7 +7105,7 @@ function renderQueue() {
         const _hidden = _mn.slice(_lim).map(n => `<span class="qmuted qmuted-h">✕ ${n}</span>`).join('');
         pills = `${_shown}${_hidden}<span class="qmuted-tog" onclick="event.stopPropagation();_togMuted(this,${_mn.length - _lim})">+${_mn.length - _lim} more</span>`;
       } else { pills = _shown; }
-    } else if (isMix) { pills = '<span style="color:var(--accent);font-size:9px">✓ All tracks</span>'; }
+    } else if (isMix) { pills = '<span style="color:var(--accent);font-size:var(--fs-xxs)">✓ All tracks</span>'; }
 
     const editBtn = isMix && item.status === 'pending'
       ? `<button class="qedit" onclick="editQueueMix('${item.id}')" title="Edit mix"><svg class="ico ico-sm"><use href="#ico-edit"/></svg></button>`
@@ -7122,7 +7122,7 @@ function renderQueue() {
           const fullTitle = fullExcluded ? 'Full skipped for this item — click to include' : 'Will bounce full range — click to skip for this item';
           return `<span onclick="event.stopPropagation();toggleJobFull('${item.id}');"
             title="${fullTitle}"
-            style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .12s;user-select:none;${fullStyle}"
+            style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:var(--fs-xxs);font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .12s;user-select:none;${fullStyle}"
           >Full</span>`;
         })()
       : '';
@@ -7151,7 +7151,7 @@ function renderQueue() {
           }
           return `<span onclick="event.stopPropagation();toggleJobMarker('${item.id}','${mid.replace(/'/g,"\\'")}');"
             title="${title}"
-            style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .12s;user-select:none;${style}"
+            style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:var(--fs-xxs);font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .12s;user-select:none;${style}"
           >${name}</span>`;
         }).join('')
       : '';
@@ -7169,7 +7169,7 @@ function renderQueue() {
       </div>
       <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
         <div class="qst ${item.status || 'pending'}">${item.status || 'pending'}</div>
-        ${(item.status === 'done' || item.status === 'error' || item.status === 'cancelled') ? `<button onclick="event.stopPropagation();resetQueueItem('${item.id}')" title="Reset to pending" style="width:20px;height:20px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .13s;line-height:1;" onmouseover="this.style.background='rgba(255,255,255,.14)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.55)'">↺</button>` : ''}
+        ${(item.status === 'done' || item.status === 'error' || item.status === 'cancelled') ? `<button onclick="event.stopPropagation();resetQueueItem('${item.id}')" title="Reset to pending" style="width:20px;height:20px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);font-size:var(--fs-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .13s;line-height:1;" onmouseover="this.style.background='rgba(255,255,255,.14)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.55)'">↺</button>` : ''}
       </div>
       ${editBtn}
       <button class="qdel" onclick="event.stopPropagation();removeQItem('${item.id}')"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
@@ -8800,7 +8800,7 @@ async function loadMasterPlugins(forceScroll = false) {
   if (!grid) return;
   if (refreshBtn) { refreshBtn.style.opacity = '0.4'; refreshBtn.disabled = true; refreshBtn.textContent = '⟳ Reconnecting…'; }
   if (dot) dot.style.background = '#ffa94d';
-  if (grid) grid.innerHTML = '<span style="color:var(--muted);font-size:10px;grid-column:1/-1;">Reading Master…</span>';
+  if (grid) grid.innerHTML = '<span style="color:var(--muted);font-size:var(--fs-xs);grid-column:1/-1;">Reading Master…</span>';
 
   let result = null;
 
@@ -8826,13 +8826,13 @@ async function loadMasterPlugins(forceScroll = false) {
   if (refreshBtn) { refreshBtn.style.opacity = '1'; refreshBtn.disabled = false; refreshBtn.textContent = '⟳ Reconnect'; }
   if (!result || !result.ok || !result.plugins || result.plugins.length === 0) {
     if (dot) dot.style.background = '#ff4757';
-    grid.innerHTML = '<span style="color:var(--muted);font-size:10px;grid-column:1/-1;">Not found — make sure Logic is open with a track in the Arrange window</span>';
+    grid.innerHTML = '<span style="color:var(--muted);font-size:var(--fs-xs);grid-column:1/-1;">Not found — make sure Logic is open with a track in the Arrange window</span>';
     return;
   }
   const allGeneric = result.plugins.every(p => p.name === 'audio plug-in');
   if (allGeneric) {
     if (dot) dot.style.background = '#ffa94d';
-    grid.innerHTML = '<span style="color:var(--muted);font-size:10px;grid-column:1/-1;">Plugin names not loaded yet — retry ⟳</span>';
+    grid.innerHTML = '<span style="color:var(--muted);font-size:var(--fs-xs);grid-column:1/-1;">Plugin names not loaded yet — retry ⟳</span>';
     return;
   }
   if (dot) dot.style.background = '#5abf28';
@@ -8844,13 +8844,13 @@ function renderMasterPlugins() {
   const grid = document.getElementById('mp-grid');
   if (!grid) return;
   if (!_masterPlugins.length) {
-    grid.innerHTML = '<span style="color:var(--muted);font-size:10px;grid-column:1/-1;">No plugins found</span>';
+    grid.innerHTML = '<span style="color:var(--muted);font-size:var(--fs-xs);grid-column:1/-1;">No plugins found</span>';
     return;
   }
   grid.innerHTML = _masterPlugins.map((p, i) => `
     <div onclick="toggleMasterPlugin(${i}, ${!p.active})" style="display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid var(--b);cursor:pointer;transition:background .12s;" onmouseover="this.style.background='rgba(128,128,128,.06)'" onmouseout="this.style.background='transparent'" title="Click to ${p.active ? 'bypass' : 'restore'} ${p.name}">
       <span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:12px;color:${p.active ? 'var(--text)' : 'var(--muted)'};">${p.name}</span>
-      <span style="font-size:9px;font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:20px;${p.active ? 'color:#5abf28;background:rgba(90,191,40,.1);border:1px solid rgba(90,191,40,.28);' : 'color:var(--red);background:rgba(255,71,87,.09);border:1px solid rgba(255,71,87,.22);'}">${p.active ? 'ACTIVE' : 'BYPASSED'}</span>
+      <span style="font-size:var(--fs-xxs);font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:20px;${p.active ? 'color:#5abf28;background:rgba(90,191,40,.1);border:1px solid rgba(90,191,40,.28);' : 'color:var(--red);background:rgba(255,71,87,.09);border:1px solid rgba(255,71,87,.22);'}">${p.active ? 'ACTIVE' : 'BYPASSED'}</span>
     </div>
   `).join('');
   // Update badge on the open button
@@ -9002,7 +9002,7 @@ function updateObStep() {
     if (!neverCheckbox) {
       neverCheckbox = document.createElement('label');
       neverCheckbox.id = 'ob-never-checkbox-wrap';
-      neverCheckbox.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);cursor:pointer;margin-bottom:16px;';
+      neverCheckbox.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);color:var(--muted);cursor:pointer;margin-bottom:16px;';
       neverCheckbox.innerHTML = '<input type="checkbox" id="ob-never-show" style="accent-color:var(--accent);"> Don\'t show onboarding again';
       const dotsRow = document.getElementById('ob-dots').parentElement;
       obCard.insertBefore(neverCheckbox, dotsRow);
@@ -9101,8 +9101,8 @@ function renderNamePresets() {
          onmouseover="this.style.background='var(--card)'" onmouseout="this.style.background=''"
          onclick="applyNamePreset(${i})"
          oncontextmenu="event.preventDefault();showPresetCtxMenu(event,[{label:'✕  Remove \\'${p.name.replace(/'/g,"\\'")}\\'' ,red:true,action:()=>deleteNamePreset(${i})}])">
-      <span style="font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;">${p.name}</span>
-      <span style="flex:1;font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.prefix}</span>
+      <span style="font-size:var(--fs-sm);font-weight:600;color:var(--text);white-space:nowrap;">${p.name}</span>
+      <span style="flex:1;font-size:var(--fs-xs);color:var(--muted);font-family:'JetBrains Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.prefix}</span>
       <button onclick="event.stopPropagation();deleteNamePreset(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0 2px;transition:color .12s;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'" title="Delete">&times;</button>
     </div>
   `).join('');
@@ -9260,7 +9260,7 @@ function renderSetNamePresets() {
   const names = _loadSetNamePresets();
 
   const lbl = document.createElement('span');
-  lbl.style.cssText = 'font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:2px;white-space:nowrap;';
+  lbl.style.cssText = 'font-size:var(--fs-xxs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:2px;white-space:nowrap;';
   lbl.textContent = 'Quick names:';
   cont.appendChild(lbl);
 
@@ -9381,7 +9381,7 @@ function renderSetsPills() {
       }
     };
     const del = document.createElement('button');
-    del.style.cssText = 'background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:0 3px;line-height:1;transition:color .14s;';
+    del.style.cssText = 'background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:var(--fs-sm);padding:0 3px;line-height:1;transition:color .14s;';
     del.textContent = '×';
     del.title = 'Delete set';
     del.onmouseover = () => del.style.color = 'var(--red)';
@@ -10046,7 +10046,7 @@ function renderHistory() {
 
     // Format row
     const fmtHtml = s.format
-      ? `<div style="padding:6px 12px 2px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--t2);">${s.format}</div>`
+      ? `<div style="padding:6px 12px 2px;font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);color:var(--t2);">${s.format}</div>`
       : '';
 
     // Plugin list + restore button
@@ -10054,14 +10054,14 @@ function renderHistory() {
     if (s.masterPlugins && s.masterPlugins.length > 0) {
       const plugRows = s.masterPlugins.map(p =>
         `<div style="display:flex;align-items:center;padding:4px 12px;gap:8px;">
-          <span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:11px;color:${p.active ? 'var(--text)' : 'var(--muted)'};">${p.name.replace(/</g,'&lt;')}</span>
-          <span style="font-size:9px;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:20px;${p.active ? 'color:#5abf28;background:rgba(90,191,40,.1);border:1px solid rgba(90,191,40,.25);' : 'color:var(--red);background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.2);'}">${p.active ? 'ACTIVE' : 'BYPASSED'}</span>
+          <span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:var(--fs-sm);color:${p.active ? 'var(--text)' : 'var(--muted)'};">${p.name.replace(/</g,'&lt;')}</span>
+          <span style="font-size:var(--fs-xxs);font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:20px;${p.active ? 'color:#5abf28;background:rgba(90,191,40,.1);border:1px solid rgba(90,191,40,.25);' : 'color:var(--red);background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.2);'}">${p.active ? 'ACTIVE' : 'BYPASSED'}</span>
         </div>`
       ).join('');
       pluginsHtml = `${_sep}
         <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 12px 2px;">
-          <span style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Master Chain</span>
-          <button onclick="event.stopPropagation();restorePluginsFromHistory(${s.id})" title="Restore these plugin states in Logic" style="font-size:9px;padding:2px 9px;border-radius:5px;border:1px solid rgba(108,99,255,.35);background:rgba(108,99,255,.1);color:var(--accent);cursor:pointer;font-family:'JetBrains Mono',monospace;font-weight:600;transition:all .13s;" onmouseover="this.style.background='rgba(108,99,255,.22)'" onmouseout="this.style.background='rgba(108,99,255,.1)'">↺ Restore</button>
+          <span style="font-size:var(--fs-xxs);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Master Chain</span>
+          <button onclick="event.stopPropagation();restorePluginsFromHistory(${s.id})" title="Restore these plugin states in Logic" style="font-size:var(--fs-xxs);padding:2px 9px;border-radius:5px;border:1px solid rgba(108,99,255,.35);background:rgba(108,99,255,.1);color:var(--accent);cursor:pointer;font-family:'JetBrains Mono',monospace;font-weight:600;transition:all .13s;" onmouseover="this.style.background='rgba(108,99,255,.22)'" onmouseout="this.style.background='rgba(108,99,255,.1)'">↺ Restore</button>
         </div>
         ${plugRows}`;
     }
@@ -10078,11 +10078,11 @@ function renderHistory() {
       <div class="hist-hdr" onclick="toggleHistExpand(${s.id})">
         <div class="hist-meta">
           <div style="display:flex;align-items:baseline;gap:8px;">
-            <span style="font-size:9px;font-weight:600;color:var(--muted);font-family:'JetBrains Mono',monospace;flex-shrink:0;white-space:nowrap;">${dateStr}</span>
+            <span style="font-size:var(--fs-xxs);font-weight:600;color:var(--muted);font-family:'JetBrains Mono',monospace;flex-shrink:0;white-space:nowrap;">${dateStr}</span>
             <span class="hist-proj">${proj}</span>
           </div>
           <div style="margin-top:4px;">
-            <span style="padding:2px 7px;border-radius:5px;border:1px solid var(--b2);font-size:9px;font-weight:600;color:var(--t2);font-family:'JetBrains Mono',monospace;">${countLabel}</span>
+            <span style="padding:2px 7px;border-radius:5px;border:1px solid var(--b2);font-size:var(--fs-xxs);font-weight:600;color:var(--t2);font-family:'JetBrains Mono',monospace;">${countLabel}</span>
           </div>
         </div>
         <div class="hist-right">
@@ -11038,7 +11038,7 @@ function renderSkinGrid() {
       '<div style="width:14px;height:14px;border-radius:50%;background:' + skin.vars['--accent'] + ';opacity:.9;"></div>' +
       '<div style="width:10px;height:10px;border-radius:50%;background:' + skin.vars['--a2'] + ';opacity:.7;"></div>' +
       '<div style="width:8px;height:8px;border-radius:50%;background:' + skin.preview[2] + ';opacity:.5;"></div>' +
-      '</div><div style="padding:5px 8px;background:' + skin.vars['--card'] + ';font-family:JetBrains Mono,monospace;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:' + skin.vars['--accent'] + ';text-align:center;">' + skin.name + '</div>';
+      '</div><div style="padding:5px 8px;background:' + skin.vars['--card'] + ';font-family:JetBrains Mono,monospace;font-size:var(--fs-xxs);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:' + skin.vars['--accent'] + ';text-align:center;">' + skin.name + '</div>';
     div.addEventListener('click', (e) => { e.stopPropagation(); applySkin(key); toast('Theme: ' + skin.name); });
     grid.appendChild(div);
   });
@@ -11242,11 +11242,11 @@ function renderSidechainDropdown() {
         const mixerOn = _mixerFilters[name];
         let style;
         if (active) {
-          style = 'padding:2px 6px;border-radius:4px;border:1px solid rgba(67,233,123,.5);background:rgba(67,233,123,.15);color:var(--a3);font-size:9px;font-weight:600;cursor:pointer;font-family:\'Space Grotesk\',sans-serif;transition:all .12s;';
+          style = 'padding:2px 6px;border-radius:4px;border:1px solid rgba(67,233,123,.5);background:rgba(67,233,123,.15);color:var(--a3);font-size:var(--fs-xxs);font-weight:600;cursor:pointer;font-family:\'Space Grotesk\',sans-serif;transition:all .12s;';
         } else if (!mixerOn) {
-          style = 'padding:2px 6px;border-radius:4px;border:1px solid var(--b2);background:rgba(68,68,88,.1);color:var(--muted);font-size:9px;font-weight:600;cursor:pointer;font-family:\'Space Grotesk\',sans-serif;transition:all .12s;text-decoration:line-through;';
+          style = 'padding:2px 6px;border-radius:4px;border:1px solid var(--b2);background:rgba(68,68,88,.1);color:var(--muted);font-size:var(--fs-xxs);font-weight:600;cursor:pointer;font-family:\'Space Grotesk\',sans-serif;transition:all .12s;text-decoration:line-through;';
         } else {
-          style = 'padding:2px 6px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--t2);font-size:9px;font-weight:600;cursor:pointer;font-family:\'Space Grotesk\',sans-serif;transition:all .12s;';
+          style = 'padding:2px 6px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--t2);font-size:var(--fs-xxs);font-weight:600;cursor:pointer;font-family:\'Space Grotesk\',sans-serif;transition:all .12s;';
         }
         return `<button onclick="event.stopPropagation();_scToggleFilter('${name.replace(/'/g,"\\'")}')" style="${style}">${name}</button>`;
       }).join('');
@@ -11266,14 +11266,14 @@ function renderSidechainDropdown() {
   if (filtered.length === 0) {
     const hasActiveFilter = _scActiveFilters.size > 0;
     const noTypeData = hasActiveFilter && ![..._scActiveFilters].some(f => _channelTypeMap[f]?.length > 0);
-    list.innerHTML = `<div style="padding:8px;color:var(--muted);font-size:10px;">${
+    list.innerHTML = `<div style="padding:8px;color:var(--muted);font-size:var(--fs-xs);">${
       noTypeData ? 'No data for this filter — toggle filters in main panel to learn types' : 'No channels match'
     }</div>`;
     return;
   }
   filtered.forEach(ch => {
     const item = document.createElement('div');
-    item.style.cssText = 'padding:4px 8px;font-size:10px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .1s;';
+    item.style.cssText = 'padding:4px 8px;font-size:var(--fs-xs);cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .1s;';
     const isSel = sidechainChannel === ch.name;
     if (isSel) item.style.background = 'rgba(255,169,77,.12)';
     item.onmouseover = () => { if (!isSel) item.style.background = 'rgba(255,255,255,.04)'; };
@@ -11568,7 +11568,7 @@ function renderMarkersPopupList() {
   if (!el) return;
 
   if (_projectMarkers.length === 0) {
-    el.innerHTML = '<div style="color:var(--muted);font-size:10px;padding:10px 12px;line-height:1.5;">No markers in project.<br>Run Scan Logic to load.</div>';
+    el.innerHTML = '<div style="color:var(--muted);font-size:var(--fs-xs);padding:10px 12px;line-height:1.5;">No markers in project.<br>Run Scan Logic to load.</div>';
     return;
   }
 
@@ -11582,11 +11582,11 @@ function renderMarkersPopupList() {
       ${_fullActive
         ? 'background:rgba(80,200,120,.18);border:1.5px solid rgba(80,200,120,.5);'
         : 'background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.2);'}">
-    <span style="font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:600;
+    <span style="font-size:var(--fs-xs);font-family:'JetBrains Mono',monospace;font-weight:600;
       color:${_fullActive ? '#7ef0a8' : 'rgba(255,255,255,.7)'};">Full</span>
   </div>`;
   if (visibleMarkers.length === 0) {
-    html += '<span style="color:var(--muted);font-size:10px;">All markers hidden</span>';
+    html += '<span style="color:var(--muted);font-size:var(--fs-xs);">All markers hidden</span>';
   }
   for (const m of visibleMarkers) {
     const id = markerId(m);
@@ -11597,10 +11597,10 @@ function renderMarkersPopupList() {
         ${isActive
           ? 'background:rgba(108,99,255,.2);border:1.5px solid rgba(108,99,255,.55);'
           : 'background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.2);'}">
-      <span style="font-size:10px;font-family:\'JetBrains Mono\',monospace;font-weight:600;
+      <span style="font-size:var(--fs-xs);font-family:\'JetBrains Mono\',monospace;font-weight:600;
         color:${isActive ? '#b8b0ff' : 'rgba(255,255,255,.7)'};">${m.name}</span>
       <span onclick="event.stopPropagation();hideMarker('${idSafe}')"
-        style="font-size:9px;line-height:1;color:rgba(255,255,255,.25);cursor:pointer;margin-left:1px;transition:color .1s;"
+        style="font-size:var(--fs-xxs);line-height:1;color:rgba(255,255,255,.25);cursor:pointer;margin-left:1px;transition:color .1s;"
         onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.25)'">✕</span>
     </div>`;
   }
@@ -11609,15 +11609,15 @@ function renderMarkersPopupList() {
   // ── Hidden section ──
   if (_markersShowHidden && hiddenMarkers.length > 0) {
     html += '<div style="border-top:1px solid rgba(255,255,255,.06);padding:6px 10px 8px;">';
-    html += '<div style="font-size:8px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">Hidden</div>';
+    html += '<div style="font-size:var(--fs-xxs);font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">Hidden</div>';
     html += '<div style="display:flex;flex-wrap:wrap;gap:5px;">';
     for (const m of hiddenMarkers) {
       const idSafe2 = markerId(m).replace(/'/g,"\\'").replace(/"/g,'&quot;');
       html += `<div style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;
         background:transparent;border:1.5px dashed rgba(255,255,255,.15);">
-        <span style="font-size:10px;font-family:\'JetBrains Mono\',monospace;color:rgba(255,255,255,.35);">${m.name}</span>
+        <span style="font-size:var(--fs-xs);font-family:\'JetBrains Mono\',monospace;color:rgba(255,255,255,.35);">${m.name}</span>
         <span onclick="restoreMarker('${idSafe2}')" title="Restore to list"
-          style="font-size:10px;color:rgba(255,255,255,.3);cursor:pointer;transition:color .1s;"
+          style="font-size:var(--fs-xs);color:rgba(255,255,255,.3);cursor:pointer;transition:color .1s;"
           onmouseover="this.style.color='rgba(255,255,255,.8)'" onmouseout="this.style.color='rgba(255,255,255,.3)'">↩</span>
       </div>`;
     }
@@ -12299,7 +12299,7 @@ window.addEventListener('load', function(){
   });
 });
 </script>
-<div id="js-tip" style="position:fixed;background:rgba(0,0,0,.92);color:#fff;font-size:10px;padding:5px 9px;border-radius:6px;white-space:nowrap;z-index:9999;pointer-events:none;display:none;font-family:'Space Grotesk',sans-serif;"></div>
+<div id="js-tip" style="position:fixed;background:rgba(0,0,0,.92);color:#fff;font-size:var(--fs-xs);padding:5px 9px;border-radius:6px;white-space:nowrap;z-index:9999;pointer-events:none;display:none;font-family:'Space Grotesk',sans-serif;"></div>
 <script>
 (function(){
   var tip = document.getElementById('js-tip');
@@ -12507,9 +12507,9 @@ async function submitFeedback() {
     <button onclick="document.getElementById('trial-expired-overlay').style.display='none';showLicenseOverlay();" style="position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;border:1px solid #333;background:#1a1a1a;color:#666;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit;line-height:1;" onmouseover="this.style.background='#2a2a2a';this.style.color='#aaa'" onmouseout="this.style.background='#1a1a1a';this.style.color='#666'"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     <div style="margin-bottom:16px;color:var(--warn);display:flex;justify-content:center;"><svg class="ico" style="width:48px;height:48px;"><use href="#ico-clock"/></svg></div>
     <div style="font-size:22px;font-weight:700;color:#f0f0f0;margin-bottom:10px;letter-spacing:-.02em;">Your trial has ended</div>
-    <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:28px;">7-day free trial is over.<br>Purchase a license to continue using EasyBounce.</div>
+    <div style="font-size:var(--fs-base);color:#555;line-height:1.7;margin-bottom:28px;">7-day free trial is over.<br>Purchase a license to continue using EasyBounce.</div>
     <button onclick="buyEasyBounce()" style="width:100%;height:50px;border-radius:12px;border:none;background:linear-gradient(135deg,#6c63ff,#ff6584);color:#fff;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:14px;box-shadow:0 8px 24px rgba(108,99,255,.4);">Purchase EasyBounce →</button>
-    <div style="font-size:11px;color:#333;">Already have a key? <a href="#" onclick="document.getElementById('trial-expired-overlay').style.display='none';showLicenseOverlay()" style="color:#6c63ff;text-decoration:none;">Enter license key →</a></div>
+    <div style="font-size:var(--fs-sm);color:#333;">Already have a key? <a href="#" onclick="document.getElementById('trial-expired-overlay').style.display='none';showLicenseOverlay()" style="color:#6c63ff;text-decoration:none;">Enter license key →</a></div>
   </div>
 </div>
 <div id="scan-done-overlay"><div id="scan-done-badge" style="display:inline-flex;align-items:center;gap:10px;"><svg class="ico ico-md" style="color:#fff;"><use href="#ico-check"/></svg>Scan complete</div></div>
@@ -12547,7 +12547,7 @@ async function submitFeedback() {
         <label class="notif-toggle"><input type="checkbox" id="notif-tg-toggle" onchange="toggleTelegram(this.checked)"><span class="slider"></span></label>
       </div>
       <div id="notif-tg-disconnected">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.5;">
+        <div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:8px;line-height:1.5;">
           Get bounce notifications in Telegram.<br>
           1. Click 'Add Bot' to open @EasyBounceBot<br>
           2. Press START in Telegram<br>
@@ -12556,7 +12556,7 @@ async function submitFeedback() {
         <button class="notif-btn" id="notif-tg-connect-btn" onclick="addTelegramBot()">Add Bot</button>
       </div>
       <div id="notif-tg-code" style="display:none;">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Tap the code to copy, then send it to <b>@EasyBounceBot</b>:</div>
+        <div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:6px;">Tap the code to copy, then send it to <b>@EasyBounceBot</b>:</div>
         <div class="notif-code" id="notif-tg-code-val" onclick="copyTgCode()" title="Tap to copy" style="cursor:pointer;user-select:all;border-radius:8px;border:1px solid var(--b2);transition:background .15s;" onmouseover="this.style.background='rgba(108,99,255,.1)'" onmouseout="this.style.background='transparent'">—</div>
         <button class="notif-btn" onclick="openTgWithCode()" style="width:100%;margin-top:6px;background:linear-gradient(135deg,#229ED9,#1a8bc4);color:#fff;border:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><svg class="ico ico-sm"><use href="#ico-bell"/></svg>Open Telegram &amp; Send Code</button>
         <div class="notif-status" id="notif-tg-waiting">Waiting for connection…</div>
@@ -12582,9 +12582,9 @@ async function submitFeedback() {
           Open Discord ↗
         </button>
         <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px;">
-          <span style="font-size:11px;color:var(--muted);">Paste webhook URL:</span>
+          <span style="font-size:var(--fs-sm);color:var(--muted);">Paste webhook URL:</span>
           <div style="position:relative;display:inline-flex;" onmouseenter="this.querySelector('.dc-tip').style.display='block'" onmouseleave="this.querySelector('.dc-tip').style.display='none'">
-            <span style="width:15px;height:15px;border-radius:50%;background:var(--b2);color:var(--t2);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:default;flex-shrink:0;">ⓘ</span>
+            <span style="width:15px;height:15px;border-radius:50%;background:var(--b2);color:var(--t2);font-size:var(--fs-xxs);font-weight:700;display:flex;align-items:center;justify-content:center;cursor:default;flex-shrink:0;">ⓘ</span>
             <div class="dc-tip" style="display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);width:240px;background:#1a1a18;border:1px solid var(--b2);border-radius:8px;padding:10px 12px;font-size:10.5px;color:var(--text);line-height:1.7;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.5);pointer-events:none;">
               <div style="color:#7289da;font-weight:700;margin-bottom:5px;">No server yet?</div>
               <span style="color:var(--muted);">In Discord: <b>+</b> in sidebar → Create My Own → For me and my friends</span>
