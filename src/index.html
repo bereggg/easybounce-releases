@@ -8842,10 +8842,24 @@ async function bounceMix(job, folder, isFirst) {
     try {
       const verifyStates = await window.api.readStates();
       const nowMuted = new Set(verifyStates?.muted || []);
-      const confirmed = mutedNames.filter(n => nowMuted.has(n));
-      const missing   = mutedNames.filter(n => !nowMuted.has(n));
-      if (missing.length > 0) log(`⚠ Mute not confirmed in Logic: ${missing.join(', ')}`, 'warn');
-      else log(`✓ Mute confirmed: ${confirmed.join(', ')}`, 'info');
+      const missing = mutedNames.filter(n => !nowMuted.has(n));
+      if (missing.length > 0) {
+        // Bridge may have seen stale "already muted" state and skipped pressing — retry once.
+        log(`⚠ Mute not confirmed: ${missing.join(', ')} — retrying`, 'warn');
+        const retryIdxs = missing.map(n => {
+          const pos = mutedNames.indexOf(n); return pos >= 0 ? indicesToMute[pos] : null;
+        }).filter(i => i != null);
+        if (retryIdxs.length > 0) {
+          await window.api.wait(600);
+          await window.api.muteManyByIndex(retryIdxs.join('|'));
+          await window.api.wait(400);
+          const v2 = await window.api.readStates().catch(() => null);
+          const nm2 = new Set(v2?.muted || []);
+          const still = missing.filter(n => !nm2.has(n));
+          if (still.length > 0) log(`✗ Mute retry failed: ${still.join(', ')} — bouncing anyway`, 'err');
+          else log(`✓ Mute confirmed after retry: ${missing.join(', ')}`, 'info');
+        }
+      } else log(`✓ Mute confirmed: ${mutedNames.join(', ')}`, 'info');
     } catch(e) { log('Mute verify failed: ' + e.message, 'warn'); }
   }
 

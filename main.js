@@ -765,16 +765,10 @@ ipcMain.handle('move-to-logic-space', async () => {
   // AppleScript 'activate' (unlike `open -a`, it does NOT trigger a Space switch
   // animation, so the transparent window never goes black mid-transition).
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  // During bounce: keep overlay on all spaces too so it follows the user
+  if (_inBounce && _overlayWindow && !_overlayWindow.isDestroyed())
+    _overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   try { await bridge('switchToEnglish'); } catch(e) {}
-
-  // During bounce: skip 'Logic Pro activate' (which forces a Space switch).
-  // AX API works cross-space. Windows stay visible on all spaces so they follow the user.
-  if (_inBounce) {
-    if (_overlayWindow && !_overlayWindow.isDestroyed())
-      _overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-    return { ok: true };
-  }
-
   try {
     await execAsync(`osascript -e 'tell application "Logic Pro" to activate'`);
   } catch(e) { console.warn('[EB]', e); }
@@ -784,6 +778,9 @@ ipcMain.handle('move-to-logic-space', async () => {
     await execAsync(`osascript -e 'tell application "Logic Pro" to activate'`);
   } catch(e) { console.warn('[EB]', e); }
   await new Promise(r => setTimeout(r, 200));
+  // During bounce: keep windows on all spaces so overlay+mini-mode follow the user.
+  // Only anchor to Logic's space after bounce ends (setBounceMode(false) + final moveToLogicSpace).
+  if (_inBounce) return { ok: true };
   // In mini mode: keep visibleOnAllWorkspaces so the widget follows the user
   if (!_inMiniMode) {
     mainWindow.setVisibleOnAllWorkspaces(false);
