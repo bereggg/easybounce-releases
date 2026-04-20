@@ -389,6 +389,21 @@
 .eb-tt.eb-tt--below::after { bottom: auto; top: calc(100% + 6px); }
 .eb-tt.eb-tt--wide::after { white-space: normal; max-width: 220px; text-align: center; }
 
+/* ── Clear selection chip-button (inside modals) ── */
+.clear-sel-btn {
+  display: none;
+  padding: 2px 8px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--b);
+  background: var(--card);
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+  transition: all var(--t-fast);
+}
+.clear-sel-btn:hover { color: var(--red); border-color: var(--red-a30); background: var(--red-a08); }
+
 /* ── Modal close button class (replaces inline-style close buttons) ── */
 .modal-close-btn {
   background: none;
