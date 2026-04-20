@@ -75,15 +75,15 @@
     </symbol>
     <symbol id="ico-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M4 6 H20 M4 12 H20 M4 18 H20"/>
-      <circle cx="9"  cy="6"  r="2" fill="#1C1C1A"/>
-      <circle cx="15" cy="12" r="2" fill="#1C1C1A"/>
-      <circle cx="8"  cy="18" r="2" fill="#1C1C1A"/>
+      <circle cx="9"  cy="6"  r="2" fill="#0c0c10"/>
+      <circle cx="15" cy="12" r="2" fill="#0c0c10"/>
+      <circle cx="8"  cy="18" r="2" fill="#0c0c10"/>
     </symbol>
     <symbol id="ico-fader" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M7 3 V21 M13 3 V21 M19 3 V21"/>
-      <rect x="4"  y="7"  width="6" height="4" rx="1" fill="#1C1C1A"/>
-      <rect x="10" y="13" width="6" height="4" rx="1" fill="#1C1C1A"/>
-      <rect x="16" y="9"  width="6" height="4" rx="1" fill="#1C1C1A"/>
+      <rect x="4"  y="7"  width="6" height="4" rx="1" fill="#0c0c10"/>
+      <rect x="10" y="13" width="6" height="4" rx="1" fill="#0c0c10"/>
+      <rect x="16" y="9"  width="6" height="4" rx="1" fill="#0c0c10"/>
     </symbol>
     <symbol id="ico-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="9"/>

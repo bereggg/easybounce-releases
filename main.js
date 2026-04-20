@@ -191,7 +191,7 @@ function createWindow() {
     if (_inMiniMode) {
       e.preventDefault();
       _inMiniMode = false;
-      mainWindow.setBackgroundColor('#1C1C1A');
+      mainWindow.setBackgroundColor('#0c0c10');
       mainWindow.setMinimumSize(1070, 640);
       mainWindow.setResizable(true);
       if (_preMini) { mainWindow.setBounds(_preMini, true); _preMini = null; }
@@ -833,7 +833,7 @@ ipcMain.handle('enter-mini-mode', () => {
 ipcMain.handle('exit-mini-mode', () => {
   if (!mainWindow) return { ok: false };
   _inMiniMode = false;
-  mainWindow.setBackgroundColor('#1C1C1A');
+  mainWindow.setBackgroundColor('#0c0c10');
   mainWindow.setMinimumSize(1070, 640);
   mainWindow.setResizable(true);
   mainWindow.setWindowButtonVisibility(true);
