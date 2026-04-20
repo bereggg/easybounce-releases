@@ -662,7 +662,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
 .fb-select:focus,.fb-input:focus,.fb-textarea:focus{border-color:var(--accent-a60);box-shadow:0 0 0 3px var(--accent-a12);}
 .fb-textarea{height:96px;overflow-y:auto;line-height:1.5;}
 .fb-attach-row{display:flex;align-items:center;gap:6px;}
-.fb-attach-slot{flex:1;display:flex;align-items:center;gap:7px;background:var(--bg,#131320);border:1px solid var(--b,rgba(255,255,255,.1));border-radius:7px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;padding:7px 10px;cursor:pointer;transition:border-color .15s,color .15s;text-align:left;min-width:0;}
+.fb-attach-slot{flex:1;display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--b);border-radius:var(--r-sm);color:var(--muted);font-family:var(--font-mono);font-size:11px;padding:7px 10px;cursor:pointer;transition:border-color .15s,color .15s;text-align:left;min-width:0;}
 .fb-attach-slot:hover{border-color:var(--accent);color:var(--text);}
 .fb-attach-slot-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .fb-attach-remove{flex-shrink:0;width:24px;height:24px;border:1px solid var(--b,rgba(255,255,255,.1));border-radius:5px;background:transparent;color:var(--muted);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .15s,color .15s;padding:0;}
@@ -1270,14 +1270,14 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
 </div>
 
 <!-- Master Plugins Modal -->
-<div id="mp-modal" style="display:none;position:fixed;inset:0;z-index:9980;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);" onclick="if(event.target===this)closeMasterPluginsModal()">
-  <div class="mp-modal-box" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:420px;background:var(--card2,#111);border:1px solid var(--b2,#222);border-radius:16px;padding:24px;box-shadow:0 24px 64px rgba(0,0,0,.7);">
+<div id="mp-modal" style="display:none;position:fixed;inset:0;z-index:var(--z-modal);background:rgba(0,0,0,.72);backdrop-filter:blur(10px) saturate(150%);-webkit-backdrop-filter:blur(10px) saturate(150%);" onclick="if(event.target===this)closeMasterPluginsModal()">
+  <div class="mp-modal-box" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:420px;background:var(--card2);border:1px solid var(--b2);border-radius:var(--r2);padding:24px;box-shadow:var(--sh-modal);">
     <div style="margin-bottom:20px;">
       <div style="font-size:20px;font-weight:700;color:var(--text);letter-spacing:-.02em;">Master Plugin Control</div>
       <div style="font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5;">View &amp; bypass all master bus plugins before bouncing stems. One-click bypass/restore for the entire chain.</div>
     </div>
-    <div class="mp-modal-inner" style="background:var(--card,#1a1a1a);border-radius:10px;overflow:hidden;border:1px solid var(--b,#222);margin-bottom:16px;">
-      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--b,#222);">
+    <div class="mp-modal-inner" style="background:var(--card);border-radius:var(--r);overflow:hidden;border:1px solid var(--b);margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--b);">
         <div id="mp-status-dot" style="width:8px;height:8px;border-radius:50%;background:#ff4757;flex-shrink:0;"></div>
         <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;">Master Plugins</span>
         <button id="mp-refresh" onclick="loadMasterPlugins(true)" style="margin-left:auto;display:flex;align-items:center;gap:5px;background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.25);color:#a89fff;font-size:10px;font-weight:700;cursor:pointer;padding:4px 10px;border-radius:6px;letter-spacing:.04em;transition:all .14s;" onmouseover="this.style.background='rgba(108,99,255,.2)'" onmouseout="this.style.background='rgba(108,99,255,.1)'" title="Scroll to master channel in Logic and re-read plugins">⟳ Reconnect</button>
