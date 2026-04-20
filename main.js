@@ -952,7 +952,7 @@ ipcMain.handle('enter-scan-badge', async () => {
   }
 
   const { x: dx, y: dy, width: dw } = targetDisplay.workArea;
-  const bw = 520; const bh = 80;
+  const bw = 520; const bh = 44;
   mainWindow.setMinimumSize(200, 60);
   mainWindow.setResizable(false);
   // Top-center of Logic's monitor — same position as bounce overlay for visual consistency
