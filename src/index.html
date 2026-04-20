@@ -21,8 +21,8 @@
 body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size:var(--fs-base);height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;}
 .titlebar{height:46px;background:var(--s);border-bottom:1px solid var(--b);display:flex;align-items:center;padding:0 16px 0 80px;-webkit-app-region:drag;user-select:none;gap:10px;position:relative;z-index:10;}
 .tb-logo{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;letter-spacing:-.03em;color:var(--text);display:flex;align-items:center;gap:9px;}
-.tb-logo-mark{width:28px;height:28px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--a2));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(108,99,255,.4);}
-.tb-logo-mark svg{width:14px;height:14px;fill:white;}
+.tb-logo-mark{width:28px;height:28px;border-radius:var(--r);flex-shrink:0;background:var(--g-primary);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px var(--accent-a40);}
+.tb-logo-mark svg{width:16px;height:16px;color:#fff;fill:currentColor;stroke:currentColor;}
 .tb-proj{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);flex:1;padding-left:6px;}
 .tb-proj.live{color:var(--t2);}
 .tb-right{display:flex;align-items:center;gap:8px;-webkit-app-region:no-drag;flex-shrink:0;}
@@ -706,7 +706,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
 </div>
 <div class="titlebar">
   <div class="tb-logo">
-    <div class="tb-logo-mark"><svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="5"/></svg></div>
+    <div class="tb-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 L6 12 L8 6 L10 18 L12 8 L14 16 L16 10 L18 12 L21 12"/></svg></div>
     EasyBounce
   </div>
   <div class="tb-proj" id="tb-proj">no project loaded</div>
@@ -716,7 +716,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
     <span class="em-lbl em-lbl-pro">Pro</span>
   </div>
   <div class="tb-right">
-    <button class="tb-pill" id="scan-btn" onclick="scanLogic()" title="Scan Logic Pro channels. Keep Mixer open!" style="background:linear-gradient(160deg,var(--accent),var(--a2));border-color:transparent;color:#fff;font-weight:700;box-shadow:0 4px 16px rgba(108,99,255,.35),inset 0 1px 0 rgba(255,255,255,.15);">
+    <button class="tb-pill" id="scan-btn" onclick="scanLogic()" title="Scan Logic Pro channels. Keep Mixer open!" style="background:var(--g-primary);border-color:transparent;color:#fff;font-weight:700;box-shadow:var(--sh-glow-sm),var(--sh-inset);">
       <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg>
       Scan Logic
     </button>
@@ -731,7 +731,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
       <div class="ldot" id="ldot"></div>
       <span class="llbl" id="llbl">Logic off</span>
     </div>
-    <button id="update-btn" onclick="checkUpdates()" style="padding:3px 9px;font-size:10px;border:none;background:none;color:var(--muted);font-family:'JetBrains Mono',monospace;cursor:pointer;opacity:.7;transition:opacity .15s,color .15s;" onmouseover="this.style.opacity='1';this.style.color='var(--t2)'" onmouseout="this.style.opacity='.7';this.style.color='var(--muted)'" title="Check for updates">
+    <button id="update-btn" onclick="checkUpdates()" style="padding:3px 9px;font-size:10px;border:1px solid transparent;border-radius:var(--r);background:none;color:var(--muted);font-family:'JetBrains Mono',monospace;cursor:pointer;opacity:.7;transition:all .15s;" onmouseover="this.style.opacity='1';this.style.color='var(--t2)'" onmouseout="this.style.opacity=(this.classList.contains('has-update')?'1':'.7');this.style.color=(this.classList.contains('has-update')?'var(--accent)':'var(--muted)')" title="Check for updates">
       <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" style="width:11px;height:11px;"><path d="M7 1v5l3.5 2" stroke-linecap="round"/><circle cx="7" cy="7" r="6"/></svg>v1.0
     </button>
     <button id="tooltip-toggle-btn" onclick="onHelpClick()" style="width:26px;height:26px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;background:none;border:1px solid var(--b);color:var(--muted);font-size:12px;font-weight:700;flex-shrink:0;cursor:pointer;transition:color .15s,border-color .15s;" onmouseover="this.style.color='var(--t2)';this.style.borderColor='var(--b2)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--b)'" title="Toggle tips">?</button>
@@ -12062,10 +12062,11 @@ async function checkUpdates() {
 function _updHighlightBtn(version) {
   const btn = document.getElementById('update-btn');
   if (!btn) return;
+  btn.classList.add('has-update');
   btn.style.opacity = '1';
   btn.style.borderColor = 'var(--accent)';
   btn.style.color = 'var(--accent)';
-  btn.style.boxShadow = '0 0 8px rgba(108,99,255,.3)';
+  btn.style.boxShadow = '0 0 8px var(--accent-a30)';
   btn.title = `Update available: v${version}`;
 }
 
