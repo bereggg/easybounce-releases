@@ -160,7 +160,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .stems-wrap #add-stems-btn{flex:1;width:100%;}
 #merge-btn{position:absolute;bottom:calc(100% + 6px);left:0;right:0;padding:7px 4px;border-radius:var(--r);border:1px solid transparent;color:#fff;font-size:10px;font-weight:700;cursor:pointer;text-align:center;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;transform:translateY(8px);z-index:200;background:linear-gradient(160deg,var(--accent),var(--teal));box-shadow:0 4px 16px rgba(56,249,215,.28);}
 .stems-wrap.active:hover #merge-btn.ok,.stems-wrap.active #merge-btn.ok:hover{opacity:1;pointer-events:auto;transform:translateY(0);}
-.mchip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--r3);border:1px solid var(--b2);background:var(--card);color:var(--t2);font-size:10px;font-weight:600;cursor:pointer;transition:all .14s;white-space:nowrap;}
+.mchip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--r-pill);border:1px solid var(--b2);background:var(--card);color:var(--t2);font-size:var(--fs-xs);font-weight:var(--fw-semi);cursor:pointer;transition:all .14s;white-space:nowrap;}
 .mchip:hover{border-color:rgba(108,99,255,.4);color:var(--accent);}
 .mchip .mchip-x{opacity:.5;font-size:11px;line-height:1;transition:opacity .12s;margin-left:2px;}
 .mchip .mchip-x:hover{opacity:1;color:var(--red);}
@@ -222,8 +222,8 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .bbtn.running{background:var(--g-running);box-shadow:0 8px 32px var(--warn-a30),inset 0 1px 0 rgba(255,255,255,.2);animation:pulse-glow 1.6s ease-in-out infinite alternate;}
 .bbtn.off{background:var(--card);color:var(--muted);box-shadow:none;cursor:not-allowed;transform:none;border:1px solid var(--b);}
 .bbtn.off::before{display:none;}
-@keyframes pulse-stems{from{box-shadow:0 0 0 rgba(67,233,123,0)}to{box-shadow:0 0 12px rgba(67,233,123,.5)}}
-@keyframes pulse-glow{from{box-shadow:0 4px 16px rgba(255,169,77,.2);}to{box-shadow:0 12px 40px rgba(255,169,77,.55),inset 0 1px 0 rgba(255,255,255,.2);}}
+@keyframes pulse-stems{from{box-shadow:0 0 0 transparent}to{box-shadow:0 0 12px var(--success-a40)}}
+@keyframes pulse-glow{from{box-shadow:0 4px 16px var(--warn-a20);}to{box-shadow:0 12px 40px var(--warn-a30),inset 0 1px 0 rgba(255,255,255,.2);}}
 .ch-item.bouncing{background:rgba(108,99,255,.12)!important;border-left:2px solid var(--accent)!important;}
 @keyframes ch-pulse{0%,100%{opacity:1}50%{opacity:.6}}
 .stop-btn{width:54px;height:54px;border-radius:var(--r2);background:var(--red-a08);border:1px solid var(--red-a30);color:var(--red);cursor:pointer;transition:all .16s;display:none;align-items:center;justify-content:center;flex-shrink:0;}
@@ -308,7 +308,7 @@ body.easy #mix-toggle-all-btn[oncontextmenu]{pointer-events:auto;}
 body.easy #mix-modal-filters{display:none!important;}
 body.easy .tcb-list{border-radius:var(--r)!important;}
 /* ── Version naming presets ── */
-.vnp-chip{padding:4px 11px;border-radius:var(--r3);border:1px solid rgba(108,99,255,.45);background:transparent;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;transition:all .14s;white-space:nowrap;font-family:'Space Grotesk',sans-serif;display:inline-flex;align-items:center;gap:4px;}
+.vnp-chip{padding:4px 11px;border-radius:var(--r-pill);border:1px solid var(--accent-a60);background:transparent;color:var(--accent);font-size:var(--fs-sm);font-weight:var(--fw-bold);cursor:pointer;transition:all .14s;white-space:nowrap;font-family:var(--font-display);display:inline-flex;align-items:center;gap:4px;}
 .vnp-chip:hover{border-color:rgba(108,99,255,.8);color:#fff;background:rgba(108,99,255,.12);}
 .vnp-chip .vnp-x{font-size:9px;opacity:.5;margin-left:2px;transition:opacity .14s;}
 .vnp-chip:hover .vnp-x{opacity:1;color:var(--red);}
@@ -820,7 +820,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
             oninput="saveNameTemplate();updateNamePresetUI()" style="flex:1;">
           <button id="name-preset-arrow" onclick="toggleNamePresetDropdown()" style="background:none;border:none;color:var(--muted);font-size:11px;padding:2px 4px;cursor:pointer;transition:color .15s;" title="Saved prefix presets">▼</button>
           <button id="name-preset-save-btn" onclick="quickSaveNamePreset()" style="display:none;background:rgba(67,233,123,.15);border:1px solid rgba(67,233,123,.4);border-radius:var(--r);color:var(--a3);font-size:9px;padding:2px 8px;cursor:pointer;white-space:nowrap;" title="Save current prefix as preset">Save</button>
-          <div id="name-preset-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;margin-top:4px;background:var(--card2);border:1px solid var(--b2);border-radius:var(--r);box-shadow:0 4px 16px rgba(0,0,0,.4);padding:4px;max-height:180px;overflow-y:auto;z-index:500;">
+          <div id="name-preset-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;margin-top:4px;background:var(--card2);border:1px solid var(--b2);border-radius:var(--r);box-shadow:var(--sh-raised);padding:4px;max-height:180px;overflow-y:auto;z-index:var(--z-dropdown);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);">
             <div id="name-preset-list"></div>
           </div>
         </div>
@@ -1265,7 +1265,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
     </div>
   </div>
   <style>
-  @keyframes ob-pulse{0%,100%{box-shadow:0 8px 40px rgba(108,99,255,.5)}50%{box-shadow:0 8px 60px rgba(108,99,255,.9),0 0 80px rgba(108,99,255,.3)}}
+  @keyframes ob-pulse{0%,100%{box-shadow:0 8px 40px var(--accent-a40)}50%{box-shadow:0 8px 60px var(--accent-a60),0 0 80px var(--accent-a30)}}
   </style>
 </div>
 
