@@ -137,5 +137,10 @@
     <symbol id="ico-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M4 5 H20 A2 2 0 0 1 22 7 V15 A2 2 0 0 1 20 17 H13 L8 21 V17 H4 A2 2 0 0 1 2 15 V7 A2 2 0 0 1 4 5 Z"/>
     </symbol>
+    <symbol id="ico-volume" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 10 V14 H7 L12 18 V6 L7 10 Z"/>
+      <path d="M16 9 Q18 12 16 15" opacity="0.7"/>
+      <path d="M19 6 Q22 12 19 18" opacity="0.5"/>
+    </symbol>
   </defs>
 </svg>
