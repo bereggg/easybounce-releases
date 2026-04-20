@@ -5701,7 +5701,16 @@ function _renderMergeChannelList() {
       tri.onclick = (e) => { e.stopPropagation(); if(!expanded) _mrgExpanded.add(t.name); else _mrgExpanded.delete(t.name); _renderMergeChannelList(); };
       row.appendChild(tri);
       if (groupChOk && ch) {
-        const gcb = _makeCustomCb(inMerge.has(ch.index), (nowOn) => {
+        // Checkbox state: collapsed = group channel only; expanded = group + all descendants
+        let grpChecked;
+        if (expanded) {
+          const kids = getAllDescendants(t.name).map(k => chMap[k.num]).filter(Boolean);
+          const all = [ch, ...kids];
+          grpChecked = all.every(c => inMerge.has(c.index));
+        } else {
+          grpChecked = inMerge.has(ch.index);
+        }
+        const gcb = _makeCustomCb(grpChecked, (nowOn) => {
           if (_mergeSelSet.has(ch.index) && _mergeSelSet.size > 1) {
             const targets = [..._mergeSelSet];
             targets.forEach(idx => {
@@ -5715,7 +5724,22 @@ function _renderMergeChannelList() {
               }
             });
             _renderMergeChannelList();
+          } else if (expanded) {
+            // Expanded: cascade to group + all descendants
+            const kids = getAllDescendants(t.name).map(k => chMap[k.num]).filter(Boolean);
+            const all = [ch, ...kids];
+            all.forEach(tch => {
+              const has = inMerge.has(tch.index);
+              if (nowOn && !has) {
+                _mergeModalChannels.push({ name: tch.name, channelIndex: tch.index, color: tch.color || '' });
+              } else if (!nowOn && has) {
+                const pos = _mergeModalChannels.findIndex(c => c.channelIndex === tch.index);
+                if (pos !== -1) _mergeModalChannels.splice(pos, 1);
+              }
+            });
+            _renderMergeChannelList();
           } else {
+            // Collapsed: only the group channel itself
             _mergeToggle(ch, nowOn);
           }
         });
@@ -6306,27 +6330,35 @@ function renderMixList(initIndices) {
       };
       row.appendChild(tri);
 
-      // Checkbox — always show for groups (cascade to all descendants)
+      // Checkbox semantics:
+      //   COLLAPSED group → toggle only the group channel itself (summing stack)
+      //   EXPANDED group  → toggle group channel + all descendants (bulk action)
       let isGrpChecked;
-      if (ch) {
-        isGrpChecked = !mixMutedSet.has(ch.index);
-      } else {
+      if (expanded) {
+        // Expanded: reflect state of ALL (group + descendants) — checked only if all unmuted
         const allKids = getAllDescendants(t.name);
         const kidChannels = allKids.map(k => chMap[k.num]).filter(Boolean);
-        isGrpChecked = kidChannels.length > 0 && kidChannels.every(kc => !mixMutedSet.has(kc.index));
+        const allTargets = [...(ch ? [ch] : []), ...kidChannels];
+        isGrpChecked = allTargets.length > 0 && allTargets.every(c => !mixMutedSet.has(c.index));
+      } else {
+        // Collapsed: reflect state of group channel only
+        isGrpChecked = ch ? !mixMutedSet.has(ch.index) : true;
       }
       const cb = _makeCustomCb(isGrpChecked, (nowOn) => {
         if (ch && _mixSelSet.has(ch.index) && _mixSelSet.size > 1) {
           // Multi-select: apply only to selected channels
           [..._mixSelSet].forEach(idx => { if (!nowOn) mixMutedSet.add(idx); else mixMutedSet.delete(idx); });
-        } else {
-          // Single: cascade to group channel + all descendants
+        } else if (expanded) {
+          // Expanded: cascade to group + all descendants
           if (ch) { if (!nowOn) mixMutedSet.add(ch.index); else mixMutedSet.delete(ch.index); }
           const allKids = getAllDescendants(t.name);
           allKids.forEach(k => {
             const kch = chMap[k.num]; if (!kch) return;
             if (!nowOn) mixMutedSet.add(kch.index); else mixMutedSet.delete(kch.index);
           });
+        } else {
+          // Collapsed: only toggle the group channel itself
+          if (ch) { if (!nowOn) mixMutedSet.add(ch.index); else mixMutedSet.delete(ch.index); }
         }
         renderMixList();
       });
@@ -7697,6 +7729,21 @@ async function doBounce() {
     } catch(e) { console.warn('[EB]', e); }
   }
 
+  // Check sidechain — warn if selected channel no longer exists in current project
+  if (sidechainEnabled && sidechainChannel && window.api && window.api.showSidechainWarning) {
+    const scExists = channels.some(c => c.name === sidechainChannel);
+    if (!scExists) {
+      const scAction = await window.api.showSidechainWarning(sidechainChannel);
+      if (scAction === 'cancel') return;
+      if (scAction === 'uncheck') {
+        sidechainEnabled = false;
+        localStorage.setItem('sb4_sidechain_on', 'false');
+        const scToggleEl = document.getElementById('sidechain-toggle');
+        if (scToggleEl) { scToggleEl.checked = false; toggleSidechain(false); }
+      }
+    }
+  }
+
   // Restore bell sound
   const savedBell = localStorage.getItem('sb4_bell');
   if (savedBell) { const bs = document.getElementById('bell-sound'); if(bs) bs.value = savedBell; }
@@ -8311,6 +8358,7 @@ async function doBounce() {
       format: localStorage.getItem('sb4_fmt_current') || '',
       totalSize: '',
       stems: queue.filter(q => q.status === 'done').map(j => ({ name: j.name, type: j.type })),
+      failedStems: queue.filter(q => q.status === 'error').map(j => ({ name: j.name, type: j.type })),
       folder: outputFolder,
       failed: true,
       failReason: hangReason
@@ -8354,8 +8402,14 @@ async function doBounce() {
       });
       updateCumulativeStats(totalDone, sessionSec);
       const fmtLabel = localStorage.getItem('sb4_fmt_current') || '';
-      const _sizeResult = await window.api?.runShell(`find "${outputFolder}" -type f | xargs stat -f%z 2>/dev/null | awk '{s+=$1} END {if(s>=1073741824) printf "%.1f GB", s/1073741824; else printf "%.0f MB", s/1048576}'`);
+      // Size: calculate from project root (contains both VERSIONS/ and STEMS/), not from outputFolder (which may be ~/Desktop)
+      const _homeDir = window._homeDir || '/Users/' + (outputFolder.split('/')[2] || 'user');
+      const _base = outputFolder.startsWith('~') ? outputFolder.replace('~', _homeDir) : outputFolder;
+      const _projSafe = projectName ? projectName.replace(/[/\\:*?"<>|]/g, '_') : '';
+      const _projRoot = _projSafe ? _base + '/' + _projSafe : _base;
+      const _sizeResult = await window.api?.runShell(`find "${_projRoot}" -type f \\( -name "*.wav" -o -name "*.aif" -o -name "*.aiff" -o -name "*.mp3" -o -name "*.m4a" -o -name "*.flac" \\) -print0 2>/dev/null | xargs -0 stat -f%z 2>/dev/null | awk '{s+=$1} END {if(s>=1073741824) printf "%.2f GB", s/1073741824; else printf "%.0f MB", s/1048576}'`);
       const completedStems = completedJobs.map(j => ({ name: j.name, type: j.type }));
+      const failedStems = queue.filter(q => q.status === 'error').map(j => ({ name: j.name, type: j.type }));
       sendBounceNotifications({
         project: projectName || outputFolder.split('/').pop() || 'Session',
         totalFiles: totalDone,
@@ -8365,7 +8419,8 @@ async function doBounce() {
         format: fmtLabel,
         totalSize: _sizeResult?.stdout || '',
         stems: completedStems,
-        folder: outputFolder
+        failedStems,
+        folder: _projRoot
       });
     } else if (_errCount > 0) {
       // All jobs failed — send failure notification
@@ -8388,13 +8443,31 @@ async function doBounce() {
   // Resume master-plugins poll if the modal is still open
   if (document.getElementById('mp-modal')?.style.display !== 'none') openMasterPluginsModal();
   setTimeout(resetProg, 4000);
-  // Auto-open project folder in Finder
-  if (totalDone > 0 && !window._userCancelled) {
-    setTimeout(() => revealStems(), 800);
-  } else if (totalDone > 0 && window._userCancelled) {
-    // At least one file was rendered before cancel — open folder after Logic restores state
-    setTimeout(() => revealStems(), 3000);
+  // Auto-open project folder in Finder — but only after Logic's track state is fully restored.
+  // Race: per-job restore is async; revealing Finder too early can steal focus mid-unmute and
+  // leave tracks muted/soloed. Poll readStates() until clean, then reveal.
+  if (totalDone > 0) {
+    const preDelay = window._userCancelled ? 1500 : 400;
+    setTimeout(() => _revealAfterRestore(), preDelay);
   }
+}
+
+async function _revealAfterRestore() {
+  try {
+    const maxTries = 8;       // ~4s total budget
+    const gapMs   = 500;
+    for (let i = 0; i < maxTries; i++) {
+      let s = null;
+      try { s = await window.api.readStates(); } catch(e) { break; }
+      const stuckSolos = s?.soloed || [];
+      if (stuckSolos.length === 0) break;
+      // Force-clear any lingering solos so the project is in a clean state
+      log(`⟳ Clearing ${stuckSolos.length} stale solo(s) before opening folder: ${stuckSolos.join(', ')}`, 'warn');
+      for (const n of stuckSolos) { try { await window.api.unsoloByName(n); } catch(e) { /* ignore */ } }
+      await window.api.wait(gapMs);
+    }
+  } catch(e) { /* non-fatal — open folder anyway */ }
+  revealStems();
 }
 
 async function activateLogicForAX() {
@@ -8427,13 +8500,54 @@ async function returnToPrevApp() {
 // AXPress works to toggle, but AXValue always returns "off", so we track state here.
 
 // ── readStates()-based verification helpers (only reliable solo/mute source) ──
+// Normalize unicode quirks that cause exact-match to fail between Mixer scan
+// (source of `job.name`) and Tracks readStates (source of `soloed[]`):
+//   curly/straight apostrophes, en/em/minus dashes, NBSP vs space, zero-width.
+function normalizeName(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/[\u2018\u2019\u201A\u201B\u2032]/g, "'")
+    .replace(/[\u201C\u201D\u201E\u201F\u2033]/g, '"')
+    .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212]/g, '-')
+    .replace(/[\u00A0\u2007\u202F]/g, ' ')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+function _namesMatch(a, b) { return normalizeName(a) === normalizeName(b); }
 async function _verifySoloApplied(name) {
-  try { const s = await window.api.readStates(); return (s?.soloed || []).includes(name); }
-  catch(e) { return true; } // if check fails, assume ok — don't block bounce
+  try {
+    const s = await window.api.readStates();
+    return (s?.soloed || []).some(n => _namesMatch(n, name));
+  } catch(e) { return true; } // if check fails, assume ok — don't block bounce
 }
 async function _verifyUnsoloApplied(name) {
-  try { const s = await window.api.readStates(); return !(s?.soloed || []).includes(name); }
-  catch(e) { return true; }
+  try {
+    const s = await window.api.readStates();
+    return !(s?.soloed || []).some(n => _namesMatch(n, name));
+  } catch(e) { return true; }
+}
+// Halt entire bounce queue with user confirmation when a solo/mute state
+// cannot be verified. Returning true = user chose Continue anyway; false = abort.
+async function _haltOnUnconfirmed(kind, name) {
+  log(`✗ ${kind} state unconfirmed: "${name}"`, 'err');
+  try {
+    await window.api.setAlwaysOnTop(false).catch(() => {});
+    const cont = await window.api.showConfirm(
+      `${kind} state unconfirmed`,
+      `Could not verify ${kind.toLowerCase()} for "${name}" in Logic. The bounce may produce wrong content.\n\nContinue anyway, or Cancel to stop the queue and restore tracks?`
+    );
+    if (!cont) {
+      window._bounceFatalHang = true;
+      window._lastHangReason = `${kind} unconfirmed: "${name}"`;
+    }
+    return cont;
+  } catch(e) {
+    window._bounceFatalHang = true;
+    window._lastHangReason = `${kind} unconfirmed: "${name}"`;
+    return false;
+  }
 }
 async function _cleanStaleJobState() {
   // Before starting a new job: clear any solos left from a previous failed job
@@ -8488,7 +8602,10 @@ async function bounceStem(job, folder, isFirst) {
       log(`⚠ Solo not in Logic state — pressing again`, 'warn');
       job.channelIndex != null ? await window.api.soloIndex(job.channelIndex) : await window.api.soloByName(_jLogicName);
       await window.api.wait(500);
-      if (!(await _verifySoloApplied(_jLogicName))) { log(`✗ Solo state unconfirmed: "${job.name}"`, 'err'); return false; }
+      if (!(await _verifySoloApplied(_jLogicName))) {
+        const cont = await _haltOnUnconfirmed('Solo', job.name);
+        if (!cont) return false;
+      }
     }
   }
   window._cancelSoloedName = _jLogicName; window._cancelSoloedIndex = job.channelIndex ?? null;
@@ -8550,6 +8667,9 @@ async function bounceStem(job, folder, isFirst) {
       log(`⚠ Unsolo verify: "${job.name}" still soloed — pressing again`, 'warn');
       job.channelIndex != null ? await window.api.unsoloIndex(job.channelIndex) : await window.api.unsoloByName(_jLogicName);
       await window.api.wait(300);
+      if (!(await _verifyUnsoloApplied(_jLogicName))) {
+        await _haltOnUnconfirmed('Unsolo', job.name);
+      }
     }
     window._cancelSoloedName = null; window._cancelSoloedIndex = null;
     await window.api.wait(300);
@@ -8594,6 +8714,10 @@ async function bounceGroup(job, folder, isFirst) {
       log(`⚠ Solo verify failed for group ch "${ch.name}" — retrying`, 'warn');
       ch.channelIndex != null ? await window.api.soloIndex(ch.channelIndex) : await window.api.soloByName(ch.name);
       await window.api.wait(300);
+      if (!(await _verifySoloApplied(ch.name))) {
+        const cont = await _haltOnUnconfirmed('Solo', ch.name);
+        if (!cont) return false;
+      }
     }
   }
   log(`⊕ Group soloed: ${chans.map(c => c.name).join(', ')}`, 'info');

@@ -113,8 +113,10 @@ async function sendTelegramNotification(bounceData) {
     : `✔️ Errors: 0 — clean\n`;
 
   const stemsLine = (bounceData.stems && bounceData.stems.length > 0)
-    ? bounceData.stems.slice(0, 8).map(s => `  • ${s.name}`).join('\n')
-      + (bounceData.stems.length > 8 ? `\n  <i>+${bounceData.stems.length - 8} more</i>` : '')
+    ? bounceData.stems.map(s => `  • ${s.name}`).join('\n')
+    : '';
+  const failedLine = (bounceData.failedStems && bounceData.failedStems.length > 0)
+    ? bounceData.failedStems.map(s => `  ✗ ${s.name}`).join('\n')
     : '';
 
   const hasErrors = (bounceData.errors || 0) > 0;
@@ -126,6 +128,7 @@ async function sendTelegramNotification(bounceData) {
       `🎚 Completed: <b>${bounceData.totalFiles}</b> of ${bounceData.totalPlanned || '?'}\n` +
       `⏱ Time: <b>${bounceData.duration}</b>\n` +
       (stemsLine ? `\n<b>Completed files:</b>\n${stemsLine}\n` : '') +
+      (failedLine ? `\n<b>Failed:</b>\n${failedLine}\n` : '') +
       `\n📂 <code>${bounceData.folder}</code>`
     : hasErrors
     ? `⚠️ <b>Bounce finished with errors!</b>\n` +
@@ -136,6 +139,7 @@ async function sendTelegramNotification(bounceData) {
       (bounceData.totalSize ? `💾 Size: <b>${bounceData.totalSize}</b>\n` : '') +
       (bounceData.format ? `🎵 Format: ${bounceData.format}\n` : '') +
       (stemsLine ? `\n<b>Completed:</b>\n${stemsLine}\n` : '') +
+      (failedLine ? `\n<b>Failed:</b>\n${failedLine}\n` : '') +
       `\n📂 <code>${bounceData.folder}</code>`
     : `✅ <b>Bounce complete!</b>\n` +
       `━━━━━━━━━━━━━━━━\n` +
@@ -231,7 +235,13 @@ async function sendEmailNotification(bounceData) {
         </table>
         ${(bounceData.stems && bounceData.stems.length > 0) ? `
         <div style="background:#1a1a1a;border-radius:10px;padding:14px 16px;margin-bottom:8px;">
+          <div style="font-size:10px;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em;">Completed (${bounceData.stems.length})</div>
           ${bounceData.stems.map(s => `<div style="padding:5px 0;border-bottom:1px solid #222;font-size:12px;color:#bbb;">• ${s.name}</div>`).join('')}
+        </div>` : ''}
+        ${(bounceData.failedStems && bounceData.failedStems.length > 0) ? `
+        <div style="background:#2a1010;border-radius:10px;padding:14px 16px;margin-bottom:8px;border:1px solid #5a1a1a;">
+          <div style="font-size:10px;color:#f88;margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em;">Failed (${bounceData.failedStems.length})</div>
+          ${bounceData.failedStems.map(s => `<div style="padding:5px 0;border-bottom:1px solid #3a1515;font-size:12px;color:#f88;">✗ ${s.name}</div>`).join('')}
         </div>` : ''}
         <div style="background:#1a1a1a;border-radius:10px;padding:12px 16px;font-family:monospace;font-size:11px;color:#555;word-break:break-all;">${bounceData.folder}</div>
       </div>
@@ -411,9 +421,31 @@ async function sendDiscordNotification(bounceData) {
   });
   if (bounceData.folder) fields.push({ name: '📂 Folder', value: `\`${bounceData.folder}\``, inline: false });
   if (bounceData.stems && bounceData.stems.length > 0) {
-    const list = bounceData.stems.slice(0, 10).map(s => `• ${s.name}`).join('\n')
-      + (bounceData.stems.length > 10 ? `\n+${bounceData.stems.length - 10} more` : '');
-    fields.push({ name: '📋 Files', value: list, inline: false });
+    // Discord field value limit = 1024 chars; split into multiple fields if needed
+    const lines = bounceData.stems.map(s => `• ${s.name}`);
+    const chunks = [];
+    let cur = '';
+    for (const ln of lines) {
+      if ((cur + '\n' + ln).length > 1000) { chunks.push(cur); cur = ln; }
+      else cur = cur ? cur + '\n' + ln : ln;
+    }
+    if (cur) chunks.push(cur);
+    chunks.forEach((chunk, i) => {
+      fields.push({ name: i === 0 ? '📋 Files' : '\u200b', value: chunk, inline: false });
+    });
+  }
+  if (bounceData.failedStems && bounceData.failedStems.length > 0) {
+    const lines = bounceData.failedStems.map(s => `✗ ${s.name}`);
+    const chunks = [];
+    let cur = '';
+    for (const ln of lines) {
+      if ((cur + '\n' + ln).length > 1000) { chunks.push(cur); cur = ln; }
+      else cur = cur ? cur + '\n' + ln : ln;
+    }
+    if (cur) chunks.push(cur);
+    chunks.forEach((chunk, i) => {
+      fields.push({ name: i === 0 ? '⚠️ Failed' : '\u200b', value: chunk, inline: false });
+    });
   }
 
   const title = bounceData.failed

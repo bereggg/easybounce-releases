@@ -936,28 +936,17 @@ ipcMain.handle('enter-scan-badge', async () => {
   _preScan = mainWindow.getBounds();
   const { screen } = require('electron');
 
-  // Try to position badge on Logic's monitor (not necessarily EasyBounce's monitor)
-  let targetDisplay = null;
-  try {
-    const { stdout } = await execAsync(
-      `osascript -e 'tell application "System Events" to get position of front window of process "Logic Pro"'`
-    );
-    const parts = stdout.trim().split(', ').map(Number);
-    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-      targetDisplay = screen.getDisplayNearestPoint({ x: parts[0], y: parts[1] });
-    }
-  } catch(e) { console.warn('[EB]', e); }
-
-  if (!targetDisplay) {
-    targetDisplay = screen.getDisplayNearestPoint({ x: _preScan.x, y: _preScan.y });
-  }
-
-  const { x: dx, y: dy, width: dw } = targetDisplay.workArea;
   const bw = 520; const bh = 44;
+  // Center badge horizontally on EasyBounce's own window, pin to top of the same monitor.
+  const appDisplay = screen.getDisplayNearestPoint({
+    x: _preScan.x + Math.floor(_preScan.width / 2),
+    y: _preScan.y + Math.floor(_preScan.height / 2)
+  });
+  const { y: dy } = appDisplay.workArea;
+  const bx = _preScan.x + Math.floor(_preScan.width / 2 - bw / 2);
   mainWindow.setMinimumSize(200, 60);
   mainWindow.setResizable(false);
-  // Top-center of Logic's monitor — same position as bounce overlay for visual consistency
-  mainWindow.setBounds({ x: dx + Math.floor(dw / 2 - bw / 2), y: dy, width: bw, height: bh }, false);
+  mainWindow.setBounds({ x: bx, y: dy, width: bw, height: bh }, false);
   // screen-saver level = same as bounce overlay, never buried behind Logic.
   // setIgnoreMouseEvents(true) = click-through: HID events from LogicBridge
   // (disclosure triangles, Marker List clicks, etc.) pass straight to Logic
@@ -1615,5 +1604,20 @@ ipcMain.handle('show-cycle-warning', async () => {
     cancelId: 1
   });
   if (result.response === 0) return 'bounce';
+  return 'cancel';
+});
+
+ipcMain.handle('show-sidechain-warning', async (_, scName) => {
+  const { dialog } = require('electron');
+  const result = await dialog.showMessageBox(mainWindow, {
+    type: 'warning',
+    title: 'Sidechain channel missing',
+    message: `⚠️ Sidechain channel "${scName}" not found in Logic!`,
+    detail: 'The selected sidechain channel does not exist in the current project. Uncheck Sidechain to proceed, or cancel to pick another channel.',
+    buttons: ['Uncheck & Bounce', 'Cancel'],
+    defaultId: 1,
+    cancelId: 1
+  });
+  if (result.response === 0) return 'uncheck';
   return 'cancel';
 });

@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld('api', {
   checkMetronome:    ()    => ipcRenderer.invoke('check-metronome'),
   checkCycle:        ()    => ipcRenderer.invoke('check-cycle'),
   showCycleWarning:  ()    => ipcRenderer.invoke('show-cycle-warning'),
+  showSidechainWarning: (n) => ipcRenderer.invoke('show-sidechain-warning', n),
   checkSolo:         ()    => ipcRenderer.invoke('check-solo'),
   showSoloWarning:   ()    => ipcRenderer.invoke('show-solo-warning'),
   setFormat:         (f,b,s) => ipcRenderer.invoke('set-format', f, b, s),
