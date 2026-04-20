@@ -219,7 +219,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 @keyframes done-flash{0%{background:var(--card)}40%{background:rgba(74,140,28,.2)}100%{background:var(--card)}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 @keyframes bounce-ready{0%,100%{box-shadow:0 8px 32px rgba(108,99,255,.4),inset 0 1px 0 rgba(255,255,255,.2);}50%{box-shadow:0 12px 48px rgba(108,99,255,.7),inset 0 1px 0 rgba(255,255,255,.3);transform:translateY(-1px);}}
-.bbtn.running{background:linear-gradient(160deg,var(--warn),#ff6b35);box-shadow:0 8px 32px rgba(255,169,77,.4),inset 0 1px 0 rgba(255,255,255,.2);animation:pulse-glow .9s ease-in-out infinite alternate;}
+.bbtn.running{background:var(--g-running);box-shadow:0 8px 32px var(--warn-a30),inset 0 1px 0 rgba(255,255,255,.2);animation:pulse-glow 1.6s ease-in-out infinite alternate;}
 .bbtn.off{background:var(--card);color:var(--muted);box-shadow:none;cursor:not-allowed;transform:none;border:1px solid var(--b);}
 .bbtn.off::before{display:none;}
 @keyframes pulse-stems{from{box-shadow:0 0 0 rgba(74,140,28,0)}to{box-shadow:0 0 12px rgba(74,140,28,.5)}}
@@ -254,9 +254,11 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .em-wrap{display:flex;align-items:center;gap:8px;padding:5px 12px;border-radius:var(--r-pill);border:1.5px solid var(--accent-a30);background:var(--accent-a05);cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s;-webkit-app-region:no-drag;user-select:none;position:absolute;left:min(50%,calc(100% - 520px));transform:translateX(-50%);z-index:2;}
 .em-wrap:hover{border-color:var(--accent-a60);background:var(--accent-a08);box-shadow:0 0 16px var(--accent-a20);}
 .em-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;transition:color .2s,opacity .2s;color:var(--t2);opacity:.55;}
-.em-lbl.em-lbl-easy{color:var(--accent);opacity:1;}
-body.easy .em-lbl.em-lbl-easy{color:var(--t2);opacity:.55;}
-body.easy .em-lbl.em-lbl-pro{color:var(--accent);opacity:1;}
+/* Default (no body.easy) = Pro mode is active → PRO bright, EASY dim */
+.em-lbl.em-lbl-pro{color:var(--accent);opacity:1;}
+/* body.easy → Easy mode active → EASY bright, PRO dim */
+body.easy .em-lbl.em-lbl-pro{color:var(--t2);opacity:.55;}
+body.easy .em-lbl.em-lbl-easy{color:var(--accent);opacity:1;}
 .em-track{width:28px;height:14px;border-radius:var(--r-pill);background:var(--b2);position:relative;transition:background .22s;flex-shrink:0;}
 .em-thumb{position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.35);transition:all .22s cubic-bezier(.34,1.3,.64,1);}
 /* ── Easy Mode: toggle styles ─────────────────── */
@@ -11981,7 +11983,7 @@ async function openBounceInLogic() {
 async function applyFormatToLogicNow() {
   const p = getEditingFmtPreset(); if (!p) return;
   const btn = document.querySelector('.fmt-apply-logic-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Applying…'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Applying…'; }
   try {
     // Disable alwaysOnTop so EasyBounce window doesn't intercept mouse clicks meant for Logic
     if (window.api.setAlwaysOnTop) await window.api.setAlwaysOnTop(false);
