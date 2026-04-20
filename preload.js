@@ -126,6 +126,7 @@ contextBridge.exposeInMainWorld('api', {
   hideBounceOverlay:     ()    => ipcRenderer.invoke('hide-bounce-overlay'),
   overlayCountdown:      (sec) => ipcRenderer.invoke('overlay-countdown', sec),
   snapToLogicSpace:      ()    => ipcRenderer.invoke('snap-to-logic-space'),
+  setBounceMode:         (v)   => ipcRenderer.invoke('set-bounce-mode', v),
   sendFeedback:          (d)   => ipcRenderer.invoke('send-feedback', d),
   writeLog:              (msg, level) => ipcRenderer.invoke('write-log', msg, level),
   setIgnoreMouseEvents:  (ignore, opts) => ipcRenderer.invoke('set-ignore-mouse-events', ignore, opts),

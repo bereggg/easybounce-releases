@@ -3116,7 +3116,7 @@ function _renderChannelsImpl() {
     const chByName = {};
     const chByNameAll = {};
     channels.forEach(ch => {
-      const k = ch.name.toLowerCase();
+      const k = normalizeName(ch.name);
       chByName[k] = ch;
       if (!chByNameAll[k]) chByNameAll[k] = [];
       chByNameAll[k].push(ch);
@@ -3201,7 +3201,7 @@ function _renderChannelsImpl() {
       const localUsed = Object.assign({}, startUsed);
       function walk(pName) {
         getDirectChildren(pName).forEach(k => {
-          const kk = k.name.toLowerCase();
+          const kk = normalizeName(k.name);
           const allCh = chByNameAll[kk] || [];
           const ui = localUsed[kk] || 0;
           const kch = allCh[ui] || null;
@@ -3218,7 +3218,7 @@ function _renderChannelsImpl() {
     function hasVisibleDescendant(groupName) {
       const kids = getDirectChildren(groupName);
       return kids.some(k => {
-        const kch = chByName[k.name.toLowerCase()];
+        const kch = chByName[normalizeName(k.name)];
         if (k.type === 'track') return treeItemVisible(kch);
         if (k.type === 'group') return treeItemVisible(kch) || hasVisibleDescendant(k.name);
         return false;
@@ -3256,10 +3256,10 @@ function _renderChannelsImpl() {
 
     const _treeVisibleOrder = []; // built inline — exactly the ch.index values click handlers use
     trackTree.forEach(t => {
-      const k = t.name.toLowerCase();
+      const k = normalizeName(t.name);
       const allCh = chByNameAll[k] || [];
       const usedIdx = chByNameUsed[k] || 0;
-      const ch = allCh[usedIdx] || allCh[0] || null;
+      const ch = t.type === 'track' ? (allCh[usedIdx] || null) : (allCh[usedIdx] || allCh[0] || null);
       if (t.type === 'track' && allCh.length > 0) { chByNameUsed[k] = usedIdx + 1; }
       const color = ch ? ch.color : (getInstrumentColor(t.name) || '#666');
       const sel   = ch && selectedIdx.has(ch.index);
@@ -3454,9 +3454,9 @@ function _renderChannelsImpl() {
     });
     // ── Orphaned channels: in mixer (channels[]) but not in track tree ──
     // e.g. Bus, Aux, Click, Preview — show below tree with a separator
-    const _treeNameSet = new Set(trackTree.map(t => t.name.toLowerCase()));
+    const _treeNameSet = new Set(trackTree.map(t => normalizeName(t.name)));
     const _orphaned = channels.filter(ch => {
-      if (_treeNameSet.has(ch.name.toLowerCase())) return false;
+      if (_treeNameSet.has(normalizeName(ch.name))) return false;
       if (channelFilter === 'hidden') return _isHidden(ch);
       if (_isHidden(ch)) return false;
       if (query && !ch.name.toLowerCase().includes(query)) return false;
@@ -7963,6 +7963,9 @@ async function doBounce() {
     log(`▶ Starting: ${pending.length} jobs × ${_markerPasses.length} ranges = ${_totalFiles} files`, 'ok');
     log(`📍 Passes: ${_markerPasses.map(p => p.name).join(' → ')}`, 'info');
   } else log(`▶ Starting: ${pending.length} jobs`, 'ok');
+  // Keep overlay + mini-mode visible on ALL spaces during bounce (no forced space switches).
+  // Reverted to Logic's space once at the very end via setBounceMode(false) + moveToLogicSpace.
+  if (window.api?.setBounceMode) await window.api.setBounceMode(true).catch(()=>{});
   // ──────────────────────────────────────────────────────────────────────────
 
   // Remember where the user was — after each bounce trigger, return them there
@@ -8334,6 +8337,9 @@ async function doBounce() {
     }
   }
 
+  // Exit bounce mode: re-enable window anchoring, then snap back to Logic's space once.
+  if (window.api?.setBounceMode) await window.api.setBounceMode(false).catch(()=>{});
+  if (!window._userCancelled && window.api?.moveToLogicSpace) await window.api.moveToLogicSpace().catch(()=>{});
   bouncing = false; updateBounceBtn();
   if (window.api?.releaseLogicPid) window.api.releaseLogicPid().catch(() => {});
   if (window.api?.hideBounceOverlay) window.api.hideBounceOverlay().catch(() => {});

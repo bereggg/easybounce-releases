@@ -19,6 +19,7 @@ let _preMini = null;
 let _overlayWindow = null;
 let _inMiniMode = false;
 let _inScanBadge = false;
+let _inBounce = false;
 // Returns correct alwaysOnTop level based on current window state.
 // Mini mode and scan badge use 'screen-saver' (same as overlay) so they
 // never get buried behind Logic or lost on other Spaces.
@@ -765,6 +766,15 @@ ipcMain.handle('move-to-logic-space', async () => {
   // animation, so the transparent window never goes black mid-transition).
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   try { await bridge('switchToEnglish'); } catch(e) {}
+
+  // During bounce: skip 'Logic Pro activate' (which forces a Space switch).
+  // AX API works cross-space. Windows stay visible on all spaces so they follow the user.
+  if (_inBounce) {
+    if (_overlayWindow && !_overlayWindow.isDestroyed())
+      _overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    return { ok: true };
+  }
+
   try {
     await execAsync(`osascript -e 'tell application "Logic Pro" to activate'`);
   } catch(e) { console.warn('[EB]', e); }
@@ -784,8 +794,16 @@ ipcMain.handle('move-to-logic-space', async () => {
   return { ok: true };
 });
 
-// Snap all windows (main + overlay) to Logic's Space after a stem render completes
+// Snap all windows (main + overlay) to Logic's Space after a stem render completes.
+// During bounce: just keep windows on all spaces (no activate, no anchoring).
 ipcMain.handle('snap-to-logic-space', async () => {
+  if (_inBounce) {
+    if (mainWindow && !mainWindow.isDestroyed())
+      mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    if (_overlayWindow && !_overlayWindow.isDestroyed())
+      _overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    return { ok: true };
+  }
   try {
     await execAsync(`osascript -e 'tell application "Logic Pro" to activate'`);
   } catch(e) { console.warn('[EB]', e); }
@@ -800,6 +818,8 @@ ipcMain.handle('snap-to-logic-space', async () => {
   }
   return { ok: true };
 });
+
+ipcMain.handle('set-bounce-mode', (_, v) => { _inBounce = !!v; return { ok: true }; });
 
 ipcMain.handle('set-always-on-top', (_, val) => {
   if (mainWindow) {
