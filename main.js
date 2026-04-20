@@ -122,7 +122,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: initW, height: initH,
     ...(initX !== undefined && initY !== undefined ? { x: initX, y: initY } : {}),
-    minWidth: 1070, minHeight: 640,
+    minWidth: 1130, minHeight: 640,
     maximizable: false,
     fullscreenable: false,
     titleBarStyle: 'hiddenInset',
@@ -193,7 +193,7 @@ function createWindow() {
       e.preventDefault();
       _inMiniMode = false;
       mainWindow.setBackgroundColor('#0c0c10');
-      mainWindow.setMinimumSize(1070, 640);
+      mainWindow.setMinimumSize(1130, 640);
       mainWindow.setResizable(true);
       if (_preMini) { mainWindow.setBounds(_preMini, true); _preMini = null; }
       else { mainWindow.setSize(1150, 760, true); mainWindow.center(); }
@@ -819,9 +819,9 @@ ipcMain.handle('snap-to-logic-space', async () => {
 ipcMain.handle('set-bounce-mode', (_, v) => { _inBounce = !!v; return { ok: true }; });
 
 ipcMain.handle('set-always-on-top', (_, val) => {
+  if (_inBounce) return { ok: true }; // ignored during bounce
   if (mainWindow) {
     if (val) {
-      // 'pop-up-menu' is above Logic's menus — EasyBounce stays visible during AX interactions
       mainWindow.setAlwaysOnTop(true, _mainAotLevel());
     } else if (!_inScanBadge && !_inMiniMode) {
       mainWindow.setAlwaysOnTop(false);
@@ -829,6 +829,33 @@ ipcMain.handle('set-always-on-top', (_, val) => {
   }
   return { ok: true };
 });
+
+// ── Compact Queue Mode — narrow panel showing only queue + bounce controls ───
+let _inCompact = false;
+let _preCompact = null;
+ipcMain.handle('enter-compact-mode', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return { ok: false };
+  if (_inBounce) return { ok: false };
+  if (!_inCompact) _preCompact = mainWindow.getBounds();
+  _inCompact = true;
+  const cur = mainWindow.getBounds();
+  mainWindow.setMinimumSize(500, 500);
+  mainWindow.setBounds({ x: cur.x, y: cur.y, width: 500, height: cur.height }, true);
+  try { mainWindow.setWindowButtonVisibility(false); } catch {}
+  return { ok: true };
+});
+ipcMain.handle('exit-compact-mode', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return { ok: false };
+  _inCompact = false;
+  mainWindow.setMinimumSize(1130, 640);
+  try { mainWindow.setWindowButtonVisibility(true); } catch {}
+  if (_preCompact) {
+    mainWindow.setBounds(_preCompact, true);
+    _preCompact = null;
+  }
+  return { ok: true };
+});
+ipcMain.handle('is-compact-mode', () => ({ compact: _inCompact }));
 
 // ── Mini Mode — resize main window to compact widget ──────────────────────────
 ipcMain.handle('enter-mini-mode', () => {
@@ -852,13 +879,20 @@ ipcMain.handle('exit-mini-mode', () => {
   if (!mainWindow) return { ok: false };
   _inMiniMode = false;
   mainWindow.setBackgroundColor('#0c0c10');
-  mainWindow.setMinimumSize(1070, 640);
-  mainWindow.setResizable(true);
-  mainWindow.setWindowButtonVisibility(true);
+  // If we entered mini from compact mode, keep compact min-size + hidden traffic lights
+  if (_inCompact) {
+    mainWindow.setMinimumSize(500, 500);
+    mainWindow.setResizable(true);
+    try { mainWindow.setWindowButtonVisibility(false); } catch {}
+  } else {
+    mainWindow.setMinimumSize(1130, 640);
+    mainWindow.setResizable(true);
+    mainWindow.setWindowButtonVisibility(true);
+  }
   if (_preMini) {
     mainWindow.setBounds(_preMini, true);
     _preMini = null;
-  } else {
+  } else if (!_inCompact) {
     mainWindow.setSize(1200, 760, true);
     mainWindow.center();
   }
@@ -990,7 +1024,7 @@ ipcMain.handle('exit-scan-badge', () => {
   mainWindow.setIgnoreMouseEvents(false);
   if (mainWindow.setWindowButtonVisibility) mainWindow.setWindowButtonVisibility(true);
   mainWindow.setVisibleOnAllWorkspaces(false);
-  mainWindow.setMinimumSize(1070, 640);
+  mainWindow.setMinimumSize(1130, 640);
   mainWindow.setResizable(true);
   if (_preScan) {
     mainWindow.setBounds(_preScan, false);
@@ -1451,6 +1485,48 @@ ipcMain.handle('notif-telegram-disconnect', () => {
 
 ipcMain.handle('notif-send-bounce', (_, bounceData) => notifications.sendBounceNotification(bounceData));
 ipcMain.handle('send-feedback', (_, data) => notifications.sendFeedback(data));
+
+// ── Hotkeys ──
+const { globalShortcut } = require('electron');
+let _registeredHotkeys = { stems: '', version: '', merge: '' };
+
+function _parseAccelerator(combo) {
+  if (!combo) return null;
+  const acc = combo.replace(/Cmd/g, 'CommandOrControl').replace(/Ctrl/g, 'Control');
+  // Electron requires pure ASCII accelerators
+  if (/[^\x00-\x7F]/.test(acc)) return null;
+  return acc;
+}
+
+ipcMain.handle('register-hotkeys', (_, hk) => {
+  // Unregister old hotkeys
+  Object.values(_registeredHotkeys).forEach(acc => {
+    if (acc) { try { globalShortcut.unregister(_parseAccelerator(acc)); } catch(e) {} }
+  });
+  _registeredHotkeys = hk;
+  ['stems', 'version', 'merge'].forEach(type => {
+    const acc = _parseAccelerator(hk[type]);
+    if (!acc) return;
+    const ok = globalShortcut.register(acc, () => {
+      if (!mainWindow || mainWindow.isDestroyed()) return;
+      if (!_inBounce) {
+        mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+        mainWindow.show();
+        mainWindow.focus();
+        setTimeout(() => {
+          if (mainWindow && !mainWindow.isDestroyed() && !_inBounce)
+            mainWindow.setVisibleOnAllWorkspaces(false);
+        }, 300);
+      }
+      mainWindow.webContents.send('hotkey-triggered', type);
+    });
+    if (!ok) console.warn('[hotkeys] failed to register:', acc);
+    else console.log('[hotkeys] registered:', acc, '→', type);
+  });
+  return { ok: true };
+});
+
+ipcMain.handle('get-selected-tracks', () => bridge('getSelectedTracks'));
 
 ipcMain.handle('notif-test-telegram', async () => {
   const s = notifications.loadSettings();

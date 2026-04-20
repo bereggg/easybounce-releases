@@ -392,6 +392,9 @@ body.easy #panel-pr{transition:all .3s;}
 .notif-btn.danger{border-color:rgba(255,80,80,.3);color:#f55;}
 .notif-btn.danger:hover{border-color:#f55;background:rgba(255,80,80,.08);}
 .notif-input{width:100%;padding:6px 8px;border-radius:var(--r);border:1px solid var(--b);background:var(--bg);color:var(--text);font-size:12px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;}
+.hk-input{width:100%;padding:6px 10px;border-radius:var(--r);border:1px solid var(--b);background:var(--bg);color:var(--accent);font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;cursor:pointer;transition:border-color .15s;}
+.hk-input:focus{outline:none;border-color:var(--accent);}
+.hk-input.recording{border-color:var(--accent);background:var(--accent-a08);color:var(--text);}
 .notif-input:focus{outline:none;border-color:var(--accent);}
 .notif-code{font-size:28px;font-weight:800;letter-spacing:6px;text-align:center;color:var(--accent);font-family:'JetBrains Mono',monospace;padding:12px 0;}
 .act-pane{display:flex;flex-direction:column;flex:1;overflow:hidden;}
@@ -570,6 +573,93 @@ body.easy #skin-panel{z-index:9000;}
 #mini-mode-ui{display:none;position:fixed;inset:0;flex-direction:column;z-index:9999;border-radius:var(--r2);overflow:hidden;opacity:0;transition:opacity .22s ease-out;}
 body.mini-mode #mini-mode-ui{display:flex;background:rgba(14,14,22,.95);backdrop-filter:blur(40px) saturate(150%);-webkit-backdrop-filter:blur(40px) saturate(150%);border:1px solid var(--accent-a20);box-shadow:0 8px 40px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08);opacity:1;}
 body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini-mode #skin-panel{display:none!important;}
+
+/* ── Compact Queue Mode ───────────────────────────────────────────── */
+#compact-toolbar{display:none;height:36px;background:var(--s);border-bottom:1px solid var(--b);padding:0 10px;align-items:center;justify-content:center;-webkit-app-region:drag;flex-shrink:0;position:relative;}
+#compact-toolbar .cm-title{font-size:11px;color:var(--t2);text-transform:uppercase;letter-spacing:.12em;font-family:var(--font-mono,'JetBrains Mono',monospace);font-weight:700;pointer-events:none;}
+#compact-toolbar-actions{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;gap:5px;-webkit-app-region:no-drag;}
+#compact-toolbar-actions button{width:26px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--t2);cursor:pointer;transition:all .15s;padding:0;}
+#compact-toolbar-actions button:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-a12);}
+#compact-toolbar-actions button svg{width:13px;height:13px;}
+
+body.compact-mode{overflow:hidden;}
+body.compact-mode .titlebar{display:none!important;}
+body.compact-mode #compact-toolbar{display:flex!important;}
+body.compact-mode .shell{grid-template-columns:1fr!important;height:calc(100vh - 34px)!important;}
+body.compact-mode .panel.pl,
+body.compact-mode #panel-resizer,
+body.compact-mode .panel-resizer,
+body.compact-mode .panel.pr{display:none!important;}
+body.compact-mode .center{border-right:none!important;}
+
+/* Hide non-essentials inside queue/bounce area */
+body.compact-mode #mp-row,
+body.compact-mode #alert-row-full,
+body.compact-mode #alert-row-mini,
+body.compact-mode .q-mini-btns,
+body.compact-mode #markers-btn,
+body.compact-mode #markers-chips-btn,
+body.compact-mode #version-drop-zone,
+body.compact-mode #merge-drop-zone,
+body.compact-mode #name-preset-arrow,
+body.compact-mode #name-preset-save-btn,
+body.compact-mode #fmt-bar-source{display:none!important;}
+
+/* Presets-bar in compact: hide all chips + labels except first built-in (Full Version) */
+body.compact-mode .presets-bar .em-presets-label,
+body.compact-mode .presets-bar .pchip-wrap ~ .pchip-wrap,
+body.compact-mode .presets-bar .pchip-add{display:none!important;}
+body.compact-mode .presets-bar{min-height:auto!important;padding:5px 10px!important;}
+body.compact-mode .presets-bar .pchip-wrap .pchip-del,
+body.compact-mode .presets-bar .pchip-wrap button[title*="Delete"],
+body.compact-mode .presets-bar .pchip-wrap button[title*="Hide"]{display:none!important;}
+
+/* Format bar — tighter so WAV/24-bit/48 fit */
+body.compact-mode .fmt-bar{gap:4px;}
+body.compact-mode #fmt-main-btn{padding:4px 8px;gap:5px;}
+body.compact-mode #fmt-main-btn .fmt-tag{padding:2px 6px;font-size:10px;}
+body.compact-mode #fmt-main-btn .fmt-bar-detail{font-size:11px;max-width:none;}
+
+/* Tighten queue header */
+body.compact-mode .queue-hdr{padding:6px 10px;}
+body.compact-mode .queue-hdr .sec-title{font-size:11px;letter-spacing:.08em;}
+
+/* Tighter queue items */
+body.compact-mode .qitem{padding:6px 10px;font-size:11px;}
+body.compact-mode .qitem .qtag{font-size:9px;padding:1px 4px;}
+
+/* Compact out-wrap fields — same height, shorter text */
+body.compact-mode .out-wrap{padding:8px 10px;gap:5px;}
+body.compact-mode .out-row{gap:6px;}
+body.compact-mode .out-lbl{font-size:9px;min-width:48px;width:48px;letter-spacing:.08em;}
+body.compact-mode .out-path,
+body.compact-mode .out-inp,
+body.compact-mode #fmt-main-btn,
+body.compact-mode #sidechain-picker-btn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+body.compact-mode .fmt-bar-detail{max-width:90px;}
+body.compact-mode #sidechain-row > span:nth-of-type(2){display:none;}
+
+/* Bounce area tightening */
+body.compact-mode .bounce-wrap{padding:8px 10px 10px;}
+body.compact-mode .bbtn{height:44px;font-size:13px;}
+body.compact-mode #cancel-btn,
+body.compact-mode #mini-btn,
+body.compact-mode #retry-btn{height:44px!important;width:44px!important;}
+
+/* Empty-state swap: full vs compact */
+body.compact-mode .q-empty-full,
+body.compact-mode .q-empty-arrow-full{display:none!important;}
+body.compact-mode .q-empty-cm,
+body.compact-mode .q-empty-arrow-cm{display:flex!important;}
+body.compact-mode .q-empty-title.q-empty-cm{display:block!important;}
+body.compact-mode .q-empty-sub.q-empty-cm{display:block!important;}
+
+/* Titlebar round icon buttons (hotkeys/compact/pin) */
+.tb-ico-btn{width:28px;height:28px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;background:none;border:1px solid var(--b);color:var(--muted);cursor:pointer;flex-shrink:0;transition:color .15s,border-color .15s,background .15s;}
+.tb-ico-btn:hover{color:var(--t2);border-color:var(--b2);}
+.tb-ico-btn.is-active{background:var(--accent-a12);border-color:var(--accent);color:var(--accent);}
+.tb-ico-btn.is-active:hover{color:var(--accent);}
+.tb-ico-btn .ico{width:14px;height:14px;}
 body.mini-mode{background:transparent!important;}
 /* Scan-badge mode: hide everything except the scan-warning banner */
 body.scan-badge .titlebar,body.scan-badge .shell{display:none!important;}
@@ -683,7 +773,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
 
 </head>
 <body>
-<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden;" aria-hidden="true"><defs><symbol id="ico-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 L6 12 L8 6 L10 18 L12 8 L14 16 L16 10 L18 12 L21 12"/></symbol><symbol id="ico-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="12" r="2.5" fill="currentColor"/><path d="M10 12 Q14 4 18 12 T22 12" opacity="0.7"/></symbol><symbol id="ico-accessibility" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="1.8" fill="currentColor"/><path d="M6 8 L12 10 L18 8"/><path d="M12 10 L12 15"/><path d="M12 15 L9 21 M12 15 L15 21"/></symbol><symbol id="ico-music" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3" fill="currentColor"/><circle cx="16" cy="16" r="3" fill="currentColor"/></symbol><symbol id="ico-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></symbol><symbol id="ico-finder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1" fill="currentColor" stroke="none"/><path d="M8 16 Q12 19 16 16"/></symbol><symbol id="ico-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L10 17 L19 7"/></symbol><symbol id="ico-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M7 12 L11 16 L17 9"/></symbol><symbol id="ico-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6 L18 18 M18 6 L6 18"/></symbol><symbol id="ico-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L22 20 L2 20 Z"/><path d="M12 10 V14"/><circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none"/></symbol><symbol id="ico-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21 Q12 23 14 21"/></symbol><symbol id="ico-bell-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 10.5-4"/><path d="M18 8c0 7 3 9 3 9H6"/><path d="M3 3 L21 21"/><path d="M10 21 Q12 23 14 21"/></symbol><symbol id="ico-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 H5 a2 2 0 0 1 -2 -2 V5 a2 2 0 0 1 2 -2 h11 l5 5 v11 a2 2 0 0 1 -2 2 z"/><path d="M8 3 V8 H16 V3"/><path d="M8 13 H16 V21 H8 z"/></symbol><symbol id="ico-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 9 M8 2 H16 M9 9 L7 15 H17 L15 9 M12 15 V22"/></symbol><symbol id="ico-cube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L21 7 V17 L12 22 L3 17 V7 Z"/><path d="M3 7 L12 12 L21 7"/><path d="M12 12 V22"/></symbol><symbol id="ico-dice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r="1.2" fill="currentColor" stroke="none"/></symbol><symbol id="ico-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6 H20 M4 12 H20 M4 18 H20"/><circle cx="9" cy="6" r="2" fill="#0c0c10"/><circle cx="15" cy="12" r="2" fill="#0c0c10"/><circle cx="8" cy="18" r="2" fill="#0c0c10"/></symbol><symbol id="ico-fader" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3 V21 M13 3 V21 M19 3 V21"/><rect x="4" y="7" width="6" height="4" rx="1" fill="#0c0c10"/><rect x="10" y="13" width="6" height="4" rx="1" fill="#0c0c10"/><rect x="16" y="9" width="6" height="4" rx="1" fill="#0c0c10"/></symbol><symbol id="ico-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7 V12 L16 14"/></symbol><symbol id="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14 A8 8 0 1 1 10 4 a7 7 0 0 0 10 10 z"/></symbol><symbol id="ico-coffee" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10 H18 V16 A4 4 0 0 1 14 20 H8 A4 4 0 0 1 4 16 Z"/><path d="M18 12 H20 A2 2 0 0 1 22 14 V15 A2 2 0 0 1 20 17 H18"/><path d="M8 3 Q8 5 9 6 M12 3 Q12 5 13 6 M16 3 Q16 5 17 6" opacity="0.6"/></symbol><symbol id="ico-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 Q7 5 12 5 Q17 5 22 12 Q17 19 12 19 Q7 19 2 12 z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="ico-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 Q7 5 12 5 Q17 5 22 12 Q17 19 12 19 Q7 19 2 12 z"/><circle cx="12" cy="12" r="3"/><path d="M3 3 L21 21"/></symbol><symbol id="ico-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10 V7 A4 4 0 0 1 16 7 V10"/></symbol><symbol id="ico-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3 A2.1 2.1 0 0 1 20 6 L8 18 L4 19 L5 15 Z"/></symbol><symbol id="ico-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7 H20 M10 11 V17 M14 11 V17 M5 7 L6 20 A2 2 0 0 0 8 22 H16 A2 2 0 0 0 18 20 L19 7 M9 7 V4 A1 1 0 0 1 10 3 H14 A1 1 0 0 1 15 4 V7"/></symbol><symbol id="ico-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 L15 12 L9 18"/></symbol><symbol id="ico-scan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5" opacity="0.5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></symbol><symbol id="ico-headphones" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14 A8 8 0 0 1 20 14"/><rect x="3" y="14" width="5" height="7" rx="1.5"/><rect x="16" y="14" width="5" height="7" rx="1.5"/></symbol><symbol id="ico-rocket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 C16 6 17 11 17 15 L12 18 L7 15 C7 11 8 6 12 2 z"/><circle cx="12" cy="10" r="1.8"/><path d="M9 18 L6 22 M15 18 L18 22"/></symbol><symbol id="ico-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5 H20 A2 2 0 0 1 22 7 V15 A2 2 0 0 1 20 17 H13 L8 21 V17 H4 A2 2 0 0 1 2 15 V7 A2 2 0 0 1 4 5 Z"/></symbol><symbol id="ico-volume" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 V14 H7 L12 18 V6 L7 10 Z"/><path d="M16 9 Q18 12 16 15" opacity="0.7"/><path d="M19 6 Q22 12 19 18" opacity="0.5"/></symbol><symbol id="ico-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9 L12 15 L18 9"/></symbol><symbol id="ico-chevrons-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 6 L12 11 L17 6"/><path d="M7 13 L12 18 L17 13"/></symbol><symbol id="ico-chevrons-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18 L12 13 L17 18"/><path d="M7 11 L12 6 L17 11"/></symbol><symbol id="ico-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4H21L14 12V20L10 18V12L3 4Z"/></symbol><symbol id="ico-filter-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4H21L14 12V20L10 18V12L3 4Z"/><path d="M3 3L21 21"/></symbol><symbol id="ico-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20 L16 16"/></symbol><symbol id="ico-search-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20 L16 16"/><path d="M4 4 L20 20"/></symbol><symbol id="ico-paperclip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12 L12 21 A5 5 0 0 1 5 14 L13 6 A3 3 0 0 1 17 10 L9 18 A1 1 0 0 1 8 17 L15 10"/></symbol><symbol id="ico-star" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></symbol><symbol id="ico-star-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></symbol></defs></svg>
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden;" aria-hidden="true"><defs><symbol id="ico-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 L6 12 L8 6 L10 18 L12 8 L14 16 L16 10 L18 12 L21 12"/></symbol><symbol id="ico-compact" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M9 10v10"/></symbol><symbol id="ico-expand-arrows" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v6h6M20 10V4h-6M14 10l7-7M10 14l-7 7"/></symbol><symbol id="ico-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="12" r="2.5" fill="currentColor"/><path d="M10 12 Q14 4 18 12 T22 12" opacity="0.7"/></symbol><symbol id="ico-accessibility" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="1.8" fill="currentColor"/><path d="M6 8 L12 10 L18 8"/><path d="M12 10 L12 15"/><path d="M12 15 L9 21 M12 15 L15 21"/></symbol><symbol id="ico-music" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3" fill="currentColor"/><circle cx="16" cy="16" r="3" fill="currentColor"/></symbol><symbol id="ico-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></symbol><symbol id="ico-finder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1" fill="currentColor" stroke="none"/><path d="M8 16 Q12 19 16 16"/></symbol><symbol id="ico-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L10 17 L19 7"/></symbol><symbol id="ico-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M7 12 L11 16 L17 9"/></symbol><symbol id="ico-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6 L18 18 M18 6 L6 18"/></symbol><symbol id="ico-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L22 20 L2 20 Z"/><path d="M12 10 V14"/><circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none"/></symbol><symbol id="ico-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21 Q12 23 14 21"/></symbol><symbol id="ico-bell-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 10.5-4"/><path d="M18 8c0 7 3 9 3 9H6"/><path d="M3 3 L21 21"/><path d="M10 21 Q12 23 14 21"/></symbol><symbol id="ico-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 H5 a2 2 0 0 1 -2 -2 V5 a2 2 0 0 1 2 -2 h11 l5 5 v11 a2 2 0 0 1 -2 2 z"/><path d="M8 3 V8 H16 V3"/><path d="M8 13 H16 V21 H8 z"/></symbol><symbol id="ico-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 9 M8 2 H16 M9 9 L7 15 H17 L15 9 M12 15 V22"/></symbol><symbol id="ico-cube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L21 7 V17 L12 22 L3 17 V7 Z"/><path d="M3 7 L12 12 L21 7"/><path d="M12 12 V22"/></symbol><symbol id="ico-dice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r="1.2" fill="currentColor" stroke="none"/></symbol><symbol id="ico-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6 H20 M4 12 H20 M4 18 H20"/><circle cx="9" cy="6" r="2" fill="#0c0c10"/><circle cx="15" cy="12" r="2" fill="#0c0c10"/><circle cx="8" cy="18" r="2" fill="#0c0c10"/></symbol><symbol id="ico-fader" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3 V21 M13 3 V21 M19 3 V21"/><rect x="4" y="7" width="6" height="4" rx="1" fill="#0c0c10"/><rect x="10" y="13" width="6" height="4" rx="1" fill="#0c0c10"/><rect x="16" y="9" width="6" height="4" rx="1" fill="#0c0c10"/></symbol><symbol id="ico-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7 V12 L16 14"/></symbol><symbol id="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14 A8 8 0 1 1 10 4 a7 7 0 0 0 10 10 z"/></symbol><symbol id="ico-coffee" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10 H18 V16 A4 4 0 0 1 14 20 H8 A4 4 0 0 1 4 16 Z"/><path d="M18 12 H20 A2 2 0 0 1 22 14 V15 A2 2 0 0 1 20 17 H18"/><path d="M8 3 Q8 5 9 6 M12 3 Q12 5 13 6 M16 3 Q16 5 17 6" opacity="0.6"/></symbol><symbol id="ico-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 Q7 5 12 5 Q17 5 22 12 Q17 19 12 19 Q7 19 2 12 z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="ico-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 Q7 5 12 5 Q17 5 22 12 Q17 19 12 19 Q7 19 2 12 z"/><circle cx="12" cy="12" r="3"/><path d="M3 3 L21 21"/></symbol><symbol id="ico-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10 V7 A4 4 0 0 1 16 7 V10"/></symbol><symbol id="ico-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3 A2.1 2.1 0 0 1 20 6 L8 18 L4 19 L5 15 Z"/></symbol><symbol id="ico-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7 H20 M10 11 V17 M14 11 V17 M5 7 L6 20 A2 2 0 0 0 8 22 H16 A2 2 0 0 0 18 20 L19 7 M9 7 V4 A1 1 0 0 1 10 3 H14 A1 1 0 0 1 15 4 V7"/></symbol><symbol id="ico-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 L15 12 L9 18"/></symbol><symbol id="ico-scan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5" opacity="0.5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></symbol><symbol id="ico-headphones" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14 A8 8 0 0 1 20 14"/><rect x="3" y="14" width="5" height="7" rx="1.5"/><rect x="16" y="14" width="5" height="7" rx="1.5"/></symbol><symbol id="ico-rocket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 C16 6 17 11 17 15 L12 18 L7 15 C7 11 8 6 12 2 z"/><circle cx="12" cy="10" r="1.8"/><path d="M9 18 L6 22 M15 18 L18 22"/></symbol><symbol id="ico-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5 H20 A2 2 0 0 1 22 7 V15 A2 2 0 0 1 20 17 H13 L8 21 V17 H4 A2 2 0 0 1 2 15 V7 A2 2 0 0 1 4 5 Z"/></symbol><symbol id="ico-volume" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 V14 H7 L12 18 V6 L7 10 Z"/><path d="M16 9 Q18 12 16 15" opacity="0.7"/><path d="M19 6 Q22 12 19 18" opacity="0.5"/></symbol><symbol id="ico-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9 L12 15 L18 9"/></symbol><symbol id="ico-chevrons-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 6 L12 11 L17 6"/><path d="M7 13 L12 18 L17 13"/></symbol><symbol id="ico-chevrons-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18 L12 13 L17 18"/><path d="M7 11 L12 6 L17 11"/></symbol><symbol id="ico-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4H21L14 12V20L10 18V12L3 4Z"/></symbol><symbol id="ico-filter-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4H21L14 12V20L10 18V12L3 4Z"/><path d="M3 3L21 21"/></symbol><symbol id="ico-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20 L16 16"/></symbol><symbol id="ico-search-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20 L16 16"/><path d="M4 4 L20 20"/></symbol><symbol id="ico-paperclip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12 L12 21 A5 5 0 0 1 5 14 L13 6 A3 3 0 0 1 17 10 L9 18 A1 1 0 0 1 8 17 L15 10"/></symbol><symbol id="ico-star" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></symbol><symbol id="ico-star-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></symbol></defs></svg>
 <!-- Mini Mode UI — same window resized to 300×88 -->
 <div id="mini-mode-ui">
   <div class="mini-drag"></div>
@@ -726,10 +816,16 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
       <div class="ldot" id="ldot"></div>
       <span class="llbl" id="llbl">Logic off</span>
     </div>
-    <button id="update-btn" onclick="checkUpdates()" style="padding:3px 9px;font-size:var(--fs-xs);border:1px solid transparent;border-radius:var(--r);background:none;color:var(--muted);font-family:'JetBrains Mono',monospace;cursor:pointer;opacity:.7;transition:all .15s;" onmouseover="this.style.opacity='1';this.style.color='var(--t2)'" onmouseout="this.style.opacity=(this.classList.contains('has-update')?'1':'.7');this.style.color=(this.classList.contains('has-update')?'var(--accent)':'var(--muted)')" title="Check for updates">
-      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" style="width:11px;height:11px;"><path d="M7 1v5l3.5 2" stroke-linecap="round"/><circle cx="7" cy="7" r="6"/></svg>v1.0
-    </button>
-    <button id="tooltip-toggle-btn" onclick="onHelpClick()" style="width:26px;height:26px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;background:none;border:1px solid var(--b);color:var(--muted);font-size:12px;font-weight:700;flex-shrink:0;cursor:pointer;transition:color .15s,border-color .15s;" onmouseover="this.style.color='var(--t2)';this.style.borderColor='var(--b2)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--b)'" title="Toggle tips">?</button>
+    <button class="tb-ico-btn" id="hotkeys-btn" onclick="showHotkeysModal()" title="Hotkey settings" style="-webkit-app-region:no-drag;"><svg class="ico ico-sm"><use href="#ico-gear"/></svg></button>
+    <button class="tb-ico-btn" id="pin-btn" onclick="togglePin()" title="Always on top" style="-webkit-app-region:no-drag;"><svg class="ico ico-sm"><use href="#ico-pin"/></svg></button>
+    <button class="tb-ico-btn" id="compact-btn" onclick="toggleCompactMode()" title="Compact queue mode" style="-webkit-app-region:no-drag;"><svg class="ico ico-sm"><use href="#ico-compact"/></svg></button>
+  </div>
+</div>
+<div id="compact-toolbar">
+  <span class="cm-title">COMPACT MODE</span>
+  <div id="compact-toolbar-actions">
+    <button id="cm-hotkeys-btn" onclick="showHotkeysModal()" title="Hotkey settings"><svg class="ico ico-sm"><use href="#ico-gear"/></svg></button>
+    <button id="exit-compact-btn" onclick="toggleCompactMode()" title="Exit compact mode"><svg class="ico ico-sm"><use href="#ico-expand-arrows"/></svg></button>
   </div>
 </div>
 <div class="shell">
@@ -796,7 +892,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
         </div>
       </div>
       <div id="qlist-wrap">
-        <div class="qlist scroll" id="qlist"><div class="q-empty"><svg class="q-empty-arrow" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M68 40 L12 40"/><path d="M24 28 L12 40 L24 52"/></svg><div class="q-empty-title">Pick a channel to start</div><div class="q-empty-sub">Click a channel on the left<br>or use <b>+ Version</b> for muted mix variants</div></div></div>
+        <div class="qlist scroll" id="qlist"><div class="q-empty"><svg class="q-empty-arrow q-empty-arrow-full" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M68 40 L12 40"/><path d="M24 28 L12 40 L24 52"/></svg><svg class="q-empty-arrow q-empty-arrow-cm" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><rect x="18" y="26" width="44" height="28" rx="4"/><path d="M28 40h24M40 34v12"/></svg><div class="q-empty-title q-empty-full">Pick a channel to start</div><div class="q-empty-sub q-empty-full">Click a channel on the left<br>or use <b>+ Version</b> for muted mix variants</div><div class="q-empty-title q-empty-cm" style="display:none;">Add from Logic via hotkeys</div><div class="q-empty-sub q-empty-cm" style="display:none;">Select tracks in Logic, then press<br>your <b>Stem</b>, <b>Version</b> or <b>Merge</b> hotkey</div></div></div>
       </div>
       <div id="version-drop-zone">⟳ VERSION</div>
       <div id="merge-drop-zone">⊕ MERGE</div>
@@ -893,6 +989,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
           <span style="font-size:var(--fs-xxs);color:var(--accent);opacity:.7;">▾</span>
         </button>
         <button class="tb-mini-btn" title="Send feedback" onclick="toggleFeedbackPopup()"><svg class="ico"><use href="#ico-chat"/></svg></button>
+        <button id="tooltip-toggle-btn" class="tb-mini-btn" onclick="onHelpClick()" title="Toggle tips" style="font-weight:700;">?</button>
         <div id="bell-popover">
           <button onclick="setBellSound('bell')" id="bell-opt-bell" class="bell-active"><svg class="ico ico-sm" style="margin-right:6px;vertical-align:-2px;"><use href="#ico-bell"/></svg>Bell</button>
           <button onclick="setBellSound('chime')" id="bell-opt-chime"><svg class="ico ico-sm" style="margin-right:6px;vertical-align:-2px;"><use href="#ico-music"/></svg>Chime</button>
@@ -1879,11 +1976,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
   // Check license immediately on load
   checkLicenseOnStart();
-  // Init pin state
+  // Init pin state (visual handled by _applyPinClass elsewhere)
   if (isPinned && window.api && window.api.setAlwaysOnTop) {
     window.api.setAlwaysOnTop(true);
-    const btn = document.getElementById('pin-btn');
-    if (btn) { btn.style.borderColor='rgba(255,169,77,.7)'; btn.style.background='rgba(255,169,77,.1)'; }
   }
   log('EasyBounce ready', 'ok');
   switchActTab('stats');
@@ -7037,7 +7132,21 @@ function renderQueue() {
   const lbl = document.getElementById('q-total-lbl');
   if (lbl) lbl.textContent = totalFiles > 0 ? totalFiles + ' files' : '';
 
-  if (queue.length === 0) { el.innerHTML = `
+  if (queue.length === 0) {
+    const isCompact = document.body.classList.contains('compact-mode');
+    if (isCompact) {
+      el.innerHTML = `
+    <div class="q-empty">
+      <svg class="q-empty-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="5" width="18" height="14" rx="2"/>
+        <path d="M7 10h2M11 10h2M15 10h2M7 14h10"/>
+      </svg>
+      <div class="q-empty-title">Add from Logic via hotkeys</div>
+      <div class="q-empty-sub">Select tracks in Logic, then press<br>your <b>Stem</b>, <b>Version</b> or <b>Merge</b> hotkey</div>
+    </div>
+  `;
+    } else {
+      el.innerHTML = `
     <div class="q-empty">
       <svg class="q-empty-arrow" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
         <path d="M68 40 L12 40"/>
@@ -7046,7 +7155,10 @@ function renderQueue() {
       <div class="q-empty-title">Pick a channel to start</div>
       <div class="q-empty-sub">Click a channel on the left<br>or use <b>+ Version</b> for muted mix variants</div>
     </div>
-  `; return; }
+  `;
+    }
+    return;
+  }
 
   let regIdx = 0;
   queue.forEach((item, i) => {
@@ -10121,6 +10233,82 @@ function prog(done, total, text) {
   });
 }
 
+// ── Always on Top (pin) toggle ─────────────────────────────────────
+const PIN_LS_KEY = 'ui.alwaysOnTop';
+function _applyPinClass(on) {
+  const btn = document.getElementById('pin-btn');
+  if (btn) btn.classList.toggle('is-active', !!on);
+}
+async function togglePin() {
+  const on = localStorage.getItem(PIN_LS_KEY) !== '1';
+  localStorage.setItem(PIN_LS_KEY, on ? '1' : '0');
+  isPinned = on;
+  _applyPinClass(on);
+  await window.api?.setAlwaysOnTop?.(on);
+  toast(on ? '📌 Pinned — app stays on top' : 'Unpinned');
+}
+window.addEventListener('DOMContentLoaded', async () => {
+  if (localStorage.getItem(PIN_LS_KEY) === '1') {
+    _applyPinClass(true);
+    await window.api?.setAlwaysOnTop?.(true);
+  }
+});
+
+// ── Compact Queue Mode ─────────────────────────────────────────────
+const COMPACT_LS_KEY = 'ui.compactMode';
+let _compactOn = false;
+function _applyCompactClass(on) {
+  document.body.classList.toggle('compact-mode', !!on);
+  const btn = document.getElementById('compact-btn');
+  if (btn) btn.classList.toggle('is-active', !!on);
+  _compactOn = !!on;
+  if (on) _applyCompactTruncations();
+}
+function _applyCompactTruncations() {
+  // OUTPUT path — show last 1-2 segments, full in title
+  const out = document.getElementById('out-folder');
+  if (out) {
+    const full = out.dataset.fullPath || out.textContent || '';
+    out.dataset.fullPath = full;
+    out.title = full;
+    const segs = full.split('/').filter(Boolean);
+    out.textContent = segs.length > 2 ? '…/' + segs.slice(-1).join('/') : full;
+  }
+  // SIDECHAIN button — trim long names
+  const sc = document.getElementById('sidechain-picker-btn');
+  if (sc) {
+    const txt = sc.dataset.fullName || sc.textContent || '';
+    sc.dataset.fullName = txt;
+    sc.title = txt;
+  }
+}
+async function toggleCompactMode() {
+  const next = !_compactOn;
+  if (next) {
+    const r = await window.api?.enterCompactMode?.();
+    if (r?.ok === false) return;
+  } else {
+    await window.api?.exitCompactMode?.();
+  }
+  _applyCompactClass(next);
+  try { localStorage.setItem(COMPACT_LS_KEY, next ? '1' : '0'); } catch {}
+  if (!next) {
+    // Restore full OUTPUT path
+    const out = document.getElementById('out-folder');
+    if (out && out.dataset.fullPath) out.textContent = out.dataset.fullPath;
+  }
+}
+// Restore on load (main.js _inCompact is false after fresh start — only apply CSS if user toggled during the session via localStorage AND main.js confirms)
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const saved = localStorage.getItem(COMPACT_LS_KEY) === '1';
+    if (saved) {
+      const r = await window.api?.enterCompactMode?.();
+      if (r?.ok) _applyCompactClass(true);
+    }
+  } catch {}
+});
+
 async function showMiniPlayer() {
   if (!window.api) return;
   window._miniActive = true;
@@ -10667,6 +10855,73 @@ function hideNotifModal() {
   if (_tgPollInterval) { clearInterval(_tgPollInterval); _tgPollInterval = null; }
 }
 
+// ── Hotkeys modal ──
+const HK_KEYS = { stems: 'sb4_hk_stems', version: 'sb4_hk_version', merge: 'sb4_hk_merge' };
+function showHotkeysModal() {
+  document.getElementById('hotkeys-modal-bg').style.display = 'flex';
+  ['stems','version','merge'].forEach(k => {
+    const inp = document.getElementById('hk-' + k + '-input');
+    inp.value = localStorage.getItem(HK_KEYS[k]) || '';
+    inp.classList.remove('recording');
+    _attachHkRecorder(inp);
+  });
+}
+function hideHotkeysModal() {
+  document.getElementById('hotkeys-modal-bg').style.display = 'none';
+  _stopAllHkRecording();
+}
+function _attachHkRecorder(inp) {
+  inp.onclick = () => {
+    document.querySelectorAll('.hk-input').forEach(i => { i.classList.remove('recording'); i.placeholder = i.dataset.ph || i.placeholder; });
+    inp.classList.add('recording');
+    inp.dataset.ph = inp.placeholder;
+    inp.placeholder = 'Press keys…';
+    inp.value = '';
+  };
+  inp.onkeydown = (e) => {
+    if (!inp.classList.contains('recording')) return;
+    e.preventDefault();
+    if (['Control','Alt','Shift','Meta'].includes(e.key)) return;
+    const mods = [];
+    if (e.ctrlKey)  mods.push('Ctrl');
+    if (e.altKey)   mods.push('Alt');
+    if (e.shiftKey) mods.push('Shift');
+    if (e.metaKey)  mods.push('Cmd');
+    // Determine key: letters/digits from e.code, symbols from e.key (ASCII only)
+    let key = '';
+    if (e.code.startsWith('Key'))        key = e.code.slice(3);   // KeyA → A
+    else if (e.code.startsWith('Digit')) key = e.code.slice(5);   // Digit1 → 1
+    else if (e.code.startsWith('F') && /^F\d+$/.test(e.code)) key = e.code; // F1-F24
+    else if (e.key.length === 1 && /^[\x20-\x7E]$/.test(e.key)) key = e.key; // ASCII symbol
+    else key = e.code; // fallback: Space, Tab, Return, etc.
+    if (!key || !mods.length) return; // require at least one modifier
+    inp.value = [...mods, key].join('+');
+    inp.classList.remove('recording');
+    inp.placeholder = inp.dataset.ph || '';
+  };
+}
+function _stopAllHkRecording() {
+  document.querySelectorAll('.hk-input').forEach(i => i.classList.remove('recording'));
+}
+function saveHotkeys() {
+  localStorage.setItem(HK_KEYS.stems,   document.getElementById('hk-stems-input').value);
+  localStorage.setItem(HK_KEYS.version, document.getElementById('hk-version-input').value);
+  localStorage.setItem(HK_KEYS.merge,   document.getElementById('hk-merge-input').value);
+  window.api?.registerHotkeys?.({
+    stems:   localStorage.getItem(HK_KEYS.stems),
+    version: localStorage.getItem(HK_KEYS.version),
+    merge:   localStorage.getItem(HK_KEYS.merge),
+  });
+  hideHotkeysModal();
+}
+function clearHotkeys() {
+  ['stems','version','merge'].forEach(k => {
+    localStorage.removeItem(HK_KEYS[k]);
+    document.getElementById('hk-' + k + '-input').value = '';
+  });
+  window.api?.registerHotkeys?.({ stems: '', version: '', merge: '' });
+}
+
 async function toggleTelegram(enabled) {
   await window.api.notifSaveSettings({ telegramEnabled: enabled });
   _notifSettings.telegramEnabled = enabled;
@@ -10950,7 +11205,7 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));
 // SKIN SYSTEM
 // ═══════════════════════════════════════════════════
 let currentSkin = localStorage.getItem('sb_skin') || 'default';
-let isPinned = localStorage.getItem('sb4_pinned') === 'true';
+let isPinned = localStorage.getItem('ui.alwaysOnTop') === '1';
 const SKINS = {
   default: {
     name:'DARK', preview:['#6c63ff','#0c0c10','#43e97b'],
@@ -11247,23 +11502,7 @@ function applySkin(name) {
   renderSkinGrid();
 }
 
-function togglePin() {
-  isPinned = !isPinned;
-  localStorage.setItem('sb4_pinned', isPinned);
-  const btn = document.getElementById('pin-btn');
-  if (isPinned) {
-    btn.style.borderColor = 'rgba(255,169,77,.7)';
-    btn.style.color = 'var(--warn)';
-    btn.style.background = 'rgba(255,169,77,.1)';
-    toast('📌 Pinned — app stays on top during bounce');
-  } else {
-    btn.style.borderColor = 'rgba(255,169,77,.3)';
-    btn.style.color = 'var(--warn)';
-    btn.style.background = '';
-    toast('Unpinned');
-  }
-  if (window.api && window.api.setAlwaysOnTop) window.api.setAlwaysOnTop(isPinned);
-}
+// togglePin() is defined earlier (ui.alwaysOnTop). Duplicate removed.
 
 function renderSkinGrid() {
   const grid = document.getElementById('skin-grid');
@@ -12494,6 +12733,57 @@ async function activateLicense() {
 </script>
 <script>
 // ── CLI bounce trigger (from `x` terminal command) ───────────────────────────
+// ── Hotkey trigger handler ──
+if (window.api?.onHotkeyTriggered) {
+  window.api.onHotkeyTriggered(async (type) => {
+    console.log('[hotkey] triggered:', type);
+    const result = await window.api.getSelectedTracks();
+    console.log('[hotkey] getSelectedTracks result:', JSON.stringify(result));
+    if (!result?.ok || !result.tracks?.length) {
+      toast('No tracks selected in Logic Pro');
+      return;
+    }
+    const tracks = result.tracks;
+    if (type === 'stems') {
+      tracks.forEach(t => {
+        const ch = channels.find(c => c.index === t.index) || { name: t.name, index: t.index, color: '#888' };
+        queue.push(_mkStemItem(ch));
+      });
+      saveQueue(); renderQueue(); updateBounceBtn();
+      toast(`${tracks.length} stem${tracks.length > 1 ? 's' : ''} added to queue`);
+    } else if (type === 'version') {
+      // Pre-fill version modal with selected tracks as muted
+      _openVersionModalWithTracks(tracks);
+    } else if (type === 'merge') {
+      // Pre-fill merge modal with selected tracks
+      _openMergeModalWithTracks(tracks);
+    }
+  });
+
+  // Load saved hotkeys on startup and register them
+  const _savedHk = {
+    stems:   localStorage.getItem('sb4_hk_stems')   || '',
+    version: localStorage.getItem('sb4_hk_version') || '',
+    merge:   localStorage.getItem('sb4_hk_merge')   || '',
+  };
+  if (_savedHk.stems || _savedHk.version || _savedHk.merge) {
+    window.api.registerHotkeys(_savedHk);
+  }
+}
+
+function _openVersionModalWithTracks(tracks) {
+  const indices = tracks.map(t => t.index);
+  openMixModal(null, indices);
+}
+
+function _openMergeModalWithTracks(tracks) {
+  const chList = tracks.map(t => {
+    const ch = channels.find(c => c.index === t.index);
+    return { name: t.name, channelIndex: t.index, color: ch?.color || '' };
+  });
+  _openMergeModalWithChannels(chList);
+}
+
 if (window.api && window.api.onCliBounce) {
   window.api.onCliBounce(() => {
     // Small delay so the window is properly focused first
@@ -12864,6 +13154,38 @@ async function submitFeedback() {
         <button class="notif-btn" onclick="saveNotifEmail()">Save</button>
       </div>
       <div class="notif-status" id="notif-email-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Hotkeys modal ───────────────────────────────────────────────── -->
+<div id="hotkeys-modal-bg" onclick="if(event.target===this)hideHotkeysModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:var(--z-modal);align-items:center;justify-content:center;backdrop-filter:blur(10px) saturate(150%);-webkit-backdrop-filter:blur(10px) saturate(150%);">
+  <div style="background:var(--card2);border:1px solid var(--b2);border-radius:var(--r2);width:360px;box-shadow:var(--sh-modal);padding:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h3 style="margin:0;font-size:var(--fs-md);font-weight:var(--fw-bold);color:var(--text);font-family:var(--font-display);">Hotkey Settings</h3>
+      <button onclick="hideHotkeysModal()" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px;">&times;</button>
+    </div>
+    <p style="font-size:var(--fs-sm);color:var(--muted);margin:0 0 16px;line-height:1.5;">Press a key combo while focused in each field. Works system-wide — even when Logic Pro is in focus.</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="background:var(--card);border:1px solid var(--b);border-radius:var(--r);padding:12px;">
+        <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:6px;font-weight:700;">HOTKEY 1 — Add as Stems</div>
+        <div style="font-size:var(--fs-xxs);color:var(--muted);margin-bottom:8px;">Selected tracks → queue as individual stems</div>
+        <input id="hk-stems-input" class="hk-input" placeholder="e.g. Ctrl+Shift+1" readonly>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--b);border-radius:var(--r);padding:12px;">
+        <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:6px;font-weight:700;">HOTKEY 2 — Add as Version</div>
+        <div style="font-size:var(--fs-xxs);color:var(--muted);margin-bottom:8px;">Selected tracks → muted in bounce (opens naming)</div>
+        <input id="hk-version-input" class="hk-input" placeholder="e.g. Ctrl+Shift+2" readonly>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--b);border-radius:var(--r);padding:12px;">
+        <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:6px;font-weight:700;">HOTKEY 3 — Add as Merge</div>
+        <div style="font-size:var(--fs-xxs);color:var(--muted);margin-bottom:8px;">Selected tracks → soloed together (opens naming)</div>
+        <input id="hk-merge-input" class="hk-input" placeholder="e.g. Ctrl+Shift+3" readonly>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+      <button onclick="clearHotkeys()" class="notif-btn danger">Clear all</button>
+      <button onclick="saveHotkeys()" class="notif-btn">Save</button>
     </div>
   </div>
 </div>
