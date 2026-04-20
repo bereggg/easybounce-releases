@@ -60,6 +60,11 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .scroll::-webkit-scrollbar{width:3px;}
 .scroll::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
 .empty-hint{padding:28px 16px;text-align:center;color:var(--muted);font-size:11px;line-height:1.9;}
+.q-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 16px;gap:18px;min-height:220px;}
+.q-empty-arrow{width:72px;height:72px;color:var(--accent);opacity:.35;animation:eb-breathe 3.2s ease-in-out infinite;}
+.q-empty-title{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.01em;}
+.q-empty-sub{font-size:11px;color:var(--muted);text-align:center;line-height:1.6;}
+.q-empty-sub b{color:var(--t2);font-weight:600;}
 .search-bar{padding:6px 10px;border-bottom:1px solid var(--b);display:flex;gap:5px;align-items:center;flex-shrink:0;flex-wrap:wrap;}
 .search-inp{flex:1;min-width:0;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 9px;transition:border-color .18s;}
 .search-inp::placeholder{color:var(--muted);}
@@ -188,7 +193,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .out-wrap{padding:10px 14px;border-top:1px solid var(--b);flex-shrink:0;display:flex;flex-direction:column;gap:6px;}
 .out-row{display:flex;align-items:center;gap:9px;}
 .out-lbl{font-size:9px;font-weight:700;color:var(--muted);width:48px;flex-shrink:0;text-transform:uppercase;letter-spacing:.08em;}
-.out-path{flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--t2);font-family:'JetBrains Mono',monospace;font-size:10px;padding:6px 9px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .16s;}
+.out-path{flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--t2);font-family:'JetBrains Mono',monospace;font-size:10px;padding:6px 9px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .16s;direction:rtl;text-align:left;unicode-bidi:plaintext;}
 .out-path:hover{border-color:rgba(108,99,255,.5);color:var(--accent);}
 .out-path.live{color:var(--text);}
 .out-sel{background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px;padding:5px 7px;cursor:pointer;}
@@ -238,20 +243,24 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .stat-cur{font-size:12px;font-weight:600;color:var(--text);line-height:1.3;font-family:'Space Grotesk',sans-serif;letter-spacing:-.01em;}
 /* ── Activity panel tabs ───────────────────────────────────── */
 .act-tabs{display:flex;gap:2px;padding:0 10px 8px;flex-shrink:0;}
-.act-tab{flex:1;padding:4px 0;border-radius:6px;border:1px solid transparent;background:transparent;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .15s;font-family:'Space Grotesk',sans-serif;}
-.act-tab.active{background:var(--card);border-color:var(--b);color:var(--text);}
+.act-tab{flex:1;padding:6px 0;border-radius:var(--r-sm) var(--r-sm) 0 0;border:none;background:transparent;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:color .18s;font-family:'Space Grotesk',sans-serif;position:relative;}
+.act-tab::after{content:'';position:absolute;left:14%;right:14%;bottom:0;height:2px;background:var(--accent);border-radius:2px;opacity:0;transform:scaleX(0);transition:opacity .2s,transform .2s var(--ease-out);transform-origin:center;}
+.act-tab.active{color:var(--text);background:transparent;}
+.act-tab.active::after{opacity:1;transform:scaleX(1);}
 .act-tab:hover:not(.active){color:var(--t2);}
 /* ── Easy Mode Toggle ──────────────────────────────────── */
-.em-wrap{display:flex;align-items:center;gap:7px;padding:5px 14px 5px 11px;border-radius:20px;border:1.5px solid rgba(108,99,255,.5);background:rgba(108,99,255,.08);cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s;-webkit-app-region:no-drag;user-select:none;position:absolute;left:min(50%,calc(100% - 520px));transform:translateX(-50%);z-index:2;}
-.em-wrap:hover{border-color:rgba(108,99,255,.75);background:rgba(108,99,255,.14);box-shadow:0 0 16px rgba(108,99,255,.22);}
-.em-track{width:28px;height:14px;border-radius:7px;background:var(--b2);position:relative;transition:background .22s;flex-shrink:0;}
-.em-thumb{position:absolute;top:2.5px;left:2px;width:9px;height:9px;border-radius:50%;background:var(--t2);opacity:.6;transition:all .22s;}
-.em-lbl{font-size:10px;font-weight:600;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;transition:color .2s;opacity:.7;}
+.em-wrap{display:flex;align-items:center;gap:8px;padding:5px 12px;border-radius:var(--r-pill);border:1.5px solid var(--accent-a30);background:var(--accent-a05);cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s;-webkit-app-region:no-drag;user-select:none;position:absolute;left:min(50%,calc(100% - 520px));transform:translateX(-50%);z-index:2;}
+.em-wrap:hover{border-color:var(--accent-a60);background:var(--accent-a08);box-shadow:0 0 16px var(--accent-a20);}
+.em-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;transition:color .2s,opacity .2s;color:var(--t2);opacity:.55;}
+.em-lbl.em-lbl-easy{color:var(--accent);opacity:1;}
+body.easy .em-lbl.em-lbl-easy{color:var(--t2);opacity:.55;}
+body.easy .em-lbl.em-lbl-pro{color:var(--accent);opacity:1;}
+.em-track{width:28px;height:14px;border-radius:var(--r-pill);background:var(--b2);position:relative;transition:background .22s;flex-shrink:0;}
+.em-thumb{position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.35);transition:all .22s cubic-bezier(.34,1.3,.64,1);}
 /* ── Easy Mode: toggle styles ─────────────────── */
-body.easy .em-track{background:linear-gradient(135deg,var(--accent),var(--a2));}
-body.easy .em-thumb{left:15px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);}
-body.easy .em-lbl{color:var(--accent)!important;opacity:1!important;font-weight:900!important;}
-body.easy .em-wrap{border-color:rgba(108,99,255,.7)!important;background:linear-gradient(135deg,rgba(108,99,255,.14),rgba(255,101,132,.08))!important;box-shadow:0 0 14px rgba(108,99,255,.2)!important;}
+body.easy .em-track{background:var(--accent-a30);}
+body.easy .em-thumb{left:16px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.35);}
+body.easy .em-wrap{border-color:var(--accent-a60);background:var(--accent-a08);box-shadow:0 0 14px var(--accent-a20);}
 
 /* ── Easy Mode: hide non-essentials ──────────── */
 body.easy .em-hide{display:none!important;}
@@ -693,9 +702,10 @@ body.mini-mode{background:transparent!important;}
     EasyBounce
   </div>
   <div class="tb-proj" id="tb-proj">no project loaded</div>
-  <div class="em-wrap" onclick="toggleEasyMode()" title="Easy Mode — simplified interface">
+  <div class="em-wrap" onclick="toggleEasyMode()" title="Toggle Easy / Pro mode">
+    <span class="em-lbl em-lbl-easy">Easy</span>
     <div class="em-track"><div class="em-thumb"></div></div>
-    <span class="em-lbl">Easy</span>
+    <span class="em-lbl em-lbl-pro">Pro</span>
   </div>
   <div class="tb-right">
     <button class="tb-pill" id="scan-btn" onclick="scanLogic()" title="Scan Logic Pro channels. Keep Mixer open!" style="background:linear-gradient(160deg,var(--accent),var(--a2));border-color:transparent;color:#fff;font-weight:700;box-shadow:0 4px 16px rgba(108,99,255,.35),inset 0 1px 0 rgba(255,255,255,.15);">
@@ -783,7 +793,7 @@ body.mini-mode{background:transparent!important;}
         </div>
       </div>
       <div id="qlist-wrap">
-        <div class="qlist scroll" id="qlist"><div class="empty-hint">Add stems or mixes to queue,<br>then hit Bounce</div></div>
+        <div class="qlist scroll" id="qlist"><div class="q-empty"><svg class="q-empty-arrow" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M68 40 L12 40"/><path d="M24 28 L12 40 L24 52"/></svg><div class="q-empty-title">Pick a channel to start</div><div class="q-empty-sub">Click a channel on the left<br>or use <b>+ Version</b> for muted mix variants</div></div></div>
       </div>
       <div id="version-drop-zone">⟳ VERSION</div>
       <div id="merge-drop-zone">⊕ MERGE</div>
@@ -809,7 +819,7 @@ body.mini-mode{background:transparent!important;}
       </div>
       <div class="out-row" id="sidechain-row" style="align-items:center;gap:8px;">
         <input type="checkbox" id="sidechain-toggle" title="Include a sidechain channel with every stem bounce" style="width:14px;height:14px;cursor:pointer;accent-color:var(--warn);" onchange="toggleSidechain(this.checked)">
-        <span style="color:var(--warn);display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-lock"/></svg></span>
+        <span class="eb-tt eb-tt--wide eb-tt--below" data-tt="Sidechain channel — bounced together with each stem. Click to change." style="color:var(--warn);display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-lock"/></svg></span>
         <span style="font-size:10px;font-weight:600;color:var(--t2);">Sidechain</span>
         <div style="flex:1;position:relative;">
           <button id="sidechain-picker-btn" onclick="toggleSidechainDropdown()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--t2);font-size:10px;padding:4px 8px;font-family:'JetBrains Mono',monospace;cursor:not-allowed;opacity:0.5;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" disabled>— select channel —</button>
@@ -3082,7 +3092,7 @@ function _renderChannelsImpl() {
     const chByNameUsed = {};
 
     const groups = trackTree.filter(t => t.type === 'group');
-    document.getElementById('ch-count').textContent = `${groups.length}g / ${channels.length}`;
+    { const _cc = document.getElementById('ch-count'); if (_cc) { _cc.innerHTML = `${groups.length} · ${channels.length}`; _cc.title = `${groups.length} groups of ${channels.length} tracks`; } }
 
     // Helper: check if a channel passes the current filter
     function treeItemVisible(ch) {
@@ -3423,8 +3433,8 @@ function _renderChannelsImpl() {
     if (_orphaned.length > 0) {
       const _orp_sep = document.createElement('div');
       _orp_sep.className = 'mixer-ch-sep';
-      _orp_sep.style.cssText = 'padding:5px 14px 3px;display:flex;align-items:center;gap:6px;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);opacity:.55;border-top:1px solid rgba(255,255,255,.05);margin-top:3px;cursor:pointer;user-select:none;';
-      _orp_sep.innerHTML = `<span style="font-size:10px;transition:transform .15s;display:inline-block;transform:${_mixerChCollapsed ? 'rotate(0deg)' : 'rotate(90deg)'}"">▶</span> Mixer channels <span style="opacity:.6">(${_orphaned.length})</span>`;
+      _orp_sep.style.cssText = 'padding:12px 14px 5px;display:flex;align-items:center;gap:6px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t2);border-top:1px solid var(--b);margin-top:8px;cursor:pointer;user-select:none;';
+      _orp_sep.innerHTML = `<span style="font-size:10px;transition:transform .15s;display:inline-block;transform:${_mixerChCollapsed ? 'rotate(0deg)' : 'rotate(90deg)'}">▶</span> Plugin instances <span style="color:var(--muted);font-weight:600;">(${_orphaned.length})</span>`;
       _orp_sep.onclick = () => {
         _mixerChCollapsed = !_mixerChCollapsed;
         localStorage.setItem('eb_mixer_ch_collapsed', _mixerChCollapsed ? '1' : '0');
@@ -6939,13 +6949,13 @@ function renderQueue() {
   if (lbl) lbl.textContent = totalFiles > 0 ? totalFiles + ' files' : '';
 
   if (queue.length === 0) { el.innerHTML = `
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:180px;gap:12px;opacity:.5;">
-      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="8" y="12" width="32" height="6" rx="2"/><rect x="8" y="22" width="24" height="6" rx="2"/><rect x="8" y="32" width="28" height="6" rx="2"/>
-        <circle cx="38" cy="35" r="7" fill="none"/><path d="M35 35l2 2 4-4"/>
+    <div class="q-empty">
+      <svg class="q-empty-arrow" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M68 40 L12 40"/>
+        <path d="M24 28 L12 40 L24 52"/>
       </svg>
-      <div style="font-size:12px;font-weight:600;color:var(--t2);">Queue is empty</div>
-      <div style="font-size:10px;color:var(--muted);text-align:center;">Click a channel to add stems<br>or use + Version for mix versions</div>
+      <div class="q-empty-title">Pick a channel to start</div>
+      <div class="q-empty-sub">Click a channel on the left<br>or use <b>+ Version</b> for muted mix variants</div>
     </div>
   `; return; }
 
@@ -10212,20 +10222,24 @@ function renderStats() {
   const manualSec = stats.files * 90;
   const savedSec = Math.max(0, manualSec - stats.timeSec);
   const savedMin = Math.floor(savedSec / 60);
-  const savedStr = savedMin >= 60
-    ? `${Math.floor(savedMin/60)}h ${savedMin%60}m`
-    : `${savedMin}m`;
-  const totalStr = stats.timeSec >= 3600
-    ? `${Math.floor(stats.timeSec/3600)}h ${Math.floor((stats.timeSec%3600)/60)}m`
-    : stats.timeSec >= 60
-      ? `${Math.floor(stats.timeSec/60)}m ${stats.timeSec%60}s`
-      : `${stats.timeSec}s`;
+  const _fmtTime = (sec) => {
+    if (sec < 60) return `${sec}s`;
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    if (h && m) return `${h}h ${m}m`;
+    if (h) return `${h}h`;
+    if (m && s && sec < 600) return `${m}m ${s}s`;
+    return `${m}m`;
+  };
+  const savedStr = _fmtTime(savedSec);
+  const totalStr = _fmtTime(stats.timeSec);
   document.getElementById('stats-body').innerHTML = `
-    <div class="st-big">
+    <div class="st-big eb-tt eb-tt--wide eb-tt--below" data-tt="~1.5 min saved per file compared to manual bounce">
       <div class="st-big-val">${stats.files}</div>
       <div class="st-big-lbl">Files bounced</div>
     </div>
-    <div class="st-big" style="border-color:rgba(74,140,28,.3);background:rgba(74,140,28,.05);">
+    <div class="st-big eb-tt eb-tt--wide eb-tt--below" data-tt="Time you would have spent manually bouncing each file" style="border-color:rgba(67,233,123,.3);background:rgba(67,233,123,.05);">
       <div class="st-big-val" style="color:var(--a3);">${savedStr}</div>
       <div class="st-big-lbl">Time saved</div>
     </div>
@@ -10233,7 +10247,6 @@ function renderStats() {
       <div class="stat-card"><div class="stat-val">${stats.sessions}</div><div class="stat-lbl">Sessions</div></div>
       <div class="stat-card"><div class="stat-val">${totalStr}</div><div class="stat-lbl">Total render</div></div>
     </div>
-    <div class="st-note">~1.5 min saved per file<br>compared to manual bounce</div>
   `;
 }
 function playBell() {
