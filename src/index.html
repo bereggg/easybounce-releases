@@ -200,12 +200,12 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .out-path.live{color:var(--text);}
 .out-sel{background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px;padding:5px 7px;cursor:pointer;}
 .out-sel:focus{outline:none;border-color:rgba(108,99,255,.5);}
-.out-inp{flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px;padding:6px 9px;}
+.out-inp{flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:var(--font-mono);font-size:10px;padding:6px 9px;transition:border-color .18s,box-shadow .18s;}
 .out-inp::placeholder{color:var(--muted);}
-.out-inp:focus{outline:none;border-color:rgba(108,99,255,.5);}
+.out-inp:focus{outline:none;border-color:var(--accent-a60);box-shadow:0 0 0 3px var(--accent-a12);}
 .bounce-wrap{padding:10px 14px 14px;border-top:1px solid var(--b2);flex-shrink:0;}
 .prog-bar{height:3px;background:var(--b);border-radius:2px;overflow:hidden;margin-bottom:6px;}
-.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--a2));border-radius:2px;transition:width .18s linear;width:0%;will-change:width;} /* Opt #7 */
+.prog-fill{height:100%;background:var(--g-primary);border-radius:2px;transition:width .18s linear;width:0%;will-change:width;}
 .prog-info{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:10px;}
 .bounce-btns{display:flex;gap:8px;}
 .bbtn{flex:1;height:54px;border-radius:var(--r2);border:none;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:linear-gradient(160deg,var(--accent) 0%,var(--a2) 100%);position:relative;overflow:hidden;transition:transform .18s,box-shadow .18s;box-shadow:0 8px 32px rgba(108,99,255,.4),inset 0 1px 0 rgba(255,255,255,.2);}
@@ -487,9 +487,9 @@ body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:va
   transition:all .15s;
   font-family:'Space Grotesk',sans-serif;
 }
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(10px);}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(10px) saturate(150%);-webkit-backdrop-filter:blur(10px) saturate(150%);}
 .overlay.show{display:flex;}
-.modal{background:var(--card);border:1px solid var(--glass-border);border-radius:var(--r2);padding:24px;width:400px;box-shadow:0 32px 80px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.06);max-height:86vh;display:flex;flex-direction:column;gap:14px;overflow:hidden;}
+.modal{background:var(--card2);border:1px solid var(--b);border-radius:var(--r2);padding:24px;width:400px;box-shadow:var(--sh-modal),var(--sh-inset);max-height:86vh;display:flex;flex-direction:column;gap:14px;overflow:hidden;}
 .modal-hdr{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;letter-spacing:-.02em;}
 .mfield label{display:block;font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;}
 .mfield input[type=text]{width:100%;background:var(--s);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;padding:9px 11px;transition:border-color .16s;}
@@ -519,7 +519,7 @@ body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:va
 #skin-panel{display:none;position:fixed;top:58px;right:12px;z-index:200;background:var(--card);border:1px solid var(--glass-border);border-radius:var(--r2);padding:18px;width:312px;box-shadow:0 24px 64px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.06);}
 body.easy #skin-panel{z-index:9000;}
 .skin-hdr{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:14px;}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--card);border:1px solid var(--glass-border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;padding:9px 20px;border-radius:var(--r3);box-shadow:0 12px 32px rgba(0,0,0,.6);opacity:0;transition:all .28s;pointer-events:none;z-index:999;white-space:nowrap;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--card2);border:1px solid var(--b2);color:var(--text);font-family:var(--font-mono);font-size:var(--fs-sm);padding:9px 20px;border-radius:var(--r3);box-shadow:var(--sh-float);opacity:0;transition:all .28s var(--ease-out);pointer-events:none;z-index:var(--z-toast);white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 /* ── Cancel overlay ─────────────────────────────────── */
 #cancel-overlay{display:none;position:fixed;inset:0;z-index:10001;align-items:center;justify-content:center;background:linear-gradient(135deg,#c85000,#e8820a,#f5a623,#e8820a,#c85000);background-size:300% 300%;animation:cancelShimmer 2s ease-in-out infinite;transition:opacity .35s ease;will-change:opacity;}
@@ -594,7 +594,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
 .mini-cancel:hover{background:rgba(0,0,0,.35);border-color:rgba(255,255,255,.4);}
 .mini-bar{height:4px;background:rgba(0,0,0,.2);border-radius:3px;overflow:hidden;}
 .mini-fill-bar{height:100%;background:linear-gradient(90deg,rgba(255,255,255,.9),rgba(255,220,160,.8));border-radius:3px;transition:width .5s ease;width:0%;box-shadow:0 0 6px rgba(255,255,255,.4);}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(10px);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(10px) saturate(150%);-webkit-backdrop-filter:blur(10px) saturate(150%);}
 .modal-overlay.show{display:flex;}
 #format-modal .modal-hdr{position:relative;}
 /* Format Presets */
