@@ -37,7 +37,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .tb-pill svg{width:13px;height:13px;flex-shrink:0;}
 .tb-status{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:var(--r3);background:var(--glass);border:1px solid var(--glass-border);}
 .ldot{width:7px;height:7px;border-radius:50%;background:var(--muted);transition:all .4s;flex-shrink:0;}
-.ldot.live{background:#6abf2a;box-shadow:0 0 0 3px rgba(67,233,123,.25);}
+.ldot.live{background:var(--a3);box-shadow:0 0 0 3px var(--success-a15),0 0 8px var(--success-a40);}
 .ldot.warn{background:var(--warn);}
 .llbl{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--t2);}
 @keyframes fade{0%,100%{opacity:1;}50%{opacity:.4;}}
@@ -54,7 +54,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .center{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--b);}
 .sec-hdr{padding:10px 14px 9px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .sec-title{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
-.sec-badge{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:var(--accent);background:rgba(108,99,255,.1);padding:2px 8px;border-radius:var(--r3);border:1px solid rgba(108,99,255,.18);}
+.sec-badge{font-family:var(--font-mono);font-size:10px;font-weight:500;color:var(--accent);background:var(--accent-a08);padding:2px 8px;border-radius:var(--r-pill);border:1px solid var(--accent-a20);}
 .scroll{flex:1;overflow-y:auto;}
 #ch-list{contain:layout style;} /* Opt #2: isolate reflow from rest of page */
 .scroll::-webkit-scrollbar{width:6px;height:6px;}
@@ -725,7 +725,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
       Theme
     </button>
     <button class="tb-pill" id="metro-btn" onclick="toggleMetronome()" title="Toggle metronome in Logic">
-      <span id="metro-dot" style="width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;margin-right:4px;"></span>Click
+      <span id="metro-dot" style="width:6px;height:6px;border-radius:50%;background:var(--muted);display:inline-block;margin-right:4px;transition:background .15s;"></span>Click
     </button>
     <div class="tb-status">
       <div class="ldot" id="ldot"></div>
@@ -11111,9 +11111,16 @@ function updateMetroBtn() {
   const dot = document.getElementById('metro-dot');
   const btn = document.getElementById('metro-btn');
   if (!dot || !btn) return;
-  dot.style.background = metronomeOn ? 'var(--red)' : 'var(--a3)';
-  btn.style.borderColor = metronomeOn ? 'rgba(255,71,87,.4)' : 'rgba(67,233,123,.3)';
-  btn.style.color = metronomeOn ? 'var(--red)' : 'var(--a3)';
+  if (metronomeOn) {
+    dot.style.background = 'var(--red)';
+    btn.style.borderColor = 'var(--red-a30)';
+    btn.style.color = 'var(--red)';
+  } else {
+    // OFF state: neutral dot + default pill style (no inline override)
+    dot.style.background = 'var(--muted)';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  }
 }
 
 async function toggleMetronome() {
