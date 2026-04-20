@@ -141,7 +141,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 #qlist-wrap{flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column;}
 .drag-handle{cursor:grab;color:var(--t2);opacity:.7;padding:2px 6px;font-size:16px;flex-shrink:0;transition:opacity .15s,color .15s;-webkit-app-region:no-drag;user-select:none;}.drag-handle:hover{opacity:1;color:var(--accent);}.drag-handle:active{cursor:grabbing;}.qitem.dragging{opacity:.5;transform:scale(.98);}.qitem{display:flex;align-items:flex-start;gap:10px;padding:9px 14px;border-bottom:1px solid var(--w-a03);transition:background .12s;}
 .qitem.running{background:rgba(255,169,77,.1);border-left:3px solid var(--warn);}
-.qitem.done{opacity:.4;}
+.qitem.done{opacity:.55;}.qitem.done .qst,.qitem.done .qname,.qitem.done .qtag,.qitem.done .qsub{opacity:.6;}.qitem.done .qdel,.qitem.done button[title="Reset to pending"]{opacity:1!important;}
 .qnum{font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--muted);width:18px;flex-shrink:0;padding-top:2px;}
 .qbody{flex:1;min-width:0;}
 .qrow1{display:flex;align-items:center;gap:7px;margin-bottom:3px;}
@@ -5218,7 +5218,7 @@ function renderPresets() {
     btn.innerHTML = '<svg class="ico ico-sm" style="vertical-align:-2px;margin-right:4px;"><use href="#ico-fader"/></svg>' + _esc(p.name);
     btn.onclick = () => addPresetToQueue(p);
     btn.oncontextmenu = (e) => showPresetCtxMenu(e, [
-      { label: '✏  Edit version', action: () => openMixModal(p.id) }
+      { label: '<svg class="ico ico-sm" style="vertical-align:-2px;margin-right:6px;"><use href="#ico-edit"/></svg>Edit version', action: () => openMixModal(p.id) }
     ]);
     const del = document.createElement('button');
     del.className = 'pchip-del';
@@ -5256,7 +5256,7 @@ function renderPresets() {
       btn.title = p.names.join(', ');
       btn.onclick = () => addStemPresetToQueue(p);
       btn.oncontextmenu = (e) => showPresetCtxMenu(e, [
-        { label: '✏  Edit preset', action: () => editStemPreset(p.id) }
+        { label: '<svg class="ico ico-sm" style="vertical-align:-2px;margin-right:6px;"><use href="#ico-edit"/></svg>Edit preset', action: () => editStemPreset(p.id) }
       ]);
       const del = document.createElement('button');
       del.className = 'pchip-del';
@@ -5330,7 +5330,7 @@ function renderPresets() {
       };
       btn.onclick = _loadSet;
       btn.oncontextmenu = (e) => showPresetCtxMenu(e, [
-        { label: '✏  Edit set', action: () => renameJobSet(js.id) }
+        { label: '<svg class="ico ico-sm" style="vertical-align:-2px;margin-right:6px;"><use href="#ico-edit"/></svg>Edit set', action: () => renameJobSet(js.id) }
       ]);
       const del = document.createElement('button');
       del.className = 'pchip-del';
@@ -6648,7 +6648,7 @@ function showPresetCtxMenu(e, items) {
     }
     const row = document.createElement('div');
     row.style.cssText = `padding:6px 12px;cursor:pointer;border-radius:5px;font-size:12px;color:${it.red?'#ff6b6b':'var(--text)'};white-space:nowrap;`;
-    row.textContent = it.label;
+    row.innerHTML = it.label;
     row.onmouseover = () => row.style.background = 'rgba(255,255,255,.07)';
     row.onmouseout  = () => row.style.background = '';
     row.onclick = () => { m.style.display = 'none'; it.action(); };
@@ -6941,6 +6941,9 @@ function _attachQNameEdit(nameEl, getVal, setVal) {
     input.style.cssText = 'background:transparent;border:none;border-bottom:1px solid var(--accent);color:inherit;font-family:inherit;font-size:inherit;font-weight:inherit;outline:none;width:100%;min-width:40px;padding:0;margin:0;';
     nameEl.textContent = '';
     nameEl.appendChild(input);
+    // Disable drag on parent while editing so text selection works
+    const qitem = nameEl.closest('.qitem');
+    if (qitem) qitem.draggable = false;
     input.focus();
     input.select();
     let committed = false;
@@ -6956,6 +6959,7 @@ function _attachQNameEdit(nameEl, getVal, setVal) {
     input.addEventListener('keydown', (ke) => {
       if (ke.key === 'Enter') { ke.preventDefault(); input.blur(); }
     });
+    input.addEventListener('mousedown', e => e.stopPropagation());
     input.addEventListener('click', e => e.stopPropagation());
   });
 }
@@ -9281,7 +9285,7 @@ async function stopCaffeinate() {
 
 function applyNameTemplate(stemName) {
   // Always read live from input field
-  const tpl = (document.getElementById('name-template')?.value || '').trim();
+  const tpl = (document.getElementById('name-template')?.value || '').trimStart();
   if (!tpl) return stemName;
   const sep = (tpl.endsWith('_') || tpl.endsWith('-') || tpl.endsWith(' ')) ? '' : '_';
   return tpl + sep + stemName;

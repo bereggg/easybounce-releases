@@ -764,6 +764,7 @@ ipcMain.handle('move-to-logic-space', async () => {
   // AppleScript 'activate' (unlike `open -a`, it does NOT trigger a Space switch
   // animation, so the transparent window never goes black mid-transition).
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  try { await bridge('switchToEnglish'); } catch(e) {}
   try {
     await execAsync(`osascript -e 'tell application "Logic Pro" to activate'`);
   } catch(e) { console.warn('[EB]', e); }
