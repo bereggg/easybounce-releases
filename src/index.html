@@ -518,8 +518,10 @@ body.easy #skin-panel{z-index:9000;}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--card);border:1px solid var(--glass-border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;padding:9px 20px;border-radius:var(--r3);box-shadow:0 12px 32px rgba(0,0,0,.6);opacity:0;transition:all .28s;pointer-events:none;z-index:999;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 /* ── Cancel overlay ─────────────────────────────────── */
-#cancel-overlay{display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;background:linear-gradient(135deg,#c85000,#e8820a,#f5a623,#e8820a,#c85000);background-size:300% 300%;animation:cancelShimmer 2s ease-in-out infinite;transition:opacity .35s ease;will-change:opacity;} /* Opt #7 */
+#cancel-overlay{display:none;position:fixed;inset:0;z-index:10001;align-items:center;justify-content:center;background:linear-gradient(135deg,#c85000,#e8820a,#f5a623,#e8820a,#c85000);background-size:300% 300%;animation:cancelShimmer 2s ease-in-out infinite;transition:opacity .35s ease;will-change:opacity;}
+/* Mutex: if both scan-warning and cancel-overlay try to appear, cancel wins (it's the user-initiated action) and scan-warning is hidden */
 #cancel-overlay.show{display:flex;}
+#cancel-overlay.show ~ #scan-warning,body:has(#cancel-overlay.show) #scan-warning{display:none!important;}
 #cancel-overlay.fade-out{opacity:0;}
 @keyframes cancelShimmer{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
 #cancel-overlay-inner{color:#fff;font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;text-align:center;letter-spacing:.01em;text-shadow:0 2px 8px rgba(0,0,0,.3);animation:cancelPulseText 1.2s ease-in-out infinite alternate;}
@@ -567,10 +569,12 @@ body.easy #skin-panel{z-index:9000;}
 @keyframes bbtn-fmt-ready{0%,100%{box-shadow:0 8px 32px rgba(108,99,255,.4),inset 0 1px 0 rgba(255,255,255,.2);}50%{box-shadow:0 10px 44px rgba(108,99,255,.65),0 0 0 3px rgba(108,99,255,.15),inset 0 1px 0 rgba(255,255,255,.25);}}
 .bbtn.fmt-ready:not(.off):not(.running){animation:bbtn-fmt-ready 2s ease-in-out infinite!important;}
 /* ── Mini Mode ─────────────────────────────────────────────── */
-#mini-mode-ui{display:none;position:fixed;inset:0;flex-direction:column;z-index:9999;border-radius:16px;overflow:hidden;}
-body.mini-mode #mini-mode-ui{display:flex;background:var(--mini-bg,linear-gradient(160deg,#6c63ff,#ff6584));box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1px 0 rgba(0,0,0,.25);}
+#mini-mode-ui{display:none;position:fixed;inset:0;flex-direction:column;z-index:9999;border-radius:var(--r2);overflow:hidden;opacity:0;transition:opacity .22s ease-out;}
+body.mini-mode #mini-mode-ui{display:flex;background:var(--mini-bg,linear-gradient(160deg,#6c63ff,#ff6584));box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1px 0 rgba(0,0,0,.25);opacity:1;}
 body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini-mode #skin-panel{display:none!important;}
 body.mini-mode{background:transparent!important;}
+/* Smooth fade between main UI and mini widget */
+body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;transition:opacity .2s ease-out;pointer-events:none;}
 .mini-drag{height:28px;-webkit-app-region:drag;flex-shrink:0;}
 .mini-content{padding:0 13px 11px;display:flex;flex-direction:column;gap:7px;flex:1;}
 .mini-row{display:flex;align-items:center;gap:7px;-webkit-app-region:no-drag;}
@@ -712,21 +716,21 @@ body.mini-mode{background:transparent!important;}
       <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg>
       Scan Logic
     </button>
-    <button class="tb-pill" id="skin-btn" title="Choose theme" onclick="openSkinPanel()" style="border-color:rgba(255,101,132,.3);color:var(--a2);">
+    <button class="tb-pill" id="skin-btn" title="Choose theme" onclick="openSkinPanel()">
       <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5.5"/><circle cx="7" cy="7" r="2"/></svg>
       Theme
     </button>
-    <button class="tb-pill" id="metro-btn" onclick="toggleMetronome()" title="Toggle metronome in Logic" style="border-color:rgba(255,169,77,.3);color:var(--warn);">
+    <button class="tb-pill" id="metro-btn" onclick="toggleMetronome()" title="Toggle metronome in Logic">
       <span id="metro-dot" style="width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;margin-right:4px;"></span>Click
     </button>
     <div class="tb-status">
       <div class="ldot" id="ldot"></div>
       <span class="llbl" id="llbl">Logic off</span>
     </div>
-    <button class="tb-pill" id="update-btn" onclick="checkUpdates()" style="padding:3px 9px;font-size:10px;border-color:rgba(108,99,255,.3);color:var(--accent);gap:4px;opacity:.85;background:rgba(108,99,255,.07);font-weight:600;" title="Check for updates">
+    <button id="update-btn" onclick="checkUpdates()" style="padding:3px 9px;font-size:10px;border:none;background:none;color:var(--muted);font-family:'JetBrains Mono',monospace;cursor:pointer;opacity:.7;transition:opacity .15s,color .15s;" onmouseover="this.style.opacity='1';this.style.color='var(--t2)'" onmouseout="this.style.opacity='.7';this.style.color='var(--muted)'" title="Check for updates">
       <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" style="width:11px;height:11px;"><path d="M7 1v5l3.5 2" stroke-linecap="round"/><circle cx="7" cy="7" r="6"/></svg>v1.0
     </button>
-    <button class="tb-pill" id="tooltip-toggle-btn" onclick="onHelpClick()" style="width:28px;height:28px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;background:rgba(108,99,255,.1);border:1.5px solid rgba(108,99,255,.35);color:var(--accent);font-size:13px;font-weight:800;flex-shrink:0;box-shadow:0 0 8px rgba(108,99,255,.2);" title="Toggle tips">?</button>
+    <button id="tooltip-toggle-btn" onclick="onHelpClick()" style="width:26px;height:26px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;background:none;border:1px solid var(--b);color:var(--muted);font-size:12px;font-weight:700;flex-shrink:0;cursor:pointer;transition:color .15s,border-color .15s;" onmouseover="this.style.color='var(--t2)';this.style.borderColor='var(--b2)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--b)'" title="Toggle tips">?</button>
   </div>
 </div>
 <div class="shell">
@@ -1480,8 +1484,8 @@ const INSTRUMENT_GROUPS = [
     'slide guitar','slide gtr','fingerpick','fingerpicked',
     'pluck','plucks','plucked',
   ] },
-  // 🎸 Bass — Blue (after drums so "bass drum" → drums)
-  { color:'#4dabf7', kw:[
+  // 🎸 Bass — Deep Blue (distinct from cyan FX, colorblind-safe)
+  { color:'#1976d2', kw:[
     'sub bass','sub ','808','eightohnine',
     'reese','reese bass',
     'bass guitar','bass gtr','e.bass','ebass',
@@ -1566,8 +1570,8 @@ const INSTRUMENT_GROUPS = [
     'aux send','aux return','fx return','send bus','bus return',
     ' send ',' aux ',
   ] },
-  // 🎧 FX / Transitions — Cyan (last — most general terms)
-  { color:'#74c0fc', kw:[
+  // 🎧 FX / Transitions — Bright Cyan (distinct from Bass deep-blue)
+  { color:'#4FC3F7', kw:[
     'sfx ','effect ','effects',
     'riser','rise ',
     'downlift','downlifter','down lift','dwnlft',
@@ -9905,11 +9909,14 @@ function prog(done, total, text) {
 async function showMiniPlayer() {
   if (!window.api) return;
   window._miniActive = true;
-  // Pre-clear body background so native window corners are transparent before resize
+  // Fade out main UI before resize for smooth transition
+  document.body.classList.add('mini-transitioning');
+  await new Promise(r => setTimeout(r, 180));
   document.body.style.background = 'transparent';
   if (window.api.enterMiniMode) await window.api.enterMiniMode();
   document.body.style.background = '';
   document.body.classList.add('mini-mode');
+  document.body.classList.remove('mini-transitioning');
   try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) { console.warn('[EB]', e); }
 }
 
