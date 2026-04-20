@@ -546,6 +546,42 @@ ipcMain.handle('close-marker-list',    () => bridge('close-marker-list'));
 ipcMain.handle('read-states',          () => bridge('readStates'));
 ipcMain.handle('bounce',        () => bridge('bounce'));
 
+// ── Track bounce via AX progress indicator (streams progress events) ──────────
+// Returns a final result when the bounce dialog closes, while streaming
+// 'bounce-progress' events to the renderer on the way.
+ipcMain.handle('track-bounce', async (_evt, preRollMs = 5000, maxRenderMs = 3600000) => {
+  return await new Promise((resolve) => {
+    const { spawn } = require('child_process');
+    const proc = spawn(BRIDGE, ['trackBounce', String(preRollMs), String(maxRenderMs)]);
+    let stdoutBuf = '';
+    let finalResult = null;
+    const wc = mainWindow && !mainWindow.isDestroyed() ? mainWindow.webContents : null;
+    const forward = (obj) => { if (wc) wc.send('bounce-progress', obj); };
+    proc.stdout.on('data', (chunk) => {
+      stdoutBuf += chunk.toString();
+      const lines = stdoutBuf.split('\n');
+      stdoutBuf = lines.pop() || '';
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        try {
+          const evt = JSON.parse(trimmed);
+          forward(evt);
+          if (['closed', 'timeout', 'no-dialog', 'error'].includes(evt.event)) {
+            finalResult = evt;
+          }
+        } catch (e) { /* ignore non-JSON */ }
+      }
+    });
+    proc.on('close', () => {
+      resolve(finalResult || { event: 'error', message: 'bridge exited without final event' });
+    });
+    proc.on('error', (err) => {
+      resolve({ event: 'error', message: String(err) });
+    });
+  });
+});
+
 // ── Cancel support ────────────────────────────────────────────────────────────
 ipcMain.handle('cancel-bounce', () => { cancelRequested = true; _cancelEmitter.emit('cancel'); return { ok: true }; });
 ipcMain.handle('reset-cancel',  () => { cancelRequested = false; return { ok: true }; });

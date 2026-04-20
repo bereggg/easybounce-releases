@@ -9946,6 +9946,32 @@ async function triggerBounce(name, folder, isFirst) {
     try { await window.api.runScript(`tell application "${window._bounceReturnApp}" to activate`); } catch(e) { console.warn('[EB]', e); }
   }
 
+  // ── AX progress tracker (authoritative "done" signal) ─────────────────────
+  // Runs in parallel with the legacy AppleScript poll loop. The legacy loop
+  // continues to handle side-dialogs (Replace / Recover / Go-to-folder / quit-save);
+  // the AX tracker is the ONLY authority for "render finished" to eliminate the
+  // false-positive "done" race where AppleScript returns done between phases.
+  window._axTrackResult = null;            // final event from trackBounce
+  window._axLastProgress = 0;              // 0..1
+  const _offProgress = window.api.onBounceProgress((evt) => {
+    if (evt.event === 'progress') {
+      window._axLastProgress = evt.value;
+      // Live-update mini/overlay progress bar with real render progress
+      try {
+        const pct = Math.max(0, Math.min(100, evt.value * 100)).toFixed(1) + '%';
+        const pf = document.getElementById('pfill'); if (pf) pf.style.width = pct;
+        const mf = document.getElementById('mini-fill'); if (mf) mf.style.width = pct;
+      } catch(e) { /* no-op */ }
+    }
+  });
+  const _trackPromise = window.api.trackBounce(6000, 60 * 60 * 1000).then((r) => {
+    window._axTrackResult = r;
+    return r;
+  }).catch((e) => {
+    window._axTrackResult = { event: 'error', message: String(e) };
+    return window._axTrackResult;
+  });
+
   // Poll until done — #44: 10-minute hard timeout with user warning at 5 minutes
   await window.api.wait(1000);
   let waited = 0;
@@ -10083,9 +10109,20 @@ async function triggerBounce(name, folder, isFirst) {
       }
     }
     if (check.output === 'done') {
-      const _elapsed = _stemStartTime ? Math.round((Date.now() - _stemStartTime) / 1000) : Math.round((waited+1000)/1000);
-      log('✓ ' + name + ' (' + _elapsed + 's)', 'ok');
-      break;
+      // AX tracker is authoritative for "render finished" — only break if it agrees.
+      // This eliminates the false-positive race where AppleScript returns "done"
+      // during the brief gap between Save-dialog closing and Bouncing-dialog opening.
+      if (window._axTrackResult && window._axTrackResult.event === 'closed') {
+        const _elapsed = _stemStartTime ? Math.round((Date.now() - _stemStartTime) / 1000) : Math.round((waited+1000)/1000);
+        const lp = window._axTrackResult.lastProgress || 0;
+        if (lp < 0.98) {
+          log(`✓ ${name} (${_elapsed}s) — closed at ${(lp*100).toFixed(0)}% (cancelled/error)`, 'warn');
+        } else {
+          log('✓ ' + name + ' (' + _elapsed + 's)', 'ok');
+        }
+        break;
+      }
+      // AX tracker hasn't confirmed close yet — keep polling (false positive)
     }
     if (check.output === 'rendering') {
       // Bounce progress window visible — render is still in progress, keep waiting
@@ -10183,6 +10220,11 @@ async function triggerBounce(name, folder, isFirst) {
     log(`⚠ Bounce timeout (${Math.round(BOUNCE_TIMEOUT_MS/60000)} min) — Logic may be frozen. Skipping track.`, 'err');
     toast(`⚠ Bounce timeout (${Math.round(BOUNCE_TIMEOUT_MS/60000)} min) — track skipped. Check if Logic is frozen.`);
   }
+  // ── AX tracker cleanup ───────────────────────────────────────────────────
+  try { if (typeof _offProgress === 'function') _offProgress(); } catch(e) { /* no-op */ }
+  // Ensure tracker promise settles (it should already have — trackBounce resolves
+  // when dialog closes, which is exactly when the legacy loop breaks on "done").
+  try { await Promise.race([_trackPromise, window.api.wait(500).then(() => null)]); } catch(e) { /* no-op */ }
   await window.api.wait(400);
   // Check if file was actually created — retry up to 4x (2s total) for slow disks/systems
   // DON'T set _userCancelled here — that would skip unsolo/unmute cleanup!

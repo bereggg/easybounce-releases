@@ -35,6 +35,12 @@ contextBridge.exposeInMainWorld('api', {
   closeMarkerList:     ()    => ipcRenderer.invoke('close-marker-list'),
   readStates:          ()    => ipcRenderer.invoke('read-states'),
   bounce:         ()    => ipcRenderer.invoke('bounce'),
+  trackBounce:    (preRollMs, maxRenderMs) => ipcRenderer.invoke('track-bounce', preRollMs, maxRenderMs),
+  onBounceProgress: (cb) => {
+    const handler = (_e, data) => { try { cb(data); } catch(e) { console.warn('[EB bounce-progress cb]', e); } };
+    ipcRenderer.on('bounce-progress', handler);
+    return () => ipcRenderer.removeListener('bounce-progress', handler);
+  },
   cancelBounce:   ()    => ipcRenderer.invoke('cancel-bounce'),
   resetCancel:    ()    => ipcRenderer.invoke('reset-cancel'),
   checkCancel:    ()    => ipcRenderer.invoke('check-cancel'),

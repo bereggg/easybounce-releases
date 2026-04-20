@@ -1038,6 +1038,132 @@ end tell
     btask.waitUntilExit()
     jsonOut(["ok": true, "action": "bounce"])
 
+// ── trackBounce: stream bounce progress via AX ──────────────────────────────
+// Usage: trackBounce <preRollMs> <maxRenderMs>
+// Emits one JSON per line to stdout:
+//   {"event":"waiting"}
+//   {"event":"opened"}
+//   {"event":"progress","value":0.42}
+//   {"event":"closed","lastProgress":0.996,"renderTime":27.3}
+//   {"event":"no-dialog"}  — bounce dialog never appeared within preRollMs
+//   {"event":"timeout","lastProgress":X} — exceeded maxRenderMs
+//   {"event":"replace"} / {"event":"recover"} / {"event":"quit-cancel"} — side-dialog detected
+case "trackBounce":
+    let preRollMs = args.count >= 3 ? (Int(args[2]) ?? 5000) : 5000
+    let maxRenderMs = args.count >= 4 ? (Int(args[3]) ?? 3600000) : 3600000
+
+    // Recursive search for first AXProgressIndicator inside an element
+    func findProgressIndicator(_ el: AXUIElement, depth: Int = 0) -> AXUIElement? {
+        if depth > 4 { return nil }
+        if axRole(el) == "AXProgressIndicator" { return el }
+        for k in axKids(el) {
+            if let f = findProgressIndicator(k, depth: depth + 1) { return f }
+        }
+        return nil
+    }
+
+    // Collect all button titles (recursive, shallow depth)
+    func collectButtonTitles(_ el: AXUIElement, depth: Int = 0) -> [String] {
+        if depth > 4 { return [] }
+        var out: [String] = []
+        if axRole(el) == "AXButton" {
+            let t = axTitle(el)
+            if !t.isEmpty { out.append(t) }
+        }
+        for k in axKids(el) {
+            out.append(contentsOf: collectButtonTitles(k, depth: depth + 1))
+        }
+        return out
+    }
+
+    // Structural filter: AXDialog + has AXProgressIndicator + has "Cancel" + no Bounce/OK/Replace
+    func findBounceDialog() -> (AXUIElement, AXUIElement)? {
+        guard let wins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement] else { return nil }
+        for w in wins {
+            let subrole = axVal(w, kAXSubroleAttribute) as? String ?? ""
+            guard subrole == "AXDialog" else { continue }
+            guard let prog = findProgressIndicator(w) else { continue }
+            let titles = collectButtonTitles(w)
+            let hasCancel = titles.contains("Cancel")
+            let hasBounce = titles.contains("Bounce")
+            let hasOK = titles.contains("OK")
+            let hasReplace = titles.contains("Replace")
+            let hasSave = titles.contains("Save")
+            if hasCancel && !hasBounce && !hasOK && !hasReplace && !hasSave {
+                return (w, prog)
+            }
+        }
+        return nil
+    }
+
+    // Side-dialog detection (Replace / Recover / Save-on-quit)
+    func findSideDialog() -> String? {
+        guard let wins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement] else { return nil }
+        for w in wins {
+            let titles = collectButtonTitles(w)
+            if titles.contains("Replace") { return "replace" }
+            if titles.contains("Recover") { return "recover" }
+            if titles.contains("Save") && titles.contains("Cancel") && !titles.contains("Bounce") {
+                return "quit-cancel"
+            }
+        }
+        return nil
+    }
+
+    func emit(_ obj: [String: Any]) {
+        if let data = try? JSONSerialization.data(withJSONObject: obj, options: []),
+           let str = String(data: data, encoding: .utf8) {
+            print(str)
+            fflush(stdout)
+        }
+    }
+
+    emit(["event": "waiting"])
+
+    // Phase A: wait for bounce dialog (or side dialog)
+    let startA = Date()
+    var dialogPair: (AXUIElement, AXUIElement)? = nil
+    while Date().timeIntervalSince(startA) * 1000 < Double(preRollMs) {
+        if let side = findSideDialog() {
+            emit(["event": side])
+            // Give renderer a chance to handle — keep polling briefly
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+        if let d = findBounceDialog() { dialogPair = d; break }
+        Thread.sleep(forTimeInterval: 0.2)
+    }
+    guard let (_, progEl) = dialogPair else {
+        emit(["event": "no-dialog"])
+        exit(0)
+    }
+    let openedAt = Date()
+    emit(["event": "opened"])
+
+    // Phase B: track progress until dialog disappears
+    var lastProgress: Double = 0.0
+    var lastEmitted: Double = -1.0
+    while Date().timeIntervalSince(openedAt) * 1000 < Double(maxRenderMs) {
+        var valRef: CFTypeRef?
+        let err = AXUIElementCopyAttributeValue(progEl, kAXValueAttribute as CFString, &valRef)
+        if err != .success {
+            // Dialog gone (or progress element destroyed)
+            let elapsed = Date().timeIntervalSince(openedAt)
+            emit(["event": "closed", "lastProgress": lastProgress, "renderTime": elapsed])
+            exit(0)
+        }
+        if let n = valRef as? NSNumber {
+            let p = n.doubleValue
+            lastProgress = p
+            if abs(p - lastEmitted) >= 0.01 {
+                emit(["event": "progress", "value": p])
+                lastEmitted = p
+            }
+        }
+        Thread.sleep(forTimeInterval: 0.3)
+    }
+    emit(["event": "timeout", "lastProgress": lastProgress])
+    exit(0)
+
 case "muteByName":
     guard args.count >= 3 else { jsonOut(["error": "name required"]); exit(1) }
     let targetName = args[2...].joined(separator: " ")
