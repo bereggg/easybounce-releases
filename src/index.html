@@ -1927,8 +1927,8 @@ function showTrialCountdown(msRemaining) {
     if (ms <= 0) {
       clearInterval(_trialTimerInterval);
       document.getElementById('trial-time-left').textContent = 'EXPIRED';
-      badge.style.background = 'rgba(255,60,60,.10)';
-      badge.style.color = '#ff6060';
+      badge.style.background = 'var(--red-a15)';
+      badge.style.color = 'var(--red)';
       showTrialExpiredOverlay();
       return;
     }
