@@ -250,7 +250,7 @@
   height: 14px;
   flex-shrink: 0;
   vertical-align: -2px;
-  fill: currentColor;
+  fill: none;
   stroke: currentColor;
 }
 .ico-sm { width: 11px; height: 11px; }
