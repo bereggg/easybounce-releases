@@ -778,7 +778,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
           <button id="markers-chips-btn" onclick="toggleQueueMarkersChips()" title="Show/hide marker names on queue items"
             style="padding:2px 7px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .14s;line-height:1.4;">–</button>
           <!-- Markers popup -->
-          <div id="markers-popup" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;min-width:480px;background:var(--card2);border:1px solid var(--b2);border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:700;padding:6px 0;">
+          <div id="markers-popup" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;min-width:480px;background:var(--card2);border:1px solid var(--b2);border-radius:var(--r);box-shadow:var(--sh-float);z-index:var(--z-dropdown);padding:6px 0;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);">
             <div style="padding:4px 10px 6px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:6px;">
               <span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);flex:1;">Bounce Ranges</span>
               <button onclick="rescanMarkers()" title="Re-scan markers from Logic" id="markers-rescan-btn" style="padding:3px 9px;border-radius:5px;border:1px solid var(--b2);background:var(--card2);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .13s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">↺ Rescan</button>
@@ -864,7 +864,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
       <div class="prog-info"><span id="ptext">Ready</span><span id="ppct"></span><span id="eta" style="font-size:9px;color:var(--muted);margin-left:auto;"></span></div>
       <div id="reveal-btn" style="display:none;margin-bottom:8px;">
         <div style="display:flex;gap:6px;align-items:center;">
-          <button id="reveal-btn-main" onclick="revealStems()" title="Open output folder in Finder" style="flex:1;padding:8px;border-radius:var(--r);border:1px solid rgba(67,233,123,.4);background:rgba(67,233,123,.08);color:var(--a3);font-size:12px;font-weight:600;cursor:pointer;transition:all .16s;font-family:'Space Grotesk',sans-serif;">
+          <button id="reveal-btn-main" onclick="revealStems()" title="Open output folder in Finder" style="flex:1;padding:8px;border-radius:var(--r);border:1px solid var(--success-a40);background:var(--success-a15);color:var(--a3);font-size:12px;font-weight:var(--fw-semi);cursor:pointer;transition:all .16s;font-family:var(--font-display);">
             📂 Open folder in Finder
           </button>
           <button onclick="document.getElementById('reveal-btn').style.display='none'" title="Close" style="padding:8px 10px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:12px;cursor:pointer;flex-shrink:0;"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
@@ -1338,11 +1338,11 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
     <div class="modal-hdr"><svg class="ico" style="vertical-align:-3px;margin-right:6px;"><use href="#ico-clock"/></svg>Schedule Bounce</div>
     <div class="mfield">
       <label>Start at</label>
-      <input type="time" id="schedule-time" style="background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:14px;padding:6px 10px;font-family:'JetBrains Mono',monospace;width:100%;box-sizing:border-box;">
+      <input type="time" id="schedule-time" style="background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:14px;padding:6px 10px;font-family:var(--font-mono);width:100%;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;" onfocus="this.style.borderColor='var(--accent-a60)';this.style.boxShadow='0 0 0 3px var(--accent-a12)'" onblur="this.style.borderColor='var(--b)';this.style.boxShadow='none'">
     </div>
     <div id="schedule-info" style="font-size:11px;color:var(--muted);padding:6px 0;"></div>
     <div id="schedule-active" style="display:none;text-align:center;padding:12px 0;">
-      <div style="font-size:28px;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;" id="schedule-countdown">--:--:--</div>
+      <div style="font-size:var(--fs-xxl);font-weight:var(--fw-bold);color:var(--accent);font-family:var(--font-mono);letter-spacing:var(--ls-tight);" id="schedule-countdown">--:--:--</div>
       <div style="font-size:10px;color:var(--warn);margin-top:8px;">⚠ Don't close lid or put Mac to sleep</div>
     </div>
     <div class="modal-actions">
