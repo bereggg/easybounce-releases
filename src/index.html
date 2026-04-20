@@ -117,7 +117,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .foot-btn.sm{flex:0;padding:7px 10px;}
 .presets-bar{padding:7px 12px;border-bottom:1px solid var(--b);display:flex;gap:5px;flex-wrap:wrap;align-items:center;min-height:44px;flex-shrink:0;}
 .preset-section-lbl{font-size:var(--fs-xxs);font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 4px;white-space:nowrap;align-self:center;}
-.pchip{padding:5px 12px;border-radius:var(--r-pill);border:1px solid var(--b2);background:var(--card);color:var(--t2);font-size:var(--fs-xs);font-weight:var(--fw-semi);cursor:pointer;transition:all .16s;white-space:nowrap;box-shadow:var(--sh-card),var(--sh-inset);}
+.pchip{padding:5px 12px;border-radius:var(--r-pill);border:1px solid var(--b2);background:var(--card);color:var(--t2);font-size:var(--fs-xs);font-weight:var(--fw-semi);cursor:pointer;transition:all .16s;white-space:nowrap;box-shadow:var(--sh-card);}
 .pchip:hover{border-color:rgba(108,99,255,.5);color:var(--accent);background:rgba(108,99,255,.07);box-shadow:0 2px 8px rgba(108,99,255,.15);}
 .pchip.mx:hover{border-color:rgba(255,101,132,.5);color:var(--a2);background:rgba(255,101,132,.07);}
 .pchip.custom{border-style:dashed;}
@@ -268,7 +268,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .ll.err .msg{color:var(--red);}
 .ll.info .msg{color:var(--t2);}
 .stats-grid{border-top:1px solid var(--b);padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;gap:6px;flex-shrink:0;}
-.stat-card{background:var(--card);border:1px solid var(--b);border-radius:var(--r);padding:9px 11px;box-shadow:var(--sh-inset);}
+.stat-card{background:var(--card);border:1px solid var(--b);border-radius:var(--r);padding:9px 11px;}
 .stat-val{font-family:var(--font-display);font-size:16px;font-weight:var(--fw-bold);line-height:1;color:var(--text);letter-spacing:var(--ls-tight);}
 .stat-val.primary{color:var(--accent);}
 .stat-lbl{font-size:var(--fs-xxs);color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:var(--ls-wide);}
@@ -555,13 +555,12 @@ body.easy #skin-panel{z-index:9000;}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--card2);border:1px solid var(--b2);color:var(--text);font-family:var(--font-mono);font-size:var(--fs-sm);padding:9px 20px;border-radius:var(--r3);box-shadow:var(--sh-float);opacity:0;transition:all .28s var(--ease-out);pointer-events:none;z-index:var(--z-toast);white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 /* ── Cancel overlay ─────────────────────────────────── */
-#cancel-overlay{display:none;position:fixed;inset:0;z-index:10001;align-items:center;justify-content:center;background:linear-gradient(135deg,#c85000,#e8820a,#f5a623,#e8820a,#c85000);background-size:300% 300%;animation:cancelShimmer 2s ease-in-out infinite;transition:opacity .35s ease;will-change:opacity;}
+#cancel-overlay{display:none;position:fixed;inset:0;z-index:10001;align-items:center;justify-content:center;background:rgba(14,14,22,0.92);backdrop-filter:blur(40px) saturate(150%);-webkit-backdrop-filter:blur(40px) saturate(150%);border:1px solid var(--warn-a30);box-shadow:0 16px 48px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);transition:opacity .35s ease;will-change:opacity;}
 /* Mutex: if both scan-warning and cancel-overlay try to appear, cancel wins (it's the user-initiated action) and scan-warning is hidden */
 #cancel-overlay.show{display:flex;}
 #cancel-overlay.show ~ #scan-warning,body:has(#cancel-overlay.show) #scan-warning{display:none!important;}
 #cancel-overlay.fade-out{opacity:0;}
-@keyframes cancelShimmer{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
-#cancel-overlay-inner{color:#fff;font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;text-align:center;letter-spacing:.01em;text-shadow:0 2px 8px rgba(0,0,0,.3);animation:cancelPulseText 1.2s ease-in-out infinite alternate;}
+#cancel-overlay-inner{color:var(--warn);font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;text-align:center;letter-spacing:.01em;text-shadow:0 2px 12px rgba(0,0,0,.5);}
 @keyframes cancelPulseText{from{opacity:.7;transform:scale(.97);}to{opacity:1;transform:scale(1);}}
 #cancel-overlay-sub{margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:var(--fs-sm);font-weight:400;opacity:.8;}
 /* ── Scan in-progress overlay ────────────────────────── */
@@ -746,9 +745,9 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
   </div>
   <div class="tb-proj" id="tb-proj">no project loaded</div>
   <div class="em-wrap" onclick="toggleEasyMode()" title="Toggle Easy / Pro mode">
-    <span class="em-lbl em-lbl-easy">Easy</span>
-    <div class="em-track"><div class="em-thumb"></div></div>
     <span class="em-lbl em-lbl-pro">Pro</span>
+    <div class="em-track"><div class="em-thumb"></div></div>
+    <span class="em-lbl em-lbl-easy">Easy</span>
   </div>
   <div class="tb-right">
     <button class="tb-pill" id="scan-btn" onclick="scanLogic()" title="Scan Logic Pro channels. Keep Mixer open!" style="background:var(--g-primary);border-color:transparent;color:#fff;font-weight:700;box-shadow:var(--sh-glow-sm),var(--sh-inset);">
@@ -2971,7 +2970,10 @@ function renderMixerFilters() {
   const names = [...known, ...extra];
   el.style.display = 'flex';
   if (hint) hint.style.display = 'none';
-  const skipBtn = `<button onclick="toggleSkipFilterScan()" title="${_skipFilterScan ? 'Filter scan disabled — click to re-enable' : 'Click to skip filter type scan (faster)'}" style="margin-left:2px;padding:2px 6px;border-radius:5px;border:1px solid ${_skipFilterScan ? 'rgba(255,100,100,.4)' : 'rgba(255,255,255,.13)'};background:${_skipFilterScan ? 'rgba(255,80,80,.13)' : 'rgba(255,255,255,.05)'};color:${_skipFilterScan ? '#ff6464' : 'rgba(255,255,255,.4)'};font-size:12px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;width:20px;height:20px;flex-shrink:0;transition:all .15s;">${_skipFilterScan ? '⊘' : '🔍'}</button>`;
+  const skipIcon = _skipFilterScan
+    ? `<svg class="ico ico-sm" style="color:var(--red)"><use href="#ico-search-off"/></svg>`
+    : `<svg class="ico ico-sm"><use href="#ico-search"/></svg>`;
+  const skipBtn = `<button onclick="toggleSkipFilterScan()" title="${_skipFilterScan ? 'Filter scan disabled — click to re-enable' : 'Click to skip filter type scan (faster)'}" style="margin-left:2px;padding:2px 6px;border-radius:5px;border:1px solid ${_skipFilterScan ? 'var(--red-a30)' : 'var(--w-a12)'};background:${_skipFilterScan ? 'var(--red-a08)' : 'var(--w-a03)'};color:${_skipFilterScan ? 'var(--red)' : 'var(--muted)'};font-size:12px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;width:20px;height:20px;flex-shrink:0;transition:all .15s;">${skipIcon}</button>`;
   el.innerHTML = '<span class="mf-label">MIXER</span>' + names.map(name => {
     const on = _mixerFilters[name];
     return `<button class="mf-btn ${on ? 'on' : 'off'}"
@@ -3551,7 +3553,8 @@ function _renderChannelsImpl() {
     return true;
   }).sort((a, b) => a.name.localeCompare(b.name));
 
-  document.getElementById('ch-count').textContent = `${visible.length}/${channels.length}`;
+  const chCountEl = document.getElementById('ch-count');
+  if (chCountEl) { chCountEl.textContent = `${visible.length} · ${channels.length}`; chCountEl.title = `${visible.length} visible of ${channels.length} total channels`; }
 
   _currentVisibleOrder = visible.map(c => c.index);
   visible.forEach(ch => {
@@ -10824,7 +10827,7 @@ const SKINS = {
   },
   logic: {
     name:'LOGIC', preview:['#0A84FF','#2A2A2A','#30D158'],
-    vars:{'--bg':'#292929','--s':'#1A1A1A','--card':'#333333','--card2':'#3D3D3D','--b':'#484848','--b2':'#505050','--accent':'#0A84FF','--a2':'#30D158','--a3':'#30D158','--warn':'#FF9F0A','--red':'#FF453A','--text':'#F0F0F0','--t2':'#999999','--muted':'#7A7A7A','--glass':'rgba(255,255,255,.04)','--glass-border':'rgba(255,255,255,.06)','--r':'7px','--r2':'12px','--r3':'18px'}
+    vars:{'--bg':'#1E1E1E','--s':'#252525','--card':'#2A2A2A','--card2':'#323232','--b':'#3A3A3A','--b2':'#484848','--accent':'#0A84FF','--a2':'#FF9F0A','--a3':'#30D158','--warn':'#FF9F0A','--red':'#FF453A','--text':'#EBEBEB','--t2':'#8E8E93','--muted':'#636366','--glass':'rgba(255,255,255,.04)','--glass-border':'rgba(255,255,255,.06)','--r':'6px','--r2':'10px','--r3':'14px'}
   },
   aurora: {
     name:'AURORA', preview:['#e879a0','#080012','#7c6aff'],
@@ -10841,11 +10844,11 @@ const SKINS = {
   anime: {
     name:'PEARL', preview:['#6c63ff','#fdfdfb','#2ba591'],
     vars:{
-      '--bg':'#fdfdfb','--s':'#f5f5f3','--card':'#f9f9f7','--card2':'#ffffff',
-      '--b':'#e5e5e0','--b2':'#d0cfc9',
+      '--bg':'#fdfdfb','--s':'#f0eee8','--card':'#ffffff','--card2':'#f7f5ef',
+      '--b':'#d4d2cc','--b2':'#b8b6af',
       '--accent':'#6c63ff','--a2':'#e85a7a','--a3':'#4ba85f','--teal':'#2ba591',
       '--warn':'#d67933','--red':'#d64550',
-      '--text':'#2a2a30','--t2':'#5e5e68','--muted':'#9a9aa2','--disabled':'#c8c8cf',
+      '--text':'#1f1f25','--t2':'#55555e','--muted':'#8e8e97','--disabled':'#c8c8cf',
       '--r':'10px','--r2':'16px','--r3':'24px',
       '--accent-a05':'rgba(108,99,255,0.05)','--accent-a08':'rgba(108,99,255,0.08)',
       '--accent-a12':'rgba(108,99,255,0.12)','--accent-a20':'rgba(108,99,255,0.18)',

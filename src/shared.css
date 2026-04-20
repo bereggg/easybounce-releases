@@ -43,46 +43,42 @@
      Each color has pre-calculated rgba values so you never hardcode again
      ───────────────────────────────────────────────────────────────── */
 
-  /* Accent rgba — indigo-violet #6c63ff */
-  --accent-rgb:  108, 99, 255;
-  --accent-a05:  rgba(108, 99, 255, 0.05);
-  --accent-a08:  rgba(108, 99, 255, 0.08);
-  --accent-a12:  rgba(108, 99, 255, 0.12);
-  --accent-a20:  rgba(108, 99, 255, 0.20);
-  --accent-a30:  rgba(108, 99, 255, 0.30);
-  --accent-a40:  rgba(108, 99, 255, 0.40);
-  --accent-a60:  rgba(108, 99, 255, 0.60);
+  /* Accent alpha — adapts to current --accent via color-mix */
+  --accent-a05:  color-mix(in srgb, var(--accent)  5%, transparent);
+  --accent-a08:  color-mix(in srgb, var(--accent)  8%, transparent);
+  --accent-a12:  color-mix(in srgb, var(--accent) 12%, transparent);
+  --accent-a20:  color-mix(in srgb, var(--accent) 20%, transparent);
+  --accent-a30:  color-mix(in srgb, var(--accent) 30%, transparent);
+  --accent-a40:  color-mix(in srgb, var(--accent) 40%, transparent);
+  --accent-a60:  color-mix(in srgb, var(--accent) 60%, transparent);
 
-  /* A2 rgba — pink-coral #ff6584 */
-  --a2-rgb:      255, 101, 132;
-  --a2-a08:      rgba(255, 101, 132, 0.08);
-  --a2-a12:      rgba(255, 101, 132, 0.12);
-  --a2-a20:      rgba(255, 101, 132, 0.20);
-  --a2-a30:      rgba(255, 101, 132, 0.30);
-  --a2-a40:      rgba(255, 101, 132, 0.40);
+  /* A2 alpha — adapts to current --a2 */
+  --a2-a08:  color-mix(in srgb, var(--a2)  8%, transparent);
+  --a2-a12:  color-mix(in srgb, var(--a2) 12%, transparent);
+  --a2-a20:  color-mix(in srgb, var(--a2) 20%, transparent);
+  --a2-a30:  color-mix(in srgb, var(--a2) 30%, transparent);
+  --a2-a40:  color-mix(in srgb, var(--a2) 40%, transparent);
 
-  /* Warn rgba — peach #ffa94d */
-  --warn-rgb:    255, 169, 77;
-  --warn-a08:    rgba(255, 169, 77, 0.08);
-  --warn-a12:    rgba(255, 169, 77, 0.12);
-  --warn-a20:    rgba(255, 169, 77, 0.20);
-  --warn-a30:    rgba(255, 169, 77, 0.30);
+  /* Warn alpha — adapts to current --warn */
+  --warn-a08:  color-mix(in srgb, var(--warn)  8%, transparent);
+  --warn-a12:  color-mix(in srgb, var(--warn) 12%, transparent);
+  --warn-a20:  color-mix(in srgb, var(--warn) 20%, transparent);
+  --warn-a30:  color-mix(in srgb, var(--warn) 30%, transparent);
 
-  /* Teal/mint rgba — aqua #38f9d7 */
-  --teal-rgb:    56, 249, 215;
-  --teal-a08:    rgba(56, 249, 215, 0.08);
-  --teal-a20:    rgba(56, 249, 215, 0.20);
-  --teal-a30:    rgba(56, 249, 215, 0.30);
+  /* Teal alpha — adapts to current --teal */
+  --teal-a08:  color-mix(in srgb, var(--teal)  8%, transparent);
+  --teal-a20:  color-mix(in srgb, var(--teal) 20%, transparent);
+  --teal-a30:  color-mix(in srgb, var(--teal) 30%, transparent);
 
-  /* Red rgba — destructive */
-  --red-a08:     rgba(255, 71, 87, 0.08);
-  --red-a15:     rgba(255, 71, 87, 0.15);
-  --red-a30:     rgba(255, 71, 87, 0.30);
-  --red-a50:     rgba(255, 71, 87, 0.50);
+  /* Red alpha — adapts to current --red */
+  --red-a08:  color-mix(in srgb, var(--red)  8%, transparent);
+  --red-a15:  color-mix(in srgb, var(--red) 15%, transparent);
+  --red-a30:  color-mix(in srgb, var(--red) 30%, transparent);
+  --red-a50:  color-mix(in srgb, var(--red) 50%, transparent);
 
-  /* Success rgba — lime #43e97b */
-  --success-a15: rgba(67, 233, 123, 0.15);
-  --success-a40: rgba(67, 233, 123, 0.40);
+  /* Success alpha — adapts to current --a3 (success green) */
+  --success-a15: color-mix(in srgb, var(--a3) 15%, transparent);
+  --success-a40: color-mix(in srgb, var(--a3) 40%, transparent);
 
   /* White overlays — for inner highlights, glass surfaces */
   --w-a03:       rgba(255, 255, 255, 0.03);
