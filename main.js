@@ -966,6 +966,7 @@ ipcMain.handle('enter-scan-badge', async () => {
   // The badge is positioned on Logic's monitor; during scan focus stays on Logic's Space.
   mainWindow.setVisibleOnAllWorkspaces(false);
   mainWindow.setIgnoreMouseEvents(true, { forward: true });
+  if (mainWindow.setWindowButtonVisibility) mainWindow.setWindowButtonVisibility(false);
   // Don't steal focus from Logic — just show badge on top
   mainWindow.showInactive();
   return { ok: true };
@@ -979,7 +980,8 @@ ipcMain.handle('set-ignore-mouse-events', (e, ignore, options) => {
 ipcMain.handle('exit-scan-badge', () => {
   if (!mainWindow) return { ok: false };
   _inScanBadge = false;
-  mainWindow.setIgnoreMouseEvents(false); // restore interactivity
+  mainWindow.setIgnoreMouseEvents(false);
+  if (mainWindow.setWindowButtonVisibility) mainWindow.setWindowButtonVisibility(true);
   mainWindow.setVisibleOnAllWorkspaces(false);
   mainWindow.setMinimumSize(1070, 640);
   mainWindow.setResizable(true);

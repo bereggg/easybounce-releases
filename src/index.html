@@ -234,7 +234,8 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .qversion{font-size:10px;color:var(--t2);font-family:var(--font-mono);}
 .qversion::before{content:'·';margin:0 6px;color:var(--muted);}
 /* ── Scan banner pulse dot + separator ── */
-.scan-pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:eb-breathe 2s ease-in-out infinite;box-shadow:0 0 12px var(--accent-a60);flex-shrink:0;}
+@keyframes scan-breathe{0%,100%{opacity:.7;transform:scale(.9);box-shadow:0 0 6px var(--accent-a30);}50%{opacity:1;transform:scale(1.05);box-shadow:0 0 14px var(--accent-a60);}}
+.scan-pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:scan-breathe 2s ease-in-out infinite;flex-shrink:0;}
 .scan-sep{color:rgba(255,255,255,.3);font-size:11px;}
 /* ── Master Plugins modal components ── */
 .mp-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--b);}
@@ -268,7 +269,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .ll.info .msg{color:var(--t2);}
 .stats-grid{border-top:1px solid var(--b);padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;gap:6px;flex-shrink:0;}
 .stat-card{background:var(--card);border:1px solid var(--b);border-radius:var(--r);padding:9px 11px;box-shadow:var(--sh-inset);}
-.stat-val{font-family:var(--font-display);font-size:var(--fs-xl);font-weight:var(--fw-bold);line-height:1;color:var(--text);letter-spacing:var(--ls-tight);}
+.stat-val{font-family:var(--font-display);font-size:16px;font-weight:var(--fw-bold);line-height:1;color:var(--text);letter-spacing:var(--ls-tight);}
 .stat-val.primary{color:var(--accent);}
 .stat-lbl{font-size:var(--fs-xxs);color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:var(--ls-wide);}
 .stat-cur{font-size:var(--fs-sm);font-weight:var(--fw-semi);color:var(--text);line-height:1.3;font-family:var(--font-display);letter-spacing:var(--ls-normal);}
@@ -337,8 +338,9 @@ body.easy #mix-toggle-all-btn[oncontextmenu]{pointer-events:auto;}
 body.easy #mix-modal-filters{display:none!important;}
 body.easy .tcb-list{border-radius:var(--r)!important;}
 /* ── Version naming presets ── */
-.vnp-chip{padding:4px 11px;border-radius:var(--r-pill);border:1px solid var(--accent-a60);background:transparent;color:var(--accent);font-size:var(--fs-sm);font-weight:var(--fw-bold);cursor:pointer;transition:all .14s;white-space:nowrap;font-family:var(--font-display);display:inline-flex;align-items:center;gap:4px;}
-.vnp-chip:hover{border-color:rgba(108,99,255,.8);color:#fff;background:rgba(108,99,255,.12);}
+.vnp-chip{padding:4px 11px;border-radius:var(--r-pill);border:1px solid var(--b);background:transparent;color:var(--t2);font-size:var(--fs-sm);font-weight:var(--fw-bold);cursor:pointer;transition:all .14s;white-space:nowrap;font-family:var(--font-display);display:inline-flex;align-items:center;gap:4px;}
+.vnp-chip:hover{border-color:var(--accent-a60);color:var(--accent);background:var(--accent-a08);}
+.vnp-chip.active{border-color:var(--accent-a60);color:var(--accent);background:var(--accent-a08);}
 .vnp-chip .vnp-x{font-size:var(--fs-xxs);opacity:.5;margin-left:2px;transition:opacity .14s;}
 .vnp-chip:hover .vnp-x{opacity:1;color:var(--red);}
 .vnp-add{padding:4px 9px;border-radius:var(--r3);border:1px dashed rgba(108,99,255,.4);background:transparent;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;transition:all .14s;}
@@ -356,36 +358,39 @@ body.easy .em-more-btn{display:inline-flex!important;cursor:pointer;}
 
 /* ── Easy Mode: BIGGER, BOLDER everything ──────── */
 body.easy .bbtn{
-  height:64px!important;font-size:18px!important;font-weight:800!important;
+  height:72px!important;font-size:20px!important;font-weight:800!important;
   letter-spacing:.18em!important;border-radius:var(--r2)!important;
   box-shadow:0 4px 20px rgba(108,99,255,.35)!important;
 }
 body.easy .stop-btn{
-  width:50px!important;height:64px!important;border-radius:var(--r2)!important;font-size:18px!important;
+  width:56px!important;height:72px!important;border-radius:var(--r2)!important;font-size:18px!important;
 }
 body.easy .bounce-btns{gap:8px!important;}
 body.easy .bounce-wrap{padding:10px 12px 14px!important;gap:10px!important;}
-body.easy .prog-bar{height:12px!important;border-radius:6px!important;position:relative!important;}
-body.easy .prog-fill{border-radius:6px!important;}
-body.easy .prog-info{font-size:12px!important;font-weight:700!important;letter-spacing:.03em!important;}
-body.easy #ppct{font-size:var(--fs-base)!important;font-weight:800!important;color:var(--accent)!important;}
-body.easy #eta{font-size:var(--fs-xs)!important;}
+body.easy .prog-bar{display:none!important;}
+body.easy .prog-info{display:none!important;}
 body.easy .fmt-main-btn{
-  padding:12px 14px!important;font-size:var(--fs-sm)!important;min-height:44px!important;
-  border-radius:var(--r)!important;font-weight:700!important;
+  padding:10px 14px!important;font-size:11px!important;min-height:40px!important;
+  border-radius:var(--r)!important;font-weight:600!important;
+  background:transparent!important;border:1px solid var(--b)!important;color:var(--t2)!important;
 }
+body.easy .fmt-main-btn:hover{border-color:var(--accent-a60)!important;color:var(--accent)!important;}
 body.easy .fmt-tag{font-size:var(--fs-xs)!important;padding:3px 8px!important;}
 body.easy .out-path,body.easy .out-inp{
-  font-size:var(--fs-sm)!important;padding:8px 10px!important;border-radius:var(--r)!important;
+  font-size:12px!important;padding:10px 12px!important;border-radius:var(--r)!important;
 }
-body.easy .out-lbl{font-size:var(--fs-xs)!important;font-weight:800!important;width:52px!important;letter-spacing:.08em!important;}
+body.easy .out-lbl{font-size:9px!important;font-weight:700!important;width:52px!important;letter-spacing:.08em!important;color:var(--muted)!important;opacity:.7;}
 body.easy .out-row{margin-bottom:3px!important;}
 body.easy .out-wrap{gap:5px!important;padding:6px 12px!important;}
-body.easy .qitem{padding:10px 14px!important;border-radius:var(--r)!important;margin-bottom:4px!important;}
-body.easy .qitem-name{font-size:12px!important;font-weight:700!important;}
+/* Queue: bigger, more spacious */
+body.easy .qitem{padding:14px 16px!important;border-radius:var(--r)!important;margin-bottom:6px!important;}
+body.easy .qitem-name{font-size:15px!important;font-weight:600!important;}
 body.easy .qitem-badge{font-size:var(--fs-xxs)!important;padding:2px 7px!important;}
-body.easy .ch-item,body.easy .tree-child,body.easy .tree-group{padding:6px 10px!important;}
-body.easy .ch-name,body.easy .tree-child-name,body.easy .tree-group-name{font-size:var(--fs-xs)!important;font-weight:600!important;}
+body.easy .qnum{font-size:10px!important;opacity:.5!important;}
+body.easy .qtag{font-size:9px!important;padding:2px 6px!important;}
+/* Channels: bigger names, more padding */
+body.easy .ch-item,body.easy .tree-child,body.easy .tree-group{padding:10px 14px!important;}
+body.easy .ch-name,body.easy .tree-child-name,body.easy .tree-group-name{font-size:14px!important;font-weight:600!important;}
 body.easy .ch-footer{padding:6px 10px!important;gap:4px!important;}
 body.easy .foot-btn{padding:8px 7px!important;font-size:var(--fs-xs)!important;font-weight:800!important;border-radius:var(--r)!important;}
 body.easy .foot-btn.green{padding:8px 10px!important;font-size:var(--fs-sm)!important;}
@@ -542,9 +547,8 @@ body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:va
 .mbtn.save{background:var(--g-primary);border:none;color:#fff;font-family:var(--font-display);box-shadow:var(--sh-glow-sm),var(--sh-inset);}
 .mbtn.save:hover{box-shadow:0 6px 24px rgba(108,99,255,.45);}
 .mbtn.del{background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.25);color:var(--red);flex:0;padding:10px 14px;}
-@keyframes savePresetGlow{0%,100%{box-shadow:0 0 6px var(--success-a15);}50%{box-shadow:0 0 16px var(--success-a40),0 2px 8px var(--success-a15);}}
-.mbtn.save-preset{background:var(--success-a15)!important;border:1px solid var(--success-a40)!important;color:var(--a3)!important;font-size:12px!important;animation:savePresetGlow 2.4s ease-in-out infinite;letter-spacing:.01em;}
-.mbtn.save-preset:hover{background:rgba(67,233,123,.35)!important;box-shadow:0 0 20px rgba(67,233,123,.5)!important;}
+.mbtn.save-preset{background:transparent!important;border:1px solid var(--success-a40)!important;color:var(--a3)!important;font-size:12px!important;letter-spacing:.01em;box-shadow:none!important;}
+.mbtn.save-preset:hover{background:var(--success-a15)!important;border-color:var(--a3)!important;}
 #skin-panel{display:none;position:fixed;top:58px;right:12px;z-index:200;background:var(--card);border:1px solid var(--glass-border);border-radius:var(--r2);padding:18px;width:312px;box-shadow:0 24px 64px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.06);}
 body.easy #skin-panel{z-index:9000;}
 .skin-hdr{font-size:var(--fs-xs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:14px;}
@@ -564,7 +568,7 @@ body.easy #skin-panel{z-index:9000;}
 #scan-warning{display:none;position:fixed;top:46px;left:0;right:0;height:44px;z-index:9999;pointer-events:none;align-items:center;justify-content:center;gap:10px;background:rgba(14,14,22,.88);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);border-bottom:1px solid var(--accent-a30);box-shadow:0 4px 24px rgba(0,0,0,.4);}
 #scan-warning.show{display:flex;}
 @keyframes scanBorderPulse{0%{background-position:-100% 0;}100%{background-position:200% 0;}}
-#scan-warning::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);background-size:200% 100%;animation:scanBorderPulse 2.2s linear infinite;}
+#scan-warning::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);background-size:200% 100%;animation:scanBorderPulse 2.8s linear infinite;}
 #scan-warning-inner{position:relative;display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(-4px);transition:opacity .22s,transform .22s;will-change:opacity,transform;}
 #scan-warning.show #scan-warning-inner{opacity:1;transform:translateY(0);}
 #scan-warning-title{font-family:var(--font-display);font-size:13px;font-weight:700;color:#fff;letter-spacing:-.01em;}
@@ -711,8 +715,8 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
 #fb-stars{display:none;flex-direction:column;gap:6px;}
 #fb-stars.show{display:flex;}
 .fb-star-row{display:flex;gap:6px;justify-content:center;}
-.fb-star{font-size:26px;cursor:pointer;opacity:.3;transition:opacity .1s,transform .1s;line-height:1;user-select:none;}
-.fb-star.active,.fb-star:hover{opacity:1;transform:scale(1.15);}
+.fb-star{font-size:22px;cursor:pointer;color:var(--muted);transition:color .1s,transform .1s;line-height:1;user-select:none;}
+.fb-star.active,.fb-star:hover{color:var(--warn);transform:scale(1.15);}
 #fb-star-desc{font-size:var(--fs-sm);color:var(--muted);text-align:center;min-height:16px;transition:opacity .15s;}
 </style>
 <style id="base-tooltip-style"></style>
@@ -1147,7 +1151,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
       </button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-      <span style="font-size:var(--fs-xs);color:var(--muted);font-weight:600;flex:1;">Uncheck channels to MUTE for this mix</span>
+      <span style="font-size:var(--fs-xs);color:var(--muted);font-style:italic;flex:1;">Active channels included · others muted</span>
       <button id="mix-tree-toggle-btn" onclick="mixToggleExpandAll()" style="padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-xs);font-weight:700;cursor:pointer;display:none;" title="Expand / Collapse all groups">⇅</button>
       <button id="mix-toggle-all-btn" onclick="mixToggleAllNone()" oncontextmenu="event.preventDefault();mixHideShowAll();" style="padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-xs);font-weight:700;cursor:pointer;" title="Click: select all/none | Right-click: hide/show all">All</button>
       <button id="mix-clear-sel-btn" onclick="_mixClearSel()" class="clear-sel-btn" title="Clear selection"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
@@ -3743,7 +3747,7 @@ function saveAsPreset() {
   document.getElementById('preset-name-input').value = '';
   renderStemNameChips();
   document.getElementById('preset-name-modal').classList.add('show');
-  setTimeout(() => document.getElementById('preset-name-input').focus(), 100);
+  setTimeout(() => { const inp = document.getElementById('preset-name-input'); if (inp) { inp.focus(); inp.setSelectionRange(0, 0); } }, 100);
 }
 
 function confirmSavePreset() {
@@ -10097,8 +10101,8 @@ function renderHistory() {
     const mixCount  = (s.files || []).filter(f => f.type === 'mix').length;
     const countLabel = stemCount > 0 && mixCount > 0
       ? `${stemCount} stems + ${mixCount} mixes`
-      : stemCount > 0 ? `${stemCount} stems`
-      : mixCount  > 0 ? `${mixCount} mixes`
+      : stemCount > 0 ? `${stemCount} ${stemCount === 1 ? 'stem' : 'stems'}`
+      : mixCount  > 0 ? `${mixCount} ${mixCount === 1 ? 'mix' : 'mixes'}`
       : `${s.totalFiles} files`;
 
     // ── Expanded body ─────────────────────────────────────────────────────────
@@ -10113,9 +10117,9 @@ function renderHistory() {
     let pluginsHtml = '';
     if (s.masterPlugins && s.masterPlugins.length > 0) {
       const plugRows = s.masterPlugins.map(p =>
-        `<div style="display:flex;align-items:center;padding:4px 12px;gap:8px;">
-          <span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:var(--fs-sm);color:${p.active ? 'var(--text)' : 'var(--muted)'};">${p.name.replace(/</g,'&lt;')}</span>
-          <span style="font-size:var(--fs-xxs);font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:20px;${p.active ? 'color:#5abf28;background:rgba(90,191,40,.1);border:1px solid rgba(90,191,40,.25);' : 'color:var(--red);background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.2);'}">${p.active ? 'ACTIVE' : 'BYPASSED'}</span>
+        `<div style="display:flex;align-items:center;padding:3px 12px;gap:8px;">
+          <span style="width:6px;height:6px;border-radius:50%;flex-shrink:0;${p.active ? 'background:var(--a3);box-shadow:0 0 4px rgba(67,233,123,.4);' : 'border:1.5px solid var(--red);background:transparent;'}display:inline-block;"></span>
+          <span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:var(--fs-sm);${p.active ? 'color:var(--text);' : 'color:var(--muted);text-decoration:line-through;text-decoration-color:var(--muted);'}">${p.name.replace(/</g,'&lt;')}</span>
         </div>`
       ).join('');
       pluginsHtml = `${_sep}
@@ -11130,12 +11134,15 @@ function renderSkinGrid() {
   Object.entries(SKINS).forEach(([key, skin]) => {
     const div = document.createElement('div');
     const isActive = key === currentSkin;
-    div.style.cssText = 'cursor:pointer;border-radius:10px;overflow:hidden;border:' + (isActive ? '2px solid ' + skin.vars['--accent'] : '1px solid var(--b2)') + ';transition:all .15s;';
+    const activeShadow = 'box-shadow:0 0 0 3px ' + skin.vars['--accent'] + '33,0 4px 16px ' + skin.vars['--accent'] + '44;';
+    div.style.cssText = 'cursor:pointer;border-radius:10px;overflow:hidden;border:' + (isActive ? '2px solid ' + skin.vars['--accent'] : '1px solid var(--b2)') + ';transition:transform .18s,box-shadow .18s;' + (isActive ? activeShadow : '');
     div.innerHTML = '<div style="height:44px;background:' + skin.vars['--bg'] + ';display:flex;align-items:center;justify-content:center;gap:5px;position:relative;">' +
       '<div style="width:14px;height:14px;border-radius:50%;background:' + skin.vars['--accent'] + ';opacity:.9;"></div>' +
       '<div style="width:10px;height:10px;border-radius:50%;background:' + skin.vars['--a2'] + ';opacity:.7;"></div>' +
       '<div style="width:8px;height:8px;border-radius:50%;background:' + skin.preview[2] + ';opacity:.5;"></div>' +
       '</div><div style="padding:5px 8px;background:' + skin.vars['--card'] + ';font-family:JetBrains Mono,monospace;font-size:var(--fs-xxs);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:' + skin.vars['--accent'] + ';text-align:center;">' + skin.name + '</div>';
+    div.addEventListener('mouseenter', () => { div.style.transform = 'translateY(-2px)'; if (!isActive) div.style.boxShadow = '0 8px 24px rgba(0,0,0,.3)'; });
+    div.addEventListener('mouseleave', () => { div.style.transform = ''; if (!isActive) div.style.boxShadow = ''; });
     div.addEventListener('click', (e) => { e.stopPropagation(); applySkin(key); toast('Theme: ' + skin.name); });
     grid.appendChild(div);
   });
@@ -12735,19 +12742,19 @@ async function submitFeedback() {
     <div>
       <div class="fb-label">Type</div>
       <select id="fb-type" class="fb-select" onchange="fbTypeChanged(this.value)">
-        <option value="Bug Report">🐛 Bug Report</option>
-        <option value="Question">❓ Question</option>
-        <option value="Suggestion">💡 Suggestion</option>
-        <option value="Rating">⭐ Rating</option>
+        <option value="Bug Report">Bug Report</option>
+        <option value="Question">Question</option>
+        <option value="Suggestion">Suggestion</option>
+        <option value="Rating">Rating</option>
       </select>
     </div>
     <div id="fb-stars">
       <div class="fb-star-row" id="fb-star-row">
-        <span class="fb-star" data-val="1">⭐</span>
-        <span class="fb-star" data-val="2">⭐</span>
-        <span class="fb-star" data-val="3">⭐</span>
-        <span class="fb-star" data-val="4">⭐</span>
-        <span class="fb-star" data-val="5">⭐</span>
+        <span class="fb-star" data-val="1">★</span>
+        <span class="fb-star" data-val="2">★</span>
+        <span class="fb-star" data-val="3">★</span>
+        <span class="fb-star" data-val="4">★</span>
+        <span class="fb-star" data-val="5">★</span>
       </div>
       <div id="fb-star-desc"></div>
     </div>
@@ -12764,21 +12771,21 @@ async function submitFeedback() {
       <div id="fb-attachments" style="display:flex;flex-direction:column;gap:6px;">
         <div class="fb-attach-row" id="fb-attach-row-0">
           <button class="fb-attach-slot" onclick="document.getElementById('fb-file-input-0').click()" title="Attach photo, video or file (max 30MB)">
-            <span>📎</span><span class="fb-attach-slot-name">Attach file 1…</span>
+            <svg class="ico ico-sm"><use href="#ico-paperclip"/></svg><span class="fb-attach-slot-name">Attach file 1…</span>
           </button>
           <button class="fb-attach-remove eb-close" id="fb-attach-remove-0" onclick="fbRemoveFile(0)" title="Remove" style="display:none"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
           <input class="fb-file-input" id="fb-file-input-0" type="file" accept="image/*,video/*,.log,.txt,.zip,.pdf,.wav,.mp3" style="display:none" onchange="fbFileSelected(this,0)">
         </div>
         <div class="fb-attach-row" id="fb-attach-row-1" style="display:none;">
           <button class="fb-attach-slot" onclick="document.getElementById('fb-file-input-1').click()" title="Attach photo, video or file (max 30MB)">
-            <span>📎</span><span class="fb-attach-slot-name">Attach file 2…</span>
+            <svg class="ico ico-sm"><use href="#ico-paperclip"/></svg><span class="fb-attach-slot-name">Attach file 2…</span>
           </button>
           <button class="fb-attach-remove eb-close" onclick="fbRemoveFile(1)" title="Remove"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
           <input class="fb-file-input" id="fb-file-input-1" type="file" accept="image/*,video/*,.log,.txt,.zip,.pdf,.wav,.mp3" style="display:none" onchange="fbFileSelected(this,1)">
         </div>
         <div class="fb-attach-row" id="fb-attach-row-2" style="display:none;">
           <button class="fb-attach-slot" onclick="document.getElementById('fb-file-input-2').click()" title="Attach photo, video or file (max 30MB)">
-            <span>📎</span><span class="fb-attach-slot-name">Attach file 3…</span>
+            <svg class="ico ico-sm"><use href="#ico-paperclip"/></svg><span class="fb-attach-slot-name">Attach file 3…</span>
           </button>
           <button class="fb-attach-remove eb-close" onclick="fbRemoveFile(2)" title="Remove"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
           <input class="fb-file-input" id="fb-file-input-2" type="file" accept="image/*,video/*,.log,.txt,.zip,.pdf,.wav,.mp3" style="display:none" onchange="fbFileSelected(this,2)">
