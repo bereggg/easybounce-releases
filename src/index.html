@@ -442,7 +442,7 @@ body.easy #retry-btn{width:60px!important;height:80px!important;border-radius:va
 .hist-hdr{display:flex;align-items:center;justify-content:space-between;padding:7px 9px;cursor:pointer;transition:background .12s;gap:6px;}
 .hist-hdr:hover{background:var(--w-a05);}
 .hist-meta{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1;}
-.hist-proj{font-family:'Space Grotesk',sans-serif;font-size:var(--fs-sm);font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hist-proj{font-family:'Space Grotesk',sans-serif;font-size:var(--fs-sm);font-weight:700;color:var(--text);min-width:0;}
 .hist-date{font-size:var(--fs-xxs);color:var(--muted);font-family:'JetBrains Mono',monospace;}
 .hist-right{display:flex;align-items:center;gap:5px;flex-shrink:0;}
 .hist-cnt{font-size:var(--fs-xxs);color:var(--muted);font-family:'JetBrains Mono',monospace;white-space:nowrap;}
@@ -702,7 +702,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
 .fb-attach-slot:hover{border-color:var(--accent);color:var(--text);}
 .fb-attach-slot-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .fb-attach-remove{flex-shrink:0;}
-#fb-send-btn{width:100%;padding:10px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-family:'JetBrains Mono',monospace;font-size:var(--fs-base);font-weight:700;cursor:pointer;transition:opacity .15s,transform .1s;letter-spacing:.02em;}
+#fb-send-btn{width:100%;padding:0 10px;height:44px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-family:'JetBrains Mono',monospace;font-size:var(--fs-base);font-weight:700;cursor:pointer;transition:opacity .15s,transform .1s;letter-spacing:.02em;}
 #fb-send-btn:hover{opacity:.88;}
 #fb-send-btn:active{transform:scale(.98);}
 #fb-send-btn:disabled{opacity:.45;cursor:default;}
@@ -1177,14 +1177,17 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
       </button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-shrink:0;">
-      <span style="font-size:var(--fs-xs);color:var(--muted);font-weight:600;flex:1;">In preset: <span id="esp-stems-count" style="color:var(--accent);font-family:'JetBrains Mono',monospace;"></span></span>
+      <span class="esp-count-badge" id="esp-stems-count-wrap" style="flex:1;display:inline-flex;align-items:center;gap:6px;"><span id="esp-stems-count" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--accent);padding:2px 10px;border-radius:var(--r-pill);background:var(--accent-a08);border:1px solid var(--accent-a20);"></span><span style="font-size:9px;color:var(--t2);text-transform:uppercase;letter-spacing:.08em;">in preset</span></span>
       <button id="esp-tree-toggle-btn" onclick="_espToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-xs);font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">⇅</button>
       <button id="esp-toggle-all-btn" onclick="_espToggleAllNone()" style="padding:2px 9px;border-radius:5px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-xs);cursor:pointer;transition:all .14s;">All</button>
       <button id="esp-clear-sel-btn" onclick="_espClearSel()" class="clear-sel-btn" title="Clear selection"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
     <div id="esp-channels-list" style="flex:1;min-height:80px;max-height:none;overflow-y:auto;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:4px 0;" class="scroll"></div>
-    <div style="font-size:var(--fs-xxs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px;flex-shrink:0;">Add from other presets</div>
-    <div id="esp-preset-chips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px;min-height:22px;flex-shrink:0;"></div>
+    <button id="esp-presets-toggle" onclick="_toggleEspPresetSection()" style="display:flex;align-items:center;gap:5px;width:100%;background:none;border:none;padding:2px 0 5px;cursor:pointer;flex-shrink:0;" title="Toggle preset copy section">
+      <svg class="ico ico-sm" id="esp-presets-toggle-ico" style="color:var(--muted);transition:transform .15s;"><use href="#ico-chevron-right"/></svg>
+      <span style="font-size:var(--fs-xxs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);">Copy from another preset</span>
+    </button>
+    <div id="esp-preset-chips" style="display:none;flex-wrap:wrap;gap:5px;margin-bottom:14px;min-height:22px;flex-shrink:0;"></div>
     <div class="modal-actions">
       <button class="mbtn cancel" onclick="document.getElementById('edit-stem-preset-modal').classList.remove('show')">Cancel</button>
       <button class="mbtn save save-preset" onclick="saveEditedStemPreset()"><svg class="ico ico-sm" style="margin-right:5px;vertical-align:-2px;"><use href="#ico-save"/></svg>Save preset</button>
@@ -1255,7 +1258,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
     <input type="text" id="eset-ch-search" placeholder="Search channels…" oninput="_esetRenderChannels()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:var(--fs-sm);padding:5px 9px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;flex-shrink:0;">
     <div id="eset-channels-list" style="max-height:110px;overflow-y:auto;flex-shrink:0;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:4px 0;"></div>
     <div style="display:flex;gap:6px;flex-shrink:0;">
-      <button onclick="esetCreateVersion()" style="flex:1;padding:5px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-sm);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--b)';this.style.color='var(--muted)'"><svg class="ico ico-sm"><use href="#ico-fader"/></svg>Create version mix…</button>
+      <button onclick="esetCreateVersion()" style="padding:7px 14px;border-radius:var(--r);border:1px dashed var(--accent-a40);background:transparent;color:var(--accent);font-size:11px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;" onmouseover="this.style.borderColor='var(--accent-a60)';this.style.background='var(--accent-a08)'" onmouseout="this.style.borderColor='var(--accent-a40)';this.style.background='transparent'"><svg class="ico ico-sm"><use href="#ico-fader"/></svg>Create version mix…</button>
     </div>
     <div class="modal-actions" id="eset-actions" style="flex-shrink:0;margin-top:2px;">
       <button class="mbtn cancel" onclick="closeEditSetModal()">Cancel</button>
@@ -3126,7 +3129,7 @@ function _renderChannelsImpl() {
     treeToggleBtn.style.display = showTreeBtns ? '' : 'none';
     const withKids = trackTree.filter(t => t.type==='group' && trackTree.some(c=>c.parent===t.name));
     const anyExpanded = withKids.some(t => !collapsedGroups.has(t.name));
-    treeToggleBtn.textContent = anyExpanded ? '▲▲' : '▼▼';
+    treeToggleBtn.innerHTML = anyExpanded ? '<svg class="ico ico-sm"><use href="#ico-chevrons-up"/></svg>' : '<svg class="ico ico-sm"><use href="#ico-chevrons-down"/></svg>';
     treeToggleBtn.title = anyExpanded ? 'Collapse all groups' : 'Expand all groups';
   }
 
@@ -3898,7 +3901,13 @@ function editStemPreset(id) {
   _renderEspStems();
   _renderEspChannels();
   _renderEspPresetChips();
+  _espPresetSectionOpen = false;
+  const _chipsDiv = document.getElementById('esp-preset-chips');
+  const _toggleIco = document.getElementById('esp-presets-toggle-ico');
+  if (_chipsDiv) _chipsDiv.style.display = 'none';
+  if (_toggleIco) _toggleIco.style.transform = '';
   document.getElementById('edit-stem-preset-modal').classList.add('show');
+  setTimeout(() => { const inp = document.getElementById('esp-name-inp'); if (inp) { inp.focus(); inp.setSelectionRange(0,0); } }, 100);
 }
 
 function _renderEspPresetChips() {
@@ -3913,11 +3922,11 @@ function _renderEspPresetChips() {
   }
   others.forEach(p => {
     const chip = document.createElement('button');
-    chip.style.cssText = 'padding:3px 11px;border-radius:var(--r3);border:1px solid var(--b2);background:var(--card);color:var(--t2);font-size:var(--fs-xs);font-weight:600;cursor:pointer;white-space:nowrap;transition:all .14s;';
+    chip.style.cssText = 'padding:5px 12px;border-radius:var(--r-sm);border:1px solid var(--accent-a40);background:var(--accent-a08);color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .14s;';
     chip.innerHTML = '<svg class="ico ico-sm" style="vertical-align:-2px;margin-right:4px;"><use href="#ico-fader"/></svg>' + _esc(p.name);
     chip.title = (p.names||[]).join(', ') || p.name;
-    chip.onmouseover = () => { chip.style.borderColor = 'var(--accent)'; chip.style.color = 'var(--accent)'; chip.style.background = 'rgba(108,99,255,.08)'; };
-    chip.onmouseout  = () => { chip.style.borderColor = 'var(--b2)'; chip.style.color = 'var(--t2)'; chip.style.background = 'var(--card)'; };
+    chip.onmouseover = () => { chip.style.borderColor = 'var(--accent-a60)'; chip.style.background = 'var(--accent-a20)'; };
+    chip.onmouseout  = () => { chip.style.borderColor = 'var(--accent-a40)'; chip.style.background = 'var(--accent-a08)'; };
     chip.onclick = () => _espAddFromPreset(p.id);
     cont.appendChild(chip);
   });
@@ -3952,6 +3961,15 @@ function _renderEspStems() {
   if (countBadge) countBadge.textContent = (p?.names || []).length || '';
 }
 
+let _espPresetSectionOpen = false;
+function _toggleEspPresetSection() {
+  _espPresetSectionOpen = !_espPresetSectionOpen;
+  const chips = document.getElementById('esp-preset-chips');
+  const ico = document.getElementById('esp-presets-toggle-ico');
+  if (chips) chips.style.display = _espPresetSectionOpen ? 'flex' : 'none';
+  if (ico) ico.style.transform = _espPresetSectionOpen ? 'rotate(90deg)' : '';
+}
+
 function _renderEspChannels() {
   const p = stemPresets.find(x => x.id === _editingStemPresetId);
   const cont = document.getElementById('esp-channels-list');
@@ -3960,6 +3978,13 @@ function _renderEspChannels() {
   _espRenderOrder = [];
   const badge = document.getElementById('esp-stems-count');
   if (badge) badge.textContent = (p?.names || []).length || '';
+  // Empty-state hint when preset has no channels selected
+  if (p && (p.names || []).length === 0) {
+    const hint = document.createElement('div');
+    hint.style.cssText = 'padding:10px 12px;font-size:var(--fs-xs);color:var(--muted);font-style:italic;';
+    hint.textContent = 'Check channels below to add them to the preset';
+    cont.appendChild(hint);
+  }
   const search = (document.getElementById('esp-search')?.value || '').toLowerCase();
   const inPreset = new Set(p ? (p.names || []) : []);
   // Update All/None button label
@@ -4282,7 +4307,7 @@ function _renderEspChannels() {
     if (hasGroups) {
       const allGroups = trackTree.filter(k => k.type === 'group' && trackTree.some(c => c.parent === k.name)).map(k => k.name);
       const anyExpanded = allGroups.some(n => _espModalExpanded.has(n));
-      espTreeBtn.textContent = anyExpanded ? '▲▲' : '▼▼';
+      espTreeBtn.innerHTML = anyExpanded ? '<svg class="ico ico-sm"><use href="#ico-chevrons-up"/></svg>' : '<svg class="ico ico-sm"><use href="#ico-chevrons-down"/></svg>';
       espTreeBtn.title = anyExpanded ? 'Collapse all groups' : 'Expand all groups';
     }
   }
@@ -10125,7 +10150,7 @@ function renderHistory() {
       pluginsHtml = `${_sep}
         <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 12px 2px;">
           <span style="font-size:var(--fs-xxs);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Master Chain</span>
-          <button onclick="event.stopPropagation();restorePluginsFromHistory(${s.id})" title="Restore these plugin states in Logic" style="font-size:var(--fs-xxs);padding:2px 9px;border-radius:5px;border:1px solid rgba(108,99,255,.35);background:rgba(108,99,255,.1);color:var(--accent);cursor:pointer;font-family:'JetBrains Mono',monospace;font-weight:600;transition:all .13s;" onmouseover="this.style.background='rgba(108,99,255,.22)'" onmouseout="this.style.background='rgba(108,99,255,.1)'">↺ Restore</button>
+          <button onclick="event.stopPropagation();restorePluginsFromHistory(${s.id})" title="Restore these plugin states in Logic" style="font-size:10px;padding:2px 6px;border-radius:var(--r-xs);border:none;background:transparent;color:var(--accent);cursor:pointer;font-family:'JetBrains Mono',monospace;font-weight:600;transition:all .13s;" onmouseover="this.style.background='rgba(108,99,255,.08)'" onmouseout="this.style.background='transparent'">↺ Restore to this state</button>
         </div>
         ${plugRows}`;
     }
