@@ -9988,7 +9988,12 @@ async function triggerBounce(name, folder, isFirst) {
     }
     if (window.api) {
       const cv2 = await window.api.checkCancel();
-      if (cv2.cancelled) { log('Cancelled', 'warn'); return false; }
+      if (cv2.cancelled) {
+        log('Cancelled', 'warn');
+        try { if (typeof _offProgress === 'function') _offProgress(); } catch {}
+        try { await window.api.stopTrackBounce?.(); } catch {}
+        return false;
+      }
     }
     // Freeze detection: measure how long AppleScript takes to respond.
     // Normal poll = 100-400ms. If Logic is frozen, System Events hangs → poll takes 5-30s.
@@ -10105,6 +10110,8 @@ async function triggerBounce(name, folder, isFirst) {
           failed: true,
           failReason: reason
         });
+        try { if (typeof _offProgress === 'function') _offProgress(); } catch {}
+        try { await window.api.stopTrackBounce?.(); } catch {}
         return false;
       }
     }
@@ -10112,10 +10119,13 @@ async function triggerBounce(name, folder, isFirst) {
       // AX tracker is authoritative for "render finished" — only break if it agrees.
       // This eliminates the false-positive race where AppleScript returns "done"
       // during the brief gap between Save-dialog closing and Bouncing-dialog opening.
-      if (window._axTrackResult && window._axTrackResult.event === 'closed') {
+      const tr = window._axTrackResult;
+      if (tr && (tr.event === 'closed' || tr.event === 'stalled')) {
         const _elapsed = _stemStartTime ? Math.round((Date.now() - _stemStartTime) / 1000) : Math.round((waited+1000)/1000);
-        const lp = window._axTrackResult.lastProgress || 0;
-        if (lp < 0.98) {
+        const lp = tr.lastProgress || 0;
+        if (tr.event === 'stalled') {
+          log(`⚠ ${name} (${_elapsed}s) — stalled at ${(lp*100).toFixed(0)}% (${Math.round(tr.stallSeconds||0)}s no progress)`, 'warn');
+        } else if (lp < 0.98) {
           log(`✓ ${name} (${_elapsed}s) — closed at ${(lp*100).toFixed(0)}% (cancelled/error)`, 'warn');
         } else {
           log('✓ ' + name + ' (' + _elapsed + 's)', 'ok');
@@ -10179,6 +10189,8 @@ async function triggerBounce(name, folder, isFirst) {
       } else if (dialogStuckCount >= 3 && reTriggerCount >= 2) {
         log(`✗ Bounce dialog stuck after 2 re-trigger attempts on "${name}" — aborting`, 'err');
         toast(`⚠ Bounce dialog stuck — skipping "${name}"`);
+        try { if (typeof _offProgress === 'function') _offProgress(); } catch {}
+        try { await window.api.stopTrackBounce?.(); } catch {}
         return false;
       }
     } else {
@@ -10205,6 +10217,8 @@ async function triggerBounce(name, folder, isFirst) {
           window._lastHangReason = reason;
           window._bounceFatalHang = true;
         }
+        try { if (typeof _offProgress === 'function') _offProgress(); } catch {}
+        try { await window.api.stopTrackBounce?.(); } catch {}
         return false;
       }
       await window.api.wait(800);
@@ -10222,8 +10236,9 @@ async function triggerBounce(name, folder, isFirst) {
   }
   // ── AX tracker cleanup ───────────────────────────────────────────────────
   try { if (typeof _offProgress === 'function') _offProgress(); } catch(e) { /* no-op */ }
-  // Ensure tracker promise settles (it should already have — trackBounce resolves
-  // when dialog closes, which is exactly when the legacy loop breaks on "done").
+  // If tracker process is still alive (we exited early via cancel/freeze/fatal),
+  // stop it so it doesn't linger polling AX in the background.
+  try { await window.api.stopTrackBounce?.(); } catch(e) { /* no-op */ }
   try { await Promise.race([_trackPromise, window.api.wait(500).then(() => null)]); } catch(e) { /* no-op */ }
   await window.api.wait(400);
   // Check if file was actually created — retry up to 4x (2s total) for slow disks/systems

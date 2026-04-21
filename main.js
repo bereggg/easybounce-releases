@@ -549,10 +549,12 @@ ipcMain.handle('bounce',        () => bridge('bounce'));
 // ── Track bounce via AX progress indicator (streams progress events) ──────────
 // Returns a final result when the bounce dialog closes, while streaming
 // 'bounce-progress' events to the renderer on the way.
+let _activeTrackProc = null;
 ipcMain.handle('track-bounce', async (_evt, preRollMs = 5000, maxRenderMs = 3600000) => {
   return await new Promise((resolve) => {
     const { spawn } = require('child_process');
     const proc = spawn(BRIDGE, ['trackBounce', String(preRollMs), String(maxRenderMs)]);
+    _activeTrackProc = proc;
     let stdoutBuf = '';
     let finalResult = null;
     const wc = mainWindow && !mainWindow.isDestroyed() ? mainWindow.webContents : null;
@@ -567,19 +569,29 @@ ipcMain.handle('track-bounce', async (_evt, preRollMs = 5000, maxRenderMs = 3600
         try {
           const evt = JSON.parse(trimmed);
           forward(evt);
-          if (['closed', 'timeout', 'no-dialog', 'error'].includes(evt.event)) {
+          if (['closed', 'timeout', 'no-dialog', 'stalled', 'killed', 'error'].includes(evt.event)) {
             finalResult = evt;
           }
         } catch (e) { /* ignore non-JSON */ }
       }
     });
     proc.on('close', () => {
+      if (_activeTrackProc === proc) _activeTrackProc = null;
       resolve(finalResult || { event: 'error', message: 'bridge exited without final event' });
     });
     proc.on('error', (err) => {
+      if (_activeTrackProc === proc) _activeTrackProc = null;
       resolve({ event: 'error', message: String(err) });
     });
   });
+});
+
+ipcMain.handle('stop-track-bounce', () => {
+  if (_activeTrackProc) {
+    try { _activeTrackProc.kill('SIGTERM'); } catch (e) { /* no-op */ }
+    _activeTrackProc = null;
+  }
+  return { ok: true };
 });
 
 // ── Cancel support ────────────────────────────────────────────────────────────

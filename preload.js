@@ -36,6 +36,7 @@ contextBridge.exposeInMainWorld('api', {
   readStates:          ()    => ipcRenderer.invoke('read-states'),
   bounce:         ()    => ipcRenderer.invoke('bounce'),
   trackBounce:    (preRollMs, maxRenderMs) => ipcRenderer.invoke('track-bounce', preRollMs, maxRenderMs),
+  stopTrackBounce: () => ipcRenderer.invoke('stop-track-bounce'),
   onBounceProgress: (cb) => {
     const handler = (_e, data) => { try { cb(data); } catch(e) { console.warn('[EB bounce-progress cb]', e); } };
     ipcRenderer.on('bounce-progress', handler);

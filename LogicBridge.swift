@@ -1118,6 +1118,19 @@ case "trackBounce":
         }
     }
 
+    // SIGTERM handler — graceful shutdown when parent kills the process.
+    // Uses DispatchSource on a GLOBAL queue (not main) because the main thread
+    // is busy in a synchronous poll loop — background queue has its own workers
+    // and will fire the handler independently.
+    // Must SIG_IGN first so default handler doesn't kill us before the source fires.
+    signal(SIGTERM, SIG_IGN)
+    let sigSource = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .global(qos: .userInitiated))
+    sigSource.setEventHandler {
+        emit(["event": "killed"])
+        exit(0)
+    }
+    sigSource.resume()
+
     emit(["event": "waiting"])
 
     // Phase A: wait for bounce dialog (or side dialog)
@@ -1140,8 +1153,12 @@ case "trackBounce":
     emit(["event": "opened"])
 
     // Phase B: track progress until dialog disappears
+    // Stall detection: if progress value doesn't change for 60s, Logic is likely
+    // hung mid-render — emit "stalled" and exit so parent doesn't wait 60 min.
     var lastProgress: Double = 0.0
     var lastEmitted: Double = -1.0
+    var lastChangedAt = Date()
+    let STALL_THRESHOLD_S: Double = 60.0
     while Date().timeIntervalSince(openedAt) * 1000 < Double(maxRenderMs) {
         var valRef: CFTypeRef?
         let err = AXUIElementCopyAttributeValue(progEl, kAXValueAttribute as CFString, &valRef)
@@ -1153,11 +1170,17 @@ case "trackBounce":
         }
         if let n = valRef as? NSNumber {
             let p = n.doubleValue
+            if abs(p - lastProgress) >= 0.001 { lastChangedAt = Date() }
             lastProgress = p
             if abs(p - lastEmitted) >= 0.01 {
                 emit(["event": "progress", "value": p])
                 lastEmitted = p
             }
+        }
+        if Date().timeIntervalSince(lastChangedAt) > STALL_THRESHOLD_S {
+            emit(["event": "stalled", "lastProgress": lastProgress,
+                  "stallSeconds": Date().timeIntervalSince(lastChangedAt)])
+            exit(0)
         }
         Thread.sleep(forTimeInterval: 0.3)
     }
