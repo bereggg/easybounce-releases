@@ -94,6 +94,13 @@ const _boundsFile = path.join(app.getPath('userData'), 'window-bounds.json');
 function _loadBounds() {
   try { return JSON.parse(fs.readFileSync(_boundsFile, 'utf8')); } catch { return null; }
 }
+const _compactFile = path.join(app.getPath('userData'), 'compact-state.json');
+function _loadCompactState() {
+  try { return JSON.parse(fs.readFileSync(_compactFile, 'utf8')).compact === true; } catch { return false; }
+}
+function _saveCompactState(compact) {
+  try { fs.writeFileSync(_compactFile, JSON.stringify({ compact })); } catch {}
+}
 function _saveBounds() {
   try {
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -110,8 +117,17 @@ function createWindow() {
   const winH = Math.min(760,  Math.max(640,  sh - 20));
 
   const saved = _loadBounds();
-  const initW = saved ? Math.max(1070, Math.min(saved.width,  sw))     : winW;
-  const initH = saved ? Math.max(640,  Math.min(saved.height, sh))     : winH;
+  const startCompact = _loadCompactState();
+  if (startCompact) {
+    _inCompact = true;
+    // Pre-set Pro bounds so exit-compact-mode can restore them even on first launch
+    const proW = (saved && saved.width >= 1000) ? Math.min(saved.width, sw) : winW;
+    const proH = (saved && saved.height >= 640)  ? Math.min(saved.height, sh) : winH;
+    _preCompact = { width: proW, height: proH };
+  }
+  const initW = startCompact ? 500
+    : (saved ? Math.max(1070, Math.min(saved.width,  sw)) : winW);
+  const initH = saved ? Math.max(startCompact ? 500 : 640, Math.min(saved.height, sh)) : winH;
   const initX = saved ? saved.x : undefined;
   const initY = saved ? saved.y : undefined;
 
@@ -122,7 +138,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: initW, height: initH,
     ...(initX !== undefined && initY !== undefined ? { x: initX, y: initY } : {}),
-    minWidth: 1130, minHeight: 640,
+    minWidth: startCompact ? 500 : 1130, minHeight: startCompact ? 500 : 640,
     maximizable: false,
     fullscreenable: false,
     titleBarStyle: 'hiddenInset',
@@ -884,23 +900,37 @@ let _preCompact = null;
 ipcMain.handle('enter-compact-mode', () => {
   if (!mainWindow || mainWindow.isDestroyed()) return { ok: false };
   if (_inBounce) return { ok: false };
-  if (!_inCompact) _preCompact = mainWindow.getBounds();
-  _inCompact = true;
-  const cur = mainWindow.getBounds();
+  if (!_inCompact) {
+    const cur = mainWindow.getBounds();
+    _preCompact = cur;
+    _inCompact = true;
+    const newW = 500;
+    // Keep window centered — both edges move inward symmetrically
+    const { workArea } = require('electron').screen.getDisplayNearestPoint({ x: cur.x, y: cur.y });
+    const centerX = cur.x + cur.width / 2;
+    const newX = Math.max(workArea.x, Math.min(Math.round(centerX - newW / 2), workArea.x + workArea.width - newW));
+    mainWindow.setMinimumSize(500, 500);
+    mainWindow.setBounds({ x: newX, y: cur.y, width: newW, height: cur.height }, true);
+  }
   mainWindow.setMinimumSize(500, 500);
-  mainWindow.setBounds({ x: cur.x, y: cur.y, width: 500, height: cur.height }, true);
   try { mainWindow.setWindowButtonVisibility(true); } catch {}
+  _saveCompactState(true);
   return { ok: true };
 });
 ipcMain.handle('exit-compact-mode', () => {
   if (!mainWindow || mainWindow.isDestroyed()) return { ok: false };
   _inCompact = false;
-  mainWindow.setMinimumSize(1130, 640);
+  _saveCompactState(false);
   try { mainWindow.setWindowButtonVisibility(true); } catch {}
-  if (_preCompact) {
-    mainWindow.setBounds(_preCompact, true);
-    _preCompact = null;
-  }
+  const cur = mainWindow.getBounds();
+  const { workArea } = require('electron').screen.getDisplayNearestPoint({ x: cur.x, y: cur.y });
+  const target = _preCompact || { width: Math.min(1150, workArea.width - 20), height: Math.min(760, workArea.height - 20) };
+  _preCompact = null;
+  // Keep window centered — both edges expand outward symmetrically
+  const centerX = cur.x + cur.width / 2;
+  const newX = Math.max(workArea.x, Math.min(Math.round(centerX - target.width / 2), workArea.x + workArea.width - target.width));
+  mainWindow.setBounds({ x: newX, y: cur.y, width: target.width, height: target.height }, true);
+  mainWindow.setMinimumSize(1130, 640);
   return { ok: true };
 });
 ipcMain.handle('is-compact-mode', () => ({ compact: _inCompact }));
@@ -931,7 +961,7 @@ ipcMain.handle('exit-mini-mode', () => {
   if (_inCompact) {
     mainWindow.setMinimumSize(500, 500);
     mainWindow.setResizable(true);
-    try { mainWindow.setWindowButtonVisibility(false); } catch {}
+    try { mainWindow.setWindowButtonVisibility(true); } catch {}
   } else {
     mainWindow.setMinimumSize(1130, 640);
     mainWindow.setResizable(true);
@@ -1070,7 +1100,7 @@ ipcMain.handle('exit-scan-badge', () => {
   if (!mainWindow) return { ok: false };
   _inScanBadge = false;
   mainWindow.setIgnoreMouseEvents(false);
-  if (mainWindow.setWindowButtonVisibility) mainWindow.setWindowButtonVisibility(!_inCompact);
+  if (mainWindow.setWindowButtonVisibility) mainWindow.setWindowButtonVisibility(true);
   mainWindow.setVisibleOnAllWorkspaces(false);
   mainWindow.setMinimumSize(_inCompact ? 500 : 1130, _inCompact ? 500 : 640);
   mainWindow.setResizable(true);

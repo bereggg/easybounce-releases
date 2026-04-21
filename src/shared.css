@@ -377,11 +377,12 @@
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.15s;
+  transition: opacity 0.18s ease;
+  transition-delay: 0s;
   box-shadow: var(--sh-raised);
   z-index: var(--z-toast);
 }
-.eb-tt:hover::after { opacity: 1; }
+body.tips-on .eb-tt:hover::after { opacity: 1; transition-delay: 0.5s; }
 .eb-tt.eb-tt--below::after { bottom: auto; top: calc(100% + 6px); }
 .eb-tt.eb-tt--wide::after { white-space: normal; max-width: 220px; text-align: center; }
 

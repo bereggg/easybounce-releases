@@ -577,9 +577,9 @@ body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini
 /* ── Compact Queue Mode ───────────────────────────────────────────── */
 #compact-toolbar{display:none;height:46px;background:var(--s);border-bottom:1px solid var(--b);padding:0 10px;align-items:center;justify-content:center;gap:8px;-webkit-app-region:drag;flex-shrink:0;position:relative;}
 #compact-toolbar .cm-title{font-size:11px;color:var(--t2);text-transform:uppercase;letter-spacing:.12em;font-family:var(--font-mono,'JetBrains Mono',monospace);font-weight:700;pointer-events:none;}
-#compact-toolbar-left{position:absolute;left:8px;top:50%;transform:translateY(-50%);display:flex;gap:5px;-webkit-app-region:no-drag;}
+#compact-toolbar-left{position:absolute;left:74px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;-webkit-app-region:no-drag;}
 #compact-toolbar-actions{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;-webkit-app-region:no-drag;}
-#compact-toolbar-left button,#compact-toolbar-actions button{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid var(--b);background:transparent;color:var(--t2);cursor:pointer;transition:all .15s;padding:0;}
+#compact-toolbar-left button,#compact-toolbar-actions button{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid var(--b);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;padding:0;}
 #compact-toolbar-left button:hover,#compact-toolbar-actions button:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-a12);}
 #compact-toolbar-left button:hover{background:rgba(255,255,255,.06);}
 #compact-toolbar-left button svg,#compact-toolbar-actions button svg{width:14px;height:14px;}
@@ -595,7 +595,6 @@ body.compact-mode .em-thumb{left:2px!important;background:#fff!important;}
 body.compact-mode .em-track{background:var(--accent-a30)!important;}
 body.compact-mode .em-lbl.em-lbl-pro{color:var(--t2)!important;opacity:.55!important;}
 body.compact-mode .em-lbl.em-lbl-easy{color:var(--accent)!important;opacity:1!important;}
-body.compact-mode .em-wrap{border-color:var(--accent-a60)!important;background:var(--accent-a08)!important;box-shadow:0 0 14px var(--accent-a20)!important;}
 #q-empty-compact{position:relative;width:100%;min-height:100%;}
 #cm-empty-arrow{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:40px;height:40px;color:var(--accent);opacity:.35;animation:eb-breathe 2.4s ease-in-out infinite;pointer-events:none;}
 
@@ -617,42 +616,18 @@ body.compact-mode #markers-btn,
 body.compact-mode #markers-chips-btn,
 body.compact-mode #version-drop-zone,
 body.compact-mode #merge-drop-zone,
-body.compact-mode #name-preset-arrow,
 body.compact-mode #name-preset-save-btn,
 body.compact-mode #fmt-bar-source{display:none!important;}
 
 /* Presets-bar: fully hidden in compact mode */
 body.compact-mode .presets-bar{display:none!important;}
 
-/* Format bar — tighter so WAV/24-bit/48 fit */
-body.compact-mode .fmt-bar{gap:4px;}
-body.compact-mode #fmt-main-btn{padding:4px 8px;gap:5px;}
-body.compact-mode #fmt-main-btn .fmt-tag{padding:2px 6px;font-size:10px;}
-body.compact-mode #fmt-main-btn .fmt-bar-detail{font-size:11px;max-width:none;}
-
-/* Tighten queue header */
-body.compact-mode .queue-hdr{padding:8px 10px;}
-body.compact-mode .queue-hdr .sec-title{font-size:11px;letter-spacing:.08em;}
-
-/* Tighter queue items */
-body.compact-mode .qitem{padding:6px 10px;font-size:11px;}
-body.compact-mode .qitem .qtag{font-size:9px;padding:1px 4px;}
-
-/* Compact out-wrap fields — same height, shorter text */
-body.compact-mode .out-wrap{padding:8px 10px;gap:5px;}
-body.compact-mode .out-row{gap:6px;}
-body.compact-mode .out-lbl{font-size:9px;min-width:62px;width:62px;letter-spacing:.08em;}
-body.compact-mode #sidechain-row{gap:8px;align-items:center;}
 body.compact-mode #fmt-bar-mp3-tag{display:none!important;}
 body.compact-mode .out-path,
 body.compact-mode .out-inp,
 body.compact-mode #fmt-main-btn,
 body.compact-mode #sidechain-picker-btn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-body.compact-mode .fmt-bar-detail{max-width:90px;}
-body.compact-mode #sidechain-row > span:nth-of-type(2){display:none;}
 
-/* Bounce area tightening */
-body.compact-mode .bounce-wrap{padding:8px 10px 20px;}
 body.compact-mode #alert-row-mini{display:flex!important;justify-content:flex-end;margin-top:14px;}
 body.compact-mode .bbtn{height:54px;font-size:16px;width:100%;}
 body.compact-mode #cancel-btn,
@@ -679,6 +654,7 @@ body.scan-badge .titlebar,body.scan-badge .shell{display:none!important;}
 body.scan-badge #scan-warning{top:0;}
 /* Smooth fade between main UI and mini widget */
 body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;transition:opacity .2s ease-out;pointer-events:none;}
+body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar,body.compact-transitioning .shell{opacity:0;transition:opacity .15s ease-out;pointer-events:none;}
 .mini-drag{height:28px;-webkit-app-region:drag;flex-shrink:0;}
 .mini-content{padding:0 13px 11px;display:flex;flex-direction:column;gap:7px;flex:1;}
 .mini-row{display:flex;align-items:center;gap:7px;-webkit-app-region:no-drag;}
@@ -786,7 +762,8 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
 
 </head>
 <body>
-<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden;" aria-hidden="true"><defs><symbol id="ico-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 L6 12 L8 6 L10 18 L12 8 L14 16 L16 10 L18 12 L21 12"/></symbol><symbol id="ico-compact" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M9 10v10"/></symbol><symbol id="ico-expand-arrows" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v6h6M20 10V4h-6M14 10l7-7M10 14l-7 7"/></symbol><symbol id="ico-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="12" r="2.5" fill="currentColor"/><path d="M10 12 Q14 4 18 12 T22 12" opacity="0.7"/></symbol><symbol id="ico-accessibility" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="1.8" fill="currentColor"/><path d="M6 8 L12 10 L18 8"/><path d="M12 10 L12 15"/><path d="M12 15 L9 21 M12 15 L15 21"/></symbol><symbol id="ico-music" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3" fill="currentColor"/><circle cx="16" cy="16" r="3" fill="currentColor"/></symbol><symbol id="ico-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></symbol><symbol id="ico-finder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1" fill="currentColor" stroke="none"/><path d="M8 16 Q12 19 16 16"/></symbol><symbol id="ico-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L10 17 L19 7"/></symbol><symbol id="ico-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M7 12 L11 16 L17 9"/></symbol><symbol id="ico-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6 L18 18 M18 6 L6 18"/></symbol><symbol id="ico-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L22 20 L2 20 Z"/><path d="M12 10 V14"/><circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none"/></symbol><symbol id="ico-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21 Q12 23 14 21"/></symbol><symbol id="ico-bell-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 10.5-4"/><path d="M18 8c0 7 3 9 3 9H6"/><path d="M3 3 L21 21"/><path d="M10 21 Q12 23 14 21"/></symbol><symbol id="ico-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 H5 a2 2 0 0 1 -2 -2 V5 a2 2 0 0 1 2 -2 h11 l5 5 v11 a2 2 0 0 1 -2 2 z"/><path d="M8 3 V8 H16 V3"/><path d="M8 13 H16 V21 H8 z"/></symbol><symbol id="ico-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 9 M8 2 H16 M9 9 L7 15 H17 L15 9 M12 15 V22"/></symbol><symbol id="ico-cube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L21 7 V17 L12 22 L3 17 V7 Z"/><path d="M3 7 L12 12 L21 7"/><path d="M12 12 V22"/></symbol><symbol id="ico-dice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r="1.2" fill="currentColor" stroke="none"/></symbol><symbol id="ico-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6 H20 M4 12 H20 M4 18 H20"/><circle cx="9" cy="6" r="2" fill="#0c0c10"/><circle cx="15" cy="12" r="2" fill="#0c0c10"/><circle cx="8" cy="18" r="2" fill="#0c0c10"/></symbol><symbol id="ico-fader" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3 V21 M13 3 V21 M19 3 V21"/><rect x="4" y="7" width="6" height="4" rx="1" fill="#0c0c10"/><rect x="10" y="13" width="6" height="4" rx="1" fill="#0c0c10"/><rect x="16" y="9" width="6" height="4" rx="1" fill="#0c0c10"/></symbol><symbol id="ico-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7 V12 L16 14"/></symbol><symbol id="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14 A8 8 0 1 1 10 4 a7 7 0 0 0 10 10 z"/></symbol><symbol id="ico-coffee" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10 H18 V16 A4 4 0 0 1 14 20 H8 A4 4 0 0 1 4 16 Z"/><path d="M18 12 H20 A2 2 0 0 1 22 14 V15 A2 2 0 0 1 20 17 H18"/><path d="M8 3 Q8 5 9 6 M12 3 Q12 5 13 6 M16 3 Q16 5 17 6" opacity="0.6"/></symbol><symbol id="ico-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 Q7 5 12 5 Q17 5 22 12 Q17 19 12 19 Q7 19 2 12 z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="ico-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 Q7 5 12 5 Q17 5 22 12 Q17 19 12 19 Q7 19 2 12 z"/><circle cx="12" cy="12" r="3"/><path d="M3 3 L21 21"/></symbol><symbol id="ico-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10 V7 A4 4 0 0 1 16 7 V10"/></symbol><symbol id="ico-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3 A2.1 2.1 0 0 1 20 6 L8 18 L4 19 L5 15 Z"/></symbol><symbol id="ico-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7 H20 M10 11 V17 M14 11 V17 M5 7 L6 20 A2 2 0 0 0 8 22 H16 A2 2 0 0 0 18 20 L19 7 M9 7 V4 A1 1 0 0 1 10 3 H14 A1 1 0 0 1 15 4 V7"/></symbol><symbol id="ico-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 L15 12 L9 18"/></symbol><symbol id="ico-scan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5" opacity="0.5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></symbol><symbol id="ico-headphones" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14 A8 8 0 0 1 20 14"/><rect x="3" y="14" width="5" height="7" rx="1.5"/><rect x="16" y="14" width="5" height="7" rx="1.5"/></symbol><symbol id="ico-rocket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 C16 6 17 11 17 15 L12 18 L7 15 C7 11 8 6 12 2 z"/><circle cx="12" cy="10" r="1.8"/><path d="M9 18 L6 22 M15 18 L18 22"/></symbol><symbol id="ico-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5 H20 A2 2 0 0 1 22 7 V15 A2 2 0 0 1 20 17 H13 L8 21 V17 H4 A2 2 0 0 1 2 15 V7 A2 2 0 0 1 4 5 Z"/></symbol><symbol id="ico-volume" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 V14 H7 L12 18 V6 L7 10 Z"/><path d="M16 9 Q18 12 16 15" opacity="0.7"/><path d="M19 6 Q22 12 19 18" opacity="0.5"/></symbol><symbol id="ico-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9 L12 15 L18 9"/></symbol><symbol id="ico-chevrons-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 6 L12 11 L17 6"/><path d="M7 13 L12 18 L17 13"/></symbol><symbol id="ico-chevrons-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18 L12 13 L17 18"/><path d="M7 11 L12 6 L17 11"/></symbol><symbol id="ico-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4H21L14 12V20L10 18V12L3 4Z"/></symbol><symbol id="ico-filter-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4H21L14 12V20L10 18V12L3 4Z"/><path d="M3 3L21 21"/></symbol><symbol id="ico-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20 L16 16"/></symbol><symbol id="ico-search-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20 L16 16"/><path d="M4 4 L20 20"/></symbol><symbol id="ico-paperclip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12 L12 21 A5 5 0 0 1 5 14 L13 6 A3 3 0 0 1 17 10 L9 18 A1 1 0 0 1 8 17 L15 10"/></symbol><symbol id="ico-star" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></symbol><symbol id="ico-star-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></symbol></defs></svg>
+<script>(function(){try{if(localStorage.getItem('ui.compactMode')!=='0')document.body.classList.add('compact-mode');}catch(e){}})()</script>
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden;" aria-hidden="true"><defs><symbol id="ico-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 L6 12 L8 6 L10 18 L12 8 L14 16 L16 10 L18 12 L21 12"/></symbol><symbol id="ico-compact" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M9 10v10"/></symbol><symbol id="ico-expand-arrows" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v6h6M20 10V4h-6M14 10l7-7M10 14l-7 7"/></symbol><symbol id="ico-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="12" r="2.5" fill="currentColor"/><path d="M10 12 Q14 4 18 12 T22 12" opacity="0.7"/></symbol><symbol id="ico-accessibility" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="1.8" fill="currentColor"/><path d="M6 8 L12 10 L18 8"/><path d="M12 10 L12 15"/><path d="M12 15 L9 21 M12 15 L15 21"/></symbol><symbol id="ico-music" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3" fill="currentColor"/><circle cx="16" cy="16" r="3" fill="currentColor"/></symbol><symbol id="ico-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="ico-finder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1" fill="currentColor" stroke="none"/><path d="M8 16 Q12 19 16 16"/></symbol><symbol id="ico-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L10 17 L19 7"/></symbol><symbol id="ico-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M7 12 L11 16 L17 9"/></symbol><symbol id="ico-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6 L18 18 M18 6 L6 18"/></symbol><symbol id="ico-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L22 20 L2 20 Z"/><path d="M12 10 V14"/><circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none"/></symbol><symbol id="ico-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21 Q12 23 14 21"/></symbol><symbol id="ico-bell-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 10.5-4"/><path d="M18 8c0 7 3 9 3 9H6"/><path d="M3 3 L21 21"/><path d="M10 21 Q12 23 14 21"/></symbol><symbol id="ico-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 H5 a2 2 0 0 1 -2 -2 V5 a2 2 0 0 1 2 -2 h11 l5 5 v11 a2 2 0 0 1 -2 2 z"/><path d="M8 3 V8 H16 V3"/><path d="M8 13 H16 V21 H8 z"/></symbol><symbol id="ico-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 9 M8 2 H16 M9 9 L7 15 H17 L15 9 M12 15 V22"/></symbol><symbol id="ico-cube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L21 7 V17 L12 22 L3 17 V7 Z"/><path d="M3 7 L12 12 L21 7"/><path d="M12 12 V22"/></symbol><symbol id="ico-dice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r="1.2" fill="currentColor" stroke="none"/></symbol><symbol id="ico-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6 H20 M4 12 H20 M4 18 H20"/><circle cx="9" cy="6" r="2" fill="#0c0c10"/><circle cx="15" cy="12" r="2" fill="#0c0c10"/><circle cx="8" cy="18" r="2" fill="#0c0c10"/></symbol><symbol id="ico-fader" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3 V21 M13 3 V21 M19 3 V21"/><rect x="4" y="7" width="6" height="4" rx="1" fill="#0c0c10"/><rect x="10" y="13" width="6" height="4" rx="1" fill="#0c0c10"/><rect x="16" y="9" width="6" height="4" rx="1" fill="#0c0c10"/></symbol><symbol id="ico-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7 V12 L16 14"/></symbol><symbol id="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14 A8 8 0 1 1 10 4 a7 7 0 0 0 10 10 z"/></symbol><symbol id="ico-coffee" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10 H18 V16 A4 4 0 0 1 14 20 H8 A4 4 0 0 1 4 16 Z"/><path d="M18 12 H20 A2 2 0 0 1 22 14 V15 A2 2 0 0 1 20 17 H18"/><path d="M8 3 Q8 5 9 6 M12 3 Q12 5 13 6 M16 3 Q16 5 17 6" opacity="0.6"/></symbol><symbol id="ico-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 Q7 5 12 5 Q17 5 22 12 Q17 19 12 19 Q7 19 2 12 z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="ico-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 Q7 5 12 5 Q17 5 22 12 Q17 19 12 19 Q7 19 2 12 z"/><circle cx="12" cy="12" r="3"/><path d="M3 3 L21 21"/></symbol><symbol id="ico-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10 V7 A4 4 0 0 1 16 7 V10"/></symbol><symbol id="ico-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3 A2.1 2.1 0 0 1 20 6 L8 18 L4 19 L5 15 Z"/></symbol><symbol id="ico-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7 H20 M10 11 V17 M14 11 V17 M5 7 L6 20 A2 2 0 0 0 8 22 H16 A2 2 0 0 0 18 20 L19 7 M9 7 V4 A1 1 0 0 1 10 3 H14 A1 1 0 0 1 15 4 V7"/></symbol><symbol id="ico-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 L15 12 L9 18"/></symbol><symbol id="ico-scan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5" opacity="0.5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></symbol><symbol id="ico-headphones" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14 A8 8 0 0 1 20 14"/><rect x="3" y="14" width="5" height="7" rx="1.5"/><rect x="16" y="14" width="5" height="7" rx="1.5"/></symbol><symbol id="ico-rocket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 C16 6 17 11 17 15 L12 18 L7 15 C7 11 8 6 12 2 z"/><circle cx="12" cy="10" r="1.8"/><path d="M9 18 L6 22 M15 18 L18 22"/></symbol><symbol id="ico-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5 H20 A2 2 0 0 1 22 7 V15 A2 2 0 0 1 20 17 H13 L8 21 V17 H4 A2 2 0 0 1 2 15 V7 A2 2 0 0 1 4 5 Z"/></symbol><symbol id="ico-volume" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 V14 H7 L12 18 V6 L7 10 Z"/><path d="M16 9 Q18 12 16 15" opacity="0.7"/><path d="M19 6 Q22 12 19 18" opacity="0.5"/></symbol><symbol id="ico-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9 L12 15 L18 9"/></symbol><symbol id="ico-chevrons-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 6 L12 11 L17 6"/><path d="M7 13 L12 18 L17 13"/></symbol><symbol id="ico-chevrons-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18 L12 13 L17 18"/><path d="M7 11 L12 6 L17 11"/></symbol><symbol id="ico-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4H21L14 12V20L10 18V12L3 4Z"/></symbol><symbol id="ico-filter-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4H21L14 12V20L10 18V12L3 4Z"/><path d="M3 3L21 21"/></symbol><symbol id="ico-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20 L16 16"/></symbol><symbol id="ico-search-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20 L16 16"/><path d="M4 4 L20 20"/></symbol><symbol id="ico-paperclip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12 L12 21 A5 5 0 0 1 5 14 L13 6 A3 3 0 0 1 17 10 L9 18 A1 1 0 0 1 8 17 L15 10"/></symbol><symbol id="ico-star" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></symbol><symbol id="ico-star-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></symbol></defs></svg>
 <!-- Mini Mode UI — same window resized to 300×88 -->
 <div id="mini-mode-ui">
   <div class="mini-drag"></div>
@@ -834,7 +811,9 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
   </div>
 </div>
 <div id="compact-toolbar">
-  <div id="compact-toolbar-left"></div>
+  <div id="compact-toolbar-left">
+    <div class="tb-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 L6 12 L8 6 L10 18 L12 8 L14 16 L16 10 L18 12 L21 12"/></svg></div>
+  </div>
   <div class="em-wrap" onclick="toggleCompactMode()" title="Easy = compact mode / Pro = full mode">
     <span class="em-lbl em-lbl-easy">Easy</span>
     <div class="em-track"><div class="em-thumb"></div></div>
@@ -926,23 +905,24 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
 
       <div class="out-row">
         <span class="out-lbl">Name</span>
-        <div style="display:flex;flex:1;gap:4px;align-items:center;position:relative;">
+        <div style="display:flex;flex:1;position:relative;">
           <input class="out-inp" id="name-template" placeholder="Name_Project_bpm_Cmaj_"
             title="Prefix added before each file name. Example: Artist_Track_120bpm_Amaj_ → Artist_Track_120bpm_Amaj_DRUMS.wav"
-            oninput="saveNameTemplate();updateNamePresetUI()" style="flex:1;">
-          <button id="name-preset-arrow" onclick="toggleNamePresetDropdown()" style="background:none;border:none;color:var(--muted);font-size:var(--fs-sm);padding:2px 4px;cursor:pointer;transition:color .15s;" title="Saved prefix presets">▼</button>
-          <button id="name-preset-save-btn" onclick="quickSaveNamePreset()" style="display:none;background:rgba(67,233,123,.15);border:1px solid rgba(67,233,123,.4);border-radius:var(--r);color:var(--a3);font-size:var(--fs-xxs);padding:2px 8px;cursor:pointer;white-space:nowrap;" title="Save current prefix as preset">Save</button>
+            oninput="saveNameTemplate();updateNamePresetUI()" style="flex:1;padding-right:28px;">
+          <button id="name-preset-arrow" onclick="toggleNamePresetDropdown()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-size:var(--fs-sm);padding:2px 4px;cursor:pointer;transition:color .15s;line-height:1;" title="Saved prefix presets">▼</button>
+          <button id="name-preset-save-btn" onclick="quickSaveNamePreset()" style="display:none;position:absolute;right:30px;top:50%;transform:translateY(-50%);background:rgba(67,233,123,.15);border:1px solid rgba(67,233,123,.4);border-radius:var(--r);color:var(--a3);font-size:var(--fs-xxs);padding:2px 8px;cursor:pointer;white-space:nowrap;" title="Save current prefix as preset">Save</button>
           <div id="name-preset-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;margin-top:4px;background:var(--card2);border:1px solid var(--b2);border-radius:var(--r);box-shadow:var(--sh-raised);padding:4px;max-height:180px;overflow-y:auto;z-index:var(--z-dropdown);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);">
             <div id="name-preset-list"></div>
           </div>
         </div>
       </div>
-      <div class="out-row" id="sidechain-row" style="align-items:center;gap:8px;">
-        <input type="checkbox" id="sidechain-toggle" title="Include a sidechain channel with every stem bounce" style="width:14px;height:14px;cursor:pointer;accent-color:var(--warn);" onchange="toggleSidechain(this.checked)">
-        <span class="eb-tt eb-tt--wide eb-tt--below" data-tt="Sidechain channel — bounced together with each stem. Click to change." style="color:var(--warn);display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-lock"/></svg></span>
-        <span style="font-size:var(--fs-xs);font-weight:600;color:var(--t2);">Sidechain</span>
+      <div class="out-row" id="sidechain-row">
+        <span class="out-lbl" style="display:flex;align-items:center;gap:5px;">
+          <input type="checkbox" id="sidechain-toggle" title="Include a sidechain channel with every stem bounce" style="width:14px;height:14px;cursor:pointer;accent-color:var(--warn);flex-shrink:0;" onchange="toggleSidechain(this.checked)">
+          <span class="eb-tt eb-tt--wide eb-tt--below" data-tt="Sidechain channel" style="color:var(--warn);display:inline-flex;align-items:center;flex-shrink:0;"><svg class="ico ico-sm"><use href="#ico-lock"/></svg></span>
+        </span>
         <div style="flex:1;position:relative;">
-          <button id="sidechain-picker-btn" onclick="toggleSidechainDropdown()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--t2);font-size:var(--fs-xs);padding:4px 8px;font-family:'JetBrains Mono',monospace;cursor:not-allowed;opacity:0.5;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" disabled>— select channel —</button>
+          <button id="sidechain-picker-btn" onclick="toggleSidechainDropdown()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--t2);font-size:var(--fs-xs);padding:6px 9px;font-family:'JetBrains Mono',monospace;cursor:not-allowed;opacity:0.5;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;" disabled>— select sidechain channel —</button>
           <div id="sidechain-dropdown" style="display:none;position:absolute;bottom:100%;left:0;right:0;margin-bottom:4px;background:var(--card2);border:1px solid var(--b2);border-radius:var(--r);box-shadow:0 -8px 32px rgba(0,0,0,.5);z-index:600;max-height:260px;overflow:hidden;display:none;flex-direction:column;">
             <input id="sidechain-search" type="text" placeholder="Search channel…" oninput="renderSidechainDropdown()" style="background:var(--card);border:none;border-bottom:1px solid var(--b);color:var(--text);font-size:var(--fs-xs);padding:6px 8px;font-family:var(--font-mono);width:100%;box-sizing:border-box;outline:none;flex-shrink:0;">
             <div id="sidechain-filters" style="display:flex;gap:3px;padding:4px 6px;border-bottom:1px solid var(--b);flex-wrap:wrap;flex-shrink:0;"></div>
@@ -957,7 +937,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
       <div class="out-row em-hide" id="mp-row" style="margin-top:2px;">
         <span class="out-lbl"></span>
         <button id="mp-open-btn" onclick="openMasterPluginsModal()" style="flex:1;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--t2);font-size:var(--fs-xs);font-weight:600;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .16s;" title="Check master channel plugins">
-          <span style="display:inline-flex;align-items:center;"><svg class="ico"><use href="#ico-sliders"/></svg></span><span style="flex:1;text-align:left;">Master plugins</span><span id="mp-badge" style="display:none;background:rgba(255,169,77,.2);border:1px solid rgba(255,169,77,.5);color:var(--warn);font-size:var(--fs-xxs);padding:1px 5px;border-radius:3px;font-weight:800;">BYPASS</span><span style="color:var(--muted);display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-gear"/></svg></span>
+          <span style="display:inline-flex;align-items:center;"><svg class="ico"><use href="#ico-sliders"/></svg></span><span style="flex:1;text-align:left;">Master plugins</span><span id="mp-badge" style="display:none;background:rgba(255,169,77,.2);border:1px solid rgba(255,169,77,.5);color:var(--warn);font-size:var(--fs-xxs);padding:1px 5px;border-radius:3px;font-weight:800;">BYPASS</span>
         </button>
       </div>
       <div class="out-row fmt-bar">
@@ -967,7 +947,6 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
           <span class="fmt-tag fmt-tag-mp3-off" id="fmt-bar-mp3-tag">MP3</span>
           <span class="fmt-bar-detail" id="fmt-bar-detail">—</span>
           <span id="fmt-bar-source" class="fmt-source-badge fmt-source-preset">PRESET</span>
-          <span style="color:var(--muted);margin-left:4px;flex-shrink:0;display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-gear"/></svg></span>
         </button>
       </div>
     </div>
@@ -5947,6 +5926,11 @@ function confirmMerge() {
   const name = (document.getElementById('merge-name-inp')?.value || '').trim();
   if (!name) { document.getElementById('merge-name-inp')?.focus(); toast('Enter a merge name'); return; }
   if (_mergeModalChannels.length < 2) { toast('Select at least 2 channels'); return; }
+  // Duplicate check — same channel set already pending
+  const newKey = _mergeModalChannels.map(c => c.channelIndex).sort((a,b) => a-b).join(',');
+  const dupMerge = queue.find(q => q.type === 'group' && q.status === 'pending' &&
+    (q.channels||[]).map(c => c.channelIndex).sort((a,b) => a-b).join(',') === newKey);
+  if (dupMerge) { toast(`"${dupMerge.name}" with same channels already in queue`); return; }
   saveUndo();
   queue.push({ id: 'q_' + Date.now() + Math.random(), type: 'group', name, channels: _mergeModalChannels.map(c=>({...c})), status: 'pending' });
   selectedIdx.clear();
@@ -10447,19 +10431,34 @@ function _applyCompactTruncations() {
 }
 async function toggleCompactMode() {
   const next = !_compactOn;
-  if (next) {
-    const r = await window.api?.enterCompactMode?.();
-    if (r?.ok === false) return;
-  } else {
-    await window.api?.exitCompactMode?.();
-  }
+
+  // Fade out — hide UI before resize
+  document.body.classList.add('compact-transitioning');
+  await new Promise(r => setTimeout(r, 160));
+
+  // Apply CSS class while UI is hidden
   _applyCompactClass(next);
-  try { localStorage.setItem(COMPACT_LS_KEY, next ? '1' : '0'); } catch {}
   if (!next) {
     const out = document.getElementById('out-folder');
     if (out && out.dataset.fullPath) out.textContent = out.dataset.fullPath;
   }
   renderQueue();
+
+  // Resize window — content already matches new size
+  if (next) {
+    const r = await window.api?.enterCompactMode?.();
+    if (r?.ok === false) {
+      document.body.classList.remove('compact-transitioning');
+      return;
+    }
+  } else {
+    await window.api?.exitCompactMode?.();
+  }
+  try { localStorage.setItem(COMPACT_LS_KEY, next ? '1' : '0'); } catch {}
+
+  // Fade in
+  document.body.classList.remove('compact-transitioning');
+
   if (_compactOn) requestAnimationFrame(_alignCmScanBtn);
   const hint = document.getElementById('scan-hint');
   if (hint && hint.classList.contains('show')) positionScanHint();
@@ -12945,12 +12944,21 @@ if (window.api?.onHotkeyTriggered) {
     }
     const tracks = result.tracks;
     if (type === 'stems') {
+      const added = [], skipped = [];
       tracks.forEach(t => {
         const ch = channels.find(c => c.index === t.index) || { name: t.name, index: t.index, color: '#888' };
-        queue.push(_mkStemItem(ch));
+        const _isDup = (j) => j.type === 'stem' && j.status !== 'done' && j.channelIndex === ch.index;
+        if (queue.find(q => _isDup(q) || (q.type === 'set' && q.jobs.some(_isDup)))) {
+          skipped.push(ch.name);
+        } else {
+          queue.push(_mkStemItem(ch));
+          added.push(ch.name);
+        }
       });
-      saveQueue(); renderQueue(); updateBounceBtn();
-      toast(`${tracks.length} stem${tracks.length > 1 ? 's' : ''} added to queue`);
+      if (added.length || skipped.length) { saveQueue(); renderQueue(); updateBounceBtn(); }
+      if (added.length && skipped.length) toast(`${added.length} added · ${skipped.length} already in queue`);
+      else if (added.length) toast(`${added.length} stem${added.length > 1 ? 's' : ''} added`);
+      else toast('Already in queue');
     } else if (type === 'version') {
       // Pre-fill version modal with selected tracks as muted
       _openVersionModalWithTracks(tracks);
@@ -13031,40 +13039,70 @@ window.addEventListener('load', function(){
   });
 });
 </script>
-<div id="js-tip" style="position:fixed;background:rgba(0,0,0,.92);color:#fff;font-size:var(--fs-xs);padding:5px 9px;border-radius:6px;white-space:nowrap;z-index:9999;pointer-events:none;display:none;font-family:'Space Grotesk',sans-serif;"></div>
+<div id="js-tip" style="position:fixed;background:rgba(14,14,20,.96);color:#e8e8f0;font-size:var(--fs-xs);padding:5px 10px;border-radius:6px;white-space:nowrap;z-index:9999;pointer-events:none;opacity:0;display:none;font-family:'Space Grotesk',sans-serif;border:1px solid rgba(255,255,255,.08);box-shadow:0 4px 16px rgba(0,0,0,.4);transition:opacity 0.18s ease;"></div>
 <script>
 (function(){
   var tip = document.getElementById('js-tip');
   var enabled = localStorage.getItem('sb4_tooltips') !== '0';
+  var _showTimer = null;
+  var _lastEl = null;
+
+  // Strip native title attributes on load to prevent OS-level tooltips
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[title]').forEach(function(el) {
+      var t = el.getAttribute('title');
+      if (t) { el.setAttribute('data-tip', t); el.removeAttribute('title'); }
+    });
+  });
+
   function showTip(e) {
-    if (!enabled) return;
-    var el = e.target.closest('[title]');
-    if (!el || !el.getAttribute('title')) return;
-    tip.textContent = el.getAttribute('title');
-    tip.style.display = 'block';
-    moveTip(e);
+    var el = e.target.closest('[data-tip]');
+    if (el !== _lastEl) { clearTimeout(_showTimer); _lastEl = el; }
+    if (!enabled || !el) { _hideTip(); return; }
+    var txt = el.getAttribute('data-tip');
+    if (!txt) { _hideTip(); return; }
+    clearTimeout(_showTimer);
+    _showTimer = setTimeout(function() {
+      tip.textContent = txt;
+      tip.style.display = 'block';
+      tip.style.opacity = '0';
+      _moveTip(e);
+      requestAnimationFrame(function(){ tip.style.opacity = '1'; });
+    }, 500);
   }
-  function moveTip(e) {
-    if (tip.style.display === 'none') return;
+  function _moveTip(e) {
     var x = e.clientX, y = e.clientY;
-    var tx = x - tip.offsetWidth/2;
-    var ty = y - tip.offsetHeight - 10;
+    var tx = x - tip.offsetWidth / 2;
+    var ty = y - tip.offsetHeight - 12;
     if (tx < 4) tx = 4;
     if (tx + tip.offsetWidth > window.innerWidth - 4) tx = window.innerWidth - tip.offsetWidth - 4;
     if (ty < 4) ty = y + 20;
     tip.style.left = tx + 'px';
     tip.style.top = ty + 'px';
   }
-  function hideTip() { tip.style.display = 'none'; }
+  function moveTip(e) {
+    if (tip.style.display === 'none' || tip.style.opacity === '0') return;
+    _moveTip(e);
+  }
+  function _hideTip() {
+    clearTimeout(_showTimer);
+    _lastEl = null;
+    if (tip.style.display === 'none') return;
+    tip.style.opacity = '0';
+    setTimeout(function(){ tip.style.display = 'none'; }, 180);
+  }
   document.addEventListener('mouseover', showTip);
   document.addEventListener('mousemove', moveTip);
-  document.addEventListener('mouseout', hideTip);
-  document.addEventListener('click', hideTip);
+  document.addEventListener('mouseout', _hideTip);
+  document.addEventListener('click', _hideTip);
   // Expose toggle function
   window._setTooltipsEnabled = function(val) {
     enabled = val;
-    if (!val) hideTip();
+    document.body.classList.toggle('tips-on', !!val);
+    if (!val) _hideTip();
   };
+  // Apply tips-on class immediately
+  if (enabled) document.body.classList.add('tips-on');
   // Init ? button state — matches toggleTooltips() OFF style exactly
   window.addEventListener('load', function(){
     var qb = document.getElementById('tooltip-toggle-btn');
