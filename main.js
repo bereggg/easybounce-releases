@@ -889,7 +889,7 @@ ipcMain.handle('enter-compact-mode', () => {
   const cur = mainWindow.getBounds();
   mainWindow.setMinimumSize(500, 500);
   mainWindow.setBounds({ x: cur.x, y: cur.y, width: 500, height: cur.height }, true);
-  try { mainWindow.setWindowButtonVisibility(false); } catch {}
+  try { mainWindow.setWindowButtonVisibility(true); } catch {}
   return { ok: true };
 });
 ipcMain.handle('exit-compact-mode', () => {
@@ -1035,14 +1035,14 @@ ipcMain.handle('enter-scan-badge', async () => {
   _preScan = mainWindow.getBounds();
   const { screen } = require('electron');
 
-  const bw = 520; const bh = 44;
-  // Center badge horizontally on EasyBounce's own window, pin to top of the same monitor.
+  const bw = 520; const bh = 69;
+  // Center badge horizontally on the DISPLAY (not the app window), pin to top.
   const appDisplay = screen.getDisplayNearestPoint({
     x: _preScan.x + Math.floor(_preScan.width / 2),
     y: _preScan.y + Math.floor(_preScan.height / 2)
   });
-  const { y: dy } = appDisplay.workArea;
-  const bx = _preScan.x + Math.floor(_preScan.width / 2 - bw / 2);
+  const { x: dx, y: dy, width: dw } = appDisplay.workArea;
+  const bx = dx + Math.floor(dw / 2 - bw / 2);
   mainWindow.setMinimumSize(200, 60);
   mainWindow.setResizable(false);
   mainWindow.setBounds({ x: bx, y: dy, width: bw, height: bh }, false);
@@ -1070,9 +1070,9 @@ ipcMain.handle('exit-scan-badge', () => {
   if (!mainWindow) return { ok: false };
   _inScanBadge = false;
   mainWindow.setIgnoreMouseEvents(false);
-  if (mainWindow.setWindowButtonVisibility) mainWindow.setWindowButtonVisibility(true);
+  if (mainWindow.setWindowButtonVisibility) mainWindow.setWindowButtonVisibility(!_inCompact);
   mainWindow.setVisibleOnAllWorkspaces(false);
-  mainWindow.setMinimumSize(1130, 640);
+  mainWindow.setMinimumSize(_inCompact ? 500 : 1130, _inCompact ? 500 : 640);
   mainWindow.setResizable(true);
   if (_preScan) {
     mainWindow.setBounds(_preScan, false);

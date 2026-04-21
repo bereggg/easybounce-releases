@@ -1133,19 +1133,46 @@ case "trackBounce":
 
     emit(["event": "waiting"])
 
-    // Phase A: wait for bounce dialog (or side dialog)
-    let startA = Date()
-    var dialogPair: (AXUIElement, AXUIElement)? = nil
-    while Date().timeIntervalSince(startA) * 1000 < Double(preRollMs) {
-        if let side = findSideDialog() {
-            emit(["event": side])
-            // Give renderer a chance to handle — keep polling briefly
-            Thread.sleep(forTimeInterval: 0.5)
+    // Phase A: AXObserver — macOS pushes a notification the instant Logic creates
+    // the bounce-progress window. No polling, no missed short bounces.
+    // Context is passed via refcon (C function pointer cannot capture Swift variables).
+    class ProgBox { var el: AXUIElement? = nil }
+    let progBox = ProgBox()
+    let ctx = Unmanaged.passRetained(progBox).toOpaque()
+
+    var axObs: AXObserver?
+    AXObserverCreate(_logicPid, { _, el, _, refcon in
+        guard let refcon = refcon else { return }
+        let box = Unmanaged<ProgBox>.fromOpaque(refcon).takeUnretainedValue()
+        guard box.el == nil else { return }
+        // BFS for AXProgressIndicator — bounce dialog has one, save sheet does not
+        var queue: [AXUIElement] = [el]
+        var d = 0
+        while !queue.isEmpty && d < 6 {
+            var next: [AXUIElement] = []
+            for e in queue {
+                var r: CFTypeRef?
+                AXUIElementCopyAttributeValue(e, kAXRoleAttribute as CFString, &r)
+                if (r as? String) == "AXProgressIndicator" {
+                    box.el = e
+                    CFRunLoopStop(CFRunLoopGetCurrent())
+                    return
+                }
+                var ch: CFTypeRef?
+                AXUIElementCopyAttributeValue(e, kAXChildrenAttribute as CFString, &ch)
+                next.append(contentsOf: (ch as? [AXUIElement]) ?? [])
+            }
+            queue = next
+            d += 1
         }
-        if let d = findBounceDialog() { dialogPair = d; break }
-        Thread.sleep(forTimeInterval: 0.2)
+    }, &axObs)
+    if let obs = axObs {
+        AXObserverAddNotification(obs, logic, kAXWindowCreatedNotification as CFString, ctx)
+        CFRunLoopAddSource(CFRunLoopGetCurrent(), AXObserverGetRunLoopSource(obs), .defaultMode)
+        CFRunLoopRunInMode(.defaultMode, Double(preRollMs) / 1000.0, false)
     }
-    guard let (_, progEl) = dialogPair else {
+    Unmanaged<ProgBox>.fromOpaque(ctx).release()
+    guard let progEl = progBox.el else {
         emit(["event": "no-dialog"])
         exit(0)
     }

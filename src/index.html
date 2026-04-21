@@ -528,7 +528,9 @@ body.easy #skin-panel{z-index:9000;}
 #cancel-overlay-inner{color:var(--warn);font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;text-align:center;letter-spacing:.01em;text-shadow:0 2px 12px rgba(0,0,0,.5);}
 #cancel-overlay-sub{margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:var(--fs-sm);font-weight:400;opacity:.8;}
 /* ── Scan in-progress overlay ────────────────────────── */
-#scan-warning{display:none;position:fixed;top:46px;left:0;right:0;height:44px;z-index:9999;pointer-events:none;align-items:center;justify-content:center;gap:10px;background:rgba(14,14,22,.88);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);border-bottom:1px solid var(--accent-a30);box-shadow:0 4px 24px rgba(0,0,0,.4);}
+#scan-warning{display:none;position:fixed;top:46px;left:0;right:0;height:69px;z-index:9999;pointer-events:none;align-items:center;justify-content:center;gap:10px;background:rgba(14,14,22,.92);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);border-bottom:1px solid var(--accent-a30);box-shadow:0 4px 24px rgba(0,0,0,.4);}
+body.compact-mode #scan-warning{top:36px;}
+body.scan-badge #scan-warning{height:100%;}
 #scan-warning.show{display:flex;}
 @keyframes scanBorderPulse{0%{background-position:-100% 0;}100%{background-position:200% 0;}}
 #scan-warning::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);background-size:200% 100%;animation:scanBorderPulse 2.8s linear infinite;}
@@ -575,12 +577,29 @@ body.mini-mode #mini-mode-ui{display:flex;background:rgba(14,14,22,.95);backdrop
 body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini-mode #skin-panel{display:none!important;}
 
 /* ── Compact Queue Mode ───────────────────────────────────────────── */
-#compact-toolbar{display:none;height:36px;background:var(--s);border-bottom:1px solid var(--b);padding:0 10px;align-items:center;justify-content:center;-webkit-app-region:drag;flex-shrink:0;position:relative;}
+#compact-toolbar{display:none;height:36px;background:var(--s);border-bottom:1px solid var(--b);padding:0 10px 0 72px;align-items:center;justify-content:center;gap:8px;-webkit-app-region:drag;flex-shrink:0;position:relative;}
 #compact-toolbar .cm-title{font-size:11px;color:var(--t2);text-transform:uppercase;letter-spacing:.12em;font-family:var(--font-mono,'JetBrains Mono',monospace);font-weight:700;pointer-events:none;}
+#compact-toolbar-left{position:absolute;left:8px;top:50%;transform:translateY(-50%);display:flex;gap:5px;-webkit-app-region:no-drag;}
 #compact-toolbar-actions{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;gap:5px;-webkit-app-region:no-drag;}
-#compact-toolbar-actions button{width:26px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--t2);cursor:pointer;transition:all .15s;padding:0;}
-#compact-toolbar-actions button:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-a12);}
-#compact-toolbar-actions button svg{width:13px;height:13px;}
+#compact-toolbar-left button,#compact-toolbar-actions button{width:26px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:var(--r);border:1px solid var(--b);background:transparent;color:var(--t2);cursor:pointer;transition:all .15s;padding:0;}
+#compact-toolbar-left button:hover,#compact-toolbar-actions button:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-a12);}
+#compact-toolbar-left button:hover{background:rgba(255,255,255,.06);}
+#compact-toolbar-left button svg,#compact-toolbar-actions button svg{width:13px;height:13px;}
+#cm-scan-btn{-webkit-app-region:no-drag;display:none;align-items:center;gap:5px;padding:3px 12px;border-radius:var(--r);border:1px solid transparent;background:var(--g-primary);color:#fff;cursor:pointer;font-size:11px;font-weight:700;font-family:var(--font-mono);box-shadow:var(--sh-glow-sm,0 0 8px rgba(108,99,255,.35)),var(--sh-inset,inset 0 1px 0 rgba(255,255,255,.08));transition:all .15s;}
+#cm-scan-btn:hover{opacity:.88;}
+#cm-scan-btn svg{width:13px;height:13px;flex-shrink:0;}
+body.compact-mode #cm-scan-btn{display:flex;}
+body.compact-mode .q-empty-normal-only{display:none!important;}
+body.compact-mode .q-empty-compact-only{display:block!important;}
+#compact-toolbar-left button.is-active,#compact-toolbar-actions button.is-active{border-color:var(--accent);color:var(--accent);background:var(--accent-a12);}
+#compact-toolbar .em-wrap{position:static;transform:none;-webkit-app-region:no-drag;}
+body.compact-mode .em-thumb{left:16px!important;background:#fff!important;}
+body.compact-mode .em-track{background:var(--accent-a30)!important;}
+body.compact-mode .em-lbl.em-lbl-pro{opacity:.55!important;}
+body.compact-mode .em-lbl.em-lbl-easy{color:var(--accent)!important;opacity:1!important;}
+body.compact-mode .em-wrap{border-color:var(--accent-a60)!important;background:var(--accent-a08)!important;box-shadow:0 0 14px var(--accent-a20)!important;}
+#q-empty-compact{position:relative;width:100%;min-height:100%;}
+#cm-empty-arrow{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:40px;height:40px;color:var(--accent);opacity:.35;animation:eb-breathe 2.4s ease-in-out infinite;pointer-events:none;}
 
 body.compact-mode{overflow:hidden;}
 body.compact-mode .titlebar{display:none!important;}
@@ -795,7 +814,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
     EasyBounce
   </div>
   <div class="tb-proj" id="tb-proj">no project loaded</div>
-  <div class="em-wrap" onclick="toggleEasyMode()" title="Toggle Easy / Pro mode">
+  <div class="em-wrap" onclick="toggleCompactMode()" title="Easy = compact mode / Pro = full mode">
     <span class="em-lbl em-lbl-pro">Pro</span>
     <div class="em-track"><div class="em-thumb"></div></div>
     <span class="em-lbl em-lbl-easy">Easy</span>
@@ -818,14 +837,22 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
     </div>
     <button class="tb-ico-btn" id="hotkeys-btn" onclick="showHotkeysModal()" title="Hotkey settings" style="-webkit-app-region:no-drag;"><svg class="ico ico-sm"><use href="#ico-gear"/></svg></button>
     <button class="tb-ico-btn" id="pin-btn" onclick="togglePin()" title="Always on top" style="-webkit-app-region:no-drag;"><svg class="ico ico-sm"><use href="#ico-pin"/></svg></button>
-    <button class="tb-ico-btn" id="compact-btn" onclick="toggleCompactMode()" title="Compact queue mode" style="-webkit-app-region:no-drag;"><svg class="ico ico-sm"><use href="#ico-compact"/></svg></button>
   </div>
 </div>
 <div id="compact-toolbar">
-  <span class="cm-title">COMPACT MODE</span>
+  <div id="compact-toolbar-left"></div>
+  <div class="em-wrap" onclick="toggleCompactMode()" title="Easy = compact mode / Pro = full mode">
+    <span class="em-lbl em-lbl-pro">Pro</span>
+    <div class="em-track"><div class="em-thumb"></div></div>
+    <span class="em-lbl em-lbl-easy">Easy</span>
+  </div>
+  <button id="cm-scan-btn" onclick="scanLogic()" title="Scan Logic Pro channels. Keep Mixer open!">
+    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg>
+    Scan Logic
+  </button>
   <div id="compact-toolbar-actions">
     <button id="cm-hotkeys-btn" onclick="showHotkeysModal()" title="Hotkey settings"><svg class="ico ico-sm"><use href="#ico-gear"/></svg></button>
-    <button id="exit-compact-btn" onclick="toggleCompactMode()" title="Exit compact mode"><svg class="ico ico-sm"><use href="#ico-expand-arrows"/></svg></button>
+    <button id="cm-pin-btn" onclick="togglePin()" title="Always on top"><svg class="ico ico-sm"><use href="#ico-pin"/></svg></button>
   </div>
 </div>
 <div class="shell">
@@ -7135,7 +7162,8 @@ function renderQueue() {
   if (queue.length === 0) {
     const isCompact = document.body.classList.contains('compact-mode');
     if (isCompact) {
-      el.innerHTML = `
+      const scanned = channels.length > 0;
+      el.innerHTML = scanned ? `
     <div class="q-empty">
       <svg class="q-empty-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="5" width="18" height="14" rx="2"/>
@@ -7144,10 +7172,14 @@ function renderQueue() {
       <div class="q-empty-title">Add from Logic via hotkeys</div>
       <div class="q-empty-sub">Select tracks in Logic, then press<br>your <b>Stem</b>, <b>Version</b> or <b>Merge</b> hotkey</div>
     </div>
+  ` : `
+    <div class="q-empty">
+      <div class="q-empty-sub">Scan Logic first, then use<br>your assigned hotkeys to add stems</div>
+    </div>
   `;
     } else {
       el.innerHTML = `
-    <div class="q-empty">
+    <div class="q-empty" id="q-empty-state">
       <svg class="q-empty-arrow" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
         <path d="M68 40 L12 40"/>
         <path d="M24 28 L12 40 L24 52"/>
@@ -7322,35 +7354,48 @@ function renderQueue() {
           >Full</span>`;
         })()
       : '';
-    const markerChips = (visibleMarkers_.length > 0 && _queueMarkersChipsVisible)
-      ? visibleMarkers_.map(m => {
-          const mid = markerId(m);
-          const name = m.name;
-          const willBounce = shouldBounceJobForMarker(item, mid);
-          const globallyActive = _activeMarkers.has(mid);
-          const excluded = (item.markerExclusions||[]).includes(mid);
-          const added    = (item.markerAdditions||[]).includes(mid);
-          // Style: active=colored, excluded=strikethrough, globally-off-but-added=orange outline, globally-off=very dim
-          let style, title;
-          if (globallyActive && !excluded) {
-            style = 'background:rgba(108,99,255,.18);color:#b8b0ff;border:1.5px solid rgba(108,99,255,.4);';
-            title = 'Will bounce — click to skip for this item';
-          } else if (globallyActive && excluded) {
-            style = 'background:transparent;color:rgba(255,255,255,.35);border:1.5px dashed rgba(255,255,255,.18);';
-            title = 'Click to include for this item';
-          } else if (!globallyActive && added) {
-            style = 'background:rgba(255,169,77,.12);color:#ffb340;border:1.5px solid rgba(255,169,77,.4);';
-            title = 'Added only for this item — click to remove';
-          } else {
-            style = 'background:transparent;color:rgba(255,255,255,.35);border:1.5px dashed rgba(255,255,255,.15);';
-            title = 'Click to add this marker only for this item';
-          }
-          return `<span onclick="event.stopPropagation();toggleJobMarker('${item.id}','${mid.replace(/'/g,"\\'")}');"
-            title="${title}"
-            style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:var(--fs-xxs);font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .12s;user-select:none;${style}"
-          >${name}</span>`;
-        }).join('')
-      : '';
+    const _mkChip = (m) => {
+      const mid = markerId(m);
+      const name = m.name;
+      const globallyActive = _activeMarkers.has(mid);
+      const excluded = (item.markerExclusions||[]).includes(mid);
+      const added    = (item.markerAdditions||[]).includes(mid);
+      let style, title;
+      if (globallyActive && !excluded) {
+        style = 'background:rgba(108,99,255,.18);color:#b8b0ff;border:1.5px solid rgba(108,99,255,.4);';
+        title = 'Will bounce — click to skip for this item';
+      } else if (globallyActive && excluded) {
+        style = 'background:transparent;color:rgba(255,255,255,.35);border:1.5px dashed rgba(255,255,255,.18);';
+        title = 'Click to include for this item';
+      } else if (!globallyActive && added) {
+        style = 'background:rgba(255,169,77,.12);color:#ffb340;border:1.5px solid rgba(255,169,77,.4);';
+        title = 'Added only for this item — click to remove';
+      } else {
+        style = 'background:transparent;color:rgba(255,255,255,.35);border:1.5px dashed rgba(255,255,255,.15);';
+        title = 'Click to add this marker only for this item';
+      }
+      return `<span onclick="event.stopPropagation();toggleJobMarker('${item.id}','${mid.replace(/'/g,"\\'")}');"
+        title="${title}"
+        style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:var(--fs-xxs);font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .12s;user-select:none;${style}"
+      >${name}</span>`;
+    };
+    const MARKER_SHOW = 3;
+    const _mkExpanded = window._markerExpanded || {};
+    let markerChips = '';
+    if (visibleMarkers_.length > 0 && _queueMarkersChipsVisible) {
+      const visible = visibleMarkers_.slice(0, MARKER_SHOW).map(_mkChip).join('');
+      const hidden  = visibleMarkers_.slice(MARKER_SHOW);
+      const isExp   = !!_mkExpanded[item.id];
+      const extra   = hidden.length > 0
+        ? (isExp
+            ? hidden.map(_mkChip).join('') +
+              `<span onclick="event.stopPropagation();window._markerExpanded=window._markerExpanded||{};window._markerExpanded['${item.id}']=false;renderQueue();"
+               style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:var(--fs-xxs);font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;color:var(--t2);border:1.5px dashed rgba(255,255,255,.18);user-select:none;">less</span>`
+            : `<span onclick="event.stopPropagation();window._markerExpanded=window._markerExpanded||{};window._markerExpanded['${item.id}']=true;renderQueue();"
+               style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:var(--fs-xxs);font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;color:var(--t2);border:1.5px dashed rgba(255,255,255,.18);user-select:none;">+${hidden.length} more</span>`)
+        : '';
+      markerChips = visible + extra;
+    }
 
     div.innerHTML = `
       <div class="drag-handle">⠿</div>
@@ -8016,15 +8061,19 @@ async function doBounce() {
     if (window._miniActive) {
       const etaEl = document.getElementById('mini-eta');
       if (!etaEl) return;
-      // From stem 2+: show 5→4→3→2→1 countdown in last 11s of predicted stem render
-      // (shows early so user knows not to click before Logic space switch)
-      if (_stemTimes.length > 0 && _stemStartTime) {
-        const avg = _stemTimes.reduce((a,b) => a+b, 0) / _stemTimes.length;
-        const stemElapsed = (Date.now() - _stemStartTime) / 1000;
-        const stemRemaining = avg - stemElapsed;
-        if (stemRemaining > 0 && stemRemaining <= 12) {
-          const cd = Math.min(5, Math.ceil(stemRemaining * 5 / 12));
-          etaEl.textContent = Math.max(1, cd);
+      // Countdown 3→2→1 based on AX progress: "1" appears at 98%, calculated from pace
+      const _axP = window._axLastProgress || 0;
+      if (_axP >= 0.98) {
+        etaEl.textContent = '1';
+        etaEl.style.color = '#ffa94d';
+        etaEl.style.fontSize = '18px';
+        return;
+      }
+      if (_axP > 0.05 && _stemStartTime) {
+        const _axElapsed = (Date.now() - _stemStartTime) / 1000;
+        const _timeTo98 = _axElapsed * (0.98 - _axP) / _axP;
+        if (_timeTo98 <= 3) {
+          etaEl.textContent = Math.max(1, Math.min(3, Math.ceil(_timeTo98)));
           etaEl.style.color = '#ffa94d';
           etaEl.style.fontSize = '18px';
           return;
@@ -8429,22 +8478,6 @@ async function doBounce() {
         const co = document.getElementById('cancel-overlay');
         if (co) { co.classList.add('fade-out'); setTimeout(() => { co.classList.remove('show','fade-out'); co.style.willChange = 'auto'; }, 400); } // Opt #7: release GPU layer after fade
         toast('✓ Cancelled — channels restored');
-      } else {
-        if (window._bounceReturnApp) {
-          // 5-second countdown before returning focus to Logic / user's app
-          if (window.api?.overlayCountdown) {
-            for (let _cd = 5; _cd >= 1; _cd--) {
-              window.api.overlayCountdown(_cd).catch(() => {});
-              await window.api.wait(1000);
-            }
-            window.api.overlayCountdown(0).catch(() => {}); // reset
-          }
-          try { await window.api.runScript(`tell application "${window._bounceReturnApp}" to activate`); } catch(e) { console.warn('[EB]', e); }
-          // 1-second safe zone: EasyBounce stays on top so user can't accidentally click Logic
-          await window.api.setAlwaysOnTop(true).catch(() => {});
-          await window.api.wait(1000).catch(() => {});
-          await window.api.setAlwaysOnTop(false).catch(() => {});
-        }
       }
     }
   }
@@ -8809,7 +8842,6 @@ async function bounceStem(job, folder, isFirst) {
     }
     window._cancelSoloedName = null; window._cancelSoloedIndex = null;
     await window.api.wait(300);
-    await returnToPrevApp();
   }
   return ok;
 }
@@ -8911,7 +8943,6 @@ async function bounceGroup(job, folder, isFirst) {
     }
     window._cancelGroupNames = []; window._cancelGroupIndices = [];
     await window.api.wait(200);
-    await returnToPrevApp();
   }
   return ok;
 }
@@ -9000,7 +9031,6 @@ async function bounceMix(job, folder, isFirst) {
       window._cancelMutedIndices = []; window._cancelMutedNames = [];
       await window.api.wait(350);
     }
-    await returnToPrevApp();
   }
   return ok;
 }
@@ -9254,7 +9284,8 @@ async function restoreAllMasterPlugins() {
 // ───────────────────────────────────────────────────────────
 
 function positionScanHint() {
-  const btn  = document.getElementById('scan-btn');
+  const isCompact = document.body.classList.contains('compact-mode');
+  const btn  = document.getElementById(isCompact ? 'cm-scan-btn' : 'scan-btn');
   const hint = document.getElementById('scan-hint');
   if (!btn || !hint) return;
   const r = btn.getBoundingClientRect();
@@ -9922,6 +9953,35 @@ async function triggerBounce(name, folder, isFirst) {
     '  end tell',
     'end tell'
   ].join('\n');
+  // ── Start AX tracker BEFORE clicking Bounce, so Phase-A polling is already
+  // active when Logic opens the Bouncing dialog. Critical for short bounces that
+  // open-and-close the dialog faster than the spawn+preRoll of a post-click start.
+  // The structural filter excludes the Save-As sheet (has "Bounce" button), so
+  // starting early is safe.
+  window._axTrackResult = null;            // final event from trackBounce
+  window._axLastProgress = 0;              // 0..1
+  const _offProgress = window.api.onBounceProgress((evt) => {
+    if (evt.event === 'progress') {
+      window._axLastProgress = evt.value;
+      try {
+        const pct = Math.max(0, Math.min(100, evt.value * 100)).toFixed(1) + '%';
+        const pf = document.getElementById('pfill'); if (pf) pf.style.width = pct;
+        const mf = document.getElementById('mini-fill'); if (mf) mf.style.width = pct;
+      } catch(e) { /* no-op */ }
+    }
+  });
+  // preRoll 30s: enough for Logic to actually open Bouncing dialog even on heavy projects.
+  // maxRender 60min: matches legacy BOUNCE_TIMEOUT_MS.
+  const _trackPromise = window.api.trackBounce(30000, 60 * 60 * 1000).then((r) => {
+    window._axTrackResult = r;
+    return r;
+  }).catch((e) => {
+    window._axTrackResult = { event: 'error', message: String(e) };
+    return window._axTrackResult;
+  });
+  // Give LogicBridge time to register AXObserver before we click Bounce
+  await window.api.wait(200);
+
   let r = { ok: false, output: '' };
   for (let attempt = 0; attempt < 3; attempt++) {
     r = await window.api.runScript(_bounceScript);
@@ -9937,40 +9997,16 @@ async function triggerBounce(name, folder, isFirst) {
   // (false positive), which leads to "file not found" retry cascade.
   if (!r.ok || (r.output !== 'ok' && r.output !== 'enter')) {
     log('⚠ Bounce dialog not found — aborting this track', 'err');
+    try { if (typeof _offProgress === 'function') _offProgress(); } catch {}
+    try { await window.api.stopTrackBounce?.(); } catch {}
     return false;
   }
 
-  // Bounce is now rendering — return user to their previous app/space immediately
-  // The poll loop works via AppleScript without Logic needing to be frontmost
-  if (window._bounceReturnApp) {
-    try { await window.api.runScript(`tell application "${window._bounceReturnApp}" to activate`); } catch(e) { console.warn('[EB]', e); }
-  }
-
-  // ── AX progress tracker (authoritative "done" signal) ─────────────────────
-  // Runs in parallel with the legacy AppleScript poll loop. The legacy loop
-  // continues to handle side-dialogs (Replace / Recover / Go-to-folder / quit-save);
-  // the AX tracker is the ONLY authority for "render finished" to eliminate the
-  // false-positive "done" race where AppleScript returns done between phases.
-  window._axTrackResult = null;            // final event from trackBounce
-  window._axLastProgress = 0;              // 0..1
-  const _offProgress = window.api.onBounceProgress((evt) => {
-    if (evt.event === 'progress') {
-      window._axLastProgress = evt.value;
-      // Live-update mini/overlay progress bar with real render progress
-      try {
-        const pct = Math.max(0, Math.min(100, evt.value * 100)).toFixed(1) + '%';
-        const pf = document.getElementById('pfill'); if (pf) pf.style.width = pct;
-        const mf = document.getElementById('mini-fill'); if (mf) mf.style.width = pct;
-      } catch(e) { /* no-op */ }
-    }
-  });
-  const _trackPromise = window.api.trackBounce(6000, 60 * 60 * 1000).then((r) => {
-    window._axTrackResult = r;
-    return r;
-  }).catch((e) => {
-    window._axTrackResult = { event: 'error', message: String(e) };
-    return window._axTrackResult;
-  });
+  // AX tracker was already started before the Bounce click (see above).
+  // Fallback counter for very short bounces where tracker might emit `no-dialog`
+  // before we observe a "done" — in that case we trust legacy AppleScript after
+  // a few consecutive confirmations + file-exists check.
+  let _consecutiveDoneWithoutTracker = 0;
 
   // Poll until done — #44: 10-minute hard timeout with user warning at 5 minutes
   await window.api.wait(1000);
@@ -10132,7 +10168,20 @@ async function triggerBounce(name, folder, isFirst) {
         }
         break;
       }
+      // Tracker already gave up (no-dialog / timeout / error) — very short bounce
+      // that finished before tracker's preRoll caught it. Trust legacy "done"
+      // after 3 consecutive confirmations (2.4s) and let findFile verify the file.
+      if (tr && (tr.event === 'no-dialog' || tr.event === 'timeout' || tr.event === 'error' || tr.event === 'killed')) {
+        _consecutiveDoneWithoutTracker++;
+        if (_consecutiveDoneWithoutTracker >= 3) {
+          const _elapsed = _stemStartTime ? Math.round((Date.now() - _stemStartTime) / 1000) : Math.round((waited+1000)/1000);
+          log(`✓ ${name} (${_elapsed}s) — short bounce (tracker: ${tr.event})`, 'ok');
+          break;
+        }
+      }
       // AX tracker hasn't confirmed close yet — keep polling (false positive)
+    } else {
+      _consecutiveDoneWithoutTracker = 0;
     }
     if (check.output === 'rendering') {
       // Bounce progress window visible — render is still in progress, keep waiting
@@ -10149,12 +10198,15 @@ async function triggerBounce(name, folder, isFirst) {
     }
     if (check.output === 'replaced') {
       log('⚠ Replaced existing file — waiting for render to start…', 'warn');
-      // After Replace, Logic closes the dialog briefly before starting render.
-      // Reset timer + reference file so stale check works correctly.
       _stemStartTime = Date.now();
       await window.api.runShell('touch /tmp/.eb_stemstart').catch(() => {});
-      // Wait for render to actually begin (otherwise next poll sees "done" = no dialogs)
       await window.api.wait(2000);
+    }
+    if (check.output === 'replace-retry') {
+      // Replace click failed — activate Logic and retry once
+      log('⚠ Replace click failed — activating Logic and retrying…', 'warn');
+      try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) {}
+      await window.api.wait(500);
     }
     if (check.output === 'goto-confirmed') {
       // "Go to folder" sheet was stuck open — path confirmed, now click Bounce
@@ -10165,10 +10217,6 @@ async function triggerBounce(name, folder, isFirst) {
       await window.api.wait(200);
       await window.api.runScript(_bounceScript);
       await window.api.wait(300);
-      // Return to user's app again after re-triggering bounce
-      if (window._bounceReturnApp) {
-        try { await window.api.runScript(`tell application "${window._bounceReturnApp}" to activate`); } catch(e) { console.warn('[EB]', e); }
-      }
     }
     // Bounce dialog is still visible (Bounce button present) — render hasn't started yet
     // This happens when user clicked something and Logic lost focus before we pressed Bounce
@@ -10183,9 +10231,6 @@ async function triggerBounce(name, folder, isFirst) {
         const reR = await window.api.runScript(_bounceScript);
         log(`Re-trigger result: ${reR.output || reR.error || '?'}`, 'info');
         await window.api.wait(500);
-        if (window._bounceReturnApp) {
-          try { await window.api.runScript(`tell application "${window._bounceReturnApp}" to activate`); } catch(e) { console.warn('[EB]', e); }
-        }
       } else if (dialogStuckCount >= 3 && reTriggerCount >= 2) {
         log(`✗ Bounce dialog stuck after 2 re-trigger attempts on "${name}" — aborting`, 'err');
         toast(`⚠ Bounce dialog stuck — skipping "${name}"`);
@@ -10234,6 +10279,66 @@ async function triggerBounce(name, folder, isFirst) {
     log(`⚠ Bounce timeout (${Math.round(BOUNCE_TIMEOUT_MS/60000)} min) — Logic may be frozen. Skipping track.`, 'err');
     toast(`⚠ Bounce timeout (${Math.round(BOUNCE_TIMEOUT_MS/60000)} min) — track skipped. Check if Logic is frozen.`);
   }
+  // ── Post-loop: final Replace/side-dialog cleanup ─────────────────────────
+  // If poll loop exited early (no-dialog fallback), a Replace dialog may still
+  // be open. Activate Logic and handle it before checking for the file.
+  try {
+    const _finalCheck = await window.api.runScript([
+      'tell application "System Events"',
+      '  tell (first process whose bundle identifier is "com.apple.logic10")',
+      '    try',
+      '      repeat with w in windows',
+      '        try',
+      '          set wb to name of every button of w',
+      '          if wb contains "Replace" then',
+      '            tell application id "com.apple.logic10" to activate',
+      '            delay 0.3',
+      '            click button "Replace" of w',
+      '            delay 1.5',
+      '            return "replaced"',
+      '          end if',
+      '        end try',
+      '      end repeat',
+      '    end try',
+      '    return "ok"',
+      '  end tell',
+      'end tell'
+    ].join('\n'));
+    if (_finalCheck.output === 'replaced') {
+      log('⚠ Replace dialog found after poll loop — clicked, waiting for render…', 'warn');
+      // Wait for the render that was just triggered
+      await window.api.wait(3000);
+      const _postReplaceCheck = await window.api.runScript([
+        'tell application "System Events"',
+        '  tell (first process whose bundle identifier is "com.apple.logic10")',
+        '    try',
+        '      repeat with w in windows',
+        '        try',
+        '          set wb to name of every button of w',
+        '          if wb contains "Cancel" and wb does not contain "Bounce" and wb does not contain "Replace" then',
+        '            set progs to (every UI element of w whose role is "AXProgressIndicator")',
+        '            if (count of progs) > 0 then return "still-rendering"',
+        '          end if',
+        '        end try',
+        '      end repeat',
+        '    end try',
+        '    return "done"',
+        '  end tell',
+        'end tell'
+      ].join('\n'));
+      if (_postReplaceCheck.output === 'still-rendering') {
+        // Wait for it to finish
+        let _rWaited = 0;
+        while (_rWaited < 10 * 60 * 1000) {
+          await window.api.wait(1000);
+          _rWaited += 1000;
+          const _rc = await window.api.runScript('tell application "System Events" to tell (first process whose bundle identifier is "com.apple.logic10") to try\nrepeat with w in windows\ntry\nset wb to name of every button of w\nif wb contains "Cancel" and wb does not contain "Bounce" and wb does not contain "Replace" then\nset progs to (every UI element of w whose role is "AXProgressIndicator")\nif (count of progs) > 0 then return "rendering"\nend if\nend try\nend repeat\nend try\nreturn "done"\nend tell');
+          if (!_rc.ok || _rc.output === 'done') break;
+        }
+      }
+    }
+  } catch(e) { console.warn('[EB] post-loop dialog check:', e); }
+
   // ── AX tracker cleanup ───────────────────────────────────────────────────
   try { if (typeof _offProgress === 'function') _offProgress(); } catch(e) { /* no-op */ }
   // If tracker process is still alive (we exited early via cancel/freeze/fatal),
@@ -10269,14 +10374,14 @@ let _progRafId = null;
 function prog(done, total, text) {
   // Always update name/counter immediately — never drop a new job's name
   const pct = total > 0 ? `${Math.round((done/total)*100)}%` : '0%';
-  const cur = total > 0 ? `${done + 1}/${total}` : ''; // current job number
+  const cur = total > 0 ? `${Math.min(done + 1, total)}/${total}` : ''; // current job number
   document.getElementById('ptext').textContent = text || 'Ready';
   document.getElementById('ppct').textContent = cur;
   if (window._miniActive) {
     const el = document.getElementById('mini-stem-name');
     const ct = document.getElementById('mini-counter');
     if (el) el.textContent = text || '…';
-    if (ct) ct.textContent = total > 0 ? `${done + 1}/${total}` : '—/—';
+    if (ct) ct.textContent = total > 0 ? `${Math.min(done + 1, total)}/${total}` : '—/—';
   }
   // Only RAF-defer the bar fill (pure visual, no info loss)
   if (_progRafId) cancelAnimationFrame(_progRafId);
@@ -10293,8 +10398,10 @@ function prog(done, total, text) {
 // ── Always on Top (pin) toggle ─────────────────────────────────────
 const PIN_LS_KEY = 'ui.alwaysOnTop';
 function _applyPinClass(on) {
-  const btn = document.getElementById('pin-btn');
-  if (btn) btn.classList.toggle('is-active', !!on);
+  ['pin-btn','cm-pin-btn'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.classList.toggle('is-active', !!on);
+  });
 }
 async function togglePin() {
   const on = localStorage.getItem(PIN_LS_KEY) !== '1';
@@ -10350,10 +10457,12 @@ async function toggleCompactMode() {
   _applyCompactClass(next);
   try { localStorage.setItem(COMPACT_LS_KEY, next ? '1' : '0'); } catch {}
   if (!next) {
-    // Restore full OUTPUT path
     const out = document.getElementById('out-folder');
     if (out && out.dataset.fullPath) out.textContent = out.dataset.fullPath;
   }
+  renderQueue();
+  const hint = document.getElementById('scan-hint');
+  if (hint && hint.classList.contains('show')) positionScanHint();
 }
 // Restore on load (main.js _inCompact is false after fresh start — only apply CSS if user toggled during the session via localStorage AND main.js confirms)
 window.addEventListener('DOMContentLoaded', async () => {
@@ -10442,6 +10551,20 @@ function _checkAutoCollapsePanel() {
 window.addEventListener('resize', _checkAutoCollapsePanel);
 // Run once on load (after DOM is ready, so wrap in a tiny defer)
 setTimeout(_checkAutoCollapsePanel, 0);
+
+function _alignCompactArrow() {
+  const btn = document.getElementById('cm-scan-btn');
+  const arrow = document.getElementById('cm-empty-arrow');
+  if (!btn || !arrow) return;
+  const btnRect = btn.getBoundingClientRect();
+  const parentRect = arrow.parentElement.getBoundingClientRect();
+  const btnCenterX = btnRect.left + btnRect.width / 2;
+  const targetLeft = btnCenterX - parentRect.left;
+  arrow.style.left = targetLeft + 'px';
+}
+window.addEventListener('resize', () => {
+  if (document.body.classList.contains('compact-mode')) _alignCompactArrow();
+});
 function switchActTab(tab) {
   ['log','history','stats'].forEach(t => {
     document.getElementById('act-' + t).style.display = t === tab ? 'flex' : 'none';
@@ -11453,8 +11576,8 @@ function applySkin(name) {
       .q-item{background:linear-gradient(180deg,#171717,#111)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)!important;}
       .presets-bar{border-top:1px solid rgba(255,255,255,.04)!important;border-bottom:1px solid #0e0e0e!important;}
       input,select{background:linear-gradient(180deg,#1a1a1a,#141414)!important;border-color:#282828!important;box-shadow:inset 0 1px 3px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04)!important;}
-      #scan-btn{background:linear-gradient(160deg,#303030,#1c1c1c)!important;color:#e8e8e8!important;border:1px solid rgba(255,255,255,.18)!important;box-shadow:0 4px 16px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.1)!important;}
-      #scan-btn:hover{background:linear-gradient(160deg,#3e3e3e,#262626)!important;border-color:rgba(255,255,255,.28)!important;box-shadow:0 6px 22px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.14)!important;}
+      #scan-btn,#cm-scan-btn{background:linear-gradient(160deg,#303030,#1c1c1c)!important;color:#e8e8e8!important;border:1px solid rgba(255,255,255,.18)!important;box-shadow:0 4px 16px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.1)!important;}
+      #scan-btn:hover,#cm-scan-btn:hover{background:linear-gradient(160deg,#3e3e3e,#262626)!important;border-color:rgba(255,255,255,.28)!important;box-shadow:0 6px 22px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.14)!important;}
     `,
     luxury: `
       body{
@@ -11489,7 +11612,7 @@ function applySkin(name) {
       .modal{background:linear-gradient(145deg,#181818,#0f0f0f)!important;border-color:#222!important;box-shadow:0 32px 80px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.07),0 0 0 1px rgba(180,255,0,.04)!important;}
       input,select{background:linear-gradient(180deg,#181818,#121212)!important;border-color:#282828!important;box-shadow:inset 0 1px 3px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04)!important;}
       .presets-bar{border-top:1px solid rgba(255,255,255,.04)!important;border-bottom:1px solid #0e0e0e!important;}
-      #scan-btn{background:linear-gradient(160deg,#3a6200,#508a00)!important;box-shadow:0 4px 16px rgba(80,138,0,.25)!important;}
+      #scan-btn,#cm-scan-btn{background:linear-gradient(160deg,#3a6200,#508a00)!important;box-shadow:0 4px 16px rgba(80,138,0,.25)!important;}
       .foot-btn.green{background:rgba(67,233,123,.12)!important;border-color:rgba(67,233,123,.3)!important;color:#7acc00!important;}
       #add-stems-btn[style*="gradient"]{background:linear-gradient(160deg,#3a6200,#508a00)!important;box-shadow:0 4px 12px rgba(80,138,0,.2)!important;}
       #merge-btn.ok[style*="gradient"]{background:linear-gradient(160deg,#3a6200,#1a5c52)!important;box-shadow:0 4px 12px rgba(26,92,82,.2)!important;}
