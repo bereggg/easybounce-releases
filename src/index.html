@@ -19,7 +19,7 @@
   --glass-border:rgba(255,255,255,.05);
 }
 body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size:var(--fs-base);height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;}
-.titlebar{height:46px;background:var(--s);border-bottom:1px solid var(--b);display:flex;align-items:center;padding:0 16px 0 80px;-webkit-app-region:drag;user-select:none;gap:10px;position:relative;z-index:10;}
+.titlebar{height:40px;background:var(--s);border-bottom:1px solid var(--b);display:flex;align-items:center;padding:0 16px 0 70px;-webkit-app-region:drag;user-select:none;gap:10px;position:relative;z-index:10;}
 .tb-logo{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;letter-spacing:-.03em;color:var(--text);display:flex;align-items:center;gap:9px;}
 .tb-logo-mark{width:28px;height:28px;border-radius:var(--r);flex-shrink:0;background:var(--g-primary);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px var(--accent-a40);}
 .tb-logo-mark svg{width:16px;height:16px;color:#fff;fill:currentColor;stroke:currentColor;}
@@ -35,12 +35,12 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .tb-pill svg{width:13px;height:13px;flex-shrink:0;}
 .tb-status{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:var(--r3);background:var(--glass);border:1px solid var(--glass-border);}
 .ldot{width:7px;height:7px;border-radius:50%;background:var(--muted);transition:all .4s;flex-shrink:0;}
-.ldot.live{background:var(--a3);box-shadow:0 0 0 3px var(--success-a15),0 0 8px var(--success-a40);}
+.ldot.live{background:var(--a3);box-shadow:0 0 0 3px var(--success-a15);}
 .ldot.warn{background:var(--warn);}
 .llbl{font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);color:var(--t2);}
 /* @keyframes fade removed — use eb-pulse from shared.css */
 @keyframes scanPulse{0%,100%{box-shadow:0 8px 48px rgba(185,28,28,.45),0 0 0 1px rgba(239,68,68,.18),0 0 0 0 rgba(239,68,68,.3);}50%{box-shadow:0 8px 48px rgba(185,28,28,.7),0 0 0 1px rgba(239,68,68,.5),0 0 0 6px rgba(239,68,68,.0);}}
-.shell{display:grid;grid-template-columns:var(--pl-w,252px) 5px 1fr 208px;height:calc(100vh - 50px);transition:grid-template-columns .22s ease;}
+.shell{display:grid;grid-template-columns:var(--pl-w,252px) 5px 1fr 208px;height:calc(100vh - 44px);transition:grid-template-columns .22s ease;}
 .shell.act-collapsed{grid-template-columns:var(--pl-w,252px) 5px 1fr 44px;}
 .panel{display:flex;flex-direction:column;overflow:hidden;}
 .pl{border-right:none;}
@@ -51,17 +51,17 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .pr{border-left:1px solid var(--b);}
 .center{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--b);}
 .sec-hdr{padding:10px 14px 9px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.sec-title{font-size:var(--fs-xxs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+.sec-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
 .sec-badge{font-family:var(--font-mono);font-size:var(--fs-xs);font-weight:500;color:var(--accent);background:var(--accent-a08);padding:2px 8px;border-radius:var(--r-pill);border:1px solid var(--accent-a20);}
 .scroll{flex:1;overflow-y:auto;}
 #ch-list{contain:layout style;} /* Opt #2: isolate reflow from rest of page */
-.scroll::-webkit-scrollbar{width:6px;height:6px;}
+.scroll::-webkit-scrollbar{width:4px;height:4px;}
 .scroll::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px;border:1px solid transparent;background-clip:content-box;}
 .scroll::-webkit-scrollbar-thumb:hover{background:var(--t2);background-clip:content-box;}
 .scroll::-webkit-scrollbar-track{background:transparent;}
-.empty-hint{padding:28px 16px;text-align:center;color:var(--muted);font-size:var(--fs-sm);line-height:1.9;}
+.empty-hint{padding:28px 16px;text-align:center;color:var(--muted);font-size:var(--fs-sm);line-height:1.6;}
 .q-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 16px;gap:18px;min-height:100%;}
-.q-empty-arrow{width:72px;height:72px;color:var(--accent);opacity:.35;animation:eb-breathe 2.4s ease-in-out infinite;}
+.q-empty-arrow{width:72px;height:72px;color:var(--accent);opacity:.5;animation:eb-breathe 2.4s ease-in-out infinite;}
 .q-empty-title{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.01em;}
 .q-empty-sub{font-size:var(--fs-sm);color:var(--muted);text-align:center;line-height:1.6;}
 .q-empty-sub b{color:var(--t2);font-weight:600;}
@@ -84,7 +84,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .mf-btn.off{background:color-mix(in srgb,var(--muted) 10%,transparent);border-color:color-mix(in srgb,var(--b2) 70%,transparent);color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--muted) 35%,transparent);}
 .ch-item{display:flex;align-items:center;gap:9px;padding:7px 14px;border-bottom:1px solid var(--w-a03);cursor:pointer;transition:all .14s;user-select:none;}
 .ch-item:hover{background:var(--w-a03);}
-.ch-item.sel{background:var(--accent-a08);border-left:2px solid var(--accent);}
+.ch-item.sel{background:var(--accent-a08);box-shadow:inset 2px 0 0 var(--accent);}
 /* ── Tree view ── */
 .tree-group{display:flex;align-items:center;gap:7px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.025);cursor:pointer;transition:all .14s;user-select:none;min-height:32px;}
 .tree-group.depth-0{background:rgba(255,255,255,.04);}
@@ -92,7 +92,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .tree-group.depth-2{background:rgba(255,255,255,.015);}
 .tree-group.depth-3{background:rgba(255,255,255,.008);}
 .tree-group:hover{background:rgba(255,255,255,.06);}
-.tree-group.sel{background:rgba(108,99,255,.08);border-left:2px solid var(--accent);}
+.tree-group.sel{background:rgba(108,99,255,.08);box-shadow:inset 2px 0 0 var(--accent);}
 .tree-toggle{font-size:14px;color:var(--muted);width:20px;min-width:20px;flex-shrink:0;line-height:1;text-align:center;cursor:pointer;user-select:none;}
 .depth-0 .tree-toggle{color:var(--text);opacity:.7;}
 .depth-1 .tree-toggle{color:var(--t2);opacity:.65;}
@@ -103,7 +103,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .tree-group-idx{font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);color:var(--muted);flex-shrink:0;pointer-events:none;}
 .tree-child{display:flex;align-items:center;gap:7px;padding:5px 14px 5px 32px;border-bottom:1px solid rgba(255,255,255,.015);cursor:pointer;transition:all .14s;user-select:none;}
 .tree-child:hover{background:rgba(255,255,255,.03);}
-.tree-child.sel{background:rgba(108,99,255,.07);border-left:2px solid rgba(108,99,255,.5);}
+.tree-child.sel{background:rgba(108,99,255,.07);box-shadow:inset 2px 0 0 rgba(108,99,255,.5);}
 .tree-child-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;opacity:.8;pointer-events:none;}
 .tree-child-name{flex:1;font-size:var(--fs-sm);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--t2);pointer-events:none;}
 .tree-child-idx{font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);color:var(--muted);flex-shrink:0;opacity:.6;}
@@ -120,7 +120,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .pchip{padding:5px 12px;border-radius:var(--r-pill);border:1px solid var(--b2);background:var(--card);color:var(--t2);font-size:var(--fs-xs);font-weight:var(--fw-semi);cursor:pointer;transition:all .16s;white-space:nowrap;box-shadow:var(--sh-card);}
 .pchip:hover{border-color:rgba(108,99,255,.5);color:var(--accent);background:rgba(108,99,255,.07);box-shadow:0 2px 8px rgba(108,99,255,.15);}
 .pchip.mx:hover{border-color:rgba(255,101,132,.5);color:var(--a2);background:rgba(255,101,132,.07);}
-.pchip.custom{border-style:dashed;}
+.pchip.custom{border-color:color-mix(in srgb,var(--accent) 30%,var(--b2));background:var(--accent-a05);}
 .pchip-del{width:18px;height:18px;border-radius:50%;border:1px solid var(--b2);background:var(--card2);color:var(--muted);font-size:var(--fs-xxs);cursor:pointer;transition:all .14s;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;line-height:1;font-weight:var(--fw-bold);}
 .pchip-del:hover{background:var(--red-a15);border-color:var(--red-a50);color:var(--red);}
 .pchip-wrap{display:flex;align-items:center;gap:3px;}
@@ -130,7 +130,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .q-mini-btn{padding:4px 11px;border-radius:var(--r);border:1px solid var(--b2);background:var(--card);color:var(--t2);font-size:var(--fs-xs);font-weight:600;cursor:pointer;transition:all .14s;letter-spacing:.01em;}
 .q-mini-btn:hover{color:var(--text);border-color:var(--accent);background:var(--card2);}
 .qlist{flex:1;overflow-y:auto;padding:2px 0;display:flex;flex-direction:column;}
-.qlist::-webkit-scrollbar{width:3px;}
+.qlist::-webkit-scrollbar{width:4px;}
 .qlist::-webkit-scrollbar-thumb{background:var(--b2);}
 #merge-drop-zone{display:none;align-items:center;justify-content:center;gap:7px;margin:4px 4px 8px;border:2px dashed color-mix(in srgb,var(--accent) 40%,transparent);border-radius:var(--r);padding:11px 15px;font-size:var(--fs-sm);font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:color-mix(in srgb,var(--accent) 65%,transparent);background:color-mix(in srgb,var(--accent) 6%,transparent);transition:border-color .13s,background .13s,color .13s,opacity .13s;flex-shrink:0;pointer-events:auto;}
 #merge-drop-zone.drag-over{border-color:var(--accent);background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 18%,transparent),color-mix(in srgb,var(--teal) 18%,transparent));color:color-mix(in srgb,var(--accent) 90%,white);}
@@ -211,14 +211,14 @@ svg.ico.ico-lg{width:20px;height:20px;}
 .out-inp::placeholder{color:var(--muted);}
 .out-inp:focus{outline:none;border-color:var(--accent-a60);box-shadow:0 0 0 3px var(--accent-a12);}
 .bounce-wrap{padding:10px 14px 14px;border-top:1px solid var(--b2);flex-shrink:0;}
-.prog-bar{height:3px;background:var(--b);border-radius:2px;overflow:hidden;margin-bottom:6px;}
+.prog-bar{height:4px;background:var(--b);border-radius:2px;overflow:hidden;margin-bottom:6px;}
 .prog-fill{height:100%;background:var(--g-primary);border-radius:2px;transition:width .18s linear;width:0%;will-change:width;}
 .prog-info{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);color:var(--muted);margin-bottom:10px;}
 .bounce-btns{display:flex;gap:8px;}
 .bbtn{flex:1;height:54px;border-radius:var(--r2);border:none;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:linear-gradient(160deg,var(--accent) 0%,var(--a2) 100%);position:relative;overflow:hidden;transition:transform .18s,box-shadow .18s;box-shadow:0 8px 32px rgba(108,99,255,.4),inset 0 1px 0 rgba(255,255,255,.2);}
 .bbtn::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.15) 0%,transparent 60%);pointer-events:none;}
 .bbtn::after{content:'';position:absolute;top:-50%;left:-60%;width:40%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);transform:skewX(-20deg);pointer-events:none;animation:none;}
-.bbtn.ready::after{animation:shimmer 3s ease-in-out infinite;}
+.bbtn.ready::after{animation:shimmer 7s ease-in-out infinite;}
 @keyframes shimmer{0%{left:-60%}100%{left:120%}}
 .bbtn:not(.running):not(.off):hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(108,99,255,.5),inset 0 1px 0 rgba(255,255,255,.25);}
 .bbtn:active{transform:translateY(0);}
@@ -421,7 +421,8 @@ body.easy #panel-pr{transition:all .3s;}
 .hist-del{width:20px;height:20px;border-radius:var(--r-sm);border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .13s;flex-shrink:0;}
 .hist-del:hover{background:var(--red-a15);border-color:var(--red-a30);color:var(--red);}
 .hist-toolbar{display:flex;align-items:center;justify-content:flex-end;padding:5px 9px;border-bottom:1px solid var(--b);flex-shrink:0;}
-.hist-clear-all{padding:3px 10px;border-radius:var(--r3);border:1px solid var(--b2);background:transparent;color:var(--muted);font-size:var(--fs-xxs);font-weight:600;letter-spacing:.04em;cursor:pointer;transition:all .15s;}
+.hist-clear-all{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:var(--r3);border:1px solid var(--b2);background:transparent;color:var(--muted);font-size:var(--fs-xxs);font-weight:600;letter-spacing:.04em;cursor:pointer;transition:all .15s;}
+.hist-clear-all svg{width:11px;height:11px;flex-shrink:0;}
 .hist-clear-all:hover{border-color:rgba(255,71,87,.4);color:var(--red);background:rgba(255,71,87,.06);}
 /* ── Stats tab ────────────────────────────────────────────── */
 .stats-pane{flex:1;overflow-y:auto;padding:16px 12px;display:flex;flex-direction:column;gap:10px;}
@@ -487,7 +488,7 @@ body.easy #panel-pr{transition:all .3s;}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(10px) saturate(150%);-webkit-backdrop-filter:blur(10px) saturate(150%);}
 .overlay.show{display:flex;}
 .modal{background:var(--card2);border:1px solid var(--b);border-radius:var(--r2);padding:24px;width:400px;box-shadow:var(--sh-modal),var(--sh-inset);max-height:86vh;display:flex;flex-direction:column;gap:14px;overflow:hidden;}
-.modal-hdr{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;letter-spacing:-.02em;}
+.modal-hdr{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;letter-spacing:-.02em;padding-bottom:12px;margin-bottom:2px;border-bottom:1px solid var(--b);}
 .mfield label{display:block;font-size:var(--fs-xxs);font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;}
 .mfield input[type=text]{width:100%;background:var(--s);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;padding:9px 11px;transition:border-color .16s;}
 .mfield input[type=text]:focus{outline:none;border-color:rgba(108,99,255,.6);}
@@ -526,7 +527,7 @@ body.easy #skin-panel{z-index:9000;}
 #cancel-overlay-inner{color:var(--warn);font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;text-align:center;letter-spacing:.01em;text-shadow:0 2px 12px rgba(0,0,0,.5);}
 #cancel-overlay-sub{margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:var(--fs-sm);font-weight:400;opacity:.8;}
 /* ── Scan in-progress overlay ────────────────────────── */
-#scan-warning{display:none;position:fixed;top:46px;left:0;right:0;height:69px;z-index:9999;pointer-events:none;align-items:center;justify-content:center;gap:10px;background:rgba(14,14,22,.92);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);border-bottom:1px solid var(--accent-a30);box-shadow:0 4px 24px rgba(0,0,0,.4);}
+#scan-warning{display:none;position:fixed;top:40px;left:0;right:0;height:69px;z-index:9999;pointer-events:none;align-items:center;justify-content:center;gap:10px;background:rgba(14,14,22,.92);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);border-bottom:1px solid var(--accent-a30);box-shadow:0 4px 24px rgba(0,0,0,.4);}
 body.compact-mode #scan-warning{top:36px;}
 body.scan-badge #scan-warning{height:100%;}
 #scan-warning.show{display:flex;}
@@ -734,6 +735,7 @@ body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar
 #feedback-popup-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
 .fb-label{font-size:var(--fs-xs);font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
 .fb-select,.fb-input,.fb-textarea{width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--b);border-radius:var(--r-sm);color:var(--text);font-family:var(--font-mono);font-size:12px;padding:8px 10px;outline:none;transition:border-color .15s,box-shadow .15s;resize:none;}
+.fb-select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23666' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;cursor:pointer;}
 .fb-select:focus,.fb-input:focus,.fb-textarea:focus{border-color:var(--accent-a60);box-shadow:0 0 0 3px var(--accent-a12);}
 .fb-textarea{height:96px;overflow-y:auto;line-height:1.5;}
 .fb-attach-row{display:flex;align-items:center;gap:6px;}
@@ -758,6 +760,29 @@ body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar
 .fb-star.active,.fb-star:hover{color:var(--warn);transform:scale(1.15);}
 #fb-star-desc{font-size:var(--fs-sm);color:var(--muted);text-align:center;min-height:16px;transition:opacity .15s;}
 </style>
+<style>
+/* ── Titlebar secondary actions — quieter than primary ── */
+#skin-btn,#metro-btn{opacity:.72;}
+#skin-btn:hover,#metro-btn:hover{opacity:1;}
+/* ── Onboarding dots — active pill ── */
+.ob-dot{height:8px;border-radius:4px;transition:width .22s cubic-bezier(.34,1.3,.64,1),background .2s;}
+.ob-dot.active{background:var(--accent);width:20px;}
+.ob-dot.inactive{background:var(--b2);width:8px;}
+/* ── markers-rescan-btn — CSS hover ── */
+#markers-rescan-btn{padding:3px 9px;border-radius:5px;border:1px solid var(--b2);background:var(--card2);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .13s;}
+#markers-rescan-btn:hover{color:var(--text);}
+/* ── Context menu buttons — CSS hover ── */
+.ch-ctx-item{width:100%;padding:7px 10px;text-align:left;background:transparent;border:none;color:var(--text);font-size:12px;cursor:pointer;border-radius:var(--r);transition:background .12s;}
+.ch-ctx-item:hover{background:rgba(255,255,255,.06);}
+.ch-ctx-item.danger:hover{background:rgba(255,71,87,.1);color:var(--red);}
+.ch-ctx-item.success:hover{background:rgba(67,233,123,.1);}
+.ch-ctx-item.accent:hover{background:rgba(108,99,255,.1);}
+/* ── eset buttons — CSS hover ── */
+#eset-clear-all-btn{display:none;padding:2px 8px;border-radius:5px;border:1px solid var(--b);background:transparent;color:var(--muted);font-size:var(--fs-xxs);font-weight:700;cursor:pointer;letter-spacing:.04em;transition:all .13s;}
+#eset-clear-all-btn:hover{border-color:rgba(255,71,87,.4);color:var(--red);}
+.eset-create-version-btn{padding:7px 14px;border-radius:var(--r);border:1px solid var(--accent-a40);background:transparent;color:var(--accent);font-size:11px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .13s;}
+.eset-create-version-btn:hover{border-color:var(--accent-a60);background:var(--accent-a08);}
+</style>
 <style id="base-tooltip-style"></style>
 
 </head>
@@ -773,7 +798,7 @@ body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar
       <div class="mini-sname" id="mini-stem-name">Bouncing…</div>
       <div class="mini-time" id="mini-eta">—:——</div>
       <div class="mini-cnt" id="mini-counter">—/—</div>
-      <button class="mini-ibtn mini-expand" onclick="exitMiniMode()" title="Expand back">⊞</button>
+      <button class="mini-ibtn mini-expand" onclick="exitMiniMode()" title="Expand back"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4V1h3M8 1h3v3M11 8v3H8M4 11H1V8"/></svg></button>
       <button class="mini-ibtn mini-cancel" onclick="cancelBounce()" title="Cancel bounce"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
     <div class="mini-bar"><div class="mini-fill-bar" id="mini-fill"></div></div>
@@ -784,7 +809,7 @@ body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar
     <div class="tb-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 L6 12 L8 6 L10 18 L12 8 L14 16 L16 10 L18 12 L21 12"/></svg></div>
     EasyBounce
   </div>
-  <div class="tb-proj" id="tb-proj">no project loaded</div>
+  <div class="tb-proj" id="tb-proj">—</div>
   <div class="em-wrap" onclick="toggleCompactMode()" title="Easy = compact mode / Pro = full mode">
     <span class="em-lbl em-lbl-easy">Easy</span>
     <div class="em-track"><div class="em-thumb"></div></div>
@@ -872,7 +897,7 @@ body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar
           <div id="markers-popup" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;min-width:480px;background:var(--card2);border:1px solid var(--b2);border-radius:var(--r);box-shadow:var(--sh-float);z-index:var(--z-dropdown);padding:6px 0;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);">
             <div style="padding:4px 10px 6px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:6px;">
               <span style="font-size:var(--fs-xxs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);flex:1;">Bounce Ranges</span>
-              <button onclick="rescanMarkers()" title="Re-scan markers from Logic" id="markers-rescan-btn" style="padding:3px 9px;border-radius:5px;border:1px solid var(--b2);background:var(--card2);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .13s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">↺ Rescan</button>
+              <button onclick="rescanMarkers()" title="Re-scan markers from Logic" id="markers-rescan-btn">↺ Rescan</button>
               <button class="hidden-btn" id="markers-showhidden-btn" onclick="toggleMarkersHidden()" title="Show/hide hidden markers">
                 <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 7s2-4 6-4 6 4 6 4-2 4-6 4-6-4-6-4z"/><circle cx="7" cy="7" r="1.6"/><line x1="2" y1="2" x2="12" y2="12" class="hidden-slash" style="display:none;"/></svg>
                 Hidden
@@ -1037,7 +1062,7 @@ body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar
       <!-- HISTORY tab -->
       <div class="act-pane" id="act-history" style="display:none;">
         <div class="hist-toolbar" id="hist-toolbar" style="display:none;">
-          <button class="hist-clear-all" onclick="clearAllHistory()">Clear all</button>
+          <button class="hist-clear-all" onclick="clearAllHistory()"><svg class="ico" style="width:11px;height:11px;"><use href="#ico-trash"/></svg>Clear all</button>
         </div>
         <div class="hist-body" id="hist-body"></div>
       </div>
@@ -1300,7 +1325,7 @@ body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar
     <div class="mfield" style="flex-shrink:0;margin-bottom:0;"><label>Set Name</label><input type="text" id="eset-name-inp" placeholder="Set name"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
       <div style="font-size:var(--fs-xxs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);">Jobs in set &nbsp;<span id="eset-jobs-count" style="color:var(--accent);font-family:'JetBrains Mono',monospace;"></span></div>
-      <button id="eset-clear-all-btn" onclick="esetClearAllJobs()" style="display:none;padding:2px 8px;border-radius:5px;border:1px solid var(--b);background:transparent;color:var(--muted);font-size:var(--fs-xxs);font-weight:700;cursor:pointer;letter-spacing:.04em;" onmouseover="this.style.borderColor='rgba(255,71,87,.4)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--b)';this.style.color='var(--muted)'">Clear all</button>
+      <button id="eset-clear-all-btn" onclick="esetClearAllJobs()">Clear all</button>
     </div>
     <div id="eset-jobs-list" style="max-height:150px;overflow-y:auto;flex-shrink:0;border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:3px;min-height:40px;font-size:12px;"></div>
     <div style="font-size:var(--fs-xxs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);flex-shrink:0;">Add presets</div>
@@ -1315,7 +1340,7 @@ body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar
     <input type="text" id="eset-ch-search" placeholder="Search channels…" oninput="_esetRenderChannels()" style="width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:var(--fs-sm);padding:5px 9px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;flex-shrink:0;">
     <div id="eset-channels-list" style="max-height:110px;overflow-y:auto;flex-shrink:0;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:4px 0;"></div>
     <div style="display:flex;gap:6px;flex-shrink:0;">
-      <button onclick="esetCreateVersion()" style="padding:7px 14px;border-radius:var(--r);border:1px dashed var(--accent-a40);background:transparent;color:var(--accent);font-size:11px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;" onmouseover="this.style.borderColor='var(--accent-a60)';this.style.background='var(--accent-a08)'" onmouseout="this.style.borderColor='var(--accent-a40)';this.style.background='transparent'"><svg class="ico ico-sm"><use href="#ico-fader"/></svg>Create version mix…</button>
+      <button onclick="esetCreateVersion()" class="eset-create-version-btn"><svg class="ico ico-sm"><use href="#ico-fader"/></svg>Create version mix…</button>
     </div>
     <div class="modal-actions" id="eset-actions" style="flex-shrink:0;margin-top:2px;">
       <button class="mbtn cancel" onclick="closeEditSetModal()">Cancel</button>
@@ -1347,7 +1372,7 @@ body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar
   <div id="ob-card" style="position:absolute;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--accent);border-radius:20px;padding:36px 40px;max-width:420px;width:92%;box-shadow:0 32px 80px rgba(0,0,0,.8),0 0 80px rgba(108,99,255,.2);transition:all .35s cubic-bezier(.4,0,.2,1);">
     <div style="text-align:center;margin-bottom:28px;">
       <div id="ob-icon" style="width:56px;height:56px;border-radius:50%;background:var(--g-primary);display:inline-flex;align-items:center;justify-content:center;color:#fff;margin-bottom:18px;box-shadow:0 8px 40px var(--accent-a40);animation:ob-pulse 2.4s ease-in-out infinite;"></div>
-      <div id="ob-title" style="font-size:24px;font-weight:900;color:var(--text);letter-spacing:-.02em;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;"></div>
+      <div id="ob-title" style="font-size:26px;font-weight:700;color:var(--text);letter-spacing:-.02em;margin-bottom:6px;"></div>
       <div style="width:40px;height:3px;background:linear-gradient(90deg,var(--accent),var(--a2));border-radius:2px;margin:8px auto 12px;"></div>
       <div id="ob-sub" style="font-size:12px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.1em;"></div>
     </div>
@@ -1400,9 +1425,9 @@ body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar
 </div>
 <div id="ch-ctx-menu" style="display:none;position:fixed;z-index:500;background:var(--card);border:1px solid var(--b2);border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,.6);padding:4px;min-width:160px;">
   <div id="ch-ctx-name" style="font-size:var(--fs-xs);font-weight:700;color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--b);margin-bottom:2px;"></div>
-  <button onclick="hideChannel()" style="width:100%;padding:7px 10px;text-align:left;background:transparent;border:none;color:var(--text);font-size:12px;cursor:pointer;border-radius:var(--r);transition:background .12s;" onmouseover="this.style.background='rgba(255,71,87,.1)';this.style.color='var(--red)'" onmouseout="this.style.background='transparent';this.style.color='var(--text)'">Hide channel</button>
-  <button onclick="addCtxAsStems()" style="width:100%;padding:7px 10px;text-align:left;background:transparent;border:none;color:var(--text);font-size:12px;cursor:pointer;border-radius:var(--r);transition:background .12s;" onmouseover="this.style.background='rgba(67,233,123,.1)'" onmouseout="this.style.background='transparent'">+ Add as Stem</button>
-  <button onclick="addCtxAsMix()" style="width:100%;padding:7px 10px;text-align:left;background:transparent;border:none;color:var(--text);font-size:12px;cursor:pointer;border-radius:var(--r);transition:background .12s;" onmouseover="this.style.background='rgba(108,99,255,.1)'" onmouseout="this.style.background='transparent'">+ Add as Mix (muted)</button>
+  <button onclick="hideChannel()" class="ch-ctx-item danger">Hide channel</button>
+  <button onclick="addCtxAsStems()" class="ch-ctx-item success">+ Add as Stem</button>
+  <button onclick="addCtxAsMix()" class="ch-ctx-item accent">+ Add as Mix (muted)</button>
 </div>
 <!-- JOB SETS MODAL -->
 <div class="overlay" id="job-sets-modal">
@@ -9034,6 +9059,11 @@ const OB_STEPS = [
   { icon: '<svg class="ico" style="width:32px;height:32px;vertical-align:middle;"><use href="#ico-fader"/></svg>', title: "Step 2 — Build Queue", sub: "Choose what to bounce", body: 'Click channels to add them to the bounce queue.<div class="ob-note"><svg class="ico ico-sm ob-note-icon"><use href="#ico-check"/></svg><span>Use <b>All</b> to select everything, click unwanted to deselect, then press <b>+ Stems</b>.</span></div><div class="ob-note"><svg class="ico ico-sm ob-note-icon"><use href="#ico-check"/></svg><span>Use <b>+ Version</b> to create muted mix versions.</span></div>' },
   { icon: '<svg class="ico" style="width:32px;height:32px;vertical-align:middle;"><use href="#ico-rocket"/></svg>', title: "Step 3 — Bounce!", sub: "Let EasyBounce do the work", body: 'Choose your output folder and name prefix.<div class="ob-note"><svg class="ico ico-sm ob-note-icon"><use href="#ico-check"/></svg><span>Hit the big <b>BOUNCE</b> button and relax — EasyBounce automatically solos each stem, bounces, and saves to your folder.</span></div>' },
 ];
+const OB_STEPS_COMPACT = [
+  { icon: '<svg class="ico" style="width:32px;height:32px;vertical-align:middle;"><use href="#ico-sliders"/></svg>', title: "Step 1 — Scan Logic", sub: "Connect to Logic Pro", body: 'Tap <b>Scan Logic</b> at the top.<div class="ob-note"><svg class="ico ico-sm ob-note-icon"><use href="#ico-warn"/></svg><span><b>Your Logic project must be open</b> before scanning.</span></div><div class="ob-note"><svg class="ico ico-sm ob-note-icon"><use href="#ico-close"/></svg><span><b>Don\'t touch anything</b> during scan — EasyBounce controls Logic automatically.</span></div>' },
+  { icon: '<svg class="ico" style="width:32px;height:32px;vertical-align:middle;"><use href="#ico-fader"/></svg>', title: "Step 2 — Build Queue", sub: "Add stems to bounce", body: 'Select tracks in Logic Pro, then use your hotkeys to add them.<div class="ob-note"><svg class="ico ico-sm ob-note-icon"><use href="#ico-check"/></svg><span>Press your <b>Stem hotkey</b> in Logic to add selected tracks directly to the queue.</span></div><div class="ob-note"><svg class="ico ico-sm ob-note-icon"><use href="#ico-check"/></svg><span>Use the <b>Version hotkey</b> to create muted mix variants.</span></div><div class="ob-note"><svg class="ico ico-sm ob-note-icon"><use href="#ico-gear"/></svg><span>Set your hotkeys via the <b>gear icon</b> in the toolbar.</span></div>' },
+  { icon: '<svg class="ico" style="width:32px;height:32px;vertical-align:middle;"><use href="#ico-rocket"/></svg>', title: "Step 3 — Bounce!", sub: "Let EasyBounce do the work", body: 'Choose your output folder and name prefix.<div class="ob-note"><svg class="ico ico-sm ob-note-icon"><use href="#ico-check"/></svg><span>Hit the big <b>BOUNCE</b> button — EasyBounce solos each stem, bounces, and saves automatically.</span></div>' },
+];
 let _obStep = 0;
 
 function showOnboarding() {
@@ -9317,8 +9347,9 @@ function hideQueueHint() {
   const hint = document.getElementById('queue-hint');
   if (hint) hint.classList.remove('show');
 }
+function _obSteps() { return document.body.classList.contains('compact-mode') ? OB_STEPS_COMPACT : OB_STEPS; }
 function obNext() {
-  if (_obStep >= OB_STEPS.length - 1) {
+  if (_obStep >= _obSteps().length - 1) {
     // Last step — check "don't show again"
     const neverShow = document.getElementById('ob-never-show');
     if (neverShow && neverShow.checked) {
@@ -9330,7 +9361,8 @@ function obNext() {
   updateObStep();
 }
 function updateObStep() {
-  const s = OB_STEPS[_obStep];
+  const steps = _obSteps();
+  const s = steps[_obStep];
   document.getElementById('ob-icon').innerHTML = s.icon;
   document.getElementById('ob-title').textContent = s.title;
   document.getElementById('ob-sub').textContent = s.sub;
@@ -9338,7 +9370,7 @@ function updateObStep() {
   // "Don't show again" checkbox on last step
   const obCard = document.getElementById('ob-card');
   let neverCheckbox = document.getElementById('ob-never-checkbox-wrap');
-  if (_obStep === OB_STEPS.length - 1) {
+  if (_obStep === steps.length - 1) {
     if (!neverCheckbox) {
       neverCheckbox = document.createElement('label');
       neverCheckbox.id = 'ob-never-checkbox-wrap';
@@ -9353,10 +9385,10 @@ function updateObStep() {
   }
   // Dots
   const dots = document.getElementById('ob-dots');
-  dots.innerHTML = OB_STEPS.map((_,i) => `<div style="width:8px;height:8px;border-radius:50%;background:${i===_obStep?'var(--accent)':'var(--b2)'};transition:background .2s;"></div>`).join('');
+  dots.innerHTML = steps.map((_,i) => `<div class="ob-dot ${i===_obStep?'active':'inactive'}"></div>`).join('');
   // Button
   const btn = document.getElementById('ob-next');
-  if (btn) btn.textContent = _obStep === OB_STEPS.length-1 ? "Let's go." : 'Next →';
+  if (btn) btn.textContent = _obStep === steps.length-1 ? "Let's go." : 'Next →';
   const card = document.getElementById('ob-card');
   const spotlight = document.getElementById('ob-spotlight');
   card.style.top = '50%'; card.style.left = '50%'; card.style.transform = 'translate(-50%,-50%)';
@@ -13458,7 +13490,7 @@ async function submitFeedback() {
     </div>
     <div>
       <div class="fb-label">Your Email (optional)</div>
-      <input id="fb-email" type="email" class="fb-input" placeholder="you@example.com">
+      <input id="fb-email" type="email" class="fb-input" placeholder="your@email.com">
     </div>
     <div>
       <div class="fb-label">Description</div>
