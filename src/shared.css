@@ -167,11 +167,12 @@
      MOTION — timing tokens
      ───────────────────────────────────────────────────────────────── */
 
-  --t-instant:   0.12s;
-  --t-fast:      0.18s;
-  --t-base:      0.22s;
-  --t-slow:      0.35s;
-  --t-slower:    0.6s;
+  --t-instant:   80ms;    /* micro: star hover, badge flash */
+  --t-fast:      160ms;   /* button hover, chip select */
+  --t:           240ms;   /* panel open/close, state change */
+  --t-base:      240ms;   /* alias kept for internal shared.css usage */
+  --t-slow:      400ms;   /* modal appear, skin switch */
+  --t-slower:    600ms;   /* full-screen transitions */
 
   --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);      /* Snappy out */
   --ease-in-out: cubic-bezier(0.25, 0.1, 0.25, 1);   /* Standard */
@@ -377,7 +378,7 @@
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.18s ease;
+  transition: opacity var(--t) ease;
   transition-delay: 0s;
   box-shadow: var(--sh-raised);
   z-index: var(--z-toast);
