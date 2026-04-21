@@ -289,16 +289,14 @@ svg.ico.ico-lg{width:20px;height:20px;}
 .em-wrap{display:flex;align-items:center;gap:8px;padding:5px 12px;border-radius:var(--r-pill);border:1.5px solid var(--accent-a30);background:var(--accent-a05);cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s;-webkit-app-region:no-drag;user-select:none;position:absolute;left:min(50%,calc(100% - 520px));transform:translateX(-50%);z-index:2;}
 .em-wrap:hover{border-color:var(--accent-a60);background:var(--accent-a08);box-shadow:0 0 16px var(--accent-a20);}
 .em-lbl{font-size:var(--fs-xs);font-weight:600;letter-spacing:.1em;text-transform:uppercase;transition:color .2s,opacity .2s;color:var(--t2);opacity:.55;}
-/* Default (no body.easy) = Pro mode is active → PRO bright, EASY dim */
+/* Default = Pro mode (not compact) → PRO bright (right), EASY dim (left), thumb RIGHT */
 .em-lbl.em-lbl-pro{color:var(--accent);opacity:1;}
-/* body.easy → Easy mode active → EASY bright, PRO dim */
-body.easy .em-lbl.em-lbl-pro{color:var(--t2);opacity:.55;}
-body.easy .em-lbl.em-lbl-easy{color:var(--accent);opacity:1;}
+.em-lbl.em-lbl-easy{color:var(--t2);opacity:.55;}
 .em-track{width:28px;height:14px;border-radius:var(--r-pill);background:var(--b2);position:relative;transition:background .22s;flex-shrink:0;}
-.em-thumb{position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.35);transition:all .22s cubic-bezier(.34,1.3,.64,1);}
-/* ── Easy Mode: toggle styles ─────────────────── */
+.em-thumb{position:absolute;top:2px;left:16px;width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.35);transition:all .22s cubic-bezier(.34,1.3,.64,1);}
+/* body.easy legacy (unused from UI but kept) */
 body.easy .em-track{background:var(--accent-a30);}
-body.easy .em-thumb{left:16px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.35);}
+body.easy .em-thumb{left:2px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.35);}
 body.easy .em-wrap{border-color:var(--accent-a60);background:var(--accent-a08);box-shadow:0 0 14px var(--accent-a20);}
 
 /* ── Easy Mode: hide non-essentials ──────────── */
@@ -577,25 +575,25 @@ body.mini-mode #mini-mode-ui{display:flex;background:rgba(14,14,22,.95);backdrop
 body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini-mode #skin-panel{display:none!important;}
 
 /* ── Compact Queue Mode ───────────────────────────────────────────── */
-#compact-toolbar{display:none;height:36px;background:var(--s);border-bottom:1px solid var(--b);padding:0 10px 0 72px;align-items:center;justify-content:center;gap:8px;-webkit-app-region:drag;flex-shrink:0;position:relative;}
+#compact-toolbar{display:none;height:46px;background:var(--s);border-bottom:1px solid var(--b);padding:0 10px;align-items:center;justify-content:center;gap:8px;-webkit-app-region:drag;flex-shrink:0;position:relative;}
 #compact-toolbar .cm-title{font-size:11px;color:var(--t2);text-transform:uppercase;letter-spacing:.12em;font-family:var(--font-mono,'JetBrains Mono',monospace);font-weight:700;pointer-events:none;}
 #compact-toolbar-left{position:absolute;left:8px;top:50%;transform:translateY(-50%);display:flex;gap:5px;-webkit-app-region:no-drag;}
-#compact-toolbar-actions{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;gap:5px;-webkit-app-region:no-drag;}
-#compact-toolbar-left button,#compact-toolbar-actions button{width:26px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:var(--r);border:1px solid var(--b);background:transparent;color:var(--t2);cursor:pointer;transition:all .15s;padding:0;}
+#compact-toolbar-actions{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;-webkit-app-region:no-drag;}
+#compact-toolbar-left button,#compact-toolbar-actions button{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid var(--b);background:transparent;color:var(--t2);cursor:pointer;transition:all .15s;padding:0;}
 #compact-toolbar-left button:hover,#compact-toolbar-actions button:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-a12);}
 #compact-toolbar-left button:hover{background:rgba(255,255,255,.06);}
-#compact-toolbar-left button svg,#compact-toolbar-actions button svg{width:13px;height:13px;}
-#cm-scan-btn{-webkit-app-region:no-drag;display:none;align-items:center;gap:5px;padding:3px 12px;border-radius:var(--r);border:1px solid transparent;background:var(--g-primary);color:#fff;cursor:pointer;font-size:11px;font-weight:700;font-family:var(--font-mono);box-shadow:var(--sh-glow-sm,0 0 8px rgba(108,99,255,.35)),var(--sh-inset,inset 0 1px 0 rgba(255,255,255,.08));transition:all .15s;}
+#compact-toolbar-left button svg,#compact-toolbar-actions button svg{width:14px;height:14px;}
+#cm-scan-btn{-webkit-app-region:no-drag;display:none;align-items:center;gap:5px;padding:6px 13px;border-radius:var(--r3);border:1px solid transparent;background:var(--g-primary);color:#fff;cursor:pointer;font-size:var(--fs-sm);font-weight:700;font-family:var(--font-ui);box-shadow:var(--sh-glow-sm,0 0 8px rgba(108,99,255,.35)),var(--sh-inset,inset 0 1px 0 rgba(255,255,255,.08));transition:opacity .15s,background .15s;position:absolute;top:50%;transform:translateY(-50%);white-space:nowrap;}
 #cm-scan-btn:hover{opacity:.88;}
 #cm-scan-btn svg{width:13px;height:13px;flex-shrink:0;}
 body.compact-mode #cm-scan-btn{display:flex;}
 body.compact-mode .q-empty-normal-only{display:none!important;}
 body.compact-mode .q-empty-compact-only{display:block!important;}
 #compact-toolbar-left button.is-active,#compact-toolbar-actions button.is-active{border-color:var(--accent);color:var(--accent);background:var(--accent-a12);}
-#compact-toolbar .em-wrap{position:static;transform:none;-webkit-app-region:no-drag;}
-body.compact-mode .em-thumb{left:16px!important;background:#fff!important;}
+#compact-toolbar .em-wrap{position:absolute;left:50%;transform:translateX(-50%);-webkit-app-region:no-drag;}
+body.compact-mode .em-thumb{left:2px!important;background:#fff!important;}
 body.compact-mode .em-track{background:var(--accent-a30)!important;}
-body.compact-mode .em-lbl.em-lbl-pro{opacity:.55!important;}
+body.compact-mode .em-lbl.em-lbl-pro{color:var(--t2)!important;opacity:.55!important;}
 body.compact-mode .em-lbl.em-lbl-easy{color:var(--accent)!important;opacity:1!important;}
 body.compact-mode .em-wrap{border-color:var(--accent-a60)!important;background:var(--accent-a08)!important;box-shadow:0 0 14px var(--accent-a20)!important;}
 #q-empty-compact{position:relative;width:100%;min-height:100%;}
@@ -604,7 +602,7 @@ body.compact-mode .em-wrap{border-color:var(--accent-a60)!important;background:v
 body.compact-mode{overflow:hidden;}
 body.compact-mode .titlebar{display:none!important;}
 body.compact-mode #compact-toolbar{display:flex!important;}
-body.compact-mode .shell{grid-template-columns:1fr!important;height:calc(100vh - 34px)!important;}
+body.compact-mode .shell{grid-template-columns:1fr!important;height:calc(100vh - 46px)!important;}
 body.compact-mode .panel.pl,
 body.compact-mode #panel-resizer,
 body.compact-mode .panel-resizer,
@@ -614,7 +612,6 @@ body.compact-mode .center{border-right:none!important;}
 /* Hide non-essentials inside queue/bounce area */
 body.compact-mode #mp-row,
 body.compact-mode #alert-row-full,
-body.compact-mode #alert-row-mini,
 body.compact-mode .q-mini-btns,
 body.compact-mode #markers-btn,
 body.compact-mode #markers-chips-btn,
@@ -624,14 +621,8 @@ body.compact-mode #name-preset-arrow,
 body.compact-mode #name-preset-save-btn,
 body.compact-mode #fmt-bar-source{display:none!important;}
 
-/* Presets-bar in compact: hide all chips + labels except first built-in (Full Version) */
-body.compact-mode .presets-bar .em-presets-label,
-body.compact-mode .presets-bar .pchip-wrap ~ .pchip-wrap,
-body.compact-mode .presets-bar .pchip-add{display:none!important;}
-body.compact-mode .presets-bar{min-height:auto!important;padding:5px 10px!important;}
-body.compact-mode .presets-bar .pchip-wrap .pchip-del,
-body.compact-mode .presets-bar .pchip-wrap button[title*="Delete"],
-body.compact-mode .presets-bar .pchip-wrap button[title*="Hide"]{display:none!important;}
+/* Presets-bar: fully hidden in compact mode */
+body.compact-mode .presets-bar{display:none!important;}
 
 /* Format bar — tighter so WAV/24-bit/48 fit */
 body.compact-mode .fmt-bar{gap:4px;}
@@ -640,7 +631,7 @@ body.compact-mode #fmt-main-btn .fmt-tag{padding:2px 6px;font-size:10px;}
 body.compact-mode #fmt-main-btn .fmt-bar-detail{font-size:11px;max-width:none;}
 
 /* Tighten queue header */
-body.compact-mode .queue-hdr{padding:6px 10px;}
+body.compact-mode .queue-hdr{padding:8px 10px;}
 body.compact-mode .queue-hdr .sec-title{font-size:11px;letter-spacing:.08em;}
 
 /* Tighter queue items */
@@ -650,7 +641,9 @@ body.compact-mode .qitem .qtag{font-size:9px;padding:1px 4px;}
 /* Compact out-wrap fields — same height, shorter text */
 body.compact-mode .out-wrap{padding:8px 10px;gap:5px;}
 body.compact-mode .out-row{gap:6px;}
-body.compact-mode .out-lbl{font-size:9px;min-width:48px;width:48px;letter-spacing:.08em;}
+body.compact-mode .out-lbl{font-size:9px;min-width:62px;width:62px;letter-spacing:.08em;}
+body.compact-mode #sidechain-row{gap:8px;align-items:center;}
+body.compact-mode #fmt-bar-mp3-tag{display:none!important;}
 body.compact-mode .out-path,
 body.compact-mode .out-inp,
 body.compact-mode #fmt-main-btn,
@@ -659,8 +652,9 @@ body.compact-mode .fmt-bar-detail{max-width:90px;}
 body.compact-mode #sidechain-row > span:nth-of-type(2){display:none;}
 
 /* Bounce area tightening */
-body.compact-mode .bounce-wrap{padding:8px 10px 10px;}
-body.compact-mode .bbtn{height:44px;font-size:13px;}
+body.compact-mode .bounce-wrap{padding:8px 10px 20px;}
+body.compact-mode #alert-row-mini{display:flex!important;justify-content:flex-end;margin-top:14px;}
+body.compact-mode .bbtn{height:54px;font-size:16px;width:100%;}
 body.compact-mode #cancel-btn,
 body.compact-mode #mini-btn,
 body.compact-mode #retry-btn{height:44px!important;width:44px!important;}
@@ -815,9 +809,9 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
   </div>
   <div class="tb-proj" id="tb-proj">no project loaded</div>
   <div class="em-wrap" onclick="toggleCompactMode()" title="Easy = compact mode / Pro = full mode">
-    <span class="em-lbl em-lbl-pro">Pro</span>
-    <div class="em-track"><div class="em-thumb"></div></div>
     <span class="em-lbl em-lbl-easy">Easy</span>
+    <div class="em-track"><div class="em-thumb"></div></div>
+    <span class="em-lbl em-lbl-pro">Pro</span>
   </div>
   <div class="tb-right">
     <button class="tb-pill" id="scan-btn" onclick="scanLogic()" title="Scan Logic Pro channels. Keep Mixer open!" style="background:var(--g-primary);border-color:transparent;color:#fff;font-weight:700;box-shadow:var(--sh-glow-sm),var(--sh-inset);">
@@ -842,9 +836,9 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
 <div id="compact-toolbar">
   <div id="compact-toolbar-left"></div>
   <div class="em-wrap" onclick="toggleCompactMode()" title="Easy = compact mode / Pro = full mode">
-    <span class="em-lbl em-lbl-pro">Pro</span>
-    <div class="em-track"><div class="em-thumb"></div></div>
     <span class="em-lbl em-lbl-easy">Easy</span>
+    <div class="em-track"><div class="em-thumb"></div></div>
+    <span class="em-lbl em-lbl-pro">Pro</span>
   </div>
   <button id="cm-scan-btn" onclick="scanLogic()" title="Scan Logic Pro channels. Keep Mixer open!">
     <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg>
@@ -1008,7 +1002,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
         <button onclick="previewBell()" id="bell-preview-btn" style="padding:4px 10px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--t2);font-size:var(--fs-xs);cursor:pointer;">▶</button>
       </div>
       <!-- Alert row: mini (easy mode) -->
-      <div id="alert-row-mini" style="display:flex;margin-top:6px;position:relative;align-items:center;justify-content:flex-end;gap:4px;">
+      <div id="alert-row-mini" style="display:flex;margin-top:14px;position:relative;align-items:center;justify-content:flex-end;gap:4px;">
         <button id="notif-btn" class="tb-mini-btn" title="Notification settings (Telegram / Email)" onclick="showNotifModal()"><span id="notif-btn-icon" style="display:inline-flex;align-items:center;"><svg class="ico"><use href="#ico-bell-off"/></svg></span></button>
         <button id="schedule-btn" class="tb-mini-btn em-hide" title="Schedule bounce for later" onclick="showScheduleModal()"><svg class="ico"><use href="#ico-clock"/></svg></button>
         <button onclick="toggleBellPopover()" id="bell-mini-btn" class="tb-mini-btn" title="Alert sound">
@@ -1016,7 +1010,7 @@ body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;trans
           <span style="font-size:var(--fs-xxs);color:var(--accent);opacity:.7;">▾</span>
         </button>
         <button class="tb-mini-btn" title="Send feedback" onclick="toggleFeedbackPopup()"><svg class="ico"><use href="#ico-chat"/></svg></button>
-        <button id="tooltip-toggle-btn" class="tb-mini-btn" onclick="onHelpClick()" title="Toggle tips" style="font-weight:700;">?</button>
+        <button id="tooltip-toggle-btn" class="tb-mini-btn" onclick="onHelpClick()" title="Toggle tips" style="font-weight:700;min-width:32px;display:inline-flex;align-items:center;justify-content:center;">?</button>
         <div id="bell-popover">
           <button onclick="setBellSound('bell')" id="bell-opt-bell" class="bell-active"><svg class="ico ico-sm" style="margin-right:6px;vertical-align:-2px;"><use href="#ico-bell"/></svg>Bell</button>
           <button onclick="setBellSound('chime')" id="bell-opt-chime"><svg class="ico ico-sm" style="margin-right:6px;vertical-align:-2px;"><use href="#ico-music"/></svg>Chime</button>
@@ -7178,7 +7172,8 @@ function renderQueue() {
     </div>
   `;
     } else {
-      el.innerHTML = `
+      const scanned = channels.length > 0;
+      el.innerHTML = scanned ? `
     <div class="q-empty" id="q-empty-state">
       <svg class="q-empty-arrow" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
         <path d="M68 40 L12 40"/>
@@ -7186,6 +7181,10 @@ function renderQueue() {
       </svg>
       <div class="q-empty-title">Pick a channel to start</div>
       <div class="q-empty-sub">Click a channel on the left<br>or use <b>+ Version</b> for muted mix variants</div>
+    </div>
+  ` : `
+    <div class="q-empty" id="q-empty-state">
+      <div class="q-empty-sub">Scan Logic first, then pick<br>a channel on the left side</div>
     </div>
   `;
     }
@@ -10461,16 +10460,17 @@ async function toggleCompactMode() {
     if (out && out.dataset.fullPath) out.textContent = out.dataset.fullPath;
   }
   renderQueue();
+  if (_compactOn) requestAnimationFrame(_alignCmScanBtn);
   const hint = document.getElementById('scan-hint');
   if (hint && hint.classList.contains('show')) positionScanHint();
 }
 // Restore on load (main.js _inCompact is false after fresh start — only apply CSS if user toggled during the session via localStorage AND main.js confirms)
 window.addEventListener('DOMContentLoaded', async () => {
   try {
-    const saved = localStorage.getItem(COMPACT_LS_KEY) === '1';
+    const saved = localStorage.getItem(COMPACT_LS_KEY) !== '0';
     if (saved) {
       const r = await window.api?.enterCompactMode?.();
-      if (r?.ok) _applyCompactClass(true);
+      if (r?.ok) { _applyCompactClass(true); renderQueue(); requestAnimationFrame(_alignCmScanBtn); }
     }
   } catch {}
 });
@@ -10552,6 +10552,19 @@ window.addEventListener('resize', _checkAutoCollapsePanel);
 // Run once on load (after DOM is ready, so wrap in a tiny defer)
 setTimeout(_checkAutoCollapsePanel, 0);
 
+function _alignCmScanBtn() {
+  const btn = document.getElementById('cm-scan-btn');
+  const emWrap = document.querySelector('#compact-toolbar .em-wrap');
+  const actions = document.getElementById('compact-toolbar-actions');
+  if (!btn || !emWrap || !actions) return;
+  const a = emWrap.getBoundingClientRect().right;
+  const b = actions.getBoundingClientRect().left;
+  const centerX = (a + b) / 2;
+  const toolbar = document.getElementById('compact-toolbar');
+  const toolbarLeft = toolbar.getBoundingClientRect().left;
+  btn.style.left = (centerX - toolbarLeft - btn.offsetWidth / 2) + 'px';
+}
+
 function _alignCompactArrow() {
   const btn = document.getElementById('cm-scan-btn');
   const arrow = document.getElementById('cm-empty-arrow');
@@ -10562,8 +10575,15 @@ function _alignCompactArrow() {
   const targetLeft = btnCenterX - parentRect.left;
   arrow.style.left = targetLeft + 'px';
 }
+let _compactResizeRaf = null;
 window.addEventListener('resize', () => {
-  if (document.body.classList.contains('compact-mode')) _alignCompactArrow();
+  if (!document.body.classList.contains('compact-mode')) return;
+  if (_compactResizeRaf) cancelAnimationFrame(_compactResizeRaf);
+  _compactResizeRaf = requestAnimationFrame(() => {
+    _compactResizeRaf = null;
+    _alignCmScanBtn();
+    _alignCompactArrow();
+  });
 });
 function switchActTab(tab) {
   ['log','history','stats'].forEach(t => {
