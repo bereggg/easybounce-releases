@@ -2275,7 +2275,7 @@ async function _learnFilterTypes() {
     'Opening Mixer…',
     'Learning filter types',
     async () => {
-      await window.api.openMixer({ skipPanelClose: false });
+      await window.api.openMixerCover();
       await window.api.wait(300);
       const enRes = await window.api.mixerEnableAll();
       const enCount = enRes?.enabled?.length || 0;
@@ -2740,6 +2740,9 @@ async function scanLogic(isAutoRetry = false) {
 
   if (window._scanCancelled) return;
 
+  // ── Cover mixer (~220px) before returning to app ──────────────────────────
+  if (window.api?.coverMixer) { try { await window.api.coverMixer(); } catch(e) { console.warn('[EB] coverMixer:', e); } }
+
   // ── Cleanup & completion ──────────────────────────────────────────────────
   // Restore window FIRST (while overlay still red), then fade overlay — avoids flash of unstyled badge
   document.body.classList.remove('scan-badge');
@@ -2963,7 +2966,7 @@ async function toggleMixerFilter(name) {
         'Opening mixer…',
         'Re-applying filter',
         async () => {
-          await window.api.openMixer({ skipPanelClose: false });
+          await window.api.openMixerCover();
           await window.api.wait(300);
           await window.api.mixerFilterToggle(name);
           await window.api.wait(150);
@@ -12992,6 +12995,15 @@ if (window.api?.onHotkeyTriggered) {
     if (!result?.ok || !result.tracks?.length) {
       toast('No tracks selected in Logic Pro');
       return;
+    }
+    // Ensure mixer is open and positioned; coverMixer if it was just opened
+    if (window.api?.ensureMixer && window.api?.coverMixer) {
+      try {
+        const emRes = await window.api.ensureMixer();
+        if (emRes?.opened) {
+          await window.api.coverMixer();
+        }
+      } catch(e) { console.warn('[EB] hotkey ensureMixer/coverMixer:', e); }
     }
     const tracks = result.tracks;
     if (type === 'stems') {

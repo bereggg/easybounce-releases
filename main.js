@@ -517,6 +517,8 @@ ipcMain.handle('open-mixer', async (_, opts = {}) => {
   return result;
 });
 ipcMain.handle('close-mixer', () => bridge('closeMixer'));
+ipcMain.handle('cover-mixer', () => bridge('coverMixer'));
+ipcMain.handle('open-mixer-cover', () => bridge('openMixerCover'));
 ipcMain.handle('ensure-mixer', () => bridge('ensureMixer'));
 ipcMain.handle('send-key', (_, keyCode, ...mods) => bridge('sendKey', String(keyCode), ...mods));
 ipcMain.handle('stop-render', () => bridge('stop-render'));

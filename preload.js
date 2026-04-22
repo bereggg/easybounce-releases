@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld('api', {
   scrollToBnc:       ()    => ipcRenderer.invoke('scroll-to-bnc'),
   openMixer:         (opts) => ipcRenderer.invoke('open-mixer', opts),
   closeMixer:        ()    => ipcRenderer.invoke('close-mixer'),
+  coverMixer:        ()    => ipcRenderer.invoke('cover-mixer'),
+  openMixerCover:    ()    => ipcRenderer.invoke('open-mixer-cover'),
   maximizeLogic:         ()  => ipcRenderer.invoke('maximize-logic'),
   exitFullscreenOnly:    ()  => ipcRenderer.invoke('exit-fullscreen-only'),
   ensureMixer:       ()    => ipcRenderer.invoke('ensure-mixer'),

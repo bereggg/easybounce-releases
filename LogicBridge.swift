@@ -1751,6 +1751,154 @@ case "openMixer":
     jsonOut(["ok": true, "wasOpen": omWasOpen])
 
 
+// ── openMixerCover: open mixer + position directly at 220px (no 60% step) ─
+case "openMixerCover":
+    var omcWins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement]
+    if omcWins == nil || omcWins!.isEmpty {
+        runScript("tell application id \"com.apple.logic10\" to activate")
+        Thread.sleep(forTimeInterval: 0.4)
+        omcWins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement]
+    }
+    let omcWin = omcWins?.first(where: { (axVal($0, kAXTitleAttribute) as? String ?? "").contains("Tracks") })
+             ?? omcWins?.first
+    guard let omcWin = omcWin else {
+        jsonOut(["ok": false, "error": "no window"]); break
+    }
+
+    func omcFindCheckbox(_ el: AXUIElement, titleVal: String, depth: Int = 0) -> AXUIElement? {
+        if depth > 5 { return nil }
+        if axRole(el) == "AXCheckBox" {
+            let t = axVal(el, kAXTitleAttribute) as? String ?? ""
+            let d = axVal(el, kAXDescriptionAttribute) as? String ?? ""
+            if t == titleVal || d == titleVal { return el }
+        }
+        for child in axKids(el) {
+            if let found = omcFindCheckbox(child, titleVal: titleVal, depth: depth + 1) { return found }
+        }
+        return nil
+    }
+
+    // Close side panels
+    for panelName in ["Library", "Inspector", "Quick Help", "Browsers", "List Editors", "Note Pads", "Loop Browser"] {
+        if let panel = omcFindCheckbox(omcWin, titleVal: panelName) {
+            if axIntValue(panel) == 1 { axPress(panel); Thread.sleep(forTimeInterval: 0.15) }
+        }
+    }
+
+    // Enable Mixer if not already open
+    var omcWasOpen = true
+    if let mixerCb = omcFindCheckbox(omcWin, titleVal: "Mixer") {
+        if axIntValue(mixerCb) == 0 {
+            axPress(mixerCb)
+            Thread.sleep(forTimeInterval: 0.45)
+            omcWasOpen = false
+        }
+    } else {
+        jsonOut(["ok": false, "error": "Mixer button not found"]); break
+    }
+
+    // Click "All" radio button
+    func omcFindAllRadioBtn(_ el: AXUIElement, depth: Int = 0) -> AXUIElement? {
+        if depth > 8 { return nil }
+        if axRole(el) == "AXRadioButton" {
+            let desc = (axVal(el, kAXDescriptionAttribute) as? String) ?? ""
+            let title = (axVal(el, kAXTitleAttribute) as? String) ?? ""
+            if desc == "All" || title == "All" { return el }
+        }
+        for child in axKids(el) {
+            if let found = omcFindAllRadioBtn(child, depth: depth + 1) { return found }
+        }
+        return nil
+    }
+    if let allBtn = omcFindAllRadioBtn(omcWin) {
+        axPress(allBtn); Thread.sleep(forTimeInterval: 0.2)
+    }
+
+    // Position mixer directly at 220px from top (no 60% step)
+    let omcWinPos  = axPos(omcWin)
+    let omcWinSize = axSize(omcWin)
+    let omcRatio   = max(220.0 / omcWinSize.height, 0.12)
+    let omcTargetY = omcWinPos.y + omcWinSize.height * (1.0 - omcRatio)
+    let omcCenterX = omcWinPos.x + omcWinSize.width / 2
+
+    func omcFindMixerGroup(_ el: AXUIElement, depth: Int = 0) -> AXUIElement? {
+        if depth > 6 { return nil }
+        if axRole(el) == "AXGroup" && (axVal(el, kAXDescriptionAttribute) as? String) == "Mixer" { return el }
+        for kid in axKids(el) { if let f = omcFindMixerGroup(kid, depth: depth + 1) { return f } }
+        return nil
+    }
+    if let omcMg = omcFindMixerGroup(omcWin) {
+        let omcMgY = axPos(omcMg).y
+        let omcDiff = abs(omcMgY - omcTargetY)
+        if omcDiff > 20 {
+            let omcDragFrom = CGPoint(x: omcCenterX, y: omcMgY + 2)
+            let omcDragTo   = CGPoint(x: omcCenterX, y: omcTargetY)
+            CGWarpMouseCursorPosition(omcDragFrom); usleep(120_000)
+            CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown,
+                    mouseCursorPosition: omcDragFrom, mouseButton: .left)?.post(tap: .cghidEventTap)
+            usleep(80_000)
+            for i in 0...30 {
+                let t = Double(i) / 30.0
+                let p = CGPoint(x: omcDragFrom.x + (omcDragTo.x - omcDragFrom.x) * t,
+                                y: omcDragFrom.y + (omcDragTo.y - omcDragFrom.y) * t)
+                CGEvent(mouseEventSource: nil, mouseType: .leftMouseDragged,
+                        mouseCursorPosition: p, mouseButton: .left)?.post(tap: .cghidEventTap)
+                usleep(10_000)
+            }
+            CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp,
+                    mouseCursorPosition: omcDragTo, mouseButton: .left)?.post(tap: .cghidEventTap)
+            usleep(250_000)
+        }
+    }
+
+    jsonOut(["ok": true, "wasOpen": omcWasOpen])
+
+
+// ── coverMixer: push mixer splitter down to ~220px after scan ─────────────
+case "coverMixer":
+    guard let cmWins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement],
+          let cmWin = cmWins.first(where: { (axVal($0, kAXTitleAttribute) as? String ?? "").contains("Tracks") })
+                   ?? cmWins.first else {
+        jsonOut(["ok": false, "error": "no window"]); break
+    }
+    let cmWinPos  = axPos(cmWin)
+    let cmWinSize = axSize(cmWin)
+    let cmRatio   = max(220.0 / cmWinSize.height, 0.12)
+    let cmTargetY = cmWinPos.y + cmWinSize.height * (1.0 - cmRatio)
+    let cmCenterX = cmWinPos.x + cmWinSize.width / 2
+
+    func cmFindMixerGroup(_ el: AXUIElement, depth: Int = 0) -> AXUIElement? {
+        if depth > 6 { return nil }
+        if axRole(el) == "AXGroup" && (axVal(el, kAXDescriptionAttribute) as? String) == "Mixer" { return el }
+        for kid in axKids(el) { if let f = cmFindMixerGroup(kid, depth: depth + 1) { return f } }
+        return nil
+    }
+    if let cmMg = cmFindMixerGroup(cmWin) {
+        let cmMgY = axPos(cmMg).y
+        let cmDiff = abs(cmMgY - cmTargetY)
+        if cmDiff > 20 {
+            let cmFrom = CGPoint(x: cmCenterX, y: cmMgY + 2)
+            let cmTo   = CGPoint(x: cmCenterX, y: cmTargetY)
+            CGWarpMouseCursorPosition(cmFrom); usleep(120_000)
+            CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown,
+                    mouseCursorPosition: cmFrom, mouseButton: .left)?.post(tap: .cghidEventTap)
+            usleep(80_000)
+            for i in 0...30 {
+                let t = Double(i) / 30.0
+                let p = CGPoint(x: cmFrom.x + (cmTo.x - cmFrom.x) * t,
+                                y: cmFrom.y + (cmTo.y - cmFrom.y) * t)
+                CGEvent(mouseEventSource: nil, mouseType: .leftMouseDragged,
+                        mouseCursorPosition: p, mouseButton: .left)?.post(tap: .cghidEventTap)
+                usleep(10_000)
+            }
+            CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp,
+                    mouseCursorPosition: cmTo, mouseButton: .left)?.post(tap: .cghidEventTap)
+            usleep(250_000)
+        }
+    }
+    jsonOut(["ok": true])
+
+
 // ── scrollToBnc: scroll mixer to find the channel with Bounce button ──────
 case "scrollToBnc":
     guard let stbWins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement],
