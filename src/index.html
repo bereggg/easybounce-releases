@@ -8158,6 +8158,7 @@ async function doBounce() {
   if (window.api.mkdir) await window.api.mkdir(folder);
   log(`Output folder: ${folder}`, 'info');
 
+  let _mlNeedsReopen = false; // set true when a stem fails — next setLocatorsByMarker will close+reopen ML
   try {
   for (const _mPass of _markerPasses) {
     if (!bouncing) break;
@@ -8177,9 +8178,12 @@ async function doBounce() {
       // Ensure Logic and EasyBounce are on the same Space before HID click
       if (window.api.moveToLogicSpace) await window.api.moveToLogicSpace().catch(() => {});
       await window.api.setAlwaysOnTop(false).catch(() => {}); // must be off so HID click reaches Logic's ML window
-      // Close ML so it reopens fresh on current Space — prevents stale position if user moved window
-      try { await window.api.closeMarkerList(); } catch(e) {}
-      await window.api.wait(200);
+      // If previous stem failed, close ML so it reopens fresh on current Space
+      if (_mlNeedsReopen) {
+        try { await window.api.closeMarkerList(); } catch(e) {}
+        await window.api.wait(200);
+        _mlNeedsReopen = false;
+      }
       await window.api.setLocatorsByMarker(_mPass.name, !_isLastPass);
       await window.api.wait(500);
       await activateLogicForAX(); // refocus Logic main window after marker list interaction
@@ -8325,6 +8329,7 @@ async function doBounce() {
         if (doneEl) { doneEl.style.animation = 'done-flash .5s ease'; setTimeout(()=>doneEl.style.animation='',500); }
       } else if (!window._userCancelled) {
         consecutiveFails++;
+        _mlNeedsReopen = true; // next pass: close+reopen ML to recover from possible Space mismatch
         // Shake on error
         const errEl = document.querySelector(`[data-qid="${job.id}"]`);
         if (errEl) { errEl.style.animation = 'shake .4s ease'; setTimeout(()=>errEl.style.animation='',400); }
