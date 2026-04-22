@@ -5352,7 +5352,7 @@ function renderPresets() {
     wrap.className = 'pchip-wrap';
     if (isEasy && mixCount > EASY_MAX_MIXES) { wrap.style.display = 'none'; _easyOverflow.push(wrap); }
     const btn = document.createElement('button');
-    btn.className = 'pchip mix-chip';
+    btn.className = 'pchip mix-chip custom';
     btn.textContent = p.icon + ' ' + p.name;
     btn.onclick = () => addPresetToQueue(p);
     // No delete button — built-in presets cannot be removed
