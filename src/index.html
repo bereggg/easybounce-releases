@@ -7166,6 +7166,49 @@ function _togMuted(btn, count) {
   btn.textContent = open ? '▴ less' : `+${count} more`;
 }
 
+// ── Shared marker chips builder — used by stem/mix AND group (merge) items ──
+function _renderItemMarkerChips(item) {
+  if (!_queueMarkersChipsVisible) return { fullChip: '', markerChips: '' };
+  const visibleMarkers = _projectMarkers.filter(m => !_hiddenMarkers.has(markerId(m)));
+  const fullChip = _fullActive
+    ? (() => {
+        const fullExcluded = !!item.fullExclusion;
+        const fs = fullExcluded
+          ? 'background:transparent;color:rgba(255,255,255,.3);border:1.5px solid rgba(255,255,255,.12);text-decoration:line-through;'
+          : 'background:rgba(80,200,120,.12);color:#7ef0a8;border:1.5px solid rgba(80,200,120,.4);';
+        const ft = fullExcluded ? 'Full skipped for this item — click to include' : 'Will bounce full range — click to skip for this item';
+        return `<span onclick="event.stopPropagation();toggleJobFull('${item.id}');" title="${ft}" style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:var(--fs-xxs);font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all var(--t-fast);user-select:none;${fs}">Full</span>`;
+      })()
+    : '';
+  const mkChip = (m) => {
+    const mid = markerId(m);
+    const globallyActive = _activeMarkers.has(mid);
+    const excluded = (item.markerExclusions||[]).includes(mid);
+    const added    = (item.markerAdditions||[]).includes(mid);
+    let cs, ct;
+    if (globallyActive && !excluded)  { cs='background:rgba(108,99,255,.18);color:#b8b0ff;border:1.5px solid rgba(108,99,255,.4);';            ct='Will bounce — click to skip for this item'; }
+    else if (globallyActive && excluded) { cs='background:transparent;color:rgba(255,255,255,.35);border:1.5px dashed rgba(255,255,255,.18);'; ct='Click to include for this item'; }
+    else if (!globallyActive && added)   { cs='background:rgba(255,169,77,.12);color:#ffb340;border:1.5px solid rgba(255,169,77,.4);';          ct='Added only for this item — click to remove'; }
+    else                                  { cs='background:transparent;color:rgba(255,255,255,.35);border:1.5px dashed rgba(255,255,255,.15);';  ct='Click to add this marker only for this item'; }
+    return `<span onclick="event.stopPropagation();toggleJobMarker('${item.id}','${mid.replace(/'/g,"\\'")}');" title="${ct}" style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:var(--fs-xxs);font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all var(--t-fast);user-select:none;${cs}">${m.name}</span>`;
+  };
+  const MSHOW = 3;
+  const expanded = window._markerExpanded || {};
+  let markerChips = '';
+  if (visibleMarkers.length > 0) {
+    const vis = visibleMarkers.slice(0, MSHOW).map(mkChip).join('');
+    const hid = visibleMarkers.slice(MSHOW);
+    const isExp = !!expanded[item.id];
+    const extra = hid.length > 0
+      ? (isExp
+          ? hid.map(mkChip).join('') + `<span onclick="event.stopPropagation();window._markerExpanded=window._markerExpanded||{};window._markerExpanded['${item.id}']=false;renderQueue();" style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:var(--fs-xxs);font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;color:var(--t2);border:1.5px dashed rgba(255,255,255,.18);user-select:none;">less</span>`
+          : `<span onclick="event.stopPropagation();window._markerExpanded=window._markerExpanded||{};window._markerExpanded['${item.id}']=true;renderQueue();" style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:var(--fs-xxs);font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;color:var(--t2);border:1.5px dashed rgba(255,255,255,.18);user-select:none;">+${hid.length} more</span>`)
+      : '';
+    markerChips = vis + extra;
+  }
+  return { fullChip, markerChips };
+}
+
 function renderQueue() {
   const el = document.getElementById('qlist');
   el.innerHTML = '';
@@ -7289,6 +7332,7 @@ function renderQueue() {
       ).join('') + ((item.channels || []).length > 6 ? `<span class="qgroup-ch" style="opacity:.6">+${item.channels.length - 6} more</span>` : '');
       const grpEditBtn = item.status === 'pending'
         ? `<button class="qedit" title="Edit group" onclick="event.stopPropagation();openEditGroupModal('${item.id}')"><svg class="ico ico-sm"><use href="#ico-edit"/></svg></button>` : '';
+      const { fullChip: grpFullChip, markerChips: grpMarkerChips } = _renderItemMarkerChips(item);
       div.innerHTML = `
         <div class="drag-handle">⠿</div>
         <div class="qnum">${String(regIdx).padStart(2,'0')}</div>
@@ -7298,6 +7342,7 @@ function renderQueue() {
             <span class="qtag group">merge</span>
           </div>
           ${subPills ? `<div class="qsub">${subPills}</div>` : ''}
+          ${(grpFullChip || grpMarkerChips) ? `<div class="qsub" style="gap:3px;margin-top:2px;">${grpFullChip}${grpMarkerChips}</div>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
           <div class="qst ${item.status || 'pending'}">${item.status || 'pending'}</div>
@@ -7360,63 +7405,8 @@ function renderQueue() {
       ? `<button class="qedit" onclick="editQueueMix('${item.id}')" title="Edit mix"><svg class="ico ico-sm"><use href="#ico-edit"/></svg></button>`
       : '';
 
-    // Per-item marker chips — only shown when _queueMarkersChipsVisible
-    const visibleMarkers_ = _projectMarkers.filter(m => !_hiddenMarkers.has(markerId(m)));
-    const fullChip = (_fullActive && _queueMarkersChipsVisible)
-      ? (() => {
-          const fullExcluded = !!item.fullExclusion;
-          const fullStyle = fullExcluded
-            ? 'background:transparent;color:rgba(255,255,255,.3);border:1.5px solid rgba(255,255,255,.12);text-decoration:line-through;'
-            : 'background:rgba(80,200,120,.12);color:#7ef0a8;border:1.5px solid rgba(80,200,120,.4);';
-          const fullTitle = fullExcluded ? 'Full skipped for this item — click to include' : 'Will bounce full range — click to skip for this item';
-          return `<span onclick="event.stopPropagation();toggleJobFull('${item.id}');"
-            title="${fullTitle}"
-            style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:var(--fs-xxs);font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all var(--t-fast);user-select:none;${fullStyle}"
-          >Full</span>`;
-        })()
-      : '';
-    const _mkChip = (m) => {
-      const mid = markerId(m);
-      const name = m.name;
-      const globallyActive = _activeMarkers.has(mid);
-      const excluded = (item.markerExclusions||[]).includes(mid);
-      const added    = (item.markerAdditions||[]).includes(mid);
-      let style, title;
-      if (globallyActive && !excluded) {
-        style = 'background:rgba(108,99,255,.18);color:#b8b0ff;border:1.5px solid rgba(108,99,255,.4);';
-        title = 'Will bounce — click to skip for this item';
-      } else if (globallyActive && excluded) {
-        style = 'background:transparent;color:rgba(255,255,255,.35);border:1.5px dashed rgba(255,255,255,.18);';
-        title = 'Click to include for this item';
-      } else if (!globallyActive && added) {
-        style = 'background:rgba(255,169,77,.12);color:#ffb340;border:1.5px solid rgba(255,169,77,.4);';
-        title = 'Added only for this item — click to remove';
-      } else {
-        style = 'background:transparent;color:rgba(255,255,255,.35);border:1.5px dashed rgba(255,255,255,.15);';
-        title = 'Click to add this marker only for this item';
-      }
-      return `<span onclick="event.stopPropagation();toggleJobMarker('${item.id}','${mid.replace(/'/g,"\\'")}');"
-        title="${title}"
-        style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:var(--fs-xxs);font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all var(--t-fast);user-select:none;${style}"
-      >${name}</span>`;
-    };
-    const MARKER_SHOW = 3;
-    const _mkExpanded = window._markerExpanded || {};
-    let markerChips = '';
-    if (visibleMarkers_.length > 0 && _queueMarkersChipsVisible) {
-      const visible = visibleMarkers_.slice(0, MARKER_SHOW).map(_mkChip).join('');
-      const hidden  = visibleMarkers_.slice(MARKER_SHOW);
-      const isExp   = !!_mkExpanded[item.id];
-      const extra   = hidden.length > 0
-        ? (isExp
-            ? hidden.map(_mkChip).join('') +
-              `<span onclick="event.stopPropagation();window._markerExpanded=window._markerExpanded||{};window._markerExpanded['${item.id}']=false;renderQueue();"
-               style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:var(--fs-xxs);font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;color:var(--t2);border:1.5px dashed rgba(255,255,255,.18);user-select:none;">less</span>`
-            : `<span onclick="event.stopPropagation();window._markerExpanded=window._markerExpanded||{};window._markerExpanded['${item.id}']=true;renderQueue();"
-               style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:var(--fs-xxs);font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;color:var(--t2);border:1.5px dashed rgba(255,255,255,.18);user-select:none;">+${hidden.length} more</span>`)
-        : '';
-      markerChips = visible + extra;
-    }
+    // Per-item marker chips — via shared helper (also used by group/merge items)
+    const { fullChip, markerChips } = _renderItemMarkerChips(item);
 
     div.innerHTML = `
       <div class="drag-handle">⠿</div>
@@ -8187,6 +8177,9 @@ async function doBounce() {
       // Ensure Logic and EasyBounce are on the same Space before HID click
       if (window.api.moveToLogicSpace) await window.api.moveToLogicSpace().catch(() => {});
       await window.api.setAlwaysOnTop(false).catch(() => {}); // must be off so HID click reaches Logic's ML window
+      // Close ML so it reopens fresh on current Space — prevents stale position if user moved window
+      try { await window.api.closeMarkerList(); } catch(e) {}
+      await window.api.wait(200);
       await window.api.setLocatorsByMarker(_mPass.name, !_isLastPass);
       await window.api.wait(500);
       await activateLogicForAX(); // refocus Logic main window after marker list interaction
@@ -8224,9 +8217,11 @@ async function doBounce() {
       ok = false;
     }
 
-    // ── Auto-retry: close any stuck dialogs, rescan, try again ──────────────
-    if (!ok && !window._userCancelled) {
-      log(`⟳ Retrying ${job.name} — closing dialogs…`, 'warn');
+    // ── Auto-retry: 2 retries for first failing stem, 1 for second consecutive ──
+    // consecutiveFails reflects previous jobs — 0 = first fail → 2 retries; 1 = second → 1 retry
+    const _maxRetries = consecutiveFails === 0 ? 2 : 1;
+    for (let _retryN = 1; _retryN <= _maxRetries && !ok && !window._userCancelled; _retryN++) {
+      log(`⟳ Retry ${_retryN}/${_maxRetries}: ${job.name} — closing dialogs…`, 'warn');
       try {
         await window.api.runScript([
           'tell application "System Events"',
@@ -8248,12 +8243,14 @@ async function doBounce() {
         ].join('\n'));
       } catch(e) { log('Dialog close error: ' + (e.message||e), 'warn'); }
       await window.api.wait(1500);
-      // Re-set cycle range before retry in case locator wasn't applied correctly
+      // Re-set cycle range before retry — close ML first so it reopens on current Space
       if (_mPass.name !== 'full') {
         try {
           log(`📍 Re-setting range: ${_mPass.name}`, 'info');
           const _isLastPass = _markerPasses.indexOf(_mPass) === _markerPasses.length - 1;
           await window.api.setAlwaysOnTop(false).catch(() => {});
+          try { await window.api.closeMarkerList(); } catch(e) {}
+          await window.api.wait(200);
           await window.api.setLocatorsByMarker(_mPass.name, !_isLastPass);
           await window.api.wait(500);
           await activateLogicForAX();
@@ -8272,10 +8269,10 @@ async function doBounce() {
         ok = job.type === 'stem' ? await bounceStem(job, jobFolder, true)
            : job.type === 'group' ? await bounceGroup(job, jobFolder, true)
            : await bounceMix(job, jobFolder, true);
-        if (ok) log(`✓ Retry succeeded: ${job.name}`, 'ok');
-        else    log(`✗ Retry failed: ${job.name}`, 'err');
+        if (ok) log(`✓ Retry ${_retryN} succeeded: ${job.name}`, 'ok');
+        else    log(`✗ Retry ${_retryN} failed: ${job.name}`, 'err');
       } catch(retryErr) {
-        log(`✗ Retry exception: ${retryErr?.message || retryErr}`, 'err');
+        log(`✗ Retry ${_retryN} exception: ${retryErr?.message || retryErr}`, 'err');
         ok = false;
       }
     }
@@ -9998,9 +9995,9 @@ async function triggerBounce(name, folder, isFirst) {
       } catch(e) { /* no-op */ }
     }
   });
-  // preRoll 30s: enough for Logic to actually open Bouncing dialog even on heavy projects.
+  // preRoll 7s: enough for Logic to open Bouncing dialog even on heavy projects.
   // maxRender 60min: matches legacy BOUNCE_TIMEOUT_MS.
-  const _trackPromise = window.api.trackBounce(30000, 60 * 60 * 1000).then((r) => {
+  const _trackPromise = window.api.trackBounce(7000, 60 * 60 * 1000).then((r) => {
     window._axTrackResult = r;
     return r;
   }).catch((e) => {
