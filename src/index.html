@@ -149,9 +149,11 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .qtag.stem{background:var(--w-a05);color:var(--t2);border:1px solid var(--b);}
 .qtag.mix{background:var(--w-a05);color:var(--t2);border:1px solid var(--b);}
 .qtag.set{background:var(--w-a05);color:var(--t2);border:1px solid var(--b);}
-.qtag.group{background:var(--g-stem);color:#fff;border:1px solid transparent;box-shadow:0 2px 8px var(--accent-a30);}
+.qtag.group{background:var(--accent-a20);color:var(--accent);border:1px solid var(--accent-a30);box-shadow:0 2px 8px var(--accent-a20);}
+.tb-pill-scan{background-color:var(--accent);background-image:var(--g-primary);border-color:rgba(255,255,255,0.15);color:#fff;font-weight:700;transform:translateZ(0);}
+.tb-pill.tb-pill-scan:hover{background-color:var(--accent);background-image:var(--g-primary);opacity:.88;border-color:rgba(255,255,255,0.22);color:#fff;}
 .qitem.running .qtag{background:var(--accent-a12);color:var(--accent);border-color:var(--accent-a30);}
-.qgroup-ch{font-size:var(--fs-xxs);padding:1px 7px;border-radius:var(--r);background:rgba(56,249,215,.1);color:var(--teal);border:1px solid rgba(56,249,215,.22);}
+.qgroup-ch{font-size:var(--fs-xxs);padding:1px 7px;border-radius:var(--r);background:var(--accent-a08);color:var(--t2);border:1px solid var(--accent-a15);}
 .stems-wrap{position:relative;flex:1;display:none;}
 .stems-wrap.active{display:flex;}
 .stems-wrap.active::before{content:'';position:absolute;bottom:100%;left:0;right:0;height:12px;z-index:199;}
@@ -525,12 +527,12 @@ body.easy #skin-panel{z-index:9000;}
 #cancel-overlay-inner{color:var(--warn);font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;text-align:center;letter-spacing:.01em;text-shadow:0 2px 12px rgba(0,0,0,.5);}
 #cancel-overlay-sub{margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:var(--fs-sm);font-weight:400;opacity:.8;}
 /* ── Scan in-progress overlay ────────────────────────── */
-#scan-warning{display:none;position:fixed;top:40px;left:0;right:0;height:69px;z-index:9999;pointer-events:none;align-items:center;justify-content:center;gap:10px;background:rgba(14,14,22,.92);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);border-bottom:1px solid var(--accent-a30);box-shadow:0 4px 24px rgba(0,0,0,.4);}
-body.compact-mode #scan-warning{top:36px;}
+#scan-warning{display:none;position:fixed;top:40px;left:0;right:0;height:84px;z-index:9999;pointer-events:none;align-items:center;justify-content:center;gap:10px;background:rgba(14,14,22,.92);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);border-bottom:1px solid var(--accent-a30);box-shadow:0 4px 24px rgba(0,0,0,.4);}
+body.compact-mode #scan-warning{top:46px;}
 body.scan-badge #scan-warning{height:100%;}
 #scan-warning.show{display:flex;}
 @keyframes scanBorderPulse{0%{background-position:-100% 0;}100%{background-position:200% 0;}}
-#scan-warning::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);background-size:200% 100%;animation:scanBorderPulse 2.8s linear infinite;}
+#scan-warning::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);background-size:200% 100%;animation:scanBorderPulse 2.8s linear infinite;}
 #scan-warning-inner{position:relative;display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(-4px);transition:opacity var(--t),transform var(--t);will-change:opacity,transform;}
 #scan-warning.show #scan-warning-inner{opacity:1;transform:translateY(0);}
 #scan-warning-title{font-family:var(--font-display);font-size:13px;font-weight:700;color:#fff;letter-spacing:-.01em;}
@@ -582,7 +584,7 @@ body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini
 #compact-toolbar-left button:hover,#compact-toolbar-actions button:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-a12);}
 #compact-toolbar-left button:hover{background:rgba(255,255,255,.06);}
 #compact-toolbar-left button svg,#compact-toolbar-actions button svg{width:14px;height:14px;}
-#cm-scan-btn{-webkit-app-region:no-drag;display:none;align-items:center;gap:5px;padding:6px 13px;border-radius:var(--r3);border:1px solid transparent;background:var(--g-primary);color:#fff;cursor:pointer;font-size:var(--fs-sm);font-weight:700;font-family:var(--font-ui);box-shadow:var(--sh-glow-sm,0 0 8px rgba(108,99,255,.35)),var(--sh-inset,inset 0 1px 0 rgba(255,255,255,.08));transition:opacity var(--t-fast),background var(--t-fast);position:absolute;top:50%;transform:translateY(-50%);white-space:nowrap;}
+#cm-scan-btn{-webkit-app-region:no-drag;display:none;align-items:center;gap:5px;padding:6px 13px;border-radius:var(--r3);border:1px solid rgba(255,255,255,0.15);background-color:var(--accent);background-image:var(--g-primary);color:#fff;cursor:pointer;font-size:var(--fs-sm);font-weight:700;font-family:var(--font-ui);box-shadow:var(--sh-glow-sm,0 0 8px rgba(108,99,255,.35)),var(--sh-inset,inset 0 1px 0 rgba(255,255,255,.08));transition:opacity var(--t-fast),background var(--t-fast);position:absolute;top:50%;transform:translateY(-50%);white-space:nowrap;}
 #cm-scan-btn:hover{opacity:.88;}
 #cm-scan-btn svg{width:13px;height:13px;flex-shrink:0;}
 body.compact-mode #cm-scan-btn{display:flex;}
@@ -610,8 +612,6 @@ body.compact-mode .center{border-right:none!important;}
 body.compact-mode #mp-row,
 body.compact-mode #alert-row-full,
 body.compact-mode .q-mini-btns,
-body.compact-mode #markers-btn,
-body.compact-mode #markers-chips-btn,
 body.compact-mode #version-drop-zone,
 body.compact-mode #merge-drop-zone,
 body.compact-mode #name-preset-save-btn,
@@ -826,7 +826,7 @@ body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar
     <span class="em-lbl em-lbl-pro">Pro</span>
   </div>
   <div class="tb-right">
-    <button class="tb-pill" id="scan-btn" onclick="scanLogic()" title="Scan Logic Pro channels. Keep Mixer open!" style="background:var(--g-primary);border-color:transparent;color:#fff;font-weight:700;box-shadow:var(--sh-glow-sm),var(--sh-inset);">
+    <button class="tb-pill tb-pill-scan" id="scan-btn" onclick="scanLogic()" title="Scan Logic Pro channels. Keep Mixer open!" style="box-shadow:var(--sh-glow-sm),var(--sh-inset);">
       <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg>
       Scan Logic
     </button>
@@ -2256,7 +2256,7 @@ async function cancelScan() {
   const scanWarn = document.getElementById('scan-warning');
   if (scanWarn) scanWarn.classList.remove('show');
   const btn = document.getElementById('scan-btn');
-  if (btn) { btn.classList.remove('scanning'); btn.innerHTML = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg> Scan Logic'; btn.style.cssText = 'background:linear-gradient(160deg,var(--accent),var(--a2));border-color:transparent;color:#fff;font-weight:700;box-shadow:0 4px 16px rgba(108,99,255,.35),inset 0 1px 0 rgba(255,255,255,.15);'; }
+  if (btn) { btn.classList.remove('scanning'); btn.innerHTML = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg> Scan Logic'; btn.style.cssText = 'background-color:var(--accent);background-image:var(--g-primary);border-color:rgba(255,255,255,0.15);color:#fff;font-weight:700;box-shadow:var(--sh-glow-sm),var(--sh-inset);'; }
   if (window.api && window.api.focusApp) { try { await window.api.focusApp(); } catch(e) { console.warn('[EB]', e); } }
   toast('Scan cancelled');
   log('Scan cancelled by user', 'warn');
@@ -2473,7 +2473,7 @@ async function scanLogic(isAutoRetry = false) {
 
   // Helper: abort current scan and auto-retry (or show final error)
   async function _abort(reason) {
-    btn.classList.remove('scanning'); btn.innerHTML = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg> Scan Logic'; btn.style.cssText = 'background:linear-gradient(160deg,var(--accent),var(--a2));border-color:transparent;color:#fff;font-weight:700;box-shadow:0 4px 16px rgba(108,99,255,.35),inset 0 1px 0 rgba(255,255,255,.15);';
+    btn.classList.remove('scanning'); btn.innerHTML = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg> Scan Logic'; btn.style.cssText = 'background-color:var(--accent);background-image:var(--g-primary);border-color:rgba(255,255,255,0.15);color:#fff;font-weight:700;box-shadow:var(--sh-glow-sm),var(--sh-inset);';
     if (isAutoRetry) {
       _scanRunning = false;
       document.body.classList.remove('scan-badge');
@@ -2534,7 +2534,7 @@ async function scanLogic(isAutoRetry = false) {
 
   btn.classList.remove('scanning');
   btn.innerHTML = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg> Scan Logic';
-  btn.style.cssText = 'background:linear-gradient(160deg,var(--accent),var(--a2));border-color:transparent;color:#fff;font-weight:700;box-shadow:0 4px 16px rgba(108,99,255,.35),inset 0 1px 0 rgba(255,255,255,.15);';
+  btn.style.cssText = 'background-color:var(--accent);background-image:var(--g-primary);border-color:rgba(255,255,255,0.15);color:#fff;font-weight:700;box-shadow:var(--sh-glow-sm),var(--sh-inset);';
   document.getElementById('scan-hint')?.classList.remove('show');
 
   channels = (result.channels || []).map((ch, i) => ({
@@ -11453,13 +11453,15 @@ let isPinned = localStorage.getItem('ui.alwaysOnTop') === '1';
 const SKINS = {
   default: {
     name:'DARK', preview:['#6c63ff','#0c0c10','#43e97b'],
-    vars:{'--bg':'#0c0c10','--s':'#111116','--card':'#17171e','--card2':'#1c1c24','--b':'#252530','--b2':'#30303e','--accent':'#6c63ff','--a2':'#ff6584','--a3':'#43e97b','--warn':'#ffa94d','--red':'#ff4757','--text':'#e2e2f0','--t2':'#8888a8','--muted':'#444458','--r':'10px','--r2':'16px','--r3':'24px'}
+    vars:{'--bg':'#0c0c10','--s':'#111116','--card':'#17171e','--card2':'#1c1c24','--b':'#252530','--b2':'#30303e','--accent':'#6c63ff','--a2':'#ff6584','--a3':'#43e97b','--warn':'#ffa94d','--red':'#ff4757','--text':'#e2e2f0','--t2':'#8888a8','--muted':'#444458','--r':'10px','--r2':'16px','--r3':'24px','--g-primary':'linear-gradient(90deg,#6c63ff 0%,#ff6584 100%)'}
   },
   logic: {
     name:'LOGIC', preview:['#0A84FF','#2A2A2A','#30D158'],
     vars:{
-      '--bg':'#2A2A2A','--s':'#1E1E1E','--card':'#333333','--card2':'#3D3D3D',
-      '--b':'#484848','--b2':'#555555',
+      '--bg':'#2A2A2A','--bg-deep':'#242424',
+      '--s':'#1E1E1E','--s-top':'#1A1A1A',
+      '--card':'#333333','--card2':'#3A3A3A',
+      '--b':'#484848','--b2':'#575757','--b3':'#575757','--b4':'#606060','--b5':'#6E6E6E',
       '--accent':'#0A84FF','--a2':'#FF9F0A','--a3':'#30D158','--warn':'#FF9F0A','--red':'#FF453A',
       '--text':'#EBEBEB','--t2':'#98989D','--muted':'#636366',
       '--glass':'rgba(255,255,255,.04)','--glass-border':'rgba(255,255,255,.08)',
@@ -11468,7 +11470,8 @@ const SKINS = {
       '--accent-a12':'rgba(10,132,255,0.12)','--accent-a20':'rgba(10,132,255,0.20)',
       '--accent-a30':'rgba(10,132,255,0.30)','--accent-a40':'rgba(10,132,255,0.40)',
       '--accent-a60':'rgba(10,132,255,0.55)',
-      '--g-primary':'linear-gradient(135deg,#0A84FF 0%,#40C8FF 100%)'
+      '--g-primary':'linear-gradient(90deg,#0A84FF 0%,#40C8FF 100%)',
+      '--sh-glow-sm':'0 0 8px rgba(10,132,255,0.4)'
     }
   },
   aurora: {
@@ -11536,7 +11539,7 @@ function applySkin(name) {
   s.id = 'skin-dynamic-css';
   const effects = {
     default: `
-      .bbtn:not(.off):not(.running){background:linear-gradient(160deg,#6c63ff,#ff6584)!important;box-shadow:0 6px 24px rgba(108,99,255,.4),inset 0 1px 0 rgba(255,255,255,.2)!important;}
+      .bbtn:not(.off):not(.running){background:linear-gradient(90deg,#6c63ff,#ff6584)!important;box-shadow:0 6px 24px rgba(108,99,255,.4),inset 0 1px 0 rgba(255,255,255,.2)!important;}
       .bbtn:not(.off):not(.running):hover{box-shadow:0 12px 40px rgba(108,99,255,.6),inset 0 1px 0 rgba(255,255,255,.25)!important;}
       .tb-logo-mark{background:linear-gradient(135deg,#6c63ff,#ff6584)!important;}
       .stat-val{color:#6c63ff!important;}
@@ -11545,7 +11548,7 @@ function applySkin(name) {
       .titlebar{background:var(--s)!important;border-bottom:1px solid var(--b)!important;box-shadow:0 1px 0 rgba(255,255,255,.06)!important;}
       .titlebar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(10,132,255,.25),transparent);}
       .tb-logo-mark{background:linear-gradient(135deg,#0A84FF,#40C8FF)!important;box-shadow:0 2px 8px rgba(10,132,255,.35)!important;}
-      .bbtn:not(.off):not(.running){background:linear-gradient(135deg,#0A84FF 0%,#40C8FF 100%)!important;color:#fff!important;border:none!important;box-shadow:0 4px 16px rgba(10,132,255,.35),inset 0 1px 0 rgba(255,255,255,.2)!important;}
+      .bbtn:not(.off):not(.running){background:linear-gradient(90deg,#0A84FF 0%,#40C8FF 100%)!important;color:#fff!important;border:none!important;box-shadow:0 4px 16px rgba(10,132,255,.35),inset 0 1px 0 rgba(255,255,255,.2)!important;}
       .bbtn:not(.off):not(.running):hover{background:linear-gradient(135deg,#1A90FF 0%,#50D0FF 100%)!important;box-shadow:0 8px 28px rgba(10,132,255,.5),inset 0 1px 0 rgba(255,255,255,.25)!important;}
       .stat-val{color:#0A84FF!important;}
       .ch-item:hover{background:rgba(10,132,255,.06)!important;}
@@ -11553,7 +11556,7 @@ function applySkin(name) {
       .tree-group.sel{background:rgba(10,132,255,.12)!important;box-shadow:inset 2px 0 0 #0A84FF!important;}
       .tree-child.sel{background:rgba(10,132,255,.09)!important;box-shadow:inset 2px 0 0 rgba(10,132,255,.55)!important;}
       .bus-toggle.on{border-color:rgba(10,132,255,.5)!important;color:#0A84FF!important;background:rgba(10,132,255,.1)!important;}
-      .prog-fill{background:linear-gradient(90deg,#0A84FF,#30D158)!important;}
+      .prog-fill{background:linear-gradient(90deg,#0A84FF,#40C8FF)!important;}
       .ldot.live{background:#30D158!important;box-shadow:0 0 0 3px rgba(48,209,88,.2)!important;}
       .mbtn.save{background:linear-gradient(135deg,#0A84FF,#40C8FF)!important;color:#fff!important;font-weight:700!important;}
       .log-body{background:#303030!important;}
@@ -13043,15 +13046,26 @@ if (window.api?.onHotkeyTriggered) {
 }
 
 function _openVersionModalWithTracks(tracks) {
-  const indices = tracks.map(t => t.index);
+  const skipped = [];
+  const indices = tracks.reduce((acc, t) => {
+    const ch = channels.find(c => c.name === t.name) || channels.find(c => c.index === t.index);
+    if (!ch) { skipped.push(t.name); return acc; }
+    acc.push(ch.index);
+    return acc;
+  }, []);
+  if (skipped.length) toast(`Not in scanned channels (re-scan): ${skipped.join(', ')}`);
   openMixModal(null, indices);
 }
 
 function _openMergeModalWithTracks(tracks) {
-  const chList = tracks.map(t => {
-    const ch = channels.find(c => c.index === t.index);
-    return { name: t.name, channelIndex: t.index, color: ch?.color || '' };
-  });
+  const skipped = [];
+  const chList = tracks.reduce((acc, t) => {
+    const ch = channels.find(c => c.name === t.name) || channels.find(c => c.index === t.index);
+    if (!ch) { skipped.push(t.name); return acc; }
+    acc.push({ name: ch.name, channelIndex: ch.index, color: ch.color || '' });
+    return acc;
+  }, []);
+  if (skipped.length) toast(`Not in scanned channels (re-scan): ${skipped.join(', ')}`);
   _openMergeModalWithChannels(chList);
 }
 
