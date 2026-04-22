@@ -273,7 +273,7 @@ svg.ico.ico-lg{width:20px;height:20px;}
 .ll.info .msg{color:var(--t2);}
 .stats-grid{border-top:1px solid var(--b);padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;gap:6px;flex-shrink:0;}
 .stat-card{background:var(--card);border:1px solid var(--b);border-radius:var(--r);padding:9px 11px;}
-.stat-val{font-family:var(--font-display);font-size:16px;font-weight:var(--fw-bold);line-height:1;color:var(--text);letter-spacing:var(--ls-tight);}
+.stat-val{font-family:var(--font-display);font-size:18px;font-weight:var(--fw-bold);line-height:1;color:var(--text);letter-spacing:var(--ls-tight);}
 .stat-val.primary{color:var(--accent);}
 .stat-lbl{font-size:var(--fs-xxs);color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:var(--ls-wide);}
 .stat-cur{font-size:var(--fs-sm);font-weight:var(--fw-semi);color:var(--text);line-height:1.3;font-family:var(--font-display);letter-spacing:var(--ls-normal);}
@@ -291,11 +291,10 @@ svg.ico.ico-lg{width:20px;height:20px;}
 /* Default = Pro mode (not compact) → PRO bright (right), EASY dim (left), thumb RIGHT */
 .em-lbl.em-lbl-pro{color:var(--accent);opacity:1;}
 .em-lbl.em-lbl-easy{color:var(--t2);opacity:.55;}
-.em-track{width:28px;height:14px;border-radius:var(--r-pill);background:var(--b2);position:relative;transition:background var(--t);flex-shrink:0;}
+.em-track{width:28px;height:14px;border-radius:var(--r-pill);background:var(--b2);position:relative;flex-shrink:0;}
 .em-thumb{position:absolute;top:2px;left:16px;width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.35);transition:all var(--t) cubic-bezier(.34,1.3,.64,1);}
 /* body.easy legacy (unused from UI but kept) */
-body.easy .em-track{background:var(--accent-a30);}
-body.easy .em-thumb{left:2px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.35);}
+body.easy .em-thumb{left:2px;}
 body.easy .em-wrap{border-color:var(--accent-a60);background:var(--accent-a08);box-shadow:0 0 14px var(--accent-a20);}
 
 /* ── Easy Mode: hide non-essentials ──────────── */
@@ -591,8 +590,7 @@ body.compact-mode .q-empty-normal-only{display:none!important;}
 body.compact-mode .q-empty-compact-only{display:block!important;}
 #compact-toolbar-left button.is-active,#compact-toolbar-actions button.is-active{border-color:var(--accent);color:var(--accent);background:var(--accent-a12);}
 #compact-toolbar .em-wrap{position:absolute;left:50%;transform:translateX(-50%);-webkit-app-region:no-drag;}
-body.compact-mode .em-thumb{left:2px!important;background:#fff!important;}
-body.compact-mode .em-track{background:var(--accent-a30)!important;}
+body.compact-mode .em-thumb{left:2px!important;}
 body.compact-mode .em-lbl.em-lbl-pro{color:var(--t2)!important;opacity:.55!important;}
 body.compact-mode .em-lbl.em-lbl-easy{color:var(--accent)!important;opacity:1!important;}
 #q-empty-compact{position:relative;width:100%;min-height:100%;}
@@ -11528,6 +11526,7 @@ function applySkin(name) {
   currentSkin = name;
   localStorage.setItem('sb_skin', name);
   const root = document.documentElement;
+  Array.from(root.style).filter(p => p.startsWith('--')).forEach(p => root.style.removeProperty(p));
   Object.entries(skin.vars).forEach(([k, v]) => root.style.setProperty(k, v));
   document.getElementById('skin-dynamic-css')?.remove();
   const s = document.createElement('style');
