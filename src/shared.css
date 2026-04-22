@@ -343,19 +343,19 @@
 .tb-mini-btn {
   padding: 4px 8px;
   border-radius: var(--r);
-  border: 1px solid var(--accent-a20);
-  background: var(--accent-a05);
-  color: var(--accent);
+  border: 1px solid var(--b);
+  background: transparent;
+  color: var(--t2);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 3px;
   opacity: 0.75;
-  transition: opacity var(--t-fast), border-color var(--t-fast);
+  transition: opacity var(--t-fast), border-color var(--t-fast), color var(--t-fast);
   -webkit-app-region: no-drag;
 }
-.tb-mini-btn:hover { opacity: 1; border-color: var(--accent-a40); }
-.tb-mini-btn.active { opacity: 1; border-color: var(--accent-a60); background: var(--accent-a12); }
+.tb-mini-btn:hover { opacity: 1; border-color: var(--b2); color: var(--text); }
+.tb-mini-btn.active { opacity: 1; border-color: var(--accent-a60); background: var(--accent-a12); color: var(--accent); }
 
 /* ── Custom tooltip — premium replacement for native title ──
    Usage: <span class="eb-tt" data-tt="Your text here">…</span>
