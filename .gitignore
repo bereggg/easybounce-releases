@@ -25,3 +25,7 @@ dist/
 node_modules/
 LogicBridge_arm64
 LogicBridge_x86
+LB_test
+LB_test.swift
+LogicBridge_test
+LogicBridge_test.swift
