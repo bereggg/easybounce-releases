@@ -28,7 +28,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .tb-right{display:flex;align-items:center;gap:8px;-webkit-app-region:no-drag;flex-shrink:0;}
 .tb-pill,.foot-btn,.q-mini-btn{color:var(--t2);cursor:pointer;}
 .tb-pill:hover,.foot-btn:hover,.q-mini-btn:hover{border-color:var(--b2);color:var(--text);background:var(--w-a05);}
-.tb-pill{display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:var(--r3);background:var(--glass);border:1px solid var(--glass-border);font-size:var(--fs-sm);font-weight:500;transition:all var(--t);white-space:nowrap;}
+.tb-pill{display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:var(--r3);background:var(--glass);border:1px solid var(--glass-border);font-size:var(--fs-sm);font-weight:500;transition:all var(--t);white-space:nowrap;outline:none;}
 .tb-pill.scanning{border-color:var(--accent);color:var(--accent);animation:tb-pulse 1.6s ease-in-out infinite;}
 @keyframes tb-pulse{0%,100%{opacity:1;border-color:var(--accent);}50%{opacity:.55;border-color:var(--accent-a30);}}
 /* Unified alert-row mini buttons (notif / schedule / alert-sound / feedback) */
@@ -150,7 +150,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .qtag.mix{background:var(--w-a05);color:var(--t2);border:1px solid var(--b);}
 .qtag.set{background:var(--w-a05);color:var(--t2);border:1px solid var(--b);}
 .qtag.group{background:var(--accent-a20);color:var(--accent);border:1px solid var(--accent-a30);box-shadow:0 2px 8px var(--accent-a20);}
-.tb-pill-scan{background:var(--g-primary);border-color:rgba(255,255,255,0.15);color:#fff;font-weight:700;transform:translateZ(0);}
+.tb-pill-scan{background:var(--g-primary);border-color:rgba(255,255,255,0.15);color:#fff;font-weight:700;}
 .tb-pill.tb-pill-scan:hover{background:var(--g-primary);opacity:.88;border-color:rgba(255,255,255,0.22);color:#fff;}
 .qitem.running .qtag{background:var(--accent-a12);color:var(--accent);border-color:var(--accent-a30);}
 .qgroup-ch{font-size:var(--fs-xxs);padding:1px 7px;border-radius:var(--r);background:var(--accent-a08);color:var(--t2);border:1px solid var(--accent-a15);}
@@ -563,6 +563,7 @@ body.scan-badge #scan-warning{height:100%;}
 /* ── Scan complete overlay ─────────────────────────────── */
 /* ── Unified success overlay + badge (used by scan-done and fmt-saved) ── */
 #scan-done-overlay,#fmt-saved-overlay{display:none;position:fixed;top:38px;left:0;right:0;bottom:0;z-index:9998;pointer-events:none;align-items:center;justify-content:center;}
+body.compact-mode #scan-done-overlay,body.compact-mode #fmt-saved-overlay{top:46px;}
 #scan-done-overlay.show,#fmt-saved-overlay.show{display:flex;}
 #scan-done-badge,#fmt-saved-badge{background:var(--g-success);color:var(--bg);font-family:var(--font-mono);font-size:var(--fs-md);font-weight:var(--fw-bold);padding:18px 40px;border-radius:var(--r2);box-shadow:0 8px 40px var(--success-a40),var(--sh-raised);letter-spacing:var(--ls-normal);opacity:0;transform:scale(.92) translateY(8px);transition:opacity var(--t-slow),transform var(--t-slow);}
 #scan-done-overlay.show #scan-done-badge,#fmt-saved-overlay.show #fmt-saved-badge{opacity:1;transform:scale(1) translateY(0);}
@@ -584,7 +585,7 @@ body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini
 #compact-toolbar-left button:hover,#compact-toolbar-actions button:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-a12);}
 #compact-toolbar-left button:hover{background:rgba(255,255,255,.06);}
 #compact-toolbar-left button svg,#compact-toolbar-actions button svg{width:14px;height:14px;}
-#cm-scan-btn{-webkit-app-region:no-drag;display:none;align-items:center;gap:5px;padding:6px 13px;border-radius:var(--r3);border:1px solid rgba(255,255,255,0.15);background:var(--g-primary);color:#fff;cursor:pointer;font-size:var(--fs-sm);font-weight:700;font-family:var(--font-ui);box-shadow:var(--sh-glow-sm,0 0 8px rgba(108,99,255,.35)),var(--sh-inset,inset 0 1px 0 rgba(255,255,255,.08));transition:opacity var(--t-fast),background var(--t-fast);position:absolute;top:50%;transform:translateY(-50%) translateZ(0);white-space:nowrap;}
+#cm-scan-btn{-webkit-app-region:no-drag;display:none;align-items:center;gap:5px;padding:6px 13px;border-radius:var(--r3);border:1px solid rgba(255,255,255,0.15);background:var(--g-primary);color:#fff;cursor:pointer;font-size:var(--fs-sm);font-weight:700;font-family:var(--font-ui);box-shadow:var(--sh-glow-sm,0 0 8px rgba(108,99,255,.35)),var(--sh-inset,inset 0 1px 0 rgba(255,255,255,.08));transition:opacity var(--t-fast),background var(--t-fast);position:absolute;top:50%;transform:translateY(-50%);white-space:nowrap;}
 #cm-scan-btn:hover{opacity:.88;}
 #cm-scan-btn svg{width:13px;height:13px;flex-shrink:0;}
 body.compact-mode #cm-scan-btn{display:flex;}
@@ -669,8 +670,9 @@ body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar
 .mini-bar{height:3px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;}
 .mini-fill-bar{height:2px;background:var(--g-primary);border-radius:3px;transition:width .5s ease;width:0%;box-shadow:0 0 8px var(--accent-a60);}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(10px) saturate(150%);-webkit-backdrop-filter:blur(10px) saturate(150%);}
+body.compact-mode .modal-overlay{inset:46px 0 0;align-items:center;padding:12px 8px;}
 .modal-overlay.show{display:flex;}
-#format-modal .modal-hdr{position:relative;}
+/* fmt-modal-hdr replaces modal-hdr for format modal */
 /* Format Presets */
 .fmt-bar { display:flex; align-items:center; gap:6px; }
 .fmt-main-btn { flex:1; display:flex; align-items:center; gap:8px; padding:5px 10px; border-radius:var(--r); border:1px solid var(--b); background:var(--card); color:var(--text); font-size:var(--fs-xs); font-weight:600; cursor:pointer; font-family:'JetBrains Mono',monospace; transition:all var(--t); min-width:0; }
@@ -681,33 +683,116 @@ body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar
 .fmt-tag-mp3 { border:1px solid var(--accent); background:var(--accent-a20); color:var(--accent); }
 .fmt-tag-mp3-off { border:1px solid var(--b); background:transparent; color:var(--muted); }
 .fmt-bar-detail { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--t2); font-size:var(--fs-xs); }
-/* Modal header format checkboxes */
-.fmt-hdr-fmts { display:flex; gap:10px; }
-.fmt-hdr-fmt { display:flex; align-items:center; gap:5px; }
-.fmt-hdr-fmt input[type=checkbox] { width:13px; height:13px; accent-color:var(--accent); cursor:pointer; flex-shrink:0; }
-.fmt-hdr-fmt span { font-size:var(--fs-xs); font-weight:700; color:var(--muted); cursor:pointer; font-family:'JetBrains Mono',monospace; letter-spacing:.5px; padding:2px 5px; border-radius:4px; transition:color var(--t-fast), background var(--t-fast); user-select:none; }
-.fmt-hdr-fmt span:hover { color:var(--t2); }
-.fmt-hdr-fmt.active-view span { color:var(--accent); background:rgba(108,99,255,.12); }
+/* Modal header format pills — see redesigned block below */
 /* Legacy */
 .fmt-active-btn { display:none; } .fmt-active-name {} .fmt-edit-btn { display:none; }
-/* Format Modal */
-#format-modal .modal { width:640px; max-width:96vw; max-height:85vh; display:flex; flex-direction:column; }
-.fmt-modal-body { display:grid; grid-template-columns:200px 1fr; gap:0; flex:1; min-height:0; overflow:hidden; }
-.fmt-preset-list { border-right:1px solid var(--b); padding:10px 0; overflow-y:auto; display:flex; flex-direction:column; }
-.fmt-preset-item { padding:8px 14px; font-size:var(--fs-sm); font-weight:600; cursor:pointer; border-left:3px solid transparent; color:var(--t2); transition:all var(--t-fast); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.fmt-preset-item:hover { background:rgba(108,99,255,.08); color:var(--text); }
-.fmt-preset-item.active { border-left-color:var(--accent); color:var(--accent); background:rgba(108,99,255,.1); }
-.fmt-preset-actions { padding:8px 10px; border-top:1px solid var(--b); display:flex; gap:6px; margin-top:auto; }
-.fmt-settings { padding:16px; overflow-y:auto; }
-.fmt-field { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
-.fmt-field label { font-size:var(--fs-xs); font-weight:700; color:var(--muted); min-width:90px; text-transform:uppercase; }
-.fmt-field select, .fmt-field input[type=text] { flex:1; background:var(--card); border:1px solid var(--b); border-radius:var(--r); color:var(--text); font-size:var(--fs-sm); padding:5px 8px; font-family:'JetBrains Mono',monospace; }
-.fmt-dest-tabs { display:flex; gap:6px; flex:1; }
-.fmt-dest-tab { flex:1; padding:5px; border-radius:var(--r); border:1px solid var(--b); background:var(--card); color:var(--muted); font-size:var(--fs-xs); font-weight:600; cursor:pointer; text-align:center; transition:all var(--t-fast); }
-.fmt-dest-tab.active { border-color:var(--accent); background:rgba(108,99,255,.15); color:var(--accent); }
-.fmt-modal-footer { padding:12px 16px; border-top:1px solid var(--b); display:flex; gap:8px; align-items:center; }
-.fmt-cb-row { display:flex; align-items:center; gap:6px; cursor:pointer; font-size:var(--fs-xs); color:var(--t2); font-weight:600; }
-.fmt-cb-row input[type=checkbox] { accent-color:var(--accent); cursor:pointer; }
+/* ════════════════════════════════════════
+   FORMAT MODAL — REDESIGNED
+   ════════════════════════════════════════ */
+#format-modal .modal{width:640px;max-width:96vw;max-height:88vh;display:flex;flex-direction:column;padding:0;gap:0;}
+/* Header */
+.fmt-modal-hdr{padding:16px 18px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--b);background:linear-gradient(180deg,var(--w-a03) 0%,transparent 100%);flex-shrink:0;position:relative;}
+.fmt-hdr-icon{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--accent-a20) 0%,var(--accent-a08) 100%);border:1px solid var(--accent-a30);display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0;}
+.fmt-hdr-icon svg{width:14px;height:14px;}
+.fmt-hdr-text{flex:1;min-width:0;}
+.fmt-hdr-title{font-size:var(--fs-base);font-weight:700;color:var(--text);letter-spacing:-.01em;font-family:var(--font-display);line-height:1;}
+.fmt-hdr-sub{font-size:var(--fs-xs);color:var(--t2);margin-top:3px;font-family:var(--font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.7;}
+/* WAV/MP3 pill toggle */
+.fmt-hdr-fmts{display:flex;background:var(--w-a05);border:1px solid var(--b);border-radius:10px;padding:3px;gap:2px;flex-shrink:0;}
+.fmt-hdr-fmt{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:7px;cursor:pointer;transition:all var(--t-fast);color:var(--muted);border:1px solid transparent;user-select:none;min-width:60px;justify-content:center;}
+.fmt-hdr-fmt:hover{background:var(--w-a05);color:var(--t2);}
+.fmt-hdr-fmt input[type=checkbox]{display:none;}
+/* Checkbox — shows enabled state (same style as .fmt-opt-box) */
+.fmt-hdr-chk{width:13px;height:13px;border-radius:3px;flex-shrink:0;border:1px solid var(--b2);display:flex;align-items:center;justify-content:center;transition:all var(--t-fast);cursor:pointer;}
+.fmt-hdr-chk:hover{border-color:var(--accent-a60);}
+.fmt-hdr-chk svg{width:8px;height:8px;color:#fff;opacity:0;transition:opacity var(--t-fast);}
+.fmt-hdr-fmt.fmt-enabled .fmt-hdr-chk{background:var(--accent);border-color:var(--accent);box-shadow:0 0 6px var(--accent-a40);}
+.fmt-hdr-fmt.fmt-enabled .fmt-hdr-chk svg{opacity:1;}
+/* Label */
+.fmt-hdr-lbl{font-size:var(--fs-xs);font-weight:700;letter-spacing:.04em;color:inherit;font-family:var(--font-mono);transition:color var(--t-fast);}
+/* Active view — which tab settings you're currently viewing */
+.fmt-hdr-fmt.active-view{background:var(--accent-a20);border-color:var(--accent-a30);color:var(--accent);}
+.fmt-hdr-fmt.active-view .fmt-hdr-chk{border-color:var(--accent-a60);}
+/* Body */
+.fmt-modal-body{display:grid;grid-template-columns:188px 1fr;gap:0;flex:1;min-height:0;overflow:hidden;}
+/* Sidebar */
+.fmt-preset-list{border-right:1px solid var(--b);padding:10px 8px;overflow-y:auto;display:flex;flex-direction:column;background:rgba(0,0,0,.12);}
+.fmt-sidebar-label{font-family:var(--font-mono);font-size:var(--fs-xxs);font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:0 6px;margin-bottom:8px;opacity:.6;flex-shrink:0;}
+.fmt-preset-item{padding:8px 10px;border-radius:8px;cursor:pointer;transition:all var(--t-fast);margin-bottom:2px;position:relative;border:1px solid transparent;color:var(--t2);}
+.fmt-preset-item:hover{background:var(--w-a05);}
+.fmt-preset-item.active{background:var(--accent-a08);border-color:var(--accent-a20);color:var(--accent);}
+.fmt-preset-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:0 2px 2px 0;background:linear-gradient(180deg,var(--accent),var(--accent-a60));}
+.fmt-preset-name{font-size:var(--fs-sm);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.01em;color:inherit;}
+.fmt-preset-badge{font-family:var(--font-mono);font-size:var(--fs-xxs);margin-top:2px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.7;}
+.fmt-preset-item.active .fmt-preset-badge{color:var(--accent);opacity:.6;}
+.fmt-preset-actions{padding:8px 0 0;border-top:1px solid var(--b);display:flex;gap:6px;margin-top:auto;flex-shrink:0;}
+.fmt-preset-actions button{flex:1;height:30px;border-radius:7px;font-size:var(--fs-xs);font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;transition:all var(--t-fast);}
+/* Settings */
+.fmt-settings{padding:14px 16px;overflow-y:auto;}
+.fmt-name-field{margin-bottom:12px;}
+.fmt-name-label{font-family:var(--font-mono);font-size:var(--fs-xxs);font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;opacity:.6;display:block;}
+/* 2-col grid for fields */
+.fmt-fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.fmt-field-group{display:flex;flex-direction:column;gap:4px;}
+.fmt-field-group.full{grid-column:1/-1;}
+.fmt-field-lbl{font-family:var(--font-mono);font-size:var(--fs-xxs);font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-left:2px;opacity:.6;}
+.fmt-select{height:34px;border-radius:7px;background:var(--w-a03);border:1px solid var(--b);padding:0 24px 0 10px;font-family:var(--font-mono);font-size:var(--fs-sm);font-weight:500;color:var(--text);cursor:pointer;transition:border-color var(--t-fast),background var(--t-fast);appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23666' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;width:100%;}
+.fmt-select:hover{border-color:var(--b2);background-color:var(--w-a05);}
+.fmt-select:focus{outline:none;border-color:var(--accent-a30);}
+/* Options section */
+.fmt-options-section{border-top:1px solid var(--b);padding-top:8px;margin-top:6px;}
+.fmt-options-label{font-family:var(--font-mono);font-size:var(--fs-xxs);font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;opacity:.5;}
+.fmt-opt-row{display:flex;align-items:center;gap:9px;padding:5px 8px;border-radius:6px;cursor:pointer;transition:background var(--t-fast);}
+.fmt-opt-row:hover{background:var(--w-a05);}
+.fmt-opt-row.checked{background:var(--accent-a08);}
+.fmt-opt-box{width:13px;height:13px;border-radius:3px;flex-shrink:0;border:1px solid var(--b2);display:flex;align-items:center;justify-content:center;transition:all var(--t-fast);pointer-events:none;}
+.fmt-opt-box.checked{background:var(--accent);border-color:var(--accent);box-shadow:0 0 6px var(--accent-a40);}
+.fmt-opt-box svg{width:8px;height:8px;color:#fff;opacity:0;transition:opacity var(--t-fast);}
+.fmt-opt-box.checked svg{opacity:1;}
+.fmt-opt-text{font-size:var(--fs-sm);font-weight:500;color:var(--t2);transition:color var(--t-fast);letter-spacing:-.01em;}
+.fmt-opt-row.checked .fmt-opt-text{color:var(--accent);opacity:.85;}
+/* Legacy fmt-field — MP3 checkboxes still use these */
+.fmt-field{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.fmt-field label{font-size:var(--fs-xs);font-weight:700;color:var(--muted);min-width:90px;text-transform:uppercase;}
+.fmt-field select,.fmt-field input[type=text]{flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:var(--fs-sm);padding:5px 8px;font-family:var(--font-mono);}
+.fmt-cb-row{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:var(--fs-xs);color:var(--t2);font-weight:600;}
+.fmt-cb-row input[type=checkbox]{accent-color:var(--accent);cursor:pointer;}
+/* Footer */
+.fmt-modal-footer{padding:11px 16px;border-top:1px solid var(--b);display:flex;gap:8px;align-items:center;background:rgba(0,0,0,.08);flex-shrink:0;}
+.fmt-src-btns{display:flex;gap:8px;width:100%;align-items:center;}
+.fmt-src-btn{padding:0 14px;height:34px;border-radius:8px;border:1px solid var(--b);background:transparent;color:var(--muted);font-size:var(--fs-sm);font-weight:600;cursor:pointer;font-family:var(--font-display);transition:all var(--t-fast);display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.fmt-src-btn:hover{border-color:var(--b2);color:var(--t2);}
+.fmt-src-dot{width:6px;height:6px;border-radius:50%;border:1.5px solid currentColor;flex-shrink:0;transition:background var(--t-fast);}
+.fmt-src-btn.active-src .fmt-src-dot{background:currentColor;}
+.fmt-src-btn.active-src.src-preset{border-color:rgba(67,233,123,.45);background:rgba(67,233,123,.08);color:var(--a3);}
+.fmt-src-btn.active-src.src-logic{border-color:rgba(255,169,77,.45);background:rgba(255,169,77,.08);color:var(--warn);}
+.fmt-save-btn{padding:0 24px;height:34px;border-radius:8px;background:linear-gradient(135deg,rgba(67,233,123,.15) 0%,rgba(67,233,123,.08) 100%);border:1px solid rgba(67,233,123,.3);color:var(--a3);font-family:var(--font-display);font-size:var(--fs-sm);font-weight:700;letter-spacing:-.01em;cursor:pointer;transition:all var(--t-fast);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 2px 8px rgba(67,233,123,.1);margin-left:auto;}
+.fmt-save-btn:hover{background:linear-gradient(135deg,rgba(67,233,123,.22) 0%,rgba(67,233,123,.1) 100%);border-color:rgba(67,233,123,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 4px 12px rgba(67,233,123,.18);transform:translateY(-1px);}
+/* Compact-mode — same layout, just scaled down */
+body.compact-mode #format-modal .modal{width:calc(100vw - 16px);max-width:calc(100vw - 16px);max-height:calc(100vh - 62px);}
+body.compact-mode .fmt-modal-hdr{padding:10px 12px 10px;}
+body.compact-mode .fmt-hdr-icon{width:24px;height:24px;border-radius:6px;}
+body.compact-mode .fmt-hdr-title{font-size:var(--fs-sm);}
+body.compact-mode .fmt-hdr-sub{font-size:10px;}
+body.compact-mode .fmt-modal-body{grid-template-columns:160px 1fr;}
+body.compact-mode .fmt-preset-list{padding:8px 6px;}
+body.compact-mode .fmt-preset-item{padding:6px 8px;border-radius:6px;}
+body.compact-mode .fmt-preset-name{font-size:var(--fs-xs);}
+body.compact-mode .fmt-preset-badge{font-size:9px;}
+body.compact-mode .fmt-settings{padding:10px 12px;}
+body.compact-mode .fmt-fields-grid{gap:6px;margin-bottom:8px;}
+body.compact-mode .fmt-select{height:28px;font-size:var(--fs-xs);}
+body.compact-mode .fmt-name-field{margin-bottom:8px;}
+body.compact-mode #fmt-name-inp{height:30px;font-size:var(--fs-xs);}
+body.compact-mode .fmt-opt-row{padding:4px 6px;}
+body.compact-mode .fmt-opt-text{font-size:var(--fs-xs);}
+body.compact-mode .fmt-modal-footer{padding:8px 12px;}
+body.compact-mode .fmt-src-btn{height:30px;padding:0 10px;font-size:var(--fs-xs);}
+body.compact-mode .fmt-save-btn{height:30px;padding:0 16px;font-size:var(--fs-xs);}
+/* Compact: legacy fmt-field for MP3 */
+body.compact-mode .fmt-field{margin-bottom:7px;}
+body.compact-mode .fmt-field label{min-width:70px;font-size:10px;}
+body.compact-mode .fmt-field select{font-size:var(--fs-xs);padding:3px 6px;}
 /* Source mode buttons */
 .fmt-src-btns { display:flex; gap:6px; width:100%; }
 .fmt-src-btn { padding:7px 13px; border-radius:var(--r); border:1px solid var(--b); background:var(--card); color:var(--muted); font-size:var(--fs-sm); font-weight:700; cursor:pointer; font-family:'Space Grotesk',sans-serif; transition:all var(--t); display:flex; align-items:center; gap:7px; }
@@ -761,6 +846,9 @@ body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar
 /* ── Shared dropdown panel base ── */
 .dropdown-panel{display:none;position:absolute;background:var(--card2);border:1px solid var(--b2);border-radius:var(--r);box-shadow:var(--sh-float);z-index:var(--z-dropdown);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
 #markers-popup{top:100%;left:0;margin-top:4px;min-width:480px;padding:6px 0;}
+/* compact-mode: popup goes fixed so it's never clipped by the narrow window */
+body.compact-mode #markers-popup{position:fixed!important;min-width:unset;width:auto;max-height:calc(100vh - 80px);}
+body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
 #name-preset-dropdown{top:100%;left:0;right:0;margin-top:4px;box-shadow:var(--sh-raised);padding:4px;max-height:180px;overflow-y:auto;}
 #sidechain-dropdown{bottom:100%;left:0;right:0;margin-bottom:4px;box-shadow:0 -8px 32px rgba(0,0,0,.5);max-height:260px;overflow:hidden;flex-direction:column;}
 /* ── Bounce side buttons (mini / retry / redo-all) ── */
@@ -905,16 +993,16 @@ body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar
             style="padding:2px 7px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-sm);cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all var(--t-fast);line-height:1.4;">–</button>
           <!-- Markers popup -->
           <div id="markers-popup" class="dropdown-panel">
-            <div style="padding:4px 10px 6px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:6px;">
-              <span style="font-size:var(--fs-xxs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);flex:1;">Bounce Ranges</span>
-              <button onclick="rescanMarkers()" title="Re-scan markers from Logic" id="markers-rescan-btn">↺ Rescan</button>
-              <button class="hidden-btn" id="markers-showhidden-btn" onclick="toggleMarkersHidden()" title="Show/hide hidden markers">
+            <div id="markers-popup-hdr" style="padding:4px 10px 6px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0;">
+              <span style="font-size:var(--fs-xxs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Bounce Ranges</span>
+              <button onclick="rescanMarkers()" title="Re-scan markers from Logic" id="markers-rescan-btn" style="flex-shrink:0;">↺ Rescan</button>
+              <button class="hidden-btn" id="markers-showhidden-btn" onclick="toggleMarkersHidden()" title="Show/hide hidden markers" style="flex-shrink:0;">
                 <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 7s2-4 6-4 6 4 6 4-2 4-6 4-6-4-6-4z"/><circle cx="7" cy="7" r="1.6"/><line x1="2" y1="2" x2="12" y2="12" class="hidden-slash" style="display:none;"/></svg>
                 Hidden
               </button>
-              <button class="eb-close" onclick="toggleMarkersPopup()" title="Close"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+              <button class="eb-close" onclick="toggleMarkersPopup()" title="Close" style="flex-shrink:0;"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
             </div>
-            <div id="markers-popup-list" style="max-height:260px;overflow-y:auto;padding:4px 0;">
+            <div id="markers-popup-list" style="max-height:260px;overflow-y:auto;padding:4px 0;overflow-x:hidden;">
               <div style="color:var(--muted);font-size:var(--fs-xs);padding:6px 10px;">No markers scanned yet</div>
             </div>
           </div>
@@ -1091,141 +1179,162 @@ body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar
     <!-- Format Presets Modal -->
     <div id="format-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeFormatModal()">
       <div class="modal">
-        <div class="modal-hdr" style="display:flex;align-items:center;gap:10px;">
-          <span>Bounce Format</span>
+        <!-- Header -->
+        <div class="fmt-modal-hdr">
+          <div class="fmt-hdr-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 19V6l12-3v13M9 19c0 1.1-1.34 2-3 2s-3-.9-3-2 1.34-2 3-2 3 .9 3 2zm12-3c0 1.1-1.34 2-3 2s-3-.9-3-2 1.34-2 3-2 3 .9 3 2z"/></svg>
+          </div>
+          <div class="fmt-hdr-text">
+            <div class="fmt-hdr-title">Bounce Format</div>
+            <div class="fmt-hdr-sub" id="fmt-hdr-sub">—</div>
+          </div>
           <div class="fmt-hdr-fmts">
-            <div class="fmt-hdr-fmt" id="fmt-tab-wav">
-              <input type="checkbox" id="fmt-chk-wav" onchange="onFmtFormatToggle('wav',this.checked)">
-              <span onclick="switchFmtTabView('wav')">WAV</span>
+            <div class="fmt-hdr-fmt" id="fmt-tab-wav" onclick="fmtTabClick('wav')">
+              <input type="checkbox" id="fmt-chk-wav" style="display:none">
+              <span class="fmt-hdr-chk" onclick="event.stopPropagation();fmtToggleOnly('wav')"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 5l2 2 4-4"/></svg></span>
+              <span class="fmt-hdr-lbl">WAV</span>
             </div>
-            <div class="fmt-hdr-fmt" id="fmt-tab-mp3">
-              <input type="checkbox" id="fmt-chk-mp3" onchange="onFmtFormatToggle('mp3',this.checked)">
-              <span onclick="switchFmtTabView('mp3')">MP3</span>
+            <div class="fmt-hdr-fmt" id="fmt-tab-mp3" onclick="fmtTabClick('mp3')">
+              <input type="checkbox" id="fmt-chk-mp3" style="display:none">
+              <span class="fmt-hdr-chk" onclick="event.stopPropagation();fmtToggleOnly('mp3')"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 5l2 2 4-4"/></svg></span>
+              <span class="fmt-hdr-lbl">MP3</span>
             </div>
           </div>
-          <button class="eb-close" onclick="closeFormatModal()" title="Close" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+          <button class="eb-close" onclick="closeFormatModal()" title="Close"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
         </div>
+        <!-- Body -->
         <div class="fmt-modal-body">
           <!-- Left: preset list -->
           <div class="fmt-preset-list" id="fmt-preset-list">
-            <!-- rendered by JS -->
+            <div class="fmt-sidebar-label">Presets</div>
+            <!-- preset items rendered by JS -->
             <div class="fmt-preset-actions">
-              <button onclick="addFormatPreset()" style="flex:1;padding:5px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-xs);cursor:pointer;font-family:'JetBrains Mono',monospace;">+ Preset</button>
-              <button onclick="deleteFormatPreset()" style="flex:1;padding:5px;border-radius:var(--r);border:1px solid rgba(255,77,79,.3);background:rgba(255,77,79,.06);color:rgba(255,77,79,.7);font-size:var(--fs-xs);cursor:pointer;font-family:'JetBrains Mono',monospace;display:inline-flex;align-items:center;justify-content:center;gap:5px;"><svg class="ico ico-sm"><use href="#ico-trash"/></svg>Del</button>
+              <button onclick="addFormatPreset()" style="background:var(--w-a05);border:1px solid var(--b);color:var(--muted);">
+                <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2v8M2 6h8"/></svg>
+                Preset
+              </button>
+              <button onclick="deleteFormatPreset()" style="background:rgba(255,71,87,.06);border:1px solid rgba(255,71,87,.2);color:rgba(255,71,87,.7);">
+                <svg class="ico ico-sm"><use href="#ico-trash"/></svg>Del
+              </button>
             </div>
           </div>
-          <!-- Right: settings editor -->
+          <!-- Right: settings -->
           <div class="fmt-settings" id="fmt-settings">
-            <div class="fmt-field" id="fmt-name-row">
-              <label>Name</label>
-              <input type="text" id="fmt-name-inp" placeholder="Preset name" oninput="onFmtNameChange()">
+            <!-- Name -->
+            <div class="fmt-name-field">
+              <span class="fmt-name-label">Preset name</span>
+              <input type="text" id="fmt-name-inp" placeholder="Preset name" oninput="onFmtNameChange()"
+                style="width:100%;height:34px;border-radius:7px;background:var(--w-a03);border:1px solid var(--b);padding:0 12px;font-family:var(--font-mono);font-size:var(--fs-sm);font-weight:500;color:var(--text);transition:border-color var(--t-fast),background var(--t-fast);outline:none;box-shadow:inset 0 1px 0 rgba(0,0,0,.15);">
             </div>
-            <!-- PCM fields shown when WAV tab active -->
+            <!-- WAV fields — 2-col grid -->
             <div id="fmt-uncompressed-fields">
-              <div class="fmt-field">
-                <label>File Type</label>
-                <select id="fmt-filetype" onchange="onFmtFieldChange()">
-                  <option>WAVE</option><option>AIFF</option><option>CAF</option>
-                </select>
-              </div>
-              <div class="fmt-field">
-                <label>Bit Depth</label>
-                <select id="fmt-bitdepth" onchange="onFmtFieldChange()">
-                  <option>16-bit</option><option>24-bit</option><option>32-bit</option><option>32-bit float</option>
-                </select>
-              </div>
-              <div class="fmt-field">
-                <label>Sample Rate</label>
-                <select id="fmt-samplerate" onchange="onFmtFieldChange()">
-                  <option>44.1 kHz</option><option>48 kHz</option><option>88.2 kHz</option><option>96 kHz</option><option>176.4 kHz</option><option>192 kHz</option>
-                </select>
-              </div>
-              <div class="fmt-field">
-                <label>Dithering</label>
-                <select id="fmt-dithering" onchange="onFmtFieldChange()">
-                  <option>None</option>
-                  <option>POW-r #1 (Dithering)</option>
-                  <option>POW-r #2 (Noise Shaping)</option>
-                  <option>POW-r #3 (Noise Shaping)</option>
-                  <option>UV22HR</option>
-                </select>
-              </div>
-              <div class="fmt-field">
-                <label>Format</label>
-                <select id="fmt-interleaved" onchange="onFmtFieldChange()">
-                  <option>Interleaved</option><option>Split</option>
-                </select>
-              </div>
-            </div>
-            <!-- MP3 fields (dest=1 or dest=2) -->
-            <div id="fmt-mp3-fields" style="display:none">
-              <div class="fmt-field">
-                <label>Bit Rate Stereo</label>
-                <select id="fmt-mp3rate-stereo" onchange="onFmtFieldChange()">
-                  <option>64 kbit/s</option><option>96 kbit/s</option><option>128 kbit/s</option><option>160 kbit/s</option><option>192 kbit/s</option><option>256 kbit/s</option><option>320 kbit/s</option>
-                </select>
-              </div>
-              <div class="fmt-field">
-                <label>Bit Rate Mono</label>
-                <select id="fmt-mp3rate-mono" onchange="onFmtFieldChange()">
-                  <option>64 kbit/s</option><option>96 kbit/s</option><option>128 kbit/s</option><option>160 kbit/s</option><option>192 kbit/s</option><option>256 kbit/s</option><option>320 kbit/s</option>
-                </select>
-              </div>
-              <div class="fmt-field">
-                <label>Stereo Mode</label>
-                <select id="fmt-mp3stereo" onchange="onFmtFieldChange()">
-                  <option>Joint Stereo</option><option>Normal</option>
-                </select>
-              </div>
-              <div class="fmt-field">
-                <label style="min-width:90px;"></label>
-                <div style="display:flex;flex-direction:column;gap:5px;flex:1;">
-                  <label class="fmt-cb-row"><input type="checkbox" id="fmt-mp3-vbr" onchange="onFmtFieldChange()"><span>Use Variable Bit Rate (VBR)</span></label>
-                  <label class="fmt-cb-row"><input type="checkbox" id="fmt-mp3-best" onchange="onFmtFieldChange()"><span>Use Best Encoding</span></label>
-                  <label class="fmt-cb-row"><input type="checkbox" id="fmt-mp3-filter10" onchange="onFmtFieldChange()"><span>Filter Below 10 Hz</span></label>
+              <div class="fmt-fields-grid">
+                <div class="fmt-field-group">
+                  <div class="fmt-field-lbl">File type</div>
+                  <select class="fmt-select" id="fmt-filetype" onchange="onFmtFieldChange()">
+                    <option>WAVE</option><option>AIFF</option><option>CAF</option>
+                  </select>
+                </div>
+                <div class="fmt-field-group">
+                  <div class="fmt-field-lbl">Bit depth</div>
+                  <select class="fmt-select" id="fmt-bitdepth" onchange="onFmtFieldChange()">
+                    <option>16-bit</option><option>24-bit</option><option>32-bit</option><option>32-bit float</option>
+                  </select>
+                </div>
+                <div class="fmt-field-group">
+                  <div class="fmt-field-lbl">Sample rate</div>
+                  <select class="fmt-select" id="fmt-samplerate" onchange="onFmtFieldChange()">
+                    <option>44.1 kHz</option><option>48 kHz</option><option>88.2 kHz</option><option>96 kHz</option><option>176.4 kHz</option><option>192 kHz</option>
+                  </select>
+                </div>
+                <div class="fmt-field-group">
+                  <div class="fmt-field-lbl">Dithering</div>
+                  <select class="fmt-select" id="fmt-dithering" onchange="onFmtFieldChange()">
+                    <option>None</option><option>POW-r #1 (Dithering)</option><option>POW-r #2 (Noise Shaping)</option><option>POW-r #3 (Noise Shaping)</option><option>UV22HR</option>
+                  </select>
+                </div>
+                <div class="fmt-field-group">
+                  <div class="fmt-field-lbl">Format</div>
+                  <select class="fmt-select" id="fmt-interleaved" onchange="onFmtFieldChange()">
+                    <option>Interleaved</option><option>Split</option>
+                  </select>
                 </div>
               </div>
             </div>
-            <!-- Common fields (always shown) -->
-            <div style="border-top:1px solid var(--b);margin:10px 0 8px;padding-top:8px;">
-              <div class="fmt-field">
-                <label>Mode</label>
-                <select id="fmt-mode" onchange="onFmtFieldChange()">
+            <!-- MP3 fields -->
+            <div id="fmt-mp3-fields" style="display:none">
+              <div class="fmt-fields-grid">
+                <div class="fmt-field-group">
+                  <div class="fmt-field-lbl">Bit rate stereo</div>
+                  <select class="fmt-select" id="fmt-mp3rate-stereo" onchange="onFmtFieldChange()">
+                    <option>64 kbit/s</option><option>96 kbit/s</option><option>128 kbit/s</option><option>160 kbit/s</option><option>192 kbit/s</option><option>256 kbit/s</option><option>320 kbit/s</option>
+                  </select>
+                </div>
+                <div class="fmt-field-group">
+                  <div class="fmt-field-lbl">Bit rate mono</div>
+                  <select class="fmt-select" id="fmt-mp3rate-mono" onchange="onFmtFieldChange()">
+                    <option>64 kbit/s</option><option>96 kbit/s</option><option>128 kbit/s</option><option>160 kbit/s</option><option>192 kbit/s</option><option>256 kbit/s</option><option>320 kbit/s</option>
+                  </select>
+                </div>
+                <div class="fmt-field-group full">
+                  <div class="fmt-field-lbl">Stereo mode</div>
+                  <select class="fmt-select" id="fmt-mp3stereo" onchange="onFmtFieldChange()">
+                    <option>Joint Stereo</option><option>Normal</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:8px;">
+                <label class="fmt-cb-row"><input type="checkbox" id="fmt-mp3-vbr" onchange="onFmtFieldChange()"><span>Use Variable Bit Rate (VBR)</span></label>
+                <label class="fmt-cb-row"><input type="checkbox" id="fmt-mp3-best" onchange="onFmtFieldChange()"><span>Use Best Encoding</span></label>
+                <label class="fmt-cb-row"><input type="checkbox" id="fmt-mp3-filter10" onchange="onFmtFieldChange()"><span>Filter Below 10 Hz</span></label>
+              </div>
+            </div>
+            <!-- Mode + Normalize (always shown) -->
+            <div class="fmt-fields-grid" style="margin-bottom:6px;">
+              <div class="fmt-field-group">
+                <div class="fmt-field-lbl">Mode</div>
+                <select class="fmt-select" id="fmt-mode" onchange="onFmtFieldChange()">
                   <option>Automatic</option><option>Offline</option><option>Realtime</option>
                 </select>
               </div>
-              <div class="fmt-field">
-                <label>Normalize</label>
-                <select id="fmt-normalize" onchange="onFmtFieldChange()">
+              <div class="fmt-field-group">
+                <div class="fmt-field-lbl">Normalize</div>
+                <select class="fmt-select" id="fmt-normalize" onchange="onFmtFieldChange()">
                   <option>Off</option><option>On</option><option>Overload Protection Only</option>
                 </select>
               </div>
-              <div class="fmt-field">
-                <label style="min-width:90px;"></label>
-                <div style="display:flex;flex-direction:column;gap:5px;flex:1;">
-                  <label class="fmt-cb-row"><input type="checkbox" id="fmt-include-tempo" onchange="onFmtFieldChange()"><span>Include Tempo Information</span></label>
-                  <label class="fmt-cb-row"><input type="checkbox" id="fmt-include-tail" onchange="onFmtFieldChange()"><span>Include Audio Tail</span></label>
-                  <label class="fmt-cb-row"><input type="checkbox" id="fmt-bounce-2nd" onchange="onFmtFieldChange()"><span>Bounce 2nd Cycle Pass</span></label>
-                </div>
+            </div>
+            <!-- Options (always shown) -->
+            <div class="fmt-options-section">
+              <div class="fmt-options-label">Options</div>
+              <div class="fmt-opt-row" onclick="toggleFmtOpt(this,'fmt-include-tempo')">
+                <span class="fmt-opt-box"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 5l2 2 4-4"/></svg></span>
+                <span class="fmt-opt-text">Include tempo information</span>
+                <input type="checkbox" id="fmt-include-tempo" style="display:none">
+              </div>
+              <div class="fmt-opt-row" onclick="toggleFmtOpt(this,'fmt-include-tail')">
+                <span class="fmt-opt-box"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 5l2 2 4-4"/></svg></span>
+                <span class="fmt-opt-text">Include audio tail</span>
+                <input type="checkbox" id="fmt-include-tail" style="display:none">
+              </div>
+              <div class="fmt-opt-row" onclick="toggleFmtOpt(this,'fmt-bounce-2nd')">
+                <span class="fmt-opt-box"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 5l2 2 4-4"/></svg></span>
+                <span class="fmt-opt-text">Bounce 2nd cycle pass</span>
+                <input type="checkbox" id="fmt-bounce-2nd" style="display:none">
               </div>
             </div>
           </div>
         </div>
+        <!-- Footer -->
         <div class="fmt-modal-footer">
           <div class="fmt-src-btns">
-            <button id="fmt-src-preset-btn" class="fmt-src-btn src-preset active-src"
-              onclick="setFmtSource('preset')"
-              title="Save format preset — will be applied automatically to Logic's Bounce dialog on each bounce">
-              <span class="fmt-src-dot"></span><svg class="ico ico-sm" style="margin-right:4px;vertical-align:-2px;"><use href="#ico-save"/></svg>Set Format
+            <button id="fmt-src-preset-btn" class="fmt-src-btn src-preset active-src" onclick="setFmtSource('preset')" title="Apply preset on each bounce">
+              <span class="fmt-src-dot"></span><svg class="ico ico-sm" style="margin-right:3px;vertical-align:-2px;"><use href="#ico-save"/></svg>Set Format
             </button>
-            <button id="fmt-src-logic-btn" class="fmt-src-btn src-logic"
-              onclick="setFmtSource('logic', true)"
-              title="Set params manually in Logic — EasyBounce won't override Logic's Bounce settings">
-              <span class="fmt-src-dot"></span><svg class="ico ico-sm" style="margin-right:4px;vertical-align:-2px;"><use href="#ico-sliders"/></svg>Set in Logic
+            <button id="fmt-src-logic-btn" class="fmt-src-btn src-logic" onclick="setFmtSource('logic', true)" title="Set manually in Logic">
+              <span class="fmt-src-dot"></span><svg class="ico ico-sm" style="margin-right:3px;vertical-align:-2px;"><use href="#ico-sliders"/></svg>Set in Logic
             </button>
-            <span style="flex:1;"></span>
-            <button onclick="applyFmtSource()" style="padding:7px 22px;border-radius:var(--r);border:1px solid rgba(67,233,123,.5);background:rgba(67,233,123,.2);color:var(--a3);font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;box-shadow:0 2px 8px rgba(67,233,123,.2);">Save</button>
-            <span style="flex:1;"></span>
+            <button class="fmt-save-btn" onclick="applyFmtSource()">Save</button>
           </div>
         </div>
       </div>
@@ -5368,7 +5477,7 @@ function renderPresets() {
     if (isEasy && mixCount > EASY_MAX_MIXES) { wrap.style.display = 'none'; _easyOverflow.push(wrap); }
     const btn = document.createElement('button');
     btn.className = 'pchip mix-chip custom';
-    btn.innerHTML = '<svg class="ico ico-sm" style="vertical-align:-2px;margin-right:4px;"><use href="#ico-fader"/></svg>' + _esc(p.name);
+    btn.textContent = p.name;
     btn.onclick = () => addPresetToQueue(p);
     btn.oncontextmenu = (e) => showPresetCtxMenu(e, [
       { label: '<svg class="ico ico-sm" style="vertical-align:-2px;margin-right:6px;"><use href="#ico-edit"/></svg>Edit version', action: () => openMixModal(p.id) }
@@ -5405,7 +5514,7 @@ function renderPresets() {
       if (isEasy && mixCount > EASY_MAX_MIXES) { wrap.style.display = 'none'; _easyOverflow.push(wrap); }
       const btn = document.createElement('button');
       btn.className = 'pchip mix-chip custom';
-      btn.innerHTML = '<svg class="ico ico-sm" style="vertical-align:-2px;margin-right:4px;"><use href="#ico-fader"/></svg>' + _esc(p.name);
+      btn.textContent = p.name;
       btn.title = p.names.join(', ');
       btn.onclick = () => addStemPresetToQueue(p);
       btn.oncontextmenu = (e) => showPresetCtxMenu(e, [
@@ -5438,7 +5547,7 @@ function renderPresets() {
       if (isEasy && mixCount > EASY_MAX_MIXES) { wrap.style.display = 'none'; _easyOverflow.push(wrap); }
       const btn = document.createElement('button');
       btn.className = 'pchip mix-chip custom';
-      btn.innerHTML = '<svg class="ico ico-sm" style="vertical-align:-2px;margin-right:4px;"><use href="#ico-cube"/></svg>' + _esc(js.name);
+      btn.textContent = js.name;
       btn.title = js.jobs.length + ' jobs — click to load';
       const _loadSet = () => {
         // Build "already in queue" sets to skip duplicates
@@ -9738,7 +9847,7 @@ function renderSetsPills() {
     wrap.style.cssText = 'display:flex;align-items:center;gap:1px;';
     const btn = document.createElement('button');
     btn.className = 'preset-pill';
-    btn.innerHTML = '<svg class="ico ico-sm" style="vertical-align:-2px;margin-right:4px;"><use href="#ico-cube"/></svg>' + _esc(js.name);
+    btn.textContent = js.name;
     btn.title = js.jobs.length + ' jobs — click to load';
     btn.onclick = () => {
       // Add as a collapsible set group item
@@ -11473,7 +11582,7 @@ const SKINS = {
       '--accent-a30':'rgba(10,132,255,0.30)','--accent-a40':'rgba(10,132,255,0.40)',
       '--accent-a60':'rgba(10,132,255,0.55)',
       '--g-primary':'linear-gradient(90deg,#0A84FF 0%,#40C8FF 100%)',
-      '--sh-glow-sm':'0 0 8px rgba(10,132,255,0.4)'
+      '--sh-glow-sm':'0 2px 10px rgba(10,132,255,0.4)'
     }
   },
   aurora: {
@@ -12056,12 +12165,23 @@ function setFmtSource(src, openDialog = false) {
   // Open Logic bounce dialog ONLY when user explicitly clicks the button
   if (src === 'logic' && openDialog) openBounceInLogic();
 }
+function toggleFmtOpt(row, cbId) {
+  const cb = document.getElementById(cbId);
+  if (!cb) return;
+  cb.checked = !cb.checked;
+  const on = cb.checked;
+  row.classList.toggle('checked', on);
+  const box = row.querySelector('.fmt-opt-box');
+  if (box) box.classList.toggle('checked', on);
+  onFmtFieldChange();
+}
+
 function applyFmtSource() {
   if (fmtSource !== 'logic') {
-    toast('✓ Format preset saved — will auto-apply on bounce');
     closeFormatModal();
+    showFormatSavedBanner();
   }
-  // 'logic' case: dialog already opened by setFmtSource — nothing to do here
+  // 'logic' case: banner is shown by setFmtSource after Logic dialog
 }
 
 function updateFmtBar() {
@@ -12104,8 +12224,14 @@ function updateFmtModalTabs() {
   const mp3On = p && (p.dest === 1 || p.dest === 2);
   wavChk.checked = !!wavOn;
   mp3Chk.checked = !!mp3On;
-  if (wavTab) wavTab.classList.toggle('active-view', _fmtViewTab === 'wav');
-  if (mp3Tab) mp3Tab.classList.toggle('active-view', _fmtViewTab === 'mp3');
+  if (wavTab) {
+    wavTab.classList.toggle('active-view', _fmtViewTab === 'wav');
+    wavTab.classList.toggle('fmt-enabled', !!wavOn);
+  }
+  if (mp3Tab) {
+    mp3Tab.classList.toggle('active-view', _fmtViewTab === 'mp3');
+    mp3Tab.classList.toggle('fmt-enabled', !!mp3On);
+  }
 }
 
 // Called by checkbox onchange — toggles whether format is included in bounce
@@ -12150,19 +12276,75 @@ function switchFmtTabView(tab) {
   renderFmtSettings();
 }
 
+// Clicking the pill label/body — switches view to this tab (enables if not enabled)
+function fmtTabClick(fmt) {
+  const p = getEditingFmtPreset(); if (!p) return;
+  const wavOn = p.dest === 0 || p.dest === 2;
+  const mp3On = p.dest === 1 || p.dest === 2;
+  const isOn  = fmt === 'wav' ? wavOn : mp3On;
+  if (!isOn) {
+    // Not enabled yet — enable and switch view
+    onFmtFormatToggle(fmt, true);
+  } else {
+    // Already enabled — just switch view
+    _fmtViewTab = fmt;
+    updateFmtModalTabs();
+    renderFmtSettings();
+  }
+}
+
+// Clicking the checkbox inside the pill — toggles on/off WITHOUT switching view
+function fmtToggleOnly(fmt) {
+  const p = getEditingFmtPreset(); if (!p) return;
+  const wavOn = p.dest === 0 || p.dest === 2;
+  const mp3On = p.dest === 1 || p.dest === 2;
+  const isOn  = fmt === 'wav' ? wavOn : mp3On;
+  onFmtFormatToggle(fmt, !isOn);
+}
+
 function renderFmtPresetList() {
   const list = document.getElementById('fmt-preset-list');
   if (!list) return;
   Array.from(list.querySelectorAll('.fmt-preset-item')).forEach(el => el.remove());
-  const actions = list.querySelector('.fmt-preset-actions');
+  const anchor = list.querySelector('.fmt-preset-actions') || list.querySelector('.fmt-sidebar-label');
   formatPresets.forEach(p => {
     const div = document.createElement('div');
     div.className = 'fmt-preset-item' + (p.id === editingFmtId ? ' active' : '');
-    div.textContent = p.name;
     div.title = p.name;
     div.onclick = () => { editingFmtId = p.id; renderFmtPresetList(); renderFmtSettings(); };
-    list.insertBefore(div, actions);
+    // Name row
+    const nameEl = document.createElement('div');
+    nameEl.className = 'fmt-preset-name';
+    nameEl.textContent = p.name;
+    div.appendChild(nameEl);
+    // Badge row — specs summary
+    const parts = [];
+    const wavOn = p.dest === 0 || p.dest === 2;
+    const mp3On = p.dest === 1 || p.dest === 2;
+    if (wavOn) {
+      if (p.fileType) parts.push(p.fileType);
+      if (p.bitDepth) parts.push(p.bitDepth);
+      if (p.sampleRate) parts.push(p.sampleRate);
+    }
+    if (mp3On && (p.mp3RateStereo || p.mp3Rate)) parts.push('MP3 ' + (p.mp3RateStereo || p.mp3Rate));
+    if (parts.length) {
+      const badge = document.createElement('div');
+      badge.className = 'fmt-preset-badge';
+      badge.textContent = parts.join(' · ');
+      div.appendChild(badge);
+    }
+    list.insertBefore(div, list.querySelector('.fmt-preset-actions'));
   });
+  // Update header subtitle
+  _updateFmtHdrSub();
+}
+
+function _updateFmtHdrSub() {
+  const sub = document.getElementById('fmt-hdr-sub');
+  if (!sub) return;
+  const p = getEditingFmtPreset();
+  const count = formatPresets.length;
+  sub.textContent = (p ? p.name : '—') + ' · ' + count + ' preset' + (count !== 1 ? 's' : '');
 }
 
 function renderFmtSettings() {
@@ -12193,6 +12375,15 @@ function renderFmtSettings() {
   setCb('fmt-include-tempo', p.includeTempo);
   setCb('fmt-include-tail',  p.includeAudioTail);
   setCb('fmt-bounce-2nd',    p.bounce2ndCyclePass);
+  // Sync visual opt-rows with checkbox state (no event firing)
+  ['fmt-include-tempo','fmt-include-tail','fmt-bounce-2nd'].forEach(id => {
+    const cb = document.getElementById(id); if (!cb) return;
+    const on = !!cb.checked;
+    const row = cb.closest('.fmt-opt-row'); if (!row) return;
+    row.classList.toggle('checked', on);
+    const box = row.querySelector('.fmt-opt-box'); if (box) box.classList.toggle('checked', on);
+  });
+  _updateFmtHdrSub();
   updateFmtModalTabs();
 }
 
@@ -12437,7 +12628,24 @@ function toggleMarkersPopup() {
   if (!popup) return;
   _markersPopupOpen = !_markersPopupOpen;
   popup.style.display = _markersPopupOpen ? 'block' : 'none';
-  if (_markersPopupOpen) renderMarkersPopupList();
+  if (_markersPopupOpen) {
+    // In compact mode: anchor to viewport so popup is never clipped
+    if (document.body.classList.contains('compact-mode')) {
+      const btn = document.getElementById('markers-btn');
+      const r = btn.getBoundingClientRect();
+      Object.assign(popup.style, {
+        top: (r.bottom + 4) + 'px',
+        left: '8px',
+        right: '8px',
+      });
+    } else {
+      // Normal mode: reset to CSS defaults
+      popup.style.top = '';
+      popup.style.left = '';
+      popup.style.right = '';
+    }
+    renderMarkersPopupList();
+  }
 }
 
 // ── Per-item marker override ─────────────────────────────
@@ -12484,8 +12692,10 @@ function shouldBounceJobForMarker(job, markerPassId) {
 
 // Close popup on outside click
 document.addEventListener('click', e => {
-  if (_markersPopupOpen && !e.target.closest('#markers-btn') && !e.target.closest('#markers-popup')) {
-    document.getElementById('markers-popup').style.display = 'none';
+  if (_markersPopupOpen && !e.target.closest('#markers-btn') && !e.target.closest('#markers-popup') && !e.target.closest('#markers-chips-btn')) {
+    const popup = document.getElementById('markers-popup');
+    popup.style.display = 'none';
+    popup.style.top = ''; popup.style.left = ''; popup.style.right = '';
     _markersPopupOpen = false;
   }
 });

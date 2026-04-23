@@ -936,14 +936,14 @@ case "scan":
 case "soloIndex":
     guard args.count >= 3, let idx = Int(args[2]) else { jsonOut(["error": "index required"]); exit(1) }
     let ch = scanChannels(logic)
-    guard idx < ch.count else { jsonOut(["error": "index out of range, total: \(ch.count)"]); exit(1) }
+    guard idx >= 0, idx < ch.count else { jsonOut(["ok": false, "error": "index out of range: \(idx), total: \(ch.count)"]); break }
     axPress(ch[idx].soloBtn)
     jsonOut(["ok": true, "action": "solo", "channel": ch[idx].name])
 
 case "unsoloIndex":
     guard args.count >= 3, let idx = Int(args[2]) else { jsonOut(["error": "index required"]); exit(1) }
     let ch = scanChannels(logic)
-    guard idx < ch.count else { jsonOut(["error": "index out of range, total: \(ch.count)"]); exit(1) }
+    guard idx >= 0, idx < ch.count else { jsonOut(["ok": false, "error": "index out of range: \(idx), total: \(ch.count)"]); break }
     axPress(ch[idx].soloBtn)
     jsonOut(["ok": true, "action": "unsolo", "channel": ch[idx].name])
 
