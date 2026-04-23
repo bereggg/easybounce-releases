@@ -32,6 +32,12 @@
   --red:       #ff4757;           /* Destructive */
   --success:   #43e97b;           /* Completion */
 
+  /* Semantic aliases — prefer these for intent-driven styling */
+  --color-danger:  var(--red);    /* errors, destructive actions */
+  --color-warning: var(--warn);   /* real warnings only (NOT active state) */
+  --color-active:  var(--accent); /* current/selected/active state */
+  --color-success: var(--a3);     /* completed, ok */
+
   /* Text hierarchy */
   --text:      #e2e2f0;           /* Primary text — cool off-white with blue-tint */
   --t2:        #8888a8;           /* Secondary text — blue-grey */
@@ -139,10 +145,12 @@
      SPACING, RADIUS, BORDERS
      ───────────────────────────────────────────────────────────────── */
 
-  --r-xs:    4px;
-  --r-sm:    6px;
-  --r:       10px;
-  --r2:      16px;
+  --r-xs:    4px;     /* tags, tiny chips */
+  --r-sm:    6px;     /* chips, small inputs */
+  --r:       10px;    /* buttons, standard inputs (alias --r-md) */
+  --r-md:    10px;
+  --r-lg:    14px;    /* modals, cards */
+  --r2:      16px;    /* legacy — prefer --r-lg for new code */
   --r3:      24px;
   --r-pill:  999px;
 
