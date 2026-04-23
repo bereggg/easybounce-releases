@@ -196,6 +196,8 @@ function createWindow() {
     mainWindow.show();
     mainWindow.focus();
     app.focus({ steal: true });
+    // Explicitly ensure AOT is off at startup — renderer will re-apply pin if user had it set
+    mainWindow.setAlwaysOnTop(false);
   });
 
   // Save window position on move/resize (debounced) and on close
@@ -884,6 +886,8 @@ ipcMain.handle('snap-to-logic-space', async () => {
 
 ipcMain.handle('set-bounce-mode', (_, v) => { _inBounce = !!v; return { ok: true }; });
 
+let _userPinned = false;
+ipcMain.handle('set-user-pin', (_, val) => { _userPinned = !!val; return { ok: true }; });
 ipcMain.handle('set-always-on-top', (_, val) => {
   if (_inBounce) return { ok: true }; // ignored during bounce
   if (mainWindow) {
@@ -976,8 +980,13 @@ ipcMain.handle('exit-mini-mode', () => {
     mainWindow.setSize(1200, 760, true);
     mainWindow.center();
   }
-  // Keep alwaysOnTop as-is (bounce may still be running).
-  // JS side calls setAlwaysOnTop(false) when bounce finishes.
+  // Reset alwaysOnTop unless bounce/scan is running or user pinned it.
+  // Otherwise mini-mode's AOT=screen-saver sticks and the app never backgrounds.
+  if (!_inBounce && !_inScanBadge && !_userPinned) {
+    mainWindow.setAlwaysOnTop(false);
+  } else if (_userPinned && !_inBounce && !_inScanBadge) {
+    mainWindow.setAlwaysOnTop(true, 'pop-up-menu');
+  }
   mainWindow.setVisibleOnAllWorkspaces(false);
   mainWindow.show();
   mainWindow.focus();
@@ -1067,7 +1076,7 @@ ipcMain.handle('enter-scan-badge', async () => {
   _preScan = mainWindow.getBounds();
   const { screen } = require('electron');
 
-  const bw = 520; const bh = 69;
+  const bw = 520; const bh = 85;
   // Center badge horizontally on the DISPLAY (not the app window), pin to top.
   const appDisplay = screen.getDisplayNearestPoint({
     x: _preScan.x + Math.floor(_preScan.width / 2),

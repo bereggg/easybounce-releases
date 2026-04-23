@@ -66,16 +66,21 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .q-empty-title{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.01em;}
 .q-empty-sub{font-size:var(--fs-sm);color:var(--muted);text-align:center;line-height:1.6;}
 .q-empty-sub b{color:var(--t2);font-weight:600;}
-.search-bar{padding:6px 10px;border-bottom:1px solid var(--b);display:flex;gap:5px;align-items:center;flex-shrink:0;flex-wrap:wrap;}
-.search-inp{flex:1;min-width:0;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:var(--font-mono);font-size:var(--fs-sm);padding:5px 9px;transition:border-color var(--t),box-shadow var(--t);}
+.search-bar{padding:6px 10px;border-bottom:1px solid var(--b);display:flex;gap:6px;align-items:center;flex-shrink:0;}
+.search-wrap{position:relative;flex:1;min-width:0;display:flex;align-items:center;}
+.search-wrap>svg.search-ico{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--muted);pointer-events:none;opacity:.7;}
+.search-inp{flex:1;min-width:0;width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:var(--font-mono);font-size:var(--fs-sm);padding:6px 9px 6px 28px;transition:border-color var(--t),box-shadow var(--t);}
 .search-inp::placeholder{color:var(--muted);}
 .search-inp:focus{outline:none;border-color:var(--accent-a30);box-shadow:0 0 0 3px var(--accent-a08);}
-.hidden-btn{display:flex;align-items:center;gap:4px;padding:5px 9px;border-radius:var(--r);border:1px solid var(--b);background:transparent;color:var(--muted);font-size:var(--fs-xs);font-weight:600;cursor:pointer;transition:all var(--t);white-space:nowrap;flex-shrink:0;}
-.hidden-btn:hover{border-color:var(--b2);color:var(--text);}
+.search-wrap:focus-within>svg.search-ico{color:var(--accent);opacity:1;}
+.hidden-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:6px 8px;border-radius:var(--r);border:1px solid var(--b);background:transparent;color:var(--muted);font-size:var(--fs-xs);font-weight:600;cursor:pointer;transition:all var(--t);white-space:nowrap;flex-shrink:0;min-width:32px;min-height:30px;}
+.hidden-btn:hover{border-color:var(--b2);color:var(--text);background:var(--w-a05);}
 .hidden-btn.on{border-color:var(--accent-a60);color:var(--accent);background:var(--accent-a08);}
-.hidden-btn svg{width:11px;height:11px;flex-shrink:0;}
+.hidden-btn svg{width:13px;height:13px;flex-shrink:0;}
 .hidden-btn .hidden-slash{display:none;}
 .hidden-btn.on .hidden-slash{display:block;}
+.hidden-btn.icon-only{padding:6px 8px;gap:0;}
+.hidden-btn.icon-only .hidden-lbl{display:none;}
 /* ── Mixer channel-type filters ─────────────────────────── */
 #mixer-filters{display:none;align-items:center;gap:4px;padding:5px 10px;border-bottom:1px solid var(--b);flex-shrink:0;flex-wrap:wrap;}
 .mf-label{font-size:var(--fs-xxs);font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-right:4px;flex-shrink:0;}
@@ -149,8 +154,8 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .qtag.mix{background:var(--w-a05);color:var(--t2);border:1px solid var(--b);}
 .qtag.set{background:var(--w-a05);color:var(--t2);border:1px solid var(--b);}
 .qtag.group{background:var(--accent-a20);color:var(--accent);border:1px solid var(--accent-a30);box-shadow:0 2px 8px var(--accent-a20);}
-.tb-pill-scan{background:var(--g-primary);border-color:rgba(255,255,255,0.15);color:#fff;font-weight:700;}
-.tb-pill.tb-pill-scan:hover{background:var(--g-primary);opacity:.88;border-color:rgba(255,255,255,0.22);color:#fff;}
+.tb-pill-scan{background:var(--g-primary);border:none!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.18),var(--sh-glow-sm,0 0 8px rgba(108,99,255,.35)),var(--sh-inset,inset 0 1px 0 rgba(255,255,255,.15))!important;color:#fff;font-weight:700;overflow:hidden;isolation:isolate;}
+.tb-pill.tb-pill-scan:hover{background:var(--g-primary);opacity:.88;color:#fff;}
 .qitem.running .qtag{background:var(--accent-a12);color:var(--accent);border-color:var(--accent-a30);}
 .qgroup-ch{font-size:var(--fs-xxs);padding:1px 7px;border-radius:var(--r);background:var(--accent-a08);color:var(--t2);border:1px solid var(--accent-a15);}
 .stems-wrap{position:relative;flex:1;display:none;}
@@ -563,9 +568,10 @@ body.easy #skin-panel{z-index:9000;}
 #cancel-overlay-inner{color:var(--warn);font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;text-align:center;letter-spacing:.01em;text-shadow:0 2px 12px rgba(0,0,0,.5);}
 #cancel-overlay-sub{margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:var(--fs-sm);font-weight:400;opacity:.8;}
 /* ── Scan in-progress overlay ────────────────────────── */
-#scan-warning{display:none;position:fixed;top:40px;left:0;right:0;height:104px;z-index:9999;pointer-events:none;align-items:center;justify-content:center;gap:10px;background:rgba(14,14,22,.92);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);border-bottom:1px solid var(--accent-a30);box-shadow:0 4px 24px rgba(0,0,0,.4);}
+#scan-warning{display:none;position:fixed;top:40px;left:0;right:0;height:84px;z-index:9999;pointer-events:none;align-items:center;justify-content:center;gap:10px;background:rgba(14,14,22,.92);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);border-bottom:1px solid var(--accent-a30);box-shadow:0 4px 24px rgba(0,0,0,.4);transition:height var(--t) var(--ease-out,cubic-bezier(.4,0,.2,1));}
 body.compact-mode #scan-warning{top:46px;}
-body.scan-badge #scan-warning{height:100%;}
+body.scan-badge .titlebar,body.scan-badge .shell,body.scan-badge #compact-toolbar{display:none!important;}
+body.scan-badge #scan-warning{top:0;height:100%;}
 #scan-warning.show{display:flex;}
 @keyframes scanBorderPulse{0%{background-position:-100% 0;}100%{background-position:200% 0;}}
 #scan-warning::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);background-size:200% 100%;animation:scanBorderPulse 2.8s linear infinite;}
@@ -656,6 +662,7 @@ body.compact-mode #fmt-bar-source{display:none!important;}
 
 /* Presets-bar: fully hidden in compact mode */
 body.compact-mode .presets-bar{display:none!important;}
+body.compact-mode #cm-fullver-chip{display:inline-flex!important;align-items:center;}
 
 body.compact-mode #fmt-bar-mp3-tag{display:none!important;}
 body.compact-mode .out-path,
@@ -685,8 +692,7 @@ body.compact-mode .q-empty-sub.q-empty-cm{display:block!important;}
 .tb-ico-btn .ico{width:14px;height:14px;}
 body.mini-mode{background:transparent!important;}
 /* Scan-badge mode: hide everything except the scan-warning banner */
-body.scan-badge .titlebar,body.scan-badge .shell{display:none!important;}
-body.scan-badge #scan-warning{top:0;}
+/* scan-badge mode: keep titlebar + shell visible, badge stays 115px below titlebar */
 /* Smooth fade between main UI and mini widget */
 body.mini-transitioning .titlebar,body.mini-transitioning .shell{opacity:0;transition:opacity var(--t) ease-out;pointer-events:none;}
 body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar,body.compact-transitioning .shell{opacity:0;transition:opacity var(--t-fast) ease-out;pointer-events:none;}
@@ -706,6 +712,11 @@ body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar
 .mini-bar{height:3px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;}
 .mini-fill-bar{height:2px;background:var(--g-primary);border-radius:3px;transition:width .5s ease;width:0%;box-shadow:0 0 8px var(--accent-a60);}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(10px) saturate(150%);-webkit-backdrop-filter:blur(10px) saturate(150%);}
+/* Overlay + modal entrance animation — scale-in + fade (Linear/Raycast style) */
+.overlay,.modal-overlay,#notif-modal-bg,#hotkeys-modal-bg,#mp-modal{transition:opacity var(--t) ease;}
+.overlay .modal,.modal-overlay .modal,#notif-modal,#hotkeys-modal-bg>div,#mp-modal>div{transform:scale(.96) translateY(8px);opacity:0;transition:transform var(--t) var(--ease-spring,cubic-bezier(.34,1.56,.64,1)),opacity var(--t);}
+.overlay.show .modal,.modal-overlay.show .modal,#notif-modal-bg.show #notif-modal,#hotkeys-modal-bg.show>div,#mp-modal.show>div{transform:scale(1) translateY(0);opacity:1;}
+#hotkeys-modal-bg.show,#mp-modal.show{display:flex!important;}
 body.compact-mode .modal-overlay{inset:46px 0 0;align-items:center;padding:12px 8px;}
 .modal-overlay.show{display:flex;}
 /* fmt-modal-hdr replaces modal-hdr for format modal */
@@ -991,11 +1002,14 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
   <div class="panel pl">
     <div class="sec-hdr"><span class="sec-title">Channels</span><span class="sec-badge" id="ch-count"></span></div>
     <div class="search-bar">
-      <input class="search-inp" id="ch-search" title="Filter channels by name" placeholder="Search…" oninput="renderChannels()" style="max-width:120px;">
+      <div class="search-wrap">
+        <svg class="search-ico" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6" cy="6" r="4"/><path d="M9 9l3.5 3.5"/></svg>
+        <input class="search-inp" id="ch-search" title="Filter channels by name" placeholder="Search channels…" oninput="renderChannels()">
+      </div>
       <button class="tb-pill" id="tree-toggle-all" onclick="toggleAllGroups()" title="Expand / Collapse all groups" style="display:none;padding:3px 7px;font-size:var(--fs-sm);opacity:.7;letter-spacing:-.02em;">⇅</button>
-      <button class="hidden-btn" id="hidden-toggle" title="Show channels you've hidden" onclick="setFilter('hidden')">
+      <button class="hidden-btn icon-only" id="hidden-toggle" title="Show channels you've hidden" onclick="setFilter('hidden')">
         <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 7s2-4 6-4 6 4 6 4-2 4-6 4-6-4-6-4z"/><circle cx="7" cy="7" r="1.6"/><line x1="2" y1="2" x2="12" y2="12" class="hidden-slash"/></svg>
-        Hidden
+        <span class="hidden-lbl">Hidden</span>
       </button>
     </div>
     <div id="mixer-filters" title="Toggle channel types visible in Logic Mixer"></div>
@@ -1018,8 +1032,11 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
       <div class="queue-hdr">
         <span class="sec-title">Bounce Queue</span>
         <span id="q-total-lbl" style="font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);color:var(--t2);margin-left:4px;"></span>
+        <!-- Compact-mode Full Version chip (identical style to PRO) — adds Full Version to queue -->
+        <button id="cm-fullver-chip" class="pchip mix-chip custom" style="display:none;margin-left:8px;" title="Add Full Version (all instruments) to queue"
+          onclick="addPresetToQueue(BUILTIN_PRESETS.find(p=>p.id==='p_full'))">Full Version</button>
         <!-- Markers button -->
-        <div style="position:relative;margin-left:6px;display:flex;align-items:center;gap:3px;">
+        <div id="markers-wrapper" style="position:relative;margin-left:6px;display:flex;align-items:center;gap:3px;">
           <button id="markers-btn" onclick="toggleMarkersPopup()" title="Bounce by markers — set cycle ranges per bounce pass"
             style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-xs);cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all var(--t);white-space:nowrap;">
             <span style="display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-pin"/></svg></span>
@@ -1382,9 +1399,12 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
     <div class="mfield"><label>Mix Name</label><input type="text" id="mix-name-inp" placeholder="e.g. NO Drums" onkeydown="if(event.key==='Enter'){event.preventDefault();saveMix();}"></div>
     <div id="mix-name-presets" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:2px 0 0;min-height:22px;flex-shrink:0;"></div>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-      <input id="mix-ch-search" type="text" placeholder="Search…" oninput="renderMixList()" style="min-width:0;width:0;flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:var(--fs-sm);padding:5px 8px;font-family:'JetBrains Mono',monospace;">
-      <button id="mix-hidden-tab" onclick="toggleMixHiddenTab()" title="Show only hidden channels" style="padding:4px 10px;border-radius:var(--r2);border:1px solid var(--b2);background:var(--card2);color:var(--t2);font-size:var(--fs-xs);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:all var(--t-fast);flex-shrink:0;letter-spacing:.03em;">
-        <span id="mix-hidden-eye" style="display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-eye"/></svg></span><span>Hidden</span>
+      <div class="search-wrap" style="flex:1;min-width:0;">
+        <svg class="search-ico" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6" cy="6" r="4"/><path d="M9 9l3.5 3.5"/></svg>
+        <input id="mix-ch-search" class="search-inp" type="text" placeholder="Search channels…" oninput="renderMixList()">
+      </div>
+      <button id="mix-hidden-tab" class="hidden-btn" onclick="toggleMixHiddenTab()" title="Show only hidden channels">
+        <span id="mix-hidden-eye" style="display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-eye"/></svg></span><span class="hidden-lbl">Hidden</span>
       </button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
@@ -1408,9 +1428,12 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
     <div class="mfield" style="flex-shrink:0;"><label>Preset Name</label><input type="text" id="esp-name-inp" onkeydown="if(event.key==='Enter'){event.preventDefault();saveEditedStemPreset();}"></div>
     <div id="esp-name-presets" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:4px 0 8px;min-height:26px;flex-shrink:0;"></div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-shrink:0;">
-      <input id="esp-search" type="text" placeholder="Search channels…" oninput="_renderEspChannels()" style="flex:1;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-size:var(--fs-sm);padding:6px 10px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;">
-      <button id="esp-hidden-tab" onclick="_espToggleHidden()" title="Show hidden channels" style="display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-sm);cursor:pointer;flex-shrink:0;white-space:nowrap;transition:all var(--t-fast);">
-        <span id="esp-hidden-eye" style="display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-eye"/></svg></span><span>Hidden</span>
+      <div class="search-wrap" style="flex:1;min-width:0;">
+        <svg class="search-ico" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6" cy="6" r="4"/><path d="M9 9l3.5 3.5"/></svg>
+        <input id="esp-search" class="search-inp" type="text" placeholder="Search channels…" oninput="_renderEspChannels()">
+      </div>
+      <button id="esp-hidden-tab" class="hidden-btn" onclick="_espToggleHidden()" title="Show hidden channels">
+        <span id="esp-hidden-eye" style="display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-eye"/></svg></span><span class="hidden-lbl">Hidden</span>
       </button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-shrink:0;">
@@ -1611,7 +1634,7 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
     </div>
   </div>
 </div>
-<div class="overlay" id="schedule-modal">
+<div class="overlay" id="schedule-modal" onclick="if(event.target===this)this.classList.remove('show')">
   <div class="modal" style="width:380px;">
     <div class="modal-hdr"><svg class="ico" style="vertical-align:-3px;margin-right:6px;"><use href="#ico-clock"/></svg>Schedule Bounce</div>
     <div class="mfield">
@@ -7450,7 +7473,7 @@ function renderQueue() {
             <div class="qbody">
               <div class="qrow1">
                 <span class="qname" style="font-size:12px;">${job.name}</span>
-                <span class="qtag ${job.type}">${job.type}</span>
+                <span class="qtag ${job.type}">${job.type === 'group' ? 'merge' : job.type}</span>
               </div>
               ${muted ? `<div class="qsub">${muted}</div>` : ''}
             </div>
@@ -7560,7 +7583,7 @@ function renderQueue() {
       <div class="qbody">
         <div class="qrow1">
           <span class="qname">${item.name}</span>
-          <span class="qtag ${item.type}">${item.type}</span>
+          <span class="qtag ${item.type}">${item.type === 'group' ? 'merge' : item.type}</span>
         </div>
         ${pills ? `<div class="qsub">${pills}</div>` : ''}
         ${(fullChip || markerChips) ? `<div class="qsub" style="gap:3px;margin-top:2px;">${fullChip}${markerChips}</div>` : ''}
@@ -9264,7 +9287,9 @@ async function openMasterPluginsModal() {
     }
   } catch(e) { console.warn('[EB] mp-modal mixer:', e); }
 
-  document.getElementById('mp-modal').style.display = 'block';
+  const _mpEl = document.getElementById('mp-modal');
+  _mpEl.style.display = 'block';
+  requestAnimationFrame(() => _mpEl.classList.add('show'));
   // If already cached from scan — show immediately; otherwise fetch
   if (_masterPlugins.length > 0) {
     renderMasterPlugins();
@@ -9300,7 +9325,9 @@ async function openMasterPluginsModal() {
   }, 500);
 }
 function closeMasterPluginsModal() {
-  document.getElementById('mp-modal').style.display = 'none';
+  const _mpEl = document.getElementById('mp-modal');
+  _mpEl.classList.remove('show');
+  setTimeout(() => { _mpEl.style.display = 'none'; }, 200);
   if (_mpPollInterval) { clearInterval(_mpPollInterval); _mpPollInterval = null; }
   if (_mpEscListener) { document.removeEventListener('keydown', _mpEscListener); _mpEscListener = null; }
 }
@@ -10584,11 +10611,14 @@ async function togglePin() {
   localStorage.setItem(PIN_LS_KEY, on ? '1' : '0');
   isPinned = on;
   _applyPinClass(on);
+  await window.api?.setUserPin?.(on);
   await window.api?.setAlwaysOnTop?.(on);
   toast(on ? '📌 Pinned — app stays on top' : 'Unpinned');
 }
 window.addEventListener('DOMContentLoaded', async () => {
-  if (localStorage.getItem(PIN_LS_KEY) === '1') {
+  const pinned = localStorage.getItem(PIN_LS_KEY) === '1';
+  await window.api?.setUserPin?.(pinned);
+  if (pinned) {
     _applyPinClass(true);
     await window.api?.setAlwaysOnTop?.(true);
   }
@@ -11250,7 +11280,9 @@ function hideNotifModal() {
 // ── Hotkeys modal ──
 const HK_KEYS = { stems: 'sb4_hk_stems', version: 'sb4_hk_version', merge: 'sb4_hk_merge' };
 function showHotkeysModal() {
-  document.getElementById('hotkeys-modal-bg').style.display = 'flex';
+  const el = document.getElementById('hotkeys-modal-bg');
+  el.style.display = 'flex';
+  requestAnimationFrame(() => el.classList.add('show'));
   ['stems','version','merge'].forEach(k => {
     const inp = document.getElementById('hk-' + k + '-input');
     inp.value = localStorage.getItem(HK_KEYS[k]) || '';
@@ -11259,7 +11291,9 @@ function showHotkeysModal() {
   });
 }
 function hideHotkeysModal() {
-  document.getElementById('hotkeys-modal-bg').style.display = 'none';
+  const el = document.getElementById('hotkeys-modal-bg');
+  el.classList.remove('show');
+  setTimeout(() => { el.style.display = 'none'; }, 200);
   _stopAllHkRecording();
 }
 function _attachHkRecorder(inp) {
@@ -11856,8 +11890,9 @@ function applySkin(name) {
       body{background:#fdfdfb!important;}
       .titlebar{background:#f5f5f3!important;border-bottom:1px solid #e5e5e0!important;box-shadow:0 1px 4px rgba(0,0,0,.06)!important;}
       .tb-logo-mark{background:linear-gradient(135deg,#6c63ff,#e85a7a)!important;box-shadow:0 4px 12px rgba(108,99,255,.28)!important;}
-      .tb-pill{background:rgba(0,0,0,.03)!important;border-color:#e5e5e0!important;color:#5e5e68!important;box-shadow:none!important;}
-      .tb-pill:hover{background:rgba(108,99,255,.06)!important;border-color:rgba(108,99,255,.35)!important;color:#6c63ff!important;}
+      .tb-pill:not(.tb-pill-scan){background:rgba(0,0,0,.03)!important;border-color:#e5e5e0!important;color:#5e5e68!important;box-shadow:none!important;}
+      .tb-pill:not(.tb-pill-scan):hover{background:rgba(108,99,255,.06)!important;border-color:rgba(108,99,255,.35)!important;color:#6c63ff!important;}
+      .tb-pill.tb-pill-scan{background:linear-gradient(135deg,#6c63ff,#e85a7a)!important;color:#fff!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2),0 4px 14px rgba(108,99,255,.3)!important;}
       .panel{background:#f9f9f7!important;border-color:#e5e5e0!important;box-shadow:none!important;}
       .panel.pl{background:#f5f5f3!important;}
       .sec-hdr{background:#f5f5f3!important;border-color:#e5e5e0!important;box-shadow:none!important;}
@@ -12781,13 +12816,17 @@ function openFormatModal() {
   setFmtSource(fmtSource); // sync button states
   renderFmtPresetList();
   renderFmtSettings();
-  document.getElementById('format-modal').style.display = 'flex';
+  const el = document.getElementById('format-modal');
+  el.style.display = 'flex';
+  requestAnimationFrame(() => el.classList.add('show'));
 }
 
 function closeFormatModal() {
   activeFmtId = editingFmtId;
   saveFmtActive(); updateFmtBar();
-  document.getElementById('format-modal').style.display = 'none';
+  const el = document.getElementById('format-modal');
+  el.classList.remove('show');
+  setTimeout(() => { el.style.display = 'none'; }, 200);
 }
 
 function addFormatPreset() {

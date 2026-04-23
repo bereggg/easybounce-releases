@@ -68,6 +68,7 @@ contextBridge.exposeInMainWorld('api', {
   resetMutes:     ()    => ipcRenderer.invoke('reset-mutes'),
   setClipboard:   (t)   => ipcRenderer.invoke('set-clipboard', t),
   setAlwaysOnTop:    (v)   => ipcRenderer.invoke('set-always-on-top', v),
+  setUserPin:        (v)   => ipcRenderer.invoke('set-user-pin', v),
   activateAndLaunch:  (k)   => ipcRenderer.invoke('activate-and-launch', k),
   checkForUpdates:    ()    => ipcRenderer.invoke('check-for-updates'),
   showConfirm:          (t,m) => ipcRenderer.invoke('show-confirm', t, m),
