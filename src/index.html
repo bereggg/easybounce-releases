@@ -2624,7 +2624,20 @@ async function _quickScanMixer() {
   }
 }
 
+// Lightweight integrity probe — reads license.json HMAC via main, returns bool.
+// Scattered through critical actions so a single patched validateKey isn't enough.
+async function _audit() {
+  try { return !!(await window.api?._chk?.()); } catch { return false; }
+}
+function _auditFail() {
+  try {
+    if (typeof showToast === 'function') showToast('License invalid — please reactivate', 'error');
+    else alert('License invalid — please reactivate');
+  } catch {}
+}
+
 async function scanLogic(isAutoRetry = false) {
+  if (!isAutoRetry && !(await _audit())) { _auditFail(); return; }
   // Guard: prevent two concurrent scans (e.g. user clicks Scan again while one is running)
   if (_scanRunning && !isAutoRetry) {
     log('⚠ Scan already in progress — ignoring duplicate request', 'warn');
@@ -8322,6 +8335,7 @@ let _preExpandQueue = null;  // snapshot of queue before set expansion — resto
 
 async function doBounce() {
   if (bouncing) return;
+  if (!(await _audit())) { _auditFail(); return; }
   // If a schedule timer is pending, cancel it — manual bounce replaces it
   if (_scheduleTimer) { clearTimeout(_scheduleTimer); _scheduleTimer = null; }
   if (_scheduleCountdown) { clearInterval(_scheduleCountdown); _scheduleCountdown = null; }
@@ -11079,6 +11093,7 @@ function _applyCompactTruncations() {
   }
 }
 async function toggleCompactMode() {
+  if (!(await _audit())) { _auditFail(); return; }
   // Don't toggle if any modal is open — in compact mode the toolbar stays
   // above the modal backdrop (inset:46px), so the em-wrap is accidentally
   // reachable when the user tries to click outside the modal to close it.
@@ -13408,7 +13423,8 @@ document.addEventListener('click', e => {
   }
 });
 
-function openFormatModal() {
+async function openFormatModal() {
+  if (!(await _audit())) { _auditFail(); return; }
   editingFmtId = activeFmtId;
   const _p = getEditingFmtPreset();
   const _wavOn = !_p || _p.dest === 0 || _p.dest === 2;

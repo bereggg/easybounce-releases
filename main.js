@@ -1724,6 +1724,19 @@ ipcMain.handle('activate-trial', async () => {
   }
 });
 
+// Cached integrity state: license.json was verified at startup or after activation.
+// Renderer pings this before critical actions; if it returns false, UI must block.
+ipcMain.handle('_chk', () => {
+  try {
+    const f = path.join(app.getPath('userData'), 'license.json');
+    const raw = JSON.parse(fs.readFileSync(f, 'utf8'));
+    if (!raw || !raw.sig) return false;
+    const machineId = getMachineId();
+    if (raw.machineId !== machineId || !raw.key) return false;
+    return verifyLicenseData(raw);
+  } catch { return false; }
+});
+
 ipcMain.handle('activate-and-launch', async (_, key) => {
   const { validateKey, getMachineId } = require('./license');
   const result = await validateKey(key);

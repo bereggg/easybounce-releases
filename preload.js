@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('api', {
+  _chk:              ()    => ipcRenderer.invoke('_chk'),
   switchToEnglish:   ()    => ipcRenderer.invoke('switch-to-english'),
   scanChannels:      ()    => ipcRenderer.invoke('scan-channels'),
   cancelScan:        ()    => ipcRenderer.invoke('cancel-scan'), // #11: kill bridge proc mid-scan
