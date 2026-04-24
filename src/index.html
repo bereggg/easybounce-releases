@@ -8732,9 +8732,6 @@ async function doBounce() {
           }));
         }
       } catch(e) { log('Rescan error: ' + (e.message||e), 'warn'); }
-      // Safety: clear stale solo before retry (failed render may leave sidechain soloed)
-      await window.api.unsoloAll().catch(() => {});
-      await window.api.wait(200).catch(() => {});
       try {
         ok = job.type === 'stem' ? await bounceStem(job, jobFolder, true)
            : job.type === 'group' ? await bounceGroup(job, jobFolder, true)
@@ -8947,11 +8944,6 @@ async function doBounce() {
       // Normal completion: bounceStem/bounceMix already restored state for each job.
       // Safety net: verify nothing is unexpectedly left soloed/muted
       if (!window._userCancelled) {
-        // Always clear stale solo on failure path — sidechain may be left soloed if render froze
-        if (window._bounceFatalHang) {
-          await window.api.unsoloAll().catch(() => {});
-          await window.api.wait(150).catch(() => {});
-        }
         try {
           const _finalState = await window.api.readStates();
           if ((_finalState?.soloed?.length || 0) > 0 || (_finalState?.muted?.length || 0) > 0) {
