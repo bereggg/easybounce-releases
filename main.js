@@ -390,8 +390,17 @@ app.whenReady().then(async () => {
           } catch(e) { console.warn('[EB]', e); }
         }
       } else if (!data.type) {
-        // ── Legacy: old users without type field — treat as lifetime ──
-        licensed = true;
+        // ── Legacy file without type — must re-validate against server ──
+        try {
+          const result = await validateKey(data.key);
+          if (result.valid) {
+            data.type = result.licenseType || 'lifetime';
+            data.lastChecked = Date.now();
+            try { fs.writeFileSync(licenseFile, JSON.stringify(data)); } catch(e) { console.warn('[EB] license save failed:', e.message); }
+            licensed = true;
+          }
+          // якщо !result.valid (включно з offline) — не пускаємо. Юзер має одноразово підключитися.
+        } catch(e) { console.warn('[EB]', e); }
       }
     }
   } catch(e) { console.warn('[EB]', e); }

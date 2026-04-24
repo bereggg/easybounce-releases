@@ -65,41 +65,17 @@ async function getTrialInfo() {
 
   try {
     const res = await supabaseRequest(
-      'GET',
-      `/rest/v1/trials?machine_id=eq.${encodeURIComponent(machineId)}&select=*`
+      'POST',
+      '/rest/v1/rpc/get_trial_info',
+      { p_machine_id: machineId }
     );
 
-    // Немає запису — тріал не починався
-    if (res.status !== 200 || !Array.isArray(res.data) || res.data.length === 0) {
-      return { started: false, active: false, expired: false, daysRemaining: 0 };
+    if (res.status !== 200 || !res.data || typeof res.data !== 'object') {
+      return { started: false, active: false, expired: false, offline: true, error: 'No internet connection' };
     }
-
-    const trial = res.data[0];
-    const now = new Date();
-    const expiresAt = new Date(trial.expires_at);
-    const msRemaining = expiresAt - now;
-
-    if (msRemaining > 0) {
-      const daysRemaining = Math.ceil(msRemaining / (1000 * 60 * 60 * 24));
-      return {
-        started: true,
-        active: true,
-        expired: false,
-        daysRemaining,
-        expiresAt: trial.expires_at
-      };
-    } else {
-      return {
-        started: true,
-        active: false,
-        expired: true,
-        daysRemaining: 0,
-        expiresAt: trial.expires_at
-      };
-    }
+    return res.data;
 
   } catch (e) {
-    // Немає інтернету — блокуємо
     return {
       started: false,
       active: false,
@@ -116,48 +92,17 @@ async function getTrialInfo() {
 async function activateTrial() {
   const machineId = getMachineId();
 
-  // Спочатку перевіряємо чи вже є
-  const existing = await getTrialInfo();
-
-  if (existing.offline) {
-    return { ok: false, reason: 'No internet connection. Please connect to start your trial.' };
-  }
-
-  if (existing.active) {
-    return { ok: true, active: true, daysRemaining: existing.daysRemaining };
-  }
-
-  if (existing.expired) {
-    return { ok: false, expired: true, reason: 'Trial expired. Purchase at easybounce.app' };
-  }
-
-  // Перший запуск — створюємо запис
   try {
-    const now = new Date();
-    const expiresAt = new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
-
     const res = await supabaseRequest(
       'POST',
-      '/rest/v1/trials',
-      {
-        machine_id: machineId,
-        started_at: now.toISOString(),
-        expires_at: expiresAt.toISOString()
-      }
+      '/rest/v1/rpc/activate_trial',
+      { p_machine_id: machineId, p_trial_days: TRIAL_DAYS }
     );
 
-    if (res.status === 201 || res.status === 200) {
-      return { ok: true, active: true, daysRemaining: TRIAL_DAYS };
+    if (res.status !== 200 || !res.data || typeof res.data !== 'object') {
+      return { ok: false, reason: 'No internet connection. Please connect to start your trial.' };
     }
-
-    // Якщо 409 — machine_id вже існує (race condition), просто читаємо
-    if (res.status === 409) {
-      const info = await getTrialInfo();
-      if (info.active) return { ok: true, active: true, daysRemaining: info.daysRemaining };
-      if (info.expired) return { ok: false, expired: true, reason: 'Trial expired. Purchase at easybounce.app' };
-    }
-
-    return { ok: false, reason: 'Could not start trial. Try again.' };
+    return res.data;
 
   } catch (e) {
     return { ok: false, reason: 'No internet connection. Please connect to start your trial.' };
@@ -185,43 +130,15 @@ async function validateKey(key) {
 
   try {
     const res = await supabaseRequest(
-      'GET',
-      `/rest/v1/Licenses?license_key=eq.${encodeURIComponent(key)}&select=*`
+      'POST',
+      '/rest/v1/rpc/validate_license',
+      { p_key: key, p_machine_id: machineId }
     );
 
-    if (res.status !== 200 || !Array.isArray(res.data) || res.data.length === 0) {
-      return { valid: false, reason: 'Invalid license key. Purchase at easybounce.app' };
+    if (res.status !== 200 || !res.data || typeof res.data !== 'object') {
+      return { valid: false, reason: 'Could not connect to activation server. Check your internet connection.', offline: true };
     }
-
-    const license = res.data[0];
-
-    if (license.license_type === 'subscription') {
-      if (license.subscription_status !== 'active') {
-        return { valid: false, reason: 'Your subscription is inactive. Renew at easybounce.app' };
-      }
-      if (license.subscription_end && new Date(license.subscription_end) < new Date()) {
-        return { valid: false, reason: 'Your subscription has expired. Renew at easybounce.app' };
-      }
-    }
-
-    if (license.machine_id && license.machine_id !== machineId) {
-      return {
-        valid: false,
-        reason: 'This key is already activated on another Mac. Contact support: easybounce.app@gmail.com'
-      };
-    }
-
-    if (!license.machine_id) {
-      await supabaseRequest(
-        'PATCH',
-        `/rest/v1/Licenses?license_key=eq.${encodeURIComponent(key)}`,
-        { machine_id: machineId, activated_at: new Date().toISOString() }
-      );
-    }
-
-    // Повертаємо тип: 'lifetime' або 'subscription'
-    const licenseType = (license.license_type === 'subscription') ? 'subscription' : 'lifetime';
-    return { valid: true, email: license.email, licenseType };
+    return res.data;
 
   } catch (e) {
     return { valid: false, reason: 'Could not connect to activation server. Check your internet connection.', offline: true };
