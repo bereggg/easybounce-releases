@@ -246,7 +246,8 @@ svg.ico.ico-lg{width:20px;height:20px;}
 @keyframes done-flash{0%{background:var(--card)}40%{background:rgba(67,233,123,.2)}100%{background:var(--card)}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 @keyframes bounce-ready{0%,100%{box-shadow:0 8px 32px var(--accent-a30),inset 0 1px 0 rgba(255,255,255,.2);}50%{box-shadow:0 12px 40px var(--accent-a40),inset 0 1px 0 rgba(255,255,255,.25);transform:translateY(-1px);}}
-.bbtn.running{background:linear-gradient(160deg,var(--accent) 0%,var(--a2) 100%);box-shadow:0 8px 32px var(--accent-a30),inset 0 1px 0 rgba(255,255,255,.2);animation:pulse-glow 1.6s ease-in-out infinite alternate;}
+.bbtn.running{background:linear-gradient(160deg,#1a8cff 0%,#0066e0 60%,#0052b4 100%);box-shadow:0 8px 32px rgba(0,102,224,.5),inset 0 1px 0 rgba(255,255,255,.25);animation:pulse-glow-blue 1.6s ease-in-out infinite alternate;}
+@keyframes pulse-glow-blue{from{box-shadow:0 4px 16px rgba(0,102,224,.35);}to{box-shadow:0 12px 40px rgba(0,102,224,.6),inset 0 1px 0 rgba(255,255,255,.2);}}
 .bbtn.off{background:var(--card);color:var(--muted);box-shadow:none;cursor:not-allowed;transform:none;border:1px solid var(--b);}
 .bbtn.off::before{display:none;}
 @keyframes pulse-stems{from{box-shadow:0 0 0 transparent}to{box-shadow:0 0 12px var(--success-a40)}}
@@ -646,6 +647,8 @@ body.compact-mode #scan-done-overlay,body.compact-mode #fmt-saved-overlay{top:46
 @keyframes bbtn-fmt-ready{0%,100%{box-shadow:0 8px 32px rgba(108,99,255,.4),inset 0 1px 0 rgba(255,255,255,.2);}50%{box-shadow:0 10px 44px rgba(108,99,255,.65),0 0 0 3px rgba(108,99,255,.15),inset 0 1px 0 rgba(255,255,255,.25);}}
 .bbtn.fmt-ready:not(.off):not(.running){animation:bbtn-fmt-ready 2s ease-in-out infinite!important;}
 /* ── Mini Mode ─────────────────────────────────────────────── */
+#mini-fade-overlay{position:fixed;inset:0;z-index:9998;background:rgba(10,10,16,1);opacity:0;pointer-events:none;transition:opacity 160ms ease;}
+#mini-fade-overlay.visible{opacity:1;pointer-events:all;}
 #mini-mode-ui{display:none;position:fixed;inset:0;flex-direction:column;z-index:9999;border-radius:var(--r2);overflow:hidden;opacity:0;transition:opacity var(--t) ease-out;}
 body.mini-mode #mini-mode-ui{display:flex;background:rgba(14,14,22,.95);backdrop-filter:blur(40px) saturate(150%);-webkit-backdrop-filter:blur(40px) saturate(150%);border:1px solid var(--accent-a20);box-shadow:0 8px 40px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08);opacity:1;}
 body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini-mode #skin-panel{display:none!important;}
@@ -659,10 +662,9 @@ body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini
 #compact-toolbar-left button:hover,#compact-toolbar-actions button:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-a12);}
 #compact-toolbar-left button:hover{background:rgba(255,255,255,.06);}
 #compact-toolbar-left button svg,#compact-toolbar-actions button svg{width:14px;height:14px;}
-#cm-scan-btn{-webkit-app-region:no-drag;display:none;align-items:center;gap:5px;padding:6px 13px;border-radius:var(--r3);border:1px solid rgba(255,255,255,0.15);background:var(--g-primary);color:#fff;cursor:pointer;font-size:var(--fs-sm);font-weight:700;font-family:var(--font-ui);box-shadow:var(--sh-glow-sm,0 0 8px rgba(108,99,255,.35)),var(--sh-inset,inset 0 1px 0 rgba(255,255,255,.08));transition:opacity var(--t-fast),background var(--t-fast);position:absolute;top:50%;transform:translateY(-50%);white-space:nowrap;}
-#cm-scan-btn:hover{opacity:.88;}
-#cm-scan-btn svg{width:13px;height:13px;flex-shrink:0;}
+#cm-scan-btn{-webkit-app-region:no-drag;display:none;position:absolute;top:50%;transform:translateY(-50%);white-space:nowrap;}
 body.compact-mode #cm-scan-btn{display:flex;}
+#cm-scan-btn svg{width:13px;height:13px;flex-shrink:0;}
 body.compact-mode .q-empty-normal-only{display:none!important;}
 body.compact-mode .q-empty-compact-only{display:block!important;}
 #compact-toolbar-left button.is-active,#compact-toolbar-actions button.is-active{border-color:var(--accent);color:var(--accent);background:var(--accent-a12);}
@@ -967,6 +969,7 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
 <body>
 <script>(function(){try{if(localStorage.getItem('ui.compactMode')!=='0')document.body.classList.add('compact-mode');}catch(e){}})()</script>
 <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden;" aria-hidden="true"><defs><symbol id="ico-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 L6 12 L8 6 L10 18 L12 8 L14 16 L16 10 L18 12 L21 12"/></symbol><symbol id="ico-compact" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M9 10v10"/></symbol><symbol id="ico-expand-arrows" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v6h6M20 10V4h-6M14 10l7-7M10 14l-7 7"/></symbol><symbol id="ico-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="12" r="2.5" fill="currentColor"/><path d="M10 12 Q14 4 18 12 T22 12" opacity="0.7"/></symbol><symbol id="ico-accessibility" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="1.8" fill="currentColor"/><path d="M6 8 L12 10 L18 8"/><path d="M12 10 L12 15"/><path d="M12 15 L9 21 M12 15 L15 21"/></symbol><symbol id="ico-music" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3" fill="currentColor"/><circle cx="16" cy="16" r="3" fill="currentColor"/></symbol><symbol id="ico-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="ico-finder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1" fill="currentColor" stroke="none"/><path d="M8 16 Q12 19 16 16"/></symbol><symbol id="ico-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L10 17 L19 7"/></symbol><symbol id="ico-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M7 12 L11 16 L17 9"/></symbol><symbol id="ico-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6 L18 18 M18 6 L6 18"/></symbol><symbol id="ico-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L22 20 L2 20 Z"/><path d="M12 10 V14"/><circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none"/></symbol><symbol id="ico-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21 Q12 23 14 21"/></symbol><symbol id="ico-bell-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 10.5-4"/><path d="M18 8c0 7 3 9 3 9H6"/><path d="M3 3 L21 21"/><path d="M10 21 Q12 23 14 21"/></symbol><symbol id="ico-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 H5 a2 2 0 0 1 -2 -2 V5 a2 2 0 0 1 2 -2 h11 l5 5 v11 a2 2 0 0 1 -2 2 z"/><path d="M8 3 V8 H16 V3"/><path d="M8 13 H16 V21 H8 z"/></symbol><symbol id="ico-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 9 M8 2 H16 M9 9 L7 15 H17 L15 9 M12 15 V22"/></symbol><symbol id="ico-cube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L21 7 V17 L12 22 L3 17 V7 Z"/><path d="M3 7 L12 12 L21 7"/><path d="M12 12 V22"/></symbol><symbol id="ico-dice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r="1.2" fill="currentColor" stroke="none"/></symbol><symbol id="ico-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6 H20 M4 12 H20 M4 18 H20"/><circle cx="9" cy="6" r="2" fill="#0c0c10"/><circle cx="15" cy="12" r="2" fill="#0c0c10"/><circle cx="8" cy="18" r="2" fill="#0c0c10"/></symbol><symbol id="ico-fader" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3 V21 M13 3 V21 M19 3 V21"/><rect x="4" y="7" width="6" height="4" rx="1" fill="#0c0c10"/><rect x="10" y="13" width="6" height="4" rx="1" fill="#0c0c10"/><rect x="16" y="9" width="6" height="4" rx="1" fill="#0c0c10"/></symbol><symbol id="ico-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7 V12 L16 14"/></symbol><symbol id="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14 A8 8 0 1 1 10 4 a7 7 0 0 0 10 10 z"/></symbol><symbol id="ico-coffee" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10 H18 V16 A4 4 0 0 1 14 20 H8 A4 4 0 0 1 4 16 Z"/><path d="M18 12 H20 A2 2 0 0 1 22 14 V15 A2 2 0 0 1 20 17 H18"/><path d="M8 3 Q8 5 9 6 M12 3 Q12 5 13 6 M16 3 Q16 5 17 6" opacity="0.6"/></symbol><symbol id="ico-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 Q7 5 12 5 Q17 5 22 12 Q17 19 12 19 Q7 19 2 12 z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="ico-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 Q7 5 12 5 Q17 5 22 12 Q17 19 12 19 Q7 19 2 12 z"/><circle cx="12" cy="12" r="3"/><path d="M3 3 L21 21"/></symbol><symbol id="ico-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10 V7 A4 4 0 0 1 16 7 V10"/></symbol><symbol id="ico-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3 A2.1 2.1 0 0 1 20 6 L8 18 L4 19 L5 15 Z"/></symbol><symbol id="ico-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7 H20 M10 11 V17 M14 11 V17 M5 7 L6 20 A2 2 0 0 0 8 22 H16 A2 2 0 0 0 18 20 L19 7 M9 7 V4 A1 1 0 0 1 10 3 H14 A1 1 0 0 1 15 4 V7"/></symbol><symbol id="ico-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 L15 12 L9 18"/></symbol><symbol id="ico-scan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5" opacity="0.5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></symbol><symbol id="ico-headphones" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14 A8 8 0 0 1 20 14"/><rect x="3" y="14" width="5" height="7" rx="1.5"/><rect x="16" y="14" width="5" height="7" rx="1.5"/></symbol><symbol id="ico-rocket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 C16 6 17 11 17 15 L12 18 L7 15 C7 11 8 6 12 2 z"/><circle cx="12" cy="10" r="1.8"/><path d="M9 18 L6 22 M15 18 L18 22"/></symbol><symbol id="ico-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5 H20 A2 2 0 0 1 22 7 V15 A2 2 0 0 1 20 17 H13 L8 21 V17 H4 A2 2 0 0 1 2 15 V7 A2 2 0 0 1 4 5 Z"/></symbol><symbol id="ico-volume" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 V14 H7 L12 18 V6 L7 10 Z"/><path d="M16 9 Q18 12 16 15" opacity="0.7"/><path d="M19 6 Q22 12 19 18" opacity="0.5"/></symbol><symbol id="ico-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9 L12 15 L18 9"/></symbol><symbol id="ico-chevrons-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 6 L12 11 L17 6"/><path d="M7 13 L12 18 L17 13"/></symbol><symbol id="ico-chevrons-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18 L12 13 L17 18"/><path d="M7 11 L12 6 L17 11"/></symbol><symbol id="ico-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4H21L14 12V20L10 18V12L3 4Z"/></symbol><symbol id="ico-filter-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4H21L14 12V20L10 18V12L3 4Z"/><path d="M3 3L21 21"/></symbol><symbol id="ico-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20 L16 16"/></symbol><symbol id="ico-search-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20 L16 16"/><path d="M4 4 L20 20"/></symbol><symbol id="ico-paperclip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12 L12 21 A5 5 0 0 1 5 14 L13 6 A3 3 0 0 1 17 10 L9 18 A1 1 0 0 1 8 17 L15 10"/></symbol><symbol id="ico-star" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></symbol><symbol id="ico-star-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></symbol><symbol id="ico-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 A9 9 0 0 1 18.5 6.5 L21 9"/><path d="M21 3 V9 H15"/><path d="M21 12 A9 9 0 0 1 5.5 17.5 L3 15"/><path d="M3 21 V15 H9"/></symbol><symbol id="ico-redo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7 H9 A6 6 0 0 0 9 19 H13"/><path d="M16 3 L21 7 L16 11"/></symbol><symbol id="ico-minimize" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><rect x="12" y="12" width="7" height="5" rx="1" fill="currentColor" stroke="none"/></symbol></defs></svg>
+<div id="mini-fade-overlay"></div>
 <!-- Mini Mode UI — same window resized to 300×88 -->
 <div id="mini-mode-ui">
   <div class="mini-drag"></div>
@@ -1022,7 +1025,7 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
     <div class="em-track"><div class="em-thumb"></div></div>
     <span class="em-lbl em-lbl-pro">Pro</span>
   </div>
-  <button id="cm-scan-btn" onclick="scanLogic()" title="Scan Logic Pro channels. Keep Mixer open!">
+  <button id="cm-scan-btn" class="tb-pill tb-pill-scan" onclick="scanLogic()" title="Scan Logic Pro channels. Keep Mixer open!" style="box-shadow:var(--sh-glow-sm),var(--sh-inset);">
     <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg>
     Scan Logic
   </button>
@@ -5900,7 +5903,7 @@ function openMergeModal() {
   if (selectedIdx.size < 2) { toast('Select 2+ channels first'); return; }
   if (window._mergeSelSet) window._mergeSelSet.clear(); window._mergeShiftAnchor = null;
   const inp = document.getElementById('merge-name-inp');
-  if (inp) inp.value = '';
+  if (inp) { inp.value = ''; _attachModalAC(inp); }
   const saveBtn = document.getElementById('merge-save-preset-btn');
   if (saveBtn) saveBtn.style.display = 'none';
   _mergeModalChannels = [...selectedIdx].map(idx => channels.find(c => c.index === idx)).filter(Boolean)
@@ -6207,6 +6210,7 @@ function closeMergeModal() {
 function confirmMerge() {
   const name = (document.getElementById('merge-name-inp')?.value || '').trim();
   if (!name) { document.getElementById('merge-name-inp')?.focus(); toast('Enter a merge name'); return; }
+  _renameRecord(name);
   if (_mergeModalChannels.length < 2) { toast('Select at least 2 channels'); return; }
   // Duplicate check — same channel set already pending
   const newKey = _mergeModalChannels.map(c => c.channelIndex).sort((a,b) => a-b).join(',');
@@ -6336,7 +6340,9 @@ function openMixModal(editId, mutedIndicesOverride) {
   editingQueueMixId = null;
   const isEdit = !!editId;
   document.getElementById('mix-modal-title').textContent = isEdit ? 'Edit Version' : 'New Version';
-  document.getElementById('mix-name-inp').value = '';
+  const _mixInp = document.getElementById('mix-name-inp');
+  _mixInp.value = '';
+  _attachModalAC(_mixInp);
 
   let checkedIndices = [];
   if (isEdit) {
@@ -7096,6 +7102,7 @@ function saveMixAsPreset() {
 function saveMix() {
   const name = document.getElementById('mix-name-inp').value.trim();
   if (!name) { toast('Enter mix name'); return; }
+  _renameRecord(name);
   const mutedIndices = [...mixMutedSet];
   const mutedNames = mutedIndices.map(i => channels.find(c => c.index === i)?.name || String(i));
 
@@ -7368,6 +7375,29 @@ function _renameSuggest(prefix) {
     if (score > bestScore) { bestScore = score; best = k; }
   }
   return best || '';
+}
+
+// ── Modal input autocomplete (same dictionary as queue rename) ───────────────
+function _attachModalAC(inp) {
+  if (!inp || inp._acAttached) return;
+  inp._acAttached = true;
+  let _userTyped = '';
+  inp.addEventListener('input', () => {
+    _userTyped = inp.value;
+    const match = _renameSuggest(_userTyped);
+    if (match && match.toLowerCase().startsWith(_userTyped.toLowerCase()) && match.length > _userTyped.length) {
+      const full = _userTyped + match.slice(_userTyped.length);
+      inp.value = full;
+      requestAnimationFrame(() => inp.setSelectionRange(_userTyped.length, full.length));
+    }
+  });
+  inp.addEventListener('keydown', (e) => {
+    if ((e.key === 'Tab' || e.key === 'ArrowRight') && inp.selectionStart < inp.value.length) {
+      e.preventDefault();
+      inp.setSelectionRange(inp.value.length, inp.value.length);
+      _userTyped = inp.value;
+    }
+  });
 }
 
 // ── Inline queue name editing with autocomplete (selection-based) ───────────
@@ -8702,6 +8732,9 @@ async function doBounce() {
           }));
         }
       } catch(e) { log('Rescan error: ' + (e.message||e), 'warn'); }
+      // Safety: clear any stale solo/mute before retry (failed render may leave sidechain soloed)
+      await Promise.all([window.api.unsoloAll().catch(()=>{}), window.api.unmuteAll().catch(()=>{})]);
+      await window.api.wait(200).catch(() => {});
       try {
         ok = job.type === 'stem' ? await bounceStem(job, jobFolder, true)
            : job.type === 'group' ? await bounceGroup(job, jobFolder, true)
@@ -8914,6 +8947,11 @@ async function doBounce() {
       // Normal completion: bounceStem/bounceMix already restored state for each job.
       // Safety net: verify nothing is unexpectedly left soloed/muted
       if (!window._userCancelled) {
+        // Always clear solo/mute on failure path — sidechain may be left soloed if render froze
+        if (window._bounceFatalHang) {
+          await Promise.all([window.api.unsoloAll().catch(()=>{}), window.api.unmuteAll().catch(()=>{})]);
+          await window.api.wait(150).catch(() => {});
+        }
         try {
           const _finalState = await window.api.readStates();
           if ((_finalState?.soloed?.length || 0) > 0 || (_finalState?.muted?.length || 0) > 0) {
@@ -11011,14 +11049,18 @@ window.addEventListener('DOMContentLoaded', async () => {
 async function showMiniPlayer() {
   if (!window.api) return;
   window._miniActive = true;
-  // Fade out main UI before resize for smooth transition
-  document.body.classList.add('mini-transitioning');
-  await new Promise(r => setTimeout(r, 180));
+  const overlay = document.getElementById('mini-fade-overlay');
+  // 1. Fade in dark overlay — hides the "reassembly" from user
+  if (overlay) overlay.classList.add('visible');
+  await new Promise(r => setTimeout(r, 170));
+  // 2. Resize window while hidden behind overlay
   document.body.style.background = 'transparent';
   if (window.api.enterMiniMode) await window.api.enterMiniMode();
   document.body.style.background = '';
   document.body.classList.add('mini-mode');
-  document.body.classList.remove('mini-transitioning');
+  // 3. Fade out overlay to reveal mini mode
+  await new Promise(r => setTimeout(r, 40));
+  if (overlay) overlay.classList.remove('visible');
   try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) { console.warn('[EB]', e); }
 }
 
