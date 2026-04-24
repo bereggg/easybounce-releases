@@ -232,6 +232,17 @@ function createWindow() {
     _lastEnglishSwitch = now;
     bridge('switchToEnglish').catch(() => {});
   });
+
+  // Defensive AOT release: when the window loses focus and we're idle
+  // (not scanning/bouncing/mini/pinned), force-drop alwaysOnTop in case
+  // a prior screen-saver level wasn't fully cleared by setAlwaysOnTop(false).
+  mainWindow.on('blur', () => {
+    if (_inBounce || _inScanBadge || _inMiniMode || _userPinned) return;
+    if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isAlwaysOnTop()) {
+      mainWindow.setAlwaysOnTop(false);
+      mainWindow.setVisibleOnAllWorkspaces(false);
+    }
+  });
 }
 
 function createLicenseWindow() {
@@ -404,6 +415,9 @@ app.on('activate', () => {
 // ── Bridge helper ─────────────────────────────────────────────────────────────
 // #11: track the currently running bridge process so cancelScan can kill it mid-scan
 let _currentBridgeProc = null;
+// Master-plugin in-flight set — killable when the MP modal closes so delayed
+// AX operations (setMasterPlugin / openMixer / scrollToBnc) don't land 30s later.
+const _mpInflight = new Set();
 
 async function bridge(...args) {
   if (!fs.existsSync(BRIDGE)) {
@@ -413,10 +427,27 @@ async function bridge(...args) {
     const { execFile } = require('child_process');
     const proc = execFile(BRIDGE, args, { timeout: 30000 }, (err, stdout) => {
       if (_currentBridgeProc === proc) _currentBridgeProc = null;
+      _mpInflight.delete(proc);
       try { resolve(JSON.parse((stdout || '').trim())); }
       catch { resolve({ error: err?.message || 'parse error' }); }
     });
     _currentBridgeProc = proc;
+  });
+}
+
+// Wrap a bridge call so the child proc is trackable / killable via cancel-master-plugin-ops.
+async function bridgeMP(...args) {
+  if (!fs.existsSync(BRIDGE)) return { error: 'LogicBridge not found' };
+  return new Promise((resolve) => {
+    const { execFile } = require('child_process');
+    const proc = execFile(BRIDGE, args, { timeout: 30000 }, (err, stdout) => {
+      if (_currentBridgeProc === proc) _currentBridgeProc = null;
+      _mpInflight.delete(proc);
+      try { resolve(JSON.parse((stdout || '').trim())); }
+      catch { resolve({ error: err?.message || 'parse error', cancelled: proc.killed }); }
+    });
+    _currentBridgeProc = proc;
+    _mpInflight.add(proc);
   });
 }
 
@@ -476,7 +507,21 @@ ipcMain.handle('cancel-scan', () => {
 });
 ipcMain.handle('scan-master-plugins', () => cachedBridge('scanMasterPlugins', 3000));
 ipcMain.handle('master-plugins', () => cachedBridge('masterPlugins', 2500));
-ipcMain.handle('set-master-plugin', (_, name, active) => { invalidateBridgeCache('masterPlugins'); return bridge('setMasterPlugin', name, String(active)); });
+let _mpModalOpen = false;
+ipcMain.handle('set-mp-modal-open', (_, v) => { _mpModalOpen = !!v; return { ok: true }; });
+ipcMain.handle('set-master-plugin', (_, name, active) => {
+  invalidateBridgeCache('masterPlugins');
+  return (_mpModalOpen ? bridgeMP : bridge)('setMasterPlugin', name, String(active));
+});
+// Kill any in-flight master-plugin bridge operations (called on MP modal close).
+ipcMain.handle('cancel-master-plugin-ops', () => {
+  let killed = 0;
+  for (const p of _mpInflight) {
+    try { p.kill('SIGTERM'); killed++; } catch(e) {}
+  }
+  _mpInflight.clear();
+  return { ok: true, killed };
+});
 ipcMain.handle('set-all-master-plugins', (_, active) => { invalidateBridgeCache('masterPlugins'); return bridge('setAllMasterPlugins', String(active)); });
 ipcMain.handle('master-plugins-quick', () => cachedBridge('masterPluginsQuick', 1000)); // 1s TTL — fast polling
 ipcMain.handle('scan-tree', async () => {
@@ -501,7 +546,7 @@ ipcMain.handle('close-panels', async () => {
 ipcMain.handle('scroll-to-bnc', async () => {
   const wasOnTop = mainWindow?.isAlwaysOnTop?.() ?? false;
   if (mainWindow && !_inScanBadge && !_inMiniMode) mainWindow.setAlwaysOnTop(false);
-  const result = await bridge('scrollToBnc');
+  const result = await (_mpModalOpen ? bridgeMP : bridge)('scrollToBnc');
   if (mainWindow && !mainWindow.isDestroyed() && wasOnTop) {
     mainWindow.setAlwaysOnTop(true, _mainAotLevel());
     mainWindow.showInactive();
@@ -511,7 +556,7 @@ ipcMain.handle('scroll-to-bnc', async () => {
 ipcMain.handle('open-mixer', async (_, opts = {}) => {
   const wasOnTop = mainWindow?.isAlwaysOnTop?.() ?? false;
   if (mainWindow && !_inScanBadge && !_inMiniMode) mainWindow.setAlwaysOnTop(false);
-  const result = await bridge('openMixer', ...(opts.skipPanelClose ? ['skipPanelClose'] : []));
+  const result = await (_mpModalOpen ? bridgeMP : bridge)('openMixer', ...(opts.skipPanelClose ? ['skipPanelClose'] : []));
   if (mainWindow && !mainWindow.isDestroyed() && wasOnTop) {
     mainWindow.setAlwaysOnTop(true, _mainAotLevel());
     mainWindow.showInactive();
@@ -818,7 +863,11 @@ ipcMain.handle('scan-markers', () => bridge('scan-markers'));
 ipcMain.handle('set-locators-by-marker', async (_, name, keepML) => bridge('set-locators-by-marker', name, ...(keepML ? ['keep-ml'] : [])));
 ipcMain.handle('focus-app', () => {
   if (_scanTreeActive) return { ok: true };
-  if (mainWindow) { mainWindow.show(); mainWindow.focus(); }
+  if (mainWindow) {
+    mainWindow.show();
+    mainWindow.focus();
+    app.focus({ steal: true });
+  }
   return { ok: true };
 });
 
@@ -1119,8 +1168,17 @@ ipcMain.handle('exit-scan-badge', () => {
     mainWindow.setBounds(_preScan, false);
     _preScan = null;
   }
-  // Reset alwaysOnTop so app doesn't stay above Logic after scan
+  // Reset alwaysOnTop so app doesn't stay above Logic after scan.
+  // macOS sometimes doesn't fully demote from 'screen-saver' level with a single
+  // setAlwaysOnTop(false); force a full reset, then restore user pin if needed.
   mainWindow.setAlwaysOnTop(false);
+  mainWindow.setVisibleOnAllWorkspaces(false);
+  setTimeout(() => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    if (_inScanBadge || _inMiniMode || _inBounce) return;
+    mainWindow.setAlwaysOnTop(false);
+    if (_userPinned) mainWindow.setAlwaysOnTop(true, 'pop-up-menu');
+  }, 120);
   return { ok: true };
 });
 

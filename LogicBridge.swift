@@ -962,18 +962,21 @@ case "unmuteIndex":
     jsonOut(["ok": true, "action": "unmute", "channel": ch[idx].name])
 
 case "readStates":
-    // Read solo/mute state via Tracks header AXDescription — reliable for all channel types
+    // Read solo/mute state via Tracks header AXDescription — reliable for visible tracks.
+    // Children of collapsed stem stacks are NOT visible here — JS falls back to mixer truth.
     var rsSoloed: [String] = []
     var rsMuted: [String] = []
+    var rsVisible: [String] = []
     if let header = findTracksHeader(logic) {
         for item in axKids(header) {
             let desc = (axVal(item, kAXDescriptionAttribute) as? String) ?? ""
             guard let t = parseTrackDesc(desc) else { continue }
+            rsVisible.append(t.name)
             if desc.contains(", solo") { rsSoloed.append(t.name) }
             if desc.contains(", mute") { rsMuted.append(t.name) }
         }
     }
-    jsonOut(["ok": true, "soloed": rsSoloed, "muted": rsMuted])
+    jsonOut(["ok": true, "soloed": rsSoloed, "muted": rsMuted, "visible": rsVisible])
 
 case "resetMutes":
     // Option+click on first mute button = unmute ALL channels in Logic
@@ -3596,9 +3599,19 @@ case "setMasterPlugin":
     }
     let currentVal = axIntValue(smpBypass)
     let wantVal = smpActive ? 0 : 1
-    if currentVal != wantVal { axPress(smpBypass); Thread.sleep(forTimeInterval: 0.15) }
-    let newVal = axIntValue(smpBypass)
-    jsonOut(["ok": true, "plugin": smpName, "active": newVal == 0, "changed": currentVal != newVal])
+    var newVal = currentVal
+    if currentVal != wantVal {
+        axPress(smpBypass)
+        // Adaptive confirm: poll until AX tree reports the new value or deadline hits.
+        // Heavy projects take 400–1000 ms to propagate; a fixed 150 ms sleep was racing.
+        let deadline = Date().addingTimeInterval(1.8)
+        while Date() < deadline {
+            Thread.sleep(forTimeInterval: 0.05)
+            newVal = axIntValue(smpBypass)
+            if newVal == wantVal { break }
+        }
+    }
+    jsonOut(["ok": true, "plugin": smpName, "active": newVal == 0, "changed": currentVal != newVal, "confirmed": newVal == wantVal])
 
 case "setAllMasterPlugins":
     // Bypass or restore ALL plugins on Stereo Out / MASTER channel — Mixer direct

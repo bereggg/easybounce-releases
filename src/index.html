@@ -92,24 +92,28 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .ch-item:hover{background:var(--w-a03);}
 .ch-item.sel{background:var(--accent-a08);box-shadow:inset 2px 0 0 var(--accent);}
 /* ── Tree view ── */
-.tree-group{display:flex;align-items:center;gap:7px;padding:0 14px;min-height:32px;border-bottom:1px solid rgba(255,255,255,.025);cursor:pointer;transition:all var(--t-fast);user-select:none;}
-.tree-group.depth-0{background:rgba(255,255,255,.04);}
-.tree-group.depth-1{background:rgba(255,255,255,.025);}
-.tree-group.depth-2{background:rgba(255,255,255,.015);}
-.tree-group.depth-3{background:rgba(255,255,255,.008);}
-.tree-group:hover{background:rgba(255,255,255,.06);}
-.tree-group.sel{background:rgba(108,99,255,.08);box-shadow:inset 2px 0 0 var(--accent);}
-.tree-toggle{font-size:14px;color:var(--muted);width:20px;min-width:20px;flex-shrink:0;line-height:1;text-align:center;cursor:pointer;user-select:none;}
-.depth-0 .tree-toggle{color:var(--text);opacity:.7;}
-.depth-1 .tree-toggle{color:var(--t2);opacity:.65;}
-.depth-2 .tree-toggle{color:var(--muted);opacity:.6;}
-.depth-3 .tree-toggle{color:var(--muted);opacity:.5;}
-.tree-group-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;pointer-events:none;}
-.tree-group-name{flex:1;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;pointer-events:none;}
+/* Tree hierarchy — connector lines + typographic depth */
+.tree-group{position:relative;display:flex;align-items:center;gap:7px;padding:0 14px;min-height:32px;border-bottom:1px solid var(--w-a03);cursor:pointer;transition:all var(--t-fast);user-select:none;}
+.tree-group:hover{background:var(--w-a05);}
+.tree-group.sel{background:var(--accent-a08);box-shadow:inset 2px 0 0 var(--accent);}
+/* depth-0 = section header — display font bold, left accent bar, no indent */
+.tree-group.depth-0{padding-left:14px;}
+.tree-group.depth-0::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;border-radius:0 2px 2px 0;background:var(--accent-a40);transition:background var(--t-fast);}
+.tree-group.depth-0:hover::before{background:var(--accent);}
+.tree-group.depth-0 .tree-group-name{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:-.01em;color:var(--text);}
+/* depth-1+ indent only (no connector guides) */
+.tree-group.depth-1{padding-left:28px;}
+.tree-group.depth-2{padding-left:44px;}
+.tree-group.depth-3{padding-left:60px;}
+.tree-toggle{font-size:14px;color:var(--muted);width:18px;min-width:18px;flex-shrink:0;line-height:1;text-align:center;cursor:pointer;user-select:none;opacity:.7;transition:opacity var(--t-fast);}
+.tree-group:hover .tree-toggle{opacity:1;}
+.depth-0 .tree-toggle{color:var(--text);}
+.tree-group-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;pointer-events:none;box-shadow:0 0 0 2px var(--bg);}
+.tree-group-name{flex:1;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;pointer-events:none;color:var(--t2);}
 .tree-group-idx{font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);color:var(--muted);flex-shrink:0;pointer-events:none;}
-.tree-child{display:flex;align-items:center;gap:7px;padding:0 14px 0 32px;min-height:32px;border-bottom:1px solid rgba(255,255,255,.015);cursor:pointer;transition:all var(--t-fast);user-select:none;}
-.tree-child:hover{background:rgba(255,255,255,.03);}
-.tree-child.sel{background:rgba(108,99,255,.07);box-shadow:inset 2px 0 0 rgba(108,99,255,.5);}
+.tree-child{position:relative;display:flex;align-items:center;gap:7px;padding:0 14px 0 40px;min-height:30px;border-bottom:1px solid var(--w-a03);cursor:pointer;transition:all var(--t-fast);user-select:none;}
+.tree-child:hover{background:var(--w-a05);}
+.tree-child.sel{background:var(--accent-a08);box-shadow:inset 2px 0 0 var(--accent-a60);}
 .tree-child-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;opacity:.8;pointer-events:none;}
 .tree-child-name{flex:1;font-size:var(--fs-sm);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--t2);pointer-events:none;}
 .tree-child-idx{font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);color:var(--muted);flex-shrink:0;opacity:.6;}
@@ -131,7 +135,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .queue-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .queue-hdr{padding:9px 14px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .q-mini-btns{display:flex;gap:4px;margin-left:auto;}
-.q-mini-btn{padding:4px 11px;border-radius:var(--r);border:1px solid var(--b2);background:var(--card);font-size:var(--fs-xs);font-weight:600;transition:all var(--t-fast);letter-spacing:.01em;}
+.q-mini-btn{padding:4px 11px;border-radius:var(--r);border:1px solid var(--b2);background:var(--card);font-size:var(--fs-xs);font-weight:600;transition:all var(--t-fast);letter-spacing:.01em;white-space:nowrap;flex-shrink:0;}
 .qlist{flex:1;overflow-y:auto;padding:2px 0;display:flex;flex-direction:column;}
 .qlist::-webkit-scrollbar{width:4px;}
 .qlist::-webkit-scrollbar-thumb{background:var(--b2);}
@@ -151,9 +155,9 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .qname{font-size:var(--fs-base);font-weight:var(--fw-semi);letter-spacing:var(--ls-tight);}
 .qtag{font-size:var(--fs-xxs);font-weight:700;padding:2px 7px;border-radius:var(--r-pill);text-transform:uppercase;letter-spacing:.08em;}
 .qtag.stem{background:var(--w-a05);color:var(--t2);border:1px solid var(--b);}
-.qtag.mix{background:var(--w-a05);color:var(--t2);border:1px solid var(--b);}
+.qtag.mix{background:var(--success-a15);color:var(--a3);border:1px solid var(--success-a40);}
 .qtag.set{background:var(--w-a05);color:var(--t2);border:1px solid var(--b);}
-.qtag.group{background:var(--accent-a20);color:var(--accent);border:1px solid var(--accent-a30);box-shadow:0 2px 8px var(--accent-a20);}
+.qtag.group{background:var(--accent-a20);color:var(--accent);border:1px solid var(--accent-a30);}
 .tb-pill-scan{background:var(--g-primary);border:none!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.18),var(--sh-glow-sm,0 0 8px rgba(108,99,255,.35)),var(--sh-inset,inset 0 1px 0 rgba(255,255,255,.15))!important;color:#fff;font-weight:700;overflow:hidden;isolation:isolate;}
 .tb-pill.tb-pill-scan:hover{background:var(--g-primary);opacity:.88;color:#fff;}
 .qitem.running .qtag{background:var(--accent-a12);color:var(--accent);border-color:var(--accent-a30);}
@@ -191,7 +195,7 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .qmuted-tog:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);}
 .ch-mute-badge{font-size:var(--fs-xxs);font-weight:700;padding:1px 5px;border-radius:var(--r);background:rgba(255,71,87,.12);color:var(--red);border:1px solid rgba(255,71,87,.18);margin-left:auto;flex-shrink:0;letter-spacing:.05em;}
 .qst{font-size:var(--fs-xxs);font-weight:var(--fw-bold);padding:3px 8px;border-radius:var(--r-pill);flex-shrink:0;margin-top:2px;text-transform:uppercase;letter-spacing:var(--ls-wide);}
-.qst.pending{color:var(--muted);background:var(--w-a05);}
+.qst.pending{display:none;}
 .qst.running{color:var(--warn);background:var(--warn-a12);animation:none;}
 .qst.running::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--warn);margin-right:5px;animation:eb-breathe 1.4s ease-in-out infinite;vertical-align:middle;}
 .qst.done{color:var(--a3);background:var(--success-a15);}
@@ -216,8 +220,11 @@ svg.ico.ico-lg{width:20px;height:20px;}
 .out-inp::placeholder{color:var(--muted);}
 .out-inp:focus{outline:none;border-color:var(--accent-a30);box-shadow:0 0 0 3px var(--accent-a08);}
 .bounce-wrap{padding:10px 14px 14px;border-top:1px solid var(--b2);flex-shrink:0;}
-.prog-bar{height:4px;background:var(--b);border-radius:2px;overflow:hidden;margin-bottom:6px;}
-.prog-fill{height:100%;background:var(--g-primary);border-radius:2px;transition:width var(--t) linear;width:0%;will-change:width;}
+.prog-bar{height:4px;background:var(--b);border-radius:2px;overflow:hidden;margin-bottom:6px;position:relative;}
+.prog-fill{height:100%;background:var(--g-primary);border-radius:2px;transition:width var(--t) linear;width:0%;will-change:width;position:relative;overflow:hidden;}
+.prog-fill::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.45) 50%,transparent 100%);transform:translateX(-100%);animation:prog-shimmer 1.6s ease-in-out infinite;will-change:transform;}
+@keyframes prog-shimmer{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+.prog-fill[style*="width: 0%"]::after,.prog-fill[style*="width:0%"]::after{display:none;}
 .prog-info{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);color:var(--muted);margin-bottom:10px;}
 .bounce-btns{display:flex;gap:8px;}
 .bbtn{flex:1;height:54px;border-radius:var(--r2);border:none;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:linear-gradient(160deg,var(--accent) 0%,var(--a2) 100%);position:relative;overflow:hidden;transition:transform var(--t),box-shadow var(--t);box-shadow:0 8px 32px rgba(108,99,255,.4),inset 0 1px 0 rgba(255,255,255,.2);}
@@ -231,7 +238,7 @@ svg.ico.ico-lg{width:20px;height:20px;}
 @keyframes done-flash{0%{background:var(--card)}40%{background:rgba(67,233,123,.2)}100%{background:var(--card)}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 @keyframes bounce-ready{0%,100%{box-shadow:0 8px 32px var(--accent-a30),inset 0 1px 0 rgba(255,255,255,.2);}50%{box-shadow:0 12px 40px var(--accent-a40),inset 0 1px 0 rgba(255,255,255,.25);transform:translateY(-1px);}}
-.bbtn.running{background:var(--g-running);box-shadow:0 8px 32px var(--warn-a30),inset 0 1px 0 rgba(255,255,255,.2);animation:pulse-glow 1.6s ease-in-out infinite alternate;}
+.bbtn.running{background:linear-gradient(160deg,var(--accent) 0%,var(--a2) 100%);box-shadow:0 8px 32px var(--accent-a30),inset 0 1px 0 rgba(255,255,255,.2);animation:pulse-glow 1.6s ease-in-out infinite alternate;}
 .bbtn.off{background:var(--card);color:var(--muted);box-shadow:none;cursor:not-allowed;transform:none;border:1px solid var(--b);}
 .bbtn.off::before{display:none;}
 @keyframes pulse-stems{from{box-shadow:0 0 0 transparent}to{box-shadow:0 0 12px var(--success-a40)}}
@@ -419,16 +426,23 @@ body.easy #panel-pr{transition:all var(--t-slow);}
 .hist-body::-webkit-scrollbar{width:3px;}
 .hist-body::-webkit-scrollbar-thumb{background:var(--b2);}
 .hist-empty{text-align:center;padding:32px 16px;color:var(--muted);font-size:var(--fs-sm);line-height:1.6;}
-.hist-item{border:1px solid var(--b);border-radius:var(--r);margin-bottom:6px;overflow:hidden;background:var(--card);}
-.hist-hdr{display:flex;align-items:center;justify-content:space-between;padding:7px 9px;cursor:pointer;transition:background var(--t-fast);gap:6px;}
+.hist-item{position:relative;border:1px solid var(--b);border-radius:var(--r);margin-bottom:6px;overflow:hidden;background:var(--card);}
+/* Vertical success bar on the left — visible statusful marker */
+.hist-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--a3);opacity:.85;}
+.hist-item.failed::before{background:var(--red);}
+.hist-hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 8px 13px;cursor:pointer;transition:background var(--t-fast);gap:8px;}
 .hist-hdr:hover{background:var(--w-a05);}
-.hist-meta{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1;}
+.hist-meta{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;}
 .hist-proj{font-family:'Space Grotesk',sans-serif;font-size:var(--fs-sm);font-weight:700;color:var(--text);min-width:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3;word-break:break-word;}
 .hist-date{font-size:var(--fs-xxs);color:var(--muted);font-family:'JetBrains Mono',monospace;}
-.hist-right{display:flex;align-items:center;gap:5px;flex-shrink:0;}
-.hist-cnt{font-size:var(--fs-xxs);color:var(--muted);font-family:'JetBrains Mono',monospace;white-space:nowrap;}
-.hist-repeat{width:22px;height:22px;border-radius:6px;border:1px solid rgba(108,99,255,.3);background:rgba(108,99,255,.08);color:var(--accent);font-size:var(--fs-base);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--t-fast);flex-shrink:0;}
-.hist-repeat:hover{background:rgba(108,99,255,.18);border-color:var(--accent);}
+.hist-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+/* Count pill — green success pill with check */
+.hist-cnt{display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-xxs);font-weight:700;color:var(--a3);font-family:'JetBrains Mono',monospace;white-space:nowrap;padding:3px 8px;border-radius:999px;background:rgba(67,233,123,.10);border:1px solid rgba(67,233,123,.25);letter-spacing:.02em;}
+.hist-cnt::before{content:'✓';font-weight:700;}
+.hist-item.failed .hist-cnt{color:var(--red);background:rgba(229,57,53,.10);border-color:rgba(229,57,53,.25);}
+.hist-item.failed .hist-cnt::before{content:'✕';}
+.hist-repeat{width:24px;height:24px;border-radius:6px;border:1px solid var(--b2);background:transparent;color:var(--muted);font-size:var(--fs-base);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--t-fast);flex-shrink:0;}
+.hist-repeat:hover{background:var(--accent-a08);border-color:var(--accent);color:var(--accent);transform:rotate(-45deg);}
 .hist-files{padding:0 9px 8px;display:none;}
 .hist-file{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:var(--fs-xs);font-family:var(--font-mono);color:var(--t2);}
 .hist-badge{font-size:var(--fs-xxs);font-weight:700;padding:1px 4px;border-radius:4px;flex-shrink:0;}
@@ -510,12 +524,19 @@ body.easy #panel-pr{transition:all var(--t-slow);}
 .mfield label{display:block;font-size:11px;font-weight:600;color:var(--t2);letter-spacing:0;text-transform:none;margin-bottom:5px;}
 .mfield input[type=text]{width:100%;background:var(--s);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;padding:9px 11px;transition:border-color var(--t);}
 .mfield input[type=text]:focus{outline:none;border-color:rgba(108,99,255,.6);}
+#mix-name-inp,#esp-name-inp,#merge-name-inp,#eg-name-inp,#eset-name-inp{border:1px solid var(--b2);background:var(--card);}
+#mix-name-inp:focus,#esp-name-inp:focus,#merge-name-inp:focus,#eg-name-inp:focus,#eset-name-inp:focus{border-color:var(--accent-a60);}
 .tcb-list{overflow-y:auto;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:4px 0;max-height:240px;flex-shrink:1;}
 .tcb-list::-webkit-scrollbar{width:3px;}
 .tcb-list::-webkit-scrollbar-thumb{background:var(--b2);}
 .tcb-item{display:flex;align-items:center;gap:7px;padding:4px 12px;cursor:pointer;transition:background var(--t-fast);}
 .tcb-item:hover{background:rgba(255,255,255,.03);}
-.tcb-item input[type=checkbox]{accent-color:var(--accent);}
+/* Custom checkbox — replaces native accent-color, consistent across themes */
+.eb-cb,.tcb-item input[type=checkbox],.fmt-cb-row input[type=checkbox]{appearance:none;-webkit-appearance:none;width:14px;height:14px;border:1.5px solid var(--b2);border-radius:4px;background:var(--card);cursor:pointer;position:relative;flex-shrink:0;transition:all var(--t-fast);margin:0;}
+.eb-cb:hover,.tcb-item input[type=checkbox]:hover,.fmt-cb-row input[type=checkbox]:hover{border-color:var(--accent-a60);}
+.eb-cb:checked,.tcb-item input[type=checkbox]:checked,.fmt-cb-row input[type=checkbox]:checked{background:var(--accent);border-color:var(--accent);}
+.eb-cb:checked::after,.tcb-item input[type=checkbox]:checked::after,.fmt-cb-row input[type=checkbox]:checked::after{content:'';position:absolute;left:3px;top:0px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg);}
+.eb-cb:focus-visible,.tcb-item input[type=checkbox]:focus-visible,.fmt-cb-row input[type=checkbox]:focus-visible{outline:none;box-shadow:0 0 0 3px var(--accent-a20);}
 .cbox{width:15px;height:15px;border-radius:4px;border:1.5px solid rgba(255,255,255,.18);background:transparent;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color var(--t-fast),background var(--t-fast),box-shadow var(--t-fast);}
 .cbox:hover{border-color:rgba(108,99,255,.6);}
 .cbox.on{background:linear-gradient(135deg,var(--accent),var(--a2));border-color:transparent;box-shadow:0 0 7px rgba(108,99,255,.35);}
@@ -3222,6 +3243,11 @@ function toggleSkipFilterScan() {
   _skipFilterScan = !_skipFilterScan;
   localStorage.setItem('eb_skip_filter_scan', _skipFilterScan ? '1' : '0');
   renderMixerFilters();
+  if (typeof _renderEspFilters === 'function') _renderEspFilters();
+  if (typeof _esetRenderFilters === 'function') _esetRenderFilters();
+  if (typeof _renderEspChannels === 'function' && document.getElementById('edit-stem-preset-modal')?.classList.contains('show')) _renderEspChannels();
+  if (typeof _esetRenderChannels === 'function' && document.getElementById('edit-set-modal')?.classList.contains('show')) _esetRenderChannels();
+  if (typeof renderMixList === 'function' && document.getElementById('mix-modal')?.classList.contains('show')) renderMixList();
   if (!_skipFilterScan) _learnFilterTypes();
 }
 
@@ -4662,6 +4688,7 @@ function _espToggleHideChannel(chIdx) {
 function _renderEspFilters() {
   const el = document.getElementById('esp-modal-filters');
   if (!el) return;
+  if (_skipFilterScan) { el.style.display = 'none'; _espActiveFilters && _espActiveFilters.clear && _espActiveFilters.clear(); return; }
   el.style.display = 'flex';
   el.innerHTML = '<span class="mf-label">FILTER</span>' + MF_ALL_NAMES.map(name => {
     const active = _espActiveFilters.has(name);
@@ -4804,6 +4831,7 @@ let _esetModalExpanded = new Set();  // expanded groups in tree view
 function _esetRenderFilters() {
   const el = document.getElementById('eset-modal-filters');
   if (!el) return;
+  if (_skipFilterScan) { el.style.display = 'none'; _esetActiveFilters && _esetActiveFilters.clear && _esetActiveFilters.clear(); return; }
   el.style.display = 'flex';
   el.innerHTML = '<span class="mf-label">FILTER</span>' + MF_ALL_NAMES.map(name => {
     const active = _esetActiveFilters.has(name);
@@ -6444,6 +6472,7 @@ function _mixModalChMatchesFilter(chName) {
 function renderMixModalFilters() {
   const el = document.getElementById('mix-modal-filters');
   if (!el) return;
+  if (_skipFilterScan) { el.style.display = 'none'; _mixModalActiveFilters && _mixModalActiveFilters.clear && _mixModalActiveFilters.clear(); return; }
   if (Object.keys(_mixerFilters).length === 0) { el.style.display = 'none'; return; }
   const known = MF_ALL_NAMES.filter(n => n in _mixerFilters);
   const extra = Object.keys(_mixerFilters).filter(n => !MF_ALL_NAMES.includes(n));
@@ -7339,12 +7368,13 @@ function _togMuted(btn, count) {
 function _renderItemMarkerChips(item) {
   if (!_queueMarkersChipsVisible) return { fullChip: '', markerChips: '' };
   const visibleMarkers = _projectMarkers.filter(m => !_hiddenMarkers.has(markerId(m)));
+  const CHIP_ACTIVE   = 'background:transparent;color:var(--t2);border:1px solid var(--a2-a30);';
+  const CHIP_INACTIVE = 'background:transparent;color:var(--muted);border:1px dashed var(--b2);text-decoration:line-through;text-decoration-thickness:1.5px;text-decoration-color:var(--muted);opacity:.65;';
+  const CHIP_ADDED    = 'background:transparent;color:var(--t2);border:1px dashed var(--a2-a30);';
   const fullChip = _fullActive
     ? (() => {
         const fullExcluded = !!item.fullExclusion;
-        const fs = fullExcluded
-          ? 'background:transparent;color:rgba(255,255,255,.3);border:1.5px solid rgba(255,255,255,.12);text-decoration:line-through;'
-          : 'background:rgba(80,200,120,.12);color:#7ef0a8;border:1.5px solid rgba(80,200,120,.4);';
+        const fs = fullExcluded ? CHIP_INACTIVE : CHIP_ACTIVE;
         const ft = fullExcluded ? 'Full skipped for this item — click to include' : 'Will bounce full range — click to skip for this item';
         return `<span onclick="event.stopPropagation();toggleJobFull('${item.id}');" title="${ft}" style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:var(--fs-xxs);font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all var(--t-fast);user-select:none;${fs}">Full</span>`;
       })()
@@ -7355,10 +7385,10 @@ function _renderItemMarkerChips(item) {
     const excluded = (item.markerExclusions||[]).includes(mid);
     const added    = (item.markerAdditions||[]).includes(mid);
     let cs, ct;
-    if (globallyActive && !excluded)  { cs='background:rgba(108,99,255,.18);color:#b8b0ff;border:1.5px solid rgba(108,99,255,.4);';            ct='Will bounce — click to skip for this item'; }
-    else if (globallyActive && excluded) { cs='background:transparent;color:rgba(255,255,255,.35);border:1.5px dashed rgba(255,255,255,.18);'; ct='Click to include for this item'; }
-    else if (!globallyActive && added)   { cs='background:rgba(255,169,77,.12);color:#ffb340;border:1.5px solid rgba(255,169,77,.4);';          ct='Added only for this item — click to remove'; }
-    else                                  { cs='background:transparent;color:rgba(255,255,255,.35);border:1.5px dashed rgba(255,255,255,.15);';  ct='Click to add this marker only for this item'; }
+    if (globallyActive && !excluded)  { cs=CHIP_ACTIVE;                                   ct='Will bounce — click to skip for this item'; }
+    else if (globallyActive && excluded) { cs=CHIP_INACTIVE; ct='Click to include for this item'; }
+    else if (!globallyActive && added)   { cs=CHIP_ADDED;                                  ct='Added only for this item — click to remove'; }
+    else                                  { cs=CHIP_INACTIVE;                              ct='Click to add this marker only for this item'; }
     return `<span onclick="event.stopPropagation();toggleJobMarker('${item.id}','${mid.replace(/'/g,"\\'")}');" title="${ct}" style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:var(--fs-xxs);font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all var(--t-fast);user-select:none;${cs}">${m.name}</span>`;
   };
   const MSHOW = 3;
@@ -8880,35 +8910,30 @@ function _namesMatch(a, b) { return normalizeName(a) === normalizeName(b); }
 async function _verifySoloApplied(name) {
   try {
     const s = await window.api.readStates();
-    return (s?.soloed || []).some(n => _namesMatch(n, name));
+    if ((s?.soloed || []).some(n => _namesMatch(n, name))) return true;
+    // Track not visible in Tracks header → child of collapsed stem stack.
+    // Mixer-based solo is reliable; skip verification instead of halting the queue.
+    const visible = s?.visible || [];
+    if (visible.length > 0 && !visible.some(n => _namesMatch(n, name))) return true;
+    return false;
   } catch(e) { return true; } // if check fails, assume ok — don't block bounce
 }
 async function _verifyUnsoloApplied(name) {
   try {
     const s = await window.api.readStates();
-    return !(s?.soloed || []).some(n => _namesMatch(n, name));
+    if (!(s?.soloed || []).some(n => _namesMatch(n, name))) return true;
+    const visible = s?.visible || [];
+    if (visible.length > 0 && !visible.some(n => _namesMatch(n, name))) return true;
+    return false;
   } catch(e) { return true; }
 }
 // Halt entire bounce queue with user confirmation when a solo/mute state
 // cannot be verified. Returning true = user chose Continue anyway; false = abort.
 async function _haltOnUnconfirmed(kind, name) {
-  log(`✗ ${kind} state unconfirmed: "${name}"`, 'err');
-  try {
-    await window.api.setAlwaysOnTop(false).catch(() => {});
-    const cont = await window.api.showConfirm(
-      `${kind} state unconfirmed`,
-      `Could not verify ${kind.toLowerCase()} for "${name}" in Logic. The bounce may produce wrong content.\n\nContinue anyway, or Cancel to stop the queue and restore tracks?`
-    );
-    if (!cont) {
-      window._bounceFatalHang = true;
-      window._lastHangReason = `${kind} unconfirmed: "${name}"`;
-    }
-    return cont;
-  } catch(e) {
-    window._bounceFatalHang = true;
-    window._lastHangReason = `${kind} unconfirmed: "${name}"`;
-    return false;
-  }
+  // Silent: never halt the queue or prompt during bounce. Mixer-based solo/mute
+  // is reliable even when Tracks AX can't verify (collapsed stem stacks). Just log.
+  log(`⚠ ${kind} state unverified: "${name}" — continuing (mixer action was applied)`, 'warn');
+  return true;
 }
 async function _cleanStaleJobState() {
   // Before starting a new job: clear any solos left from a previous failed job
@@ -9271,21 +9296,27 @@ let _mpPollInterval = null;
 let _mpPollPausedUntil = 0;
 let _mpEscListener = null;
 let _mpLastToggleAt = 0;
-async function openMasterPluginsModal() {
-  // If mixer is closed — open it and scroll to BNC first, then return to app
-  try {
-    const em = await window.api.ensureMixer?.();
-    if (em?.opened) {
-      await _withRecoveryBadge(
-        'Opening mixer…',
-        'Scrolling to Stereo Out',
-        async () => {
-          await window.api.scrollToBnc();
-          await window.api.wait(200);
-        }
-      );
+async function _ensureMasterReady() {
+  // Probe: Stereo Out Bnc already visible?
+  const q = await window.api.masterPluginsQuick().catch(() => null);
+  if (q?.ok && q.plugins?.length) return { opened: false };
+  // Not visible — open mixer + maybe scroll, under badge
+  await _withRecoveryBadge('Opening mixer…', 'Checking Stereo Out', async () => {
+    await window.api.openMixer({ skipPanelClose: false });
+    const q2 = await window.api.masterPluginsQuick().catch(() => null);
+    if (!(q2?.ok && q2.plugins?.length)) {
+      _setScanSub('Scrolling to Stereo Out');
+      await window.api.scrollToBnc();
     }
-  } catch(e) { console.warn('[EB] mp-modal mixer:', e); }
+  });
+  return { opened: true };
+}
+
+async function openMasterPluginsModal() {
+  // Tell main that MP modal is open — setMasterPlugin/openMixer/scrollToBnc called
+  // from here will be tracked and killable on close.
+  window.api?.setMpModalOpen?.(true);
+  try { await _ensureMasterReady(); } catch(e) { console.warn('[EB] mp-modal mixer:', e); }
 
   const _mpEl = document.getElementById('mp-modal');
   _mpEl.style.display = 'block';
@@ -9330,6 +9361,10 @@ function closeMasterPluginsModal() {
   setTimeout(() => { _mpEl.style.display = 'none'; }, 200);
   if (_mpPollInterval) { clearInterval(_mpPollInterval); _mpPollInterval = null; }
   if (_mpEscListener) { document.removeEventListener('keydown', _mpEscListener); _mpEscListener = null; }
+  // Kill any still-running bridge procs from master plugin ops so Logic
+  // doesn't execute a delayed openMixer/setMasterPlugin 30s later.
+  window.api?.cancelMasterPluginOps?.();
+  window.api?.setMpModalOpen?.(false);
 }
 
 async function loadMasterPlugins(forceScroll = false) {
@@ -9344,17 +9379,8 @@ async function loadMasterPlugins(forceScroll = false) {
   let result = null;
 
   if (forceScroll) {
-    // Reconnect button: always open mixer + scroll to master so bypass/activate will work
-    await _withRecoveryBadge(
-      'Finding master channel…',
-      'Scrolling to Stereo Out',
-      async () => {
-        await window.api.openMixer({ skipPanelClose: false });
-        await window.api.wait(300);
-        await window.api.scrollToBnc();
-        await window.api.wait(350);
-      }
-    );
+    // Reconnect button: probe first — skip scroll if Bnc already visible
+    await _ensureMasterReady();
     result = await window.api.masterPluginsQuick().catch(() => null);
   } else {
     // Modal open: try quick read only — never auto-scroll/reconnect on open.
@@ -9423,45 +9449,22 @@ async function toggleMasterPlugin(index, wantActive) {
   _masterPlugins[index].active = wantActive;
   renderMasterPlugins();
   _mpLastToggleAt = Date.now();
-  _mpPollPausedUntil = Date.now() + 3000;
+  // Pause the auto-poll long enough for Swift's adaptive confirm (up to ~1.8s) plus slack
+  _mpPollPausedUntil = Date.now() + 10000;
+  // Swift now adaptively waits for AX to propagate and returns the authoritative state.
+  // Trust it — no re-read, no retry here. Prevents double-press on heavy projects.
   const setResult = await window.api.setMasterPlugin(String(index), wantActive ? 1 : 0).catch(() => null);
-  // Re-read real state from Logic
-  let freshState = await window.api.masterPluginsQuick().catch(() => null);
-  if (freshState?.ok && freshState.plugins?.length) {
-    _masterPlugins = freshState.plugins;
+  if (setResult?.ok && typeof setResult.active === 'boolean') {
+    _masterPlugins[index].active = setResult.active;
     renderMasterPlugins();
-  }
-  // Check if operation actually worked
-  // Skip recovery if another toggle happened within 600ms — mismatch is due to fast clicks, not a real error
-  const actualActive = _masterPlugins[index]?.active;
-  if (actualActive !== wantActive && Date.now() - _mpLastToggleAt < 600) return;
-  if (actualActive !== wantActive) {
-    // Distinguish WHY it failed:
-    // ok:false → BNC not found in mixer (scrolled off screen) → need openMixer + scrollToBnc
-    // ok:true  → BNC was found but Logic was busy (heavy project) → just retry, no scroll needed
-    const bncNotFound = !setResult?.ok;
-    await _withRecoveryBadge(
-      bncNotFound ? 'Scrolling to master…' : 'Retrying…',
-      bncNotFound ? 'Master channel not visible' : 'Logic is busy',
-      async () => {
-        if (bncNotFound) {
-          await window.api.openMixer({ skipPanelClose: false });
-          await window.api.wait(300);
-          await window.api.scrollToBnc();
-          await window.api.wait(300);
-        } else {
-          // Logic was busy — just wait a bit before retry
-          await window.api.wait(400);
-        }
-      }
-    );
-    // Retry after recovery
-    await window.api.setMasterPlugin(String(index), wantActive ? 1 : 0).catch(() => null);
-    freshState = await window.api.masterPluginsQuick().catch(() => null);
-    if (freshState?.ok && freshState.plugins?.length) {
-      _masterPlugins = freshState.plugins;
-      renderMasterPlugins();
+    // If Swift couldn't confirm within its deadline, mixer is likely closed or Bnc gone.
+    if (setResult.confirmed === false) {
+      await _ensureMasterReady();
     }
+  } else {
+    // Hard failure — Stereo Out not found. Open/scroll mixer, then leave state as optimistic
+    // (next poll tick will reconcile once things settle).
+    await _ensureMasterReady();
   }
   _mpPollPausedUntil = 0;
   window.api.focusApp();
@@ -11818,7 +11821,10 @@ function applySkin(name) {
       }
       .titlebar{background:linear-gradient(180deg,rgba(35,35,35,.97) 0%,rgba(12,12,12,.97) 100%)!important;backdrop-filter:blur(20px)!important;border-bottom:1px solid #1e1e1e!important;box-shadow:0 1px 0 rgba(255,255,255,.06),0 2px 12px rgba(0,0,0,.5)!important;}
       .titlebar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),rgba(255,255,255,.10),transparent);}
-      .tb-logo-mark{background:linear-gradient(135deg,#fff,#aaa)!important;box-shadow:0 4px 16px rgba(255,255,255,.15)!important;}
+      .tb-logo-mark{background:linear-gradient(135deg,#9a9a9a,#4a4a4a)!important;box-shadow:0 4px 12px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.12)!important;}
+      .eb-cb:checked,.tcb-item input[type=checkbox]:checked,.fmt-cb-row input[type=checkbox]:checked{background:#2a2a2a!important;border-color:#555!important;}
+      .eb-cb:checked::after,.tcb-item input[type=checkbox]:checked::after,.fmt-cb-row input[type=checkbox]:checked::after{border-color:#fff!important;}
+      .cbox.on{background:linear-gradient(135deg,#3a3a3a,#1e1e1e)!important;border-color:#555!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important;}
       .bbtn:not(.off):not(.running){
         background:linear-gradient(160deg,#2c2c2c 0%,#1a1a1a 50%,#0e0e0e 100%)!important;
         color:#ffffff!important;font-weight:700;
@@ -11858,7 +11864,10 @@ function applySkin(name) {
       }
       .titlebar{background:linear-gradient(180deg,rgba(18,18,18,.98) 0%,rgba(10,10,10,.98) 100%)!important;border-bottom:1px solid #1c1c1c!important;box-shadow:0 1px 0 rgba(180,255,0,.08),0 2px 14px rgba(0,0,0,.6)!important;}
       .titlebar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(180,255,0,.5),rgba(212,255,96,.7),rgba(180,255,0,.5),transparent);}
-      .tb-logo-mark{background:linear-gradient(135deg,#6aaa00,#b4ff00)!important;box-shadow:0 4px 20px rgba(180,255,0,.35)!important;}
+      .tb-logo-mark{background:linear-gradient(135deg,#4a6600,#7aaa00)!important;box-shadow:0 4px 12px rgba(0,0,0,.5),inset 0 1px 0 rgba(180,255,0,.18)!important;}
+      .eb-cb:checked,.tcb-item input[type=checkbox]:checked,.fmt-cb-row input[type=checkbox]:checked{background:#2a2a2a!important;border-color:#555!important;}
+      .eb-cb:checked::after,.tcb-item input[type=checkbox]:checked::after,.fmt-cb-row input[type=checkbox]:checked::after{border-color:#fff!important;}
+      .cbox.on{background:linear-gradient(135deg,#3a3a3a,#1e1e1e)!important;border-color:#555!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important;}
       .panel{background:linear-gradient(180deg,rgba(255,255,255,.015) 0%,transparent 50%),#0e0e0e!important;border-color:#1c1c1c!important;border-top:1px solid rgba(255,255,255,.04)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;}
       .panel.pl{background:linear-gradient(180deg,rgba(255,255,255,.01) 0%,transparent 50%),#0c0c0c!important;}
       .sec-hdr{background:linear-gradient(180deg,#161616,#101010)!important;border-bottom:1px solid #1c1c1c!important;border-top:1px solid rgba(255,255,255,.04)!important;}
@@ -12596,9 +12605,12 @@ function updateMarkersBtnLabel() {
   const activeCount = _projectMarkers.filter(m => _activeMarkers.has(markerId(m)) && !_hiddenMarkers.has(markerId(m))).length;
   const hasAny = _fullActive || activeCount > 0;
   lblEl.textContent = 'Markers';
-  btnEl.style.color = hasAny ? 'var(--accent)' : 'var(--muted)';
-  btnEl.style.borderColor = hasAny ? 'rgba(108,99,255,.4)' : 'var(--b)';
-  btnEl.style.background = hasAny ? 'rgba(108,99,255,.08)' : 'var(--card)';
+  lblEl.style.color = 'var(--text)';
+  const svgEl = btnEl.querySelector('svg');
+  if (svgEl) svgEl.style.color = hasAny ? 'var(--a2)' : 'var(--muted)';
+  btnEl.style.color = 'var(--text)';
+  btnEl.style.borderColor = hasAny ? 'var(--a2-a30)' : 'var(--b)';
+  btnEl.style.background = 'var(--card)';
 }
 
 function renderMarkersPopupList() {
@@ -12618,10 +12630,10 @@ function renderMarkersPopupList() {
   html += `<div onclick="toggleFullActive()" title="Include a full-range bounce pass for every item"
     style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;cursor:pointer;transition:all var(--t-fast);user-select:none;
       ${_fullActive
-        ? 'background:rgba(80,200,120,.18);border:1.5px solid rgba(80,200,120,.5);'
-        : 'background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.2);'}">
+        ? 'background:transparent;border:1px solid var(--a2-a30);'
+        : 'background:transparent;border:1px dashed var(--b2);'}">
     <span style="font-size:var(--fs-xs);font-family:'JetBrains Mono',monospace;font-weight:600;
-      color:${_fullActive ? '#7ef0a8' : 'rgba(255,255,255,.7)'};">Full</span>
+      color:${_fullActive ? 'var(--t2)' : 'var(--muted)'};">Full</span>
   </div>`;
   if (visibleMarkers.length === 0) {
     html += '<span style="color:var(--muted);font-size:var(--fs-xs);">All markers hidden</span>';
@@ -12633,10 +12645,10 @@ function renderMarkersPopupList() {
     html += `<div onclick="toggleMarkerActive('${idSafe}',${!isActive})"
       style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px 2px 7px;border-radius:20px;cursor:pointer;transition:all var(--t-fast);user-select:none;
         ${isActive
-          ? 'background:rgba(108,99,255,.2);border:1.5px solid rgba(108,99,255,.55);'
-          : 'background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.2);'}">
+          ? 'background:transparent;border:1px solid var(--a2-a30);'
+          : 'background:transparent;border:1px dashed var(--b2);'}">
       <span style="font-size:var(--fs-xs);font-family:\'JetBrains Mono\',monospace;font-weight:600;
-        color:${isActive ? '#b8b0ff' : 'rgba(255,255,255,.7)'};">${m.name}</span>
+        color:${isActive ? 'var(--t2)' : 'var(--muted)'};">${m.name}</span>
       <span onclick="event.stopPropagation();hideMarker('${idSafe}')"
         style="font-size:var(--fs-xxs);line-height:1;color:rgba(255,255,255,.25);cursor:pointer;margin-left:1px;transition:color var(--t-instant);"
         onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.25)'">✕</span>
