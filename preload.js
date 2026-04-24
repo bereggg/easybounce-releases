@@ -65,6 +65,8 @@ contextBridge.exposeInMainWorld('api', {
   unsoloByName:   (n)   => ipcRenderer.invoke('unsolo-by-name', n),
   channelNameAt:  (i)   => ipcRenderer.invoke('channel-name-at', i),
   findChannelByName: (n) => ipcRenderer.invoke('find-channel-by-name', n),
+  loadRenameHistory: ()  => ipcRenderer.invoke('load-rename-history'),
+  saveRenameHistory: (d) => ipcRenderer.invoke('save-rename-history', d),
   muteMany:       (ns)  => ipcRenderer.invoke('mute-many', ns),
   unmuteMany:     (ns)  => ipcRenderer.invoke('unmute-many', ns),
   resetMutes:     ()    => ipcRenderer.invoke('reset-mutes'),

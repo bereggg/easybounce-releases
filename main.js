@@ -101,6 +101,14 @@ function _loadCompactState() {
 function _saveCompactState(compact) {
   try { fs.writeFileSync(_compactFile, JSON.stringify({ compact })); } catch {}
 }
+const _renameHistFile = path.join(app.getPath('userData'), 'rename-history.json');
+ipcMain.handle('load-rename-history', () => {
+  try { return JSON.parse(fs.readFileSync(_renameHistFile, 'utf8')); } catch { return {}; }
+});
+ipcMain.handle('save-rename-history', (_e, dict) => {
+  try { fs.writeFileSync(_renameHistFile, JSON.stringify(dict)); return { ok: true }; }
+  catch (e) { return { ok: false, error: String(e) }; }
+});
 function _saveBounds() {
   try {
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -805,9 +813,20 @@ ipcMain.handle('release-logic-pid', () => { _logicPid = null; return { ok: true 
 
 ipcMain.handle('get-project-name', async () => {
   try {
-    const { stdout } = await execAsync(`osascript -e 'tell application "Logic Pro" to if (count of documents) > 0 then return name of document 1'`);
-    return { name: stdout.trim().replace(/\.logicx$/, '') };
-  } catch { return { name: null }; }
+    const { stdout } = await execAsync(`osascript -e 'tell application "Logic Pro"
+  if (count of documents) > 0 then
+    return (name of document 1) & "|" & (path of document 1)
+  end if
+end tell'`);
+    const raw = stdout.trim();
+    if (!raw) return { name: null, path: null, folder: null };
+    const [nameRaw, pathRaw] = raw.split('|');
+    const name = (nameRaw || '').replace(/\.logicx$/, '');
+    const filePath = (pathRaw || '').trim();
+    let folder = null;
+    if (filePath) folder = path.dirname(filePath.replace(/\/$/, ''));
+    return { name, path: filePath || null, folder };
+  } catch { return { name: null, path: null, folder: null }; }
 });
 
 // ── File system ───────────────────────────────────────────────────────────────
