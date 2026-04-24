@@ -8732,8 +8732,8 @@ async function doBounce() {
           }));
         }
       } catch(e) { log('Rescan error: ' + (e.message||e), 'warn'); }
-      // Safety: clear any stale solo/mute before retry (failed render may leave sidechain soloed)
-      await Promise.all([window.api.unsoloAll().catch(()=>{}), window.api.unmuteAll().catch(()=>{})]);
+      // Safety: clear stale solo before retry (failed render may leave sidechain soloed)
+      await window.api.unsoloAll().catch(() => {});
       await window.api.wait(200).catch(() => {});
       try {
         ok = job.type === 'stem' ? await bounceStem(job, jobFolder, true)
@@ -8947,9 +8947,9 @@ async function doBounce() {
       // Normal completion: bounceStem/bounceMix already restored state for each job.
       // Safety net: verify nothing is unexpectedly left soloed/muted
       if (!window._userCancelled) {
-        // Always clear solo/mute on failure path — sidechain may be left soloed if render froze
+        // Always clear stale solo on failure path — sidechain may be left soloed if render froze
         if (window._bounceFatalHang) {
-          await Promise.all([window.api.unsoloAll().catch(()=>{}), window.api.unmuteAll().catch(()=>{})]);
+          await window.api.unsoloAll().catch(() => {});
           await window.api.wait(150).catch(() => {});
         }
         try {
