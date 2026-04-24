@@ -9382,14 +9382,30 @@ async function openMasterPluginsModal() {
   const _mpEl = document.getElementById('mp-modal');
   _mpEl.style.display = 'block';
   requestAnimationFrame(() => _mpEl.classList.add('show'));
-  // If already cached from scan — show immediately; otherwise fetch.
-  // Under SKIP_BNC, the scan never populates plugins, so first open always
-  // triggers the full Inspector prep flow (forceScroll=true).
-  if (_masterPlugins.length > 0) {
-    renderMasterPlugins();
-    const dot = document.getElementById('mp-status-dot');
-    if (dot) dot.style.background = '#5abf28';
-  } else { loadMasterPlugins(SKIP_BNC); }
+  // If already cached — show immediately. Otherwise try a zero-overhead
+  // Inspector probe first: if Stereo Out Bnc is already visible, populate
+  // and render instantly (no badge, no full prep flow). Only if the probe
+  // misses do we fall through to loadMasterPlugins which runs the full
+  // Inspector flow (open + shrink + navigate).
+  (async () => {
+    if (_masterPlugins.length > 0) {
+      renderMasterPlugins();
+      const dot = document.getElementById('mp-status-dot');
+      if (dot) dot.style.background = '#5abf28';
+      return;
+    }
+    if (SKIP_BNC) {
+      const probe = await window.api.inspectorMasterQuick().catch(() => null);
+      if (probe?.ok && probe.plugins && probe.plugins.length >= 0) {
+        _masterPlugins = probe.plugins;
+        renderMasterPlugins();
+        const dot = document.getElementById('mp-status-dot');
+        if (dot) dot.style.background = '#5abf28';
+        return;
+      }
+    }
+    loadMasterPlugins(SKIP_BNC);
+  })();
   // ESC key always closes the modal properly (clears interval)
   if (!_mpEscListener) {
     _mpEscListener = (e) => { if (e.key === 'Escape') closeMasterPluginsModal(); };
