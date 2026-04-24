@@ -605,9 +605,39 @@ ipcMain.handle('open-mixer', async (_, opts = {}) => {
   return result;
 });
 ipcMain.handle('close-mixer', () => bridge('closeMixer'));
-ipcMain.handle('cover-mixer', () => bridge('coverMixer'));
-ipcMain.handle('open-mixer-cover', () => bridge('openMixerCover'));
-ipcMain.handle('ensure-mixer', () => bridge('ensureMixer'));
+ipcMain.handle('cover-mixer', async () => {
+  const wasOnTop = mainWindow?.isAlwaysOnTop?.() ?? false;
+  if (mainWindow && !_inScanBadge && !_inMiniMode) mainWindow.setAlwaysOnTop(false);
+  try { return await bridge('coverMixer'); }
+  finally {
+    if (mainWindow && !mainWindow.isDestroyed() && wasOnTop) {
+      mainWindow.setAlwaysOnTop(true, _mainAotLevel());
+      mainWindow.showInactive();
+    }
+  }
+});
+ipcMain.handle('open-mixer-cover', async () => {
+  const wasOnTop = mainWindow?.isAlwaysOnTop?.() ?? false;
+  if (mainWindow && !_inScanBadge && !_inMiniMode) mainWindow.setAlwaysOnTop(false);
+  try { return await bridge('openMixerCover'); }
+  finally {
+    if (mainWindow && !mainWindow.isDestroyed() && wasOnTop) {
+      mainWindow.setAlwaysOnTop(true, _mainAotLevel());
+      mainWindow.showInactive();
+    }
+  }
+});
+ipcMain.handle('ensure-mixer', async () => {
+  const wasOnTop = mainWindow?.isAlwaysOnTop?.() ?? false;
+  if (mainWindow && !_inScanBadge && !_inMiniMode) mainWindow.setAlwaysOnTop(false);
+  try { return await bridge('ensureMixer'); }
+  finally {
+    if (mainWindow && !mainWindow.isDestroyed() && wasOnTop) {
+      mainWindow.setAlwaysOnTop(true, _mainAotLevel());
+      mainWindow.showInactive();
+    }
+  }
+});
 ipcMain.handle('send-key', (_, keyCode, ...mods) => bridge('sendKey', String(keyCode), ...mods));
 ipcMain.handle('stop-render', () => bridge('stop-render'));
 ipcMain.handle('type-text', (_, text) => {
@@ -868,6 +898,8 @@ ipcMain.handle('mute-by-name',   (_, n) => bridge('muteByName',   n));
 ipcMain.handle('unmute-by-name', (_, n) => bridge('unmuteByName', n));
 ipcMain.handle('solo-by-name',   (_, n) => bridge('soloByName',   n));
 ipcMain.handle('unsolo-by-name', (_, n) => bridge('unsoloByName', n));
+ipcMain.handle('channel-name-at', (_, i) => bridge('channelNameAt', String(i)));
+ipcMain.handle('find-channel-by-name', (_, n) => bridge('findChannelByName', String(n)));
 // #10: escape any '|' in channel names so the pipe delimiter used by LogicBridge stays unambiguous
 ipcMain.handle('mute-many',   (_, names) => bridge('muteMany',   names.map(n => n.replace(/\|/g, '\\|')).join('|')));
 ipcMain.handle('unmute-many', (_, names) => bridge('unmuteMany', names.map(n => n.replace(/\|/g, '\\|')).join('|')));
@@ -1032,7 +1064,30 @@ ipcMain.handle('exit-compact-mode', () => {
 ipcMain.handle('is-compact-mode', () => ({ compact: _inCompact }));
 
 // ── Mini Mode — resize main window to compact widget ──────────────────────────
-ipcMain.handle('enter-mini-mode', () => {
+function _tweenBounds(win, from, to, duration = 320) {
+  return new Promise(resolve => {
+    const start = Date.now();
+    const ease = t => 1 - Math.pow(1 - t, 3); // ease-out cubic
+    const step = () => {
+      if (!win || win.isDestroyed()) return resolve();
+      const elapsed = Date.now() - start;
+      const t = Math.min(1, elapsed / duration);
+      const k = ease(t);
+      const b = {
+        x: Math.round(from.x + (to.x - from.x) * k),
+        y: Math.round(from.y + (to.y - from.y) * k),
+        width: Math.round(from.width + (to.width - from.width) * k),
+        height: Math.round(from.height + (to.height - from.height) * k),
+      };
+      try { win.setBounds(b, false); } catch {}
+      if (t < 1) setTimeout(step, 16);
+      else resolve();
+    };
+    step();
+  });
+}
+
+ipcMain.handle('enter-mini-mode', async () => {
   if (!mainWindow) return { ok: false };
   _inMiniMode = true;
   _preMini = mainWindow.getBounds();
@@ -1043,32 +1098,39 @@ ipcMain.handle('enter-mini-mode', () => {
   mainWindow.setResizable(false);
   mainWindow.setWindowButtonVisibility(false);
   mainWindow.setBackgroundColor('#00000000');
-  mainWindow.setBounds({ x: dx + dw - 320, y: dy + dh - 108, width: 300, height: 88 }, true);
+  const target = { x: dx + dw - 320, y: dy + dh - 108, width: 300, height: 88 };
   mainWindow.setAlwaysOnTop(true, 'screen-saver');
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  await _tweenBounds(mainWindow, _preMini, target, 340);
   return { ok: true };
 });
 
-ipcMain.handle('exit-mini-mode', () => {
+ipcMain.handle('exit-mini-mode', async () => {
   if (!mainWindow) return { ok: false };
   _inMiniMode = false;
   mainWindow.setBackgroundColor('#0c0c10');
-  // If we entered mini from compact mode, keep compact min-size + hidden traffic lights
+  const from = mainWindow.getBounds();
+  let target = null;
+  if (_preMini) {
+    target = _preMini;
+    _preMini = null;
+  } else if (!_inCompact) {
+    const { screen } = require('electron');
+    const display = screen.getDisplayNearestPoint({ x: from.x, y: from.y });
+    const { x: dx, y: dy, width: dw, height: dh } = display.workArea;
+    const w = 1200, h = 760;
+    target = { x: dx + Math.floor((dw - w) / 2), y: dy + Math.floor((dh - h) / 2), width: w, height: h };
+  }
+  // Lower min-size BEFORE tween so setBounds isn't clamped to old minimums
+  mainWindow.setMinimumSize(200, 80);
+  mainWindow.setResizable(true);
+  if (target) await _tweenBounds(mainWindow, from, target, 340);
   if (_inCompact) {
     mainWindow.setMinimumSize(500, 500);
-    mainWindow.setResizable(true);
     try { mainWindow.setWindowButtonVisibility(true); } catch {}
   } else {
     mainWindow.setMinimumSize(1130, 640);
-    mainWindow.setResizable(true);
     mainWindow.setWindowButtonVisibility(true);
-  }
-  if (_preMini) {
-    mainWindow.setBounds(_preMini, true);
-    _preMini = null;
-  } else if (!_inCompact) {
-    mainWindow.setSize(1200, 760, true);
-    mainWindow.center();
   }
   // Reset alwaysOnTop unless bounce/scan is running or user pinned it.
   // Otherwise mini-mode's AOT=screen-saver sticks and the app never backgrounds.

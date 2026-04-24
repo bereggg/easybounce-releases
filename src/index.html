@@ -111,6 +111,12 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .tree-group-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;pointer-events:none;box-shadow:0 0 0 2px var(--bg);}
 .tree-group-name{flex:1;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;pointer-events:none;color:var(--t2);}
 .tree-group-idx{font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);color:var(--muted);flex-shrink:0;pointer-events:none;}
+.tree-q-badge{display:inline-flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;line-height:1;padding:2px 6px;border-radius:999px;background:var(--accent-a20,rgba(108,99,255,.22));color:var(--accent);border:1px solid var(--accent-a40,rgba(108,99,255,.4));flex-shrink:0;pointer-events:none;letter-spacing:.02em;}
+.tree-q-badge.q-solo{padding:2px;width:18px;height:18px;}
+.tree-q-badge.q-solo .ico{width:11px;height:11px;}
+.tree-group.q-any::before{background:var(--accent)!important;}
+.tree-child.q-on .tree-child-name{color:var(--text);}
+.tree-child.q-on .tree-child-dot{opacity:1;box-shadow:0 0 0 2px var(--accent-a20,rgba(108,99,255,.22));}
 .tree-child{position:relative;display:flex;align-items:center;gap:7px;padding:0 14px 0 40px;min-height:30px;border-bottom:1px solid var(--w-a03);cursor:pointer;transition:all var(--t-fast);user-select:none;}
 .tree-child:hover{background:var(--w-a05);}
 .tree-child.sel{background:var(--accent-a08);box-shadow:inset 2px 0 0 var(--accent-a60);}
@@ -433,7 +439,9 @@ body.easy #panel-pr{transition:all var(--t-slow);}
 .hist-hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 8px 13px;cursor:pointer;transition:background var(--t-fast);gap:8px;}
 .hist-hdr:hover{background:var(--w-a05);}
 .hist-meta{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;}
-.hist-proj{font-family:'Space Grotesk',sans-serif;font-size:var(--fs-sm);font-weight:700;color:var(--text);min-width:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3;word-break:break-word;}
+.hist-proj{font-family:'Space Grotesk',sans-serif;font-size:var(--fs-sm);font-weight:700;color:var(--text);min-width:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3;word-break:break-word;position:relative;cursor:default;}
+.hist-proj[data-tip]:hover::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 6px);z-index:var(--z-toast);background:var(--card2);border:1px solid var(--b2);color:var(--text);font-family:var(--font-mono);font-size:var(--fs-xs);font-weight:500;padding:7px 12px;border-radius:var(--r);box-shadow:var(--sh-float);white-space:normal;max-width:320px;line-height:1.45;pointer-events:none;animation:histTipIn .14s var(--ease-out);}
+@keyframes histTipIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
 .hist-date{font-size:var(--fs-xxs);color:var(--muted);font-family:'JetBrains Mono',monospace;}
 .hist-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
 /* Count pill — green success pill with check */
@@ -725,7 +733,8 @@ body.compact-transitioning .titlebar,body.compact-transitioning #compact-toolbar
 .mini-sname{font-family:'Space Grotesk',sans-serif;font-size:var(--fs-base);font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;letter-spacing:-.02em;min-width:0;text-shadow:0 1px 3px rgba(0,0,0,.2);}
 .mini-time{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:rgba(255,255,255,.9);flex-shrink:0;letter-spacing:-.01em;text-shadow:0 1px 3px rgba(0,0,0,.2);}
 .mini-cnt{font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);color:rgba(255,255,255,.55);flex-shrink:0;}
-.mini-ibtn{width:24px;height:24px;border-radius:var(--r-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all var(--t-fast);}
+.mini-ibtn{width:30px;height:30px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all var(--t-fast);-webkit-app-region:no-drag;position:relative;z-index:2;}
+.mini-ibtn::before{content:'';position:absolute;inset:-6px;}
 .mini-expand{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);}
 .mini-expand:hover{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.5);}
 .mini-cancel{border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.2);color:rgba(255,255,255,.9);}
@@ -954,7 +963,7 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
 </head>
 <body>
 <script>(function(){try{if(localStorage.getItem('ui.compactMode')!=='0')document.body.classList.add('compact-mode');}catch(e){}})()</script>
-<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden;" aria-hidden="true"><defs><symbol id="ico-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 L6 12 L8 6 L10 18 L12 8 L14 16 L16 10 L18 12 L21 12"/></symbol><symbol id="ico-compact" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M9 10v10"/></symbol><symbol id="ico-expand-arrows" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v6h6M20 10V4h-6M14 10l7-7M10 14l-7 7"/></symbol><symbol id="ico-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="12" r="2.5" fill="currentColor"/><path d="M10 12 Q14 4 18 12 T22 12" opacity="0.7"/></symbol><symbol id="ico-accessibility" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="1.8" fill="currentColor"/><path d="M6 8 L12 10 L18 8"/><path d="M12 10 L12 15"/><path d="M12 15 L9 21 M12 15 L15 21"/></symbol><symbol id="ico-music" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3" fill="currentColor"/><circle cx="16" cy="16" r="3" fill="currentColor"/></symbol><symbol id="ico-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="ico-finder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1" fill="currentColor" stroke="none"/><path d="M8 16 Q12 19 16 16"/></symbol><symbol id="ico-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L10 17 L19 7"/></symbol><symbol id="ico-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M7 12 L11 16 L17 9"/></symbol><symbol id="ico-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6 L18 18 M18 6 L6 18"/></symbol><symbol id="ico-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L22 20 L2 20 Z"/><path d="M12 10 V14"/><circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none"/></symbol><symbol id="ico-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21 Q12 23 14 21"/></symbol><symbol id="ico-bell-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 10.5-4"/><path d="M18 8c0 7 3 9 3 9H6"/><path d="M3 3 L21 21"/><path d="M10 21 Q12 23 14 21"/></symbol><symbol id="ico-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 H5 a2 2 0 0 1 -2 -2 V5 a2 2 0 0 1 2 -2 h11 l5 5 v11 a2 2 0 0 1 -2 2 z"/><path d="M8 3 V8 H16 V3"/><path d="M8 13 H16 V21 H8 z"/></symbol><symbol id="ico-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 9 M8 2 H16 M9 9 L7 15 H17 L15 9 M12 15 V22"/></symbol><symbol id="ico-cube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L21 7 V17 L12 22 L3 17 V7 Z"/><path d="M3 7 L12 12 L21 7"/><path d="M12 12 V22"/></symbol><symbol id="ico-dice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r="1.2" fill="currentColor" stroke="none"/></symbol><symbol id="ico-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6 H20 M4 12 H20 M4 18 H20"/><circle cx="9" cy="6" r="2" fill="#0c0c10"/><circle cx="15" cy="12" r="2" fill="#0c0c10"/><circle cx="8" cy="18" r="2" fill="#0c0c10"/></symbol><symbol id="ico-fader" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3 V21 M13 3 V21 M19 3 V21"/><rect x="4" y="7" width="6" height="4" rx="1" fill="#0c0c10"/><rect x="10" y="13" width="6" height="4" rx="1" fill="#0c0c10"/><rect x="16" y="9" width="6" height="4" rx="1" fill="#0c0c10"/></symbol><symbol id="ico-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7 V12 L16 14"/></symbol><symbol id="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14 A8 8 0 1 1 10 4 a7 7 0 0 0 10 10 z"/></symbol><symbol id="ico-coffee" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10 H18 V16 A4 4 0 0 1 14 20 H8 A4 4 0 0 1 4 16 Z"/><path d="M18 12 H20 A2 2 0 0 1 22 14 V15 A2 2 0 0 1 20 17 H18"/><path d="M8 3 Q8 5 9 6 M12 3 Q12 5 13 6 M16 3 Q16 5 17 6" opacity="0.6"/></symbol><symbol id="ico-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 Q7 5 12 5 Q17 5 22 12 Q17 19 12 19 Q7 19 2 12 z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="ico-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 Q7 5 12 5 Q17 5 22 12 Q17 19 12 19 Q7 19 2 12 z"/><circle cx="12" cy="12" r="3"/><path d="M3 3 L21 21"/></symbol><symbol id="ico-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10 V7 A4 4 0 0 1 16 7 V10"/></symbol><symbol id="ico-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3 A2.1 2.1 0 0 1 20 6 L8 18 L4 19 L5 15 Z"/></symbol><symbol id="ico-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7 H20 M10 11 V17 M14 11 V17 M5 7 L6 20 A2 2 0 0 0 8 22 H16 A2 2 0 0 0 18 20 L19 7 M9 7 V4 A1 1 0 0 1 10 3 H14 A1 1 0 0 1 15 4 V7"/></symbol><symbol id="ico-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 L15 12 L9 18"/></symbol><symbol id="ico-scan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5" opacity="0.5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></symbol><symbol id="ico-headphones" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14 A8 8 0 0 1 20 14"/><rect x="3" y="14" width="5" height="7" rx="1.5"/><rect x="16" y="14" width="5" height="7" rx="1.5"/></symbol><symbol id="ico-rocket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 C16 6 17 11 17 15 L12 18 L7 15 C7 11 8 6 12 2 z"/><circle cx="12" cy="10" r="1.8"/><path d="M9 18 L6 22 M15 18 L18 22"/></symbol><symbol id="ico-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5 H20 A2 2 0 0 1 22 7 V15 A2 2 0 0 1 20 17 H13 L8 21 V17 H4 A2 2 0 0 1 2 15 V7 A2 2 0 0 1 4 5 Z"/></symbol><symbol id="ico-volume" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 V14 H7 L12 18 V6 L7 10 Z"/><path d="M16 9 Q18 12 16 15" opacity="0.7"/><path d="M19 6 Q22 12 19 18" opacity="0.5"/></symbol><symbol id="ico-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9 L12 15 L18 9"/></symbol><symbol id="ico-chevrons-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 6 L12 11 L17 6"/><path d="M7 13 L12 18 L17 13"/></symbol><symbol id="ico-chevrons-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18 L12 13 L17 18"/><path d="M7 11 L12 6 L17 11"/></symbol><symbol id="ico-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4H21L14 12V20L10 18V12L3 4Z"/></symbol><symbol id="ico-filter-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4H21L14 12V20L10 18V12L3 4Z"/><path d="M3 3L21 21"/></symbol><symbol id="ico-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20 L16 16"/></symbol><symbol id="ico-search-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20 L16 16"/><path d="M4 4 L20 20"/></symbol><symbol id="ico-paperclip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12 L12 21 A5 5 0 0 1 5 14 L13 6 A3 3 0 0 1 17 10 L9 18 A1 1 0 0 1 8 17 L15 10"/></symbol><symbol id="ico-star" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></symbol><symbol id="ico-star-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></symbol><symbol id="ico-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 A9 9 0 0 1 18.5 6.5 L21 9"/><path d="M21 3 V9 H15"/><path d="M21 12 A9 9 0 0 1 5.5 17.5 L3 15"/><path d="M3 21 V15 H9"/></symbol><symbol id="ico-redo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7 H9 A6 6 0 0 0 9 19 H13"/><path d="M16 3 L21 7 L16 11"/></symbol><symbol id="ico-minimize" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19 H19"/></symbol></defs></svg>
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden;" aria-hidden="true"><defs><symbol id="ico-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 L6 12 L8 6 L10 18 L12 8 L14 16 L16 10 L18 12 L21 12"/></symbol><symbol id="ico-compact" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M9 10v10"/></symbol><symbol id="ico-expand-arrows" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v6h6M20 10V4h-6M14 10l7-7M10 14l-7 7"/></symbol><symbol id="ico-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="12" r="2.5" fill="currentColor"/><path d="M10 12 Q14 4 18 12 T22 12" opacity="0.7"/></symbol><symbol id="ico-accessibility" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="1.8" fill="currentColor"/><path d="M6 8 L12 10 L18 8"/><path d="M12 10 L12 15"/><path d="M12 15 L9 21 M12 15 L15 21"/></symbol><symbol id="ico-music" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3" fill="currentColor"/><circle cx="16" cy="16" r="3" fill="currentColor"/></symbol><symbol id="ico-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="ico-finder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1" fill="currentColor" stroke="none"/><path d="M8 16 Q12 19 16 16"/></symbol><symbol id="ico-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L10 17 L19 7"/></symbol><symbol id="ico-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M7 12 L11 16 L17 9"/></symbol><symbol id="ico-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6 L18 18 M18 6 L6 18"/></symbol><symbol id="ico-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L22 20 L2 20 Z"/><path d="M12 10 V14"/><circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none"/></symbol><symbol id="ico-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21 Q12 23 14 21"/></symbol><symbol id="ico-bell-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 10.5-4"/><path d="M18 8c0 7 3 9 3 9H6"/><path d="M3 3 L21 21"/><path d="M10 21 Q12 23 14 21"/></symbol><symbol id="ico-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 H5 a2 2 0 0 1 -2 -2 V5 a2 2 0 0 1 2 -2 h11 l5 5 v11 a2 2 0 0 1 -2 2 z"/><path d="M8 3 V8 H16 V3"/><path d="M8 13 H16 V21 H8 z"/></symbol><symbol id="ico-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L12 9 M8 2 H16 M9 9 L7 15 H17 L15 9 M12 15 V22"/></symbol><symbol id="ico-cube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L21 7 V17 L12 22 L3 17 V7 Z"/><path d="M3 7 L12 12 L21 7"/><path d="M12 12 V22"/></symbol><symbol id="ico-dice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r="1.2" fill="currentColor" stroke="none"/></symbol><symbol id="ico-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6 H20 M4 12 H20 M4 18 H20"/><circle cx="9" cy="6" r="2" fill="#0c0c10"/><circle cx="15" cy="12" r="2" fill="#0c0c10"/><circle cx="8" cy="18" r="2" fill="#0c0c10"/></symbol><symbol id="ico-fader" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3 V21 M13 3 V21 M19 3 V21"/><rect x="4" y="7" width="6" height="4" rx="1" fill="#0c0c10"/><rect x="10" y="13" width="6" height="4" rx="1" fill="#0c0c10"/><rect x="16" y="9" width="6" height="4" rx="1" fill="#0c0c10"/></symbol><symbol id="ico-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7 V12 L16 14"/></symbol><symbol id="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14 A8 8 0 1 1 10 4 a7 7 0 0 0 10 10 z"/></symbol><symbol id="ico-coffee" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10 H18 V16 A4 4 0 0 1 14 20 H8 A4 4 0 0 1 4 16 Z"/><path d="M18 12 H20 A2 2 0 0 1 22 14 V15 A2 2 0 0 1 20 17 H18"/><path d="M8 3 Q8 5 9 6 M12 3 Q12 5 13 6 M16 3 Q16 5 17 6" opacity="0.6"/></symbol><symbol id="ico-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 Q7 5 12 5 Q17 5 22 12 Q17 19 12 19 Q7 19 2 12 z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="ico-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 Q7 5 12 5 Q17 5 22 12 Q17 19 12 19 Q7 19 2 12 z"/><circle cx="12" cy="12" r="3"/><path d="M3 3 L21 21"/></symbol><symbol id="ico-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10 V7 A4 4 0 0 1 16 7 V10"/></symbol><symbol id="ico-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3 A2.1 2.1 0 0 1 20 6 L8 18 L4 19 L5 15 Z"/></symbol><symbol id="ico-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7 H20 M10 11 V17 M14 11 V17 M5 7 L6 20 A2 2 0 0 0 8 22 H16 A2 2 0 0 0 18 20 L19 7 M9 7 V4 A1 1 0 0 1 10 3 H14 A1 1 0 0 1 15 4 V7"/></symbol><symbol id="ico-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 L15 12 L9 18"/></symbol><symbol id="ico-scan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5" opacity="0.5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></symbol><symbol id="ico-headphones" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14 A8 8 0 0 1 20 14"/><rect x="3" y="14" width="5" height="7" rx="1.5"/><rect x="16" y="14" width="5" height="7" rx="1.5"/></symbol><symbol id="ico-rocket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 C16 6 17 11 17 15 L12 18 L7 15 C7 11 8 6 12 2 z"/><circle cx="12" cy="10" r="1.8"/><path d="M9 18 L6 22 M15 18 L18 22"/></symbol><symbol id="ico-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5 H20 A2 2 0 0 1 22 7 V15 A2 2 0 0 1 20 17 H13 L8 21 V17 H4 A2 2 0 0 1 2 15 V7 A2 2 0 0 1 4 5 Z"/></symbol><symbol id="ico-volume" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 V14 H7 L12 18 V6 L7 10 Z"/><path d="M16 9 Q18 12 16 15" opacity="0.7"/><path d="M19 6 Q22 12 19 18" opacity="0.5"/></symbol><symbol id="ico-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9 L12 15 L18 9"/></symbol><symbol id="ico-chevrons-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 6 L12 11 L17 6"/><path d="M7 13 L12 18 L17 13"/></symbol><symbol id="ico-chevrons-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18 L12 13 L17 18"/><path d="M7 11 L12 6 L17 11"/></symbol><symbol id="ico-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4H21L14 12V20L10 18V12L3 4Z"/></symbol><symbol id="ico-filter-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4H21L14 12V20L10 18V12L3 4Z"/><path d="M3 3L21 21"/></symbol><symbol id="ico-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20 L16 16"/></symbol><symbol id="ico-search-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20 L16 16"/><path d="M4 4 L20 20"/></symbol><symbol id="ico-paperclip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12 L12 21 A5 5 0 0 1 5 14 L13 6 A3 3 0 0 1 17 10 L9 18 A1 1 0 0 1 8 17 L15 10"/></symbol><symbol id="ico-star" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></symbol><symbol id="ico-star-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></symbol><symbol id="ico-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 A9 9 0 0 1 18.5 6.5 L21 9"/><path d="M21 3 V9 H15"/><path d="M21 12 A9 9 0 0 1 5.5 17.5 L3 15"/><path d="M3 21 V15 H9"/></symbol><symbol id="ico-redo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7 H9 A6 6 0 0 0 9 19 H13"/><path d="M16 3 L21 7 L16 11"/></symbol><symbol id="ico-minimize" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><rect x="12" y="12" width="7" height="5" rx="1" fill="currentColor" stroke="none"/></symbol></defs></svg>
 <!-- Mini Mode UI — same window resized to 300×88 -->
 <div id="mini-mode-ui">
   <div class="mini-drag"></div>
@@ -1652,6 +1661,20 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
     <div class="modal-actions">
       <button class="mbtn cancel" onclick="document.getElementById('save-set-modal').classList.remove('show')">Cancel</button>
       <button class="mbtn ok" onclick="confirmSaveSet()">Save</button>
+    </div>
+  </div>
+</div>
+<!-- SIDECHAIN MISMATCH MODAL -->
+<div class="overlay" id="sc-mismatch-modal" onclick="if(event.target===this)_scMismatchChoose('cancel')">
+  <div class="modal" style="width:440px;">
+    <div class="modal-hdr">Sidechain channel not found</div>
+    <div style="font-size:var(--fs-sm);color:var(--t2);line-height:1.5;">
+      <div id="sc-mismatch-body">Selected sidechain channel <b id="sc-mismatch-name" style="color:var(--warn);"></b> is not visible in the current Logic mixer. Soloing by saved position would hit a different track.</div>
+    </div>
+    <div class="modal-actions" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+      <button class="mbtn cancel" onclick="_scMismatchChoose('cancel')">Cancel</button>
+      <button class="mbtn" onclick="_scMismatchChoose('no-sidechain')">Bounce without</button>
+      <button class="mbtn ok" onclick="_scMismatchChoose('reselect')">Re-select</button>
     </div>
   </div>
 </div>
@@ -3413,15 +3436,7 @@ function toggleAllGroups() {
   if (anyExpanded) collapseAllGroups(); else expandAllGroups();
 }
 function showScanDone() {
-  const ov = document.getElementById('scan-done-overlay');
-  if (!ov) return;
-  ov.classList.remove('hide');
-  ov.classList.add('show');
-  setTimeout(() => {
-    ov.classList.add('hide');
-    setTimeout(() => { ov.classList.remove('show','hide'); }, 300);
-  }, 1400);
-  // Show post-scan queue arrows after a short delay
+  toast('✓ Scan complete');
   setTimeout(showQueueHint, 1800);
 }
 
@@ -3454,6 +3469,15 @@ function _renderChannelsImpl() {
     treeToggleBtn.innerHTML = anyExpanded ? '<svg class="ico ico-sm"><use href="#ico-chevrons-up"/></svg>' : '<svg class="ico ico-sm"><use href="#ico-chevrons-down"/></svg>';
     treeToggleBtn.title = anyExpanded ? 'Collapse all groups' : 'Expand all groups';
   }
+
+  // Channels currently in queue (stems only, not done) — tree badges mark these
+  const _queuedIdx = new Set();
+  queue.forEach(q => {
+    if (q.type === 'stem' && q.status !== 'done' && q.channelIndex != null) _queuedIdx.add(q.channelIndex);
+    if (q.type === 'set' && Array.isArray(q.jobs)) q.jobs.forEach(j => {
+      if (j.type === 'stem' && j.status !== 'done' && j.channelIndex != null) _queuedIdx.add(j.channelIndex);
+    });
+  });
 
   // ── Tree view (when tree data available and no search query) ──
   if (trackTree.length > 0 && !query) {
@@ -3624,18 +3648,33 @@ function _renderChannelsImpl() {
         const isCollapsed = collapsedGroups.has(t.name);
         const indent = 14 + depth * 18;
         // Count ALL descendant tracks (not subgroups)
-        const childCount = getAllDescendantNames(t.name).filter(n => {
+        const _descNames = getAllDescendantNames(t.name);
+        const _descTrackNames = _descNames.filter(n => {
           const item = trackTree.find(x => x.name === n);
           return item && item.type === 'track';
-        }).length;
+        });
+        const childCount = _descTrackNames.length;
+        // Count descendants currently queued (by channel index lookup)
+        let queuedCount = 0;
+        _descTrackNames.forEach(n => {
+          const k = normalizeName(n);
+          const cc = chByName[k];
+          if (cc && _queuedIdx.has(cc.index)) queuedCount++;
+        });
+        // Self queued (group channel itself) + badge
+        const groupChSelfQueued = ch && _queuedIdx.has(ch.index);
         const div = document.createElement('div');
-        div.className = 'tree-group depth-' + Math.min(depth, 3) + (sel ? ' sel' : '');
+        div.className = 'tree-group depth-' + Math.min(depth, 3) + (sel ? ' sel' : '') + (queuedCount > 0 || groupChSelfQueued ? ' q-any' : '');
         div.style.paddingLeft = indent + 'px';
         const groupMuted = ch ? ch.isMuted : (t.muted == 1);
+        const qBadgeHtml = queuedCount > 0
+          ? `<span class="tree-q-badge" title="${queuedCount} of ${childCount} in queue">${queuedCount}/${childCount}</span>`
+          : (groupChSelfQueued ? `<span class="tree-q-badge q-solo" title="In queue"><svg class="ico ico-sm"><use href="#ico-check"/></svg></span>` : '');
         div.innerHTML = `
           <span class="tree-toggle">${hasChildren ? `<svg class="ico ico-sm" style="transition:transform var(--t);transform:rotate(${isCollapsed ? '-90deg' : '0deg'})"><use href="#ico-chevron"/></svg>` : ''}</span>
           <span class="tree-group-dot" style="background:${color}"></span>
           <span class="tree-group-name">${t.name}</span>
+          ${qBadgeHtml}
           ${childCount > 0 ? `<span class="tree-group-idx">${childCount}</span>` : ''}
           ${groupMuted ? '<span class="ch-mute-badge">M</span>' : ''}
         `;
@@ -3749,12 +3788,14 @@ function _renderChannelsImpl() {
         if (!treeItemVisible(ch)) return;
         const indent = 14 + depth * 18;
         const div = document.createElement('div');
-        div.className = 'tree-child' + (sel ? ' sel' : '');
+        const _childQueued = ch && _queuedIdx.has(ch.index);
+        div.className = 'tree-child' + (sel ? ' sel' : '') + (_childQueued ? ' q-on' : '');
         div.style.paddingLeft = indent + 'px';
         const trackMuted = ch ? ch.isMuted : (t.muted == 1);
         div.innerHTML = `
           <span class="tree-child-dot" style="background:${color}"></span>
           <span class="tree-child-name">${t.name}</span>
+          ${_childQueued ? `<span class="tree-q-badge q-solo" title="In queue"><svg class="ico ico-sm"><use href="#ico-check"/></svg></span>` : ''}
           ${trackMuted ? '<span class="ch-mute-badge">M</span>' : ''}
         `;
         div.onmousedown = (e) => {
@@ -6067,15 +6108,9 @@ function _renderMergeChannelList() {
       tri.onclick = (e) => { e.stopPropagation(); if(!expanded) _mrgExpanded.add(t.name); else _mrgExpanded.delete(t.name); _renderMergeChannelList(); };
       row.appendChild(tri);
       if (groupChOk && ch) {
-        // Checkbox state: collapsed = group channel only; expanded = group + all descendants
-        let grpChecked;
-        if (expanded) {
-          const kids = getAllDescendants(t.name).map(k => chMap[k.num]).filter(Boolean);
-          const all = [ch, ...kids];
-          grpChecked = all.every(c => inMerge.has(c.index));
-        } else {
-          grpChecked = inMerge.has(ch.index);
-        }
+        // Checkbox ALWAYS reflects parent channel only — children have their own boxes.
+        // User: "звичайно тільки лише на поточному parent, ні в якому разі не проставляти на всіх дітях".
+        const grpChecked = inMerge.has(ch.index);
         const gcb = _makeCustomCb(grpChecked, (nowOn) => {
           if (_mergeSelSet.has(ch.index) && _mergeSelSet.size > 1) {
             const targets = [..._mergeSelSet];
@@ -6090,22 +6125,8 @@ function _renderMergeChannelList() {
               }
             });
             _renderMergeChannelList();
-          } else if (expanded) {
-            // Expanded: cascade to group + all descendants
-            const kids = getAllDescendants(t.name).map(k => chMap[k.num]).filter(Boolean);
-            const all = [ch, ...kids];
-            all.forEach(tch => {
-              const has = inMerge.has(tch.index);
-              if (nowOn && !has) {
-                _mergeModalChannels.push({ name: tch.name, channelIndex: tch.index, color: tch.color || '' });
-              } else if (!nowOn && has) {
-                const pos = _mergeModalChannels.findIndex(c => c.channelIndex === tch.index);
-                if (pos !== -1) _mergeModalChannels.splice(pos, 1);
-              }
-            });
-            _renderMergeChannelList();
           } else {
-            // Collapsed: only the group channel itself
+            // Toggle ONLY this parent — never cascade to children (collapsed or expanded).
             _mergeToggle(ch, nowOn);
           }
         });
@@ -6700,34 +6721,13 @@ function renderMixList(initIndices) {
       };
       row.appendChild(tri);
 
-      // Checkbox semantics:
-      //   COLLAPSED group → toggle only the group channel itself (summing stack)
-      //   EXPANDED group  → toggle group channel + all descendants (bulk action)
-      let isGrpChecked;
-      if (expanded) {
-        // Expanded: reflect state of ALL (group + descendants) — checked only if all unmuted
-        const allKids = getAllDescendants(t.name);
-        const kidChannels = allKids.map(k => chMap[k.num]).filter(Boolean);
-        const allTargets = [...(ch ? [ch] : []), ...kidChannels];
-        isGrpChecked = allTargets.length > 0 && allTargets.every(c => !mixMutedSet.has(c.index));
-      } else {
-        // Collapsed: reflect state of group channel only
-        isGrpChecked = ch ? !mixMutedSet.has(ch.index) : true;
-      }
+      // Checkbox ALWAYS reflects parent channel only — never cascades to children.
+      // Version modal is INVERTED: checked = unmuted, unchecked = muted.
+      const isGrpChecked = ch ? !mixMutedSet.has(ch.index) : true;
       const cb = _makeCustomCb(isGrpChecked, (nowOn) => {
         if (ch && _mixSelSet.has(ch.index) && _mixSelSet.size > 1) {
-          // Multi-select: apply only to selected channels
           [..._mixSelSet].forEach(idx => { if (!nowOn) mixMutedSet.add(idx); else mixMutedSet.delete(idx); });
-        } else if (expanded) {
-          // Expanded: cascade to group + all descendants
-          if (ch) { if (!nowOn) mixMutedSet.add(ch.index); else mixMutedSet.delete(ch.index); }
-          const allKids = getAllDescendants(t.name);
-          allKids.forEach(k => {
-            const kch = chMap[k.num]; if (!kch) return;
-            if (!nowOn) mixMutedSet.add(kch.index); else mixMutedSet.delete(kch.index);
-          });
         } else {
-          // Collapsed: only toggle the group channel itself
           if (ch) { if (!nowOn) mixMutedSet.add(ch.index); else mixMutedSet.delete(ch.index); }
         }
         renderMixList();
@@ -7430,6 +7430,8 @@ function renderQueue() {
   const prevLen = _lastQueueLen;
   _lastQueueLen = queue.length;
   el.innerHTML = '';
+  // Refresh tree badges (queued-state markers) — queue composition may have changed
+  if (typeof renderChannels === 'function') renderChannels();
 
   // Update total files label in header
   const totalFiles = _queueTotalFiles();
@@ -8141,13 +8143,38 @@ async function doBounce() {
     } catch(e) { console.warn('[EB]', e); }
   }
 
-  // Check sidechain — warn if selected channel no longer exists in current project
-  if (sidechainEnabled && sidechainChannel && window.api && window.api.showSidechainWarning) {
-    const scExists = channels.some(c => c.name === sidechainChannel);
-    if (!scExists) {
-      const scAction = await window.api.showSidechainWarning(sidechainChannel);
-      if (scAction === 'cancel') return;
-      if (scAction === 'uncheck') {
+  // Check sidechain — verify saved index↔name still matches; re-lookup by name as fallback.
+  if (sidechainEnabled && sidechainChannel && window.api) {
+    let scOk = false;
+    // 1) Quick path: visible channels list
+    const inList = channels.find(c => c.name === sidechainChannel);
+    if (inList) {
+      if (sidechainIndex !== inList.index) {
+        sidechainIndex = inList.index;
+        localStorage.setItem('sb4_sidechain_idx', JSON.stringify(sidechainIndex));
+      }
+      scOk = true;
+    }
+    // 2) Live AX verify by saved index
+    if (!scOk && sidechainIndex != null && window.api.channelNameAt) {
+      const at = await window.api.channelNameAt(sidechainIndex).catch(() => null);
+      if (at?.ok && at.name === sidechainChannel) scOk = true;
+    }
+    // 3) Live AX find by name (picks up channel that moved)
+    if (!scOk && window.api.findChannelByName) {
+      const f = await window.api.findChannelByName(sidechainChannel).catch(() => null);
+      if (f?.ok && f.found) {
+        sidechainIndex = f.index;
+        localStorage.setItem('sb4_sidechain_idx', JSON.stringify(sidechainIndex));
+        scOk = true;
+      }
+    }
+    // 4) Not found → ask user
+    if (!scOk) {
+      const choice = await _showSidechainMismatchModal(sidechainChannel);
+      if (choice === 'cancel') return;
+      if (choice === 'reselect') { toggleSidechainDropdown(); return; }
+      if (choice === 'no-sidechain') {
         sidechainEnabled = false;
         localStorage.setItem('sb4_sidechain_on', 'false');
         const scToggleEl = document.getElementById('sidechain-toggle');
@@ -8300,16 +8327,29 @@ async function doBounce() {
       if (!etaEl) return;
       // Countdown 3→2→1 based on AX progress: "1" appears at 98%, calculated from pace
       const _axP = window._axLastProgress || 0;
-      if (_axP >= 0.98) {
+      const _phase = window._bouncePhase;
+      const _setupPhase = _phase === 'solo' || _phase === 'mute' || _phase === 'format' || _phase === 'navigate' || _phase === 'naming';
+      const _actuallyRendering = _axP > 0.02 && _axP < 0.98;
+      // Only show "Preparing…" when actually between stems (no active render progress)
+      // AND either we're in a setup phase OR stale ≥98 from previous stem.
+      if (!_actuallyRendering && (_setupPhase || (_axP >= 0.98 && _phase !== 'render'))) {
+        etaEl.textContent = 'Preparing next track…';
+        etaEl.style.color = '#ffa94d';
+        etaEl.style.fontSize = '11px';
+        return;
+      }
+      // End-of-render countdown: stuck at 98% while in render phase → "1"
+      if (_axP >= 0.98 && _phase === 'render') {
         etaEl.textContent = '1';
         etaEl.style.color = '#ffa94d';
         etaEl.style.fontSize = '18px';
         return;
       }
-      if (_axP > 0.05 && _stemStartTime) {
+      // Countdown 3→2→1 when close to end of render
+      if (_actuallyRendering && _stemStartTime) {
         const _axElapsed = (Date.now() - _stemStartTime) / 1000;
         const _timeTo98 = _axElapsed * (0.98 - _axP) / _axP;
-        if (_timeTo98 <= 3) {
+        if (_timeTo98 <= 3 && _timeTo98 > 0) {
           etaEl.textContent = Math.max(1, Math.min(3, Math.ceil(_timeTo98)));
           etaEl.style.color = '#ffa94d';
           etaEl.style.fontSize = '18px';
@@ -8812,9 +8852,15 @@ async function doBounce() {
         date: new Date().toISOString(),
         project: projectName || outputFolder.split('/').pop() || 'Session',
         folder: outputFolder,
-        files: completedJobs.map(j => ({ name: j.name, type: j.type, id: j.id,
+        files: completedJobs.map(j => ({
+          name: j.name, type: j.type, id: j.id,
           channelIndex: j.channelIndex,
-          mutedIndices: j.mutedIndices, mutedNames: j.mutedNames })),
+          logicName: j.logicName, color: j.color,
+          mutedIndices: j.mutedIndices, mutedNames: j.mutedNames,
+          channels: j.channels ? j.channels.map(c => ({ name: c.name, channelIndex: c.channelIndex, color: c.color })) : undefined,
+          jobs: j.jobs ? j.jobs.map(jj => ({ id: jj.id, type: jj.type, name: jj.name, logicName: jj.logicName, channelIndex: jj.channelIndex, color: jj.color, mutedIndices: jj.mutedIndices, mutedNames: jj.mutedNames })) : undefined,
+          stemGroup: j.stemGroup, stemPresetId: j.stemPresetId
+        })),
         totalTime: sessionSec,
         totalFiles: totalDone,
         namePrefix: (document.getElementById('name-template')?.value || '').trim(),
@@ -11010,7 +11056,7 @@ function renderHistory() {
         <div class="hist-meta">
           <div style="display:flex;align-items:baseline;gap:8px;">
             <span style="font-size:var(--fs-xxs);font-weight:600;color:var(--muted);font-family:'JetBrains Mono',monospace;flex-shrink:0;white-space:nowrap;">${dateStr}</span>
-            <span class="hist-proj" title="${proj}">${proj}</span>
+            <span class="hist-proj" data-tip="${proj}" title="${proj}">${proj}</span>
           </div>
           <div style="margin-top:4px;">
             <span style="padding:2px 7px;border-radius:5px;border:1px solid var(--b2);font-size:var(--fs-xxs);font-weight:600;color:var(--t2);font-family:'JetBrains Mono',monospace;">${countLabel}</span>
@@ -11071,35 +11117,77 @@ function repeatSession(id) {
   if (!session) return;
   let added = 0, skipped = 0;
   const skippedNames = [];
+  const hasChannels = channels.length > 0;
+  const _newId = (p = 'q_') => p + Date.now() + Math.random();
   session.files.forEach(f => {
-    if (f.type === 'stem' && f.channelIndex != null && channels.length > 0) {
-      // Validate stem via resolveChannel
-      const resolved = resolveChannel(f.channelIndex, f.name);
-      if (!resolved) { skipped++; skippedNames.push(f.name); return; }
-      const existing = queue.find(q => q.name === resolved.name && q.type === 'stem');
+    if (f.type === 'stem' && f.channelIndex != null && hasChannels) {
+      // Resolve by logicName first (pre-rename identity), fall back to saved f.name
+      const resolved = resolveChannel(f.channelIndex, f.logicName || f.name);
+      if (!resolved) { skipped++; skippedNames.push(f.logicName || f.name); return; }
+      const existing = queue.find(q => q.name === f.name && q.type === 'stem');
       if (existing) { existing.status = 'pending'; delete existing.error; }
       else {
-        queue.push({ id: 'q_' + Date.now() + Math.random(), name: resolved.name, type: 'stem',
-          channelIndex: resolved.index, color: resolved.color, status: 'pending' });
+        queue.push({ id: _newId(), type: 'stem',
+          name: f.name, logicName: resolved.name,
+          channelIndex: resolved.index, color: resolved.color || f.color, status: 'pending' });
       }
-    } else if (f.type === 'mix' && f.mutedIndices && channels.length > 0) {
-      // Validate mix via resolveIndexNamePairs
+      added++;
+    } else if (f.type === 'mix' && f.mutedIndices && hasChannels) {
       const r = resolveIndexNamePairs(f.mutedIndices, f.mutedNames);
       if (r.skippedNames.length > 0) {
         log(`Session restore "${f.name}": not found: ${r.skippedNames.join(', ')}`, 'warn');
+        skippedNames.push(...r.skippedNames.map(n => `${f.name} → ${n}`));
       }
       const existing = queue.find(q => q.name === f.name && q.type === 'mix');
       if (existing) { existing.status = 'pending'; existing.mutedIndices = r.validIndices; existing.mutedNames = r.validNames; delete existing.error; }
       else {
-        queue.push({ id: 'q_' + Date.now() + Math.random(), name: f.name, type: 'mix',
+        queue.push({ id: _newId(), name: f.name, type: 'mix',
           mutedIndices: r.validIndices, mutedNames: r.validNames, status: 'pending' });
       }
+      added++;
+    } else if (f.type === 'group' && Array.isArray(f.channels) && hasChannels) {
+      // Merge — resolve each sub-channel
+      const resolvedChs = [];
+      (f.channels || []).forEach(c => {
+        const r = resolveChannel(c.channelIndex, c.name);
+        if (r) resolvedChs.push({ name: r.name, channelIndex: r.index, color: r.color || c.color });
+        else skippedNames.push(`${f.name} → ${c.name}`);
+      });
+      if (resolvedChs.length < 2) { skipped++; return; }
+      const existing = queue.find(q => q.name === f.name && q.type === 'group');
+      if (existing) { existing.status = 'pending'; existing.channels = resolvedChs; delete existing.error; }
+      else {
+        queue.push({ id: _newId(), type: 'group', name: f.name, channels: resolvedChs, status: 'pending' });
+      }
+      added++;
+    } else if (f.type === 'set' && Array.isArray(f.jobs) && hasChannels) {
+      // Version/stem-preset group — resolve each nested job
+      const resolvedJobs = [];
+      f.jobs.forEach(jj => {
+        if (jj.type === 'stem' && jj.channelIndex != null) {
+          const r = resolveChannel(jj.channelIndex, jj.logicName || jj.name);
+          if (!r) { skippedNames.push(`${f.name} → ${jj.logicName || jj.name}`); return; }
+          resolvedJobs.push({ id: _newId('j_'), type: 'stem', name: jj.name, logicName: r.name,
+            channelIndex: r.index, color: r.color || jj.color, status: 'pending' });
+        } else if (jj.type === 'mix') {
+          const pr = resolveIndexNamePairs(jj.mutedIndices, jj.mutedNames);
+          if (pr.skippedNames.length > 0) skippedNames.push(...pr.skippedNames.map(n => `${f.name}/${jj.name} → ${n}`));
+          resolvedJobs.push({ id: _newId('j_'), type: 'mix', name: jj.name,
+            mutedIndices: pr.validIndices, mutedNames: pr.validNames, status: 'pending' });
+        }
+      });
+      if (!resolvedJobs.length) { skipped++; return; }
+      queue.push({ id: _newId('q_set_'), type: 'set', name: f.name,
+        stemGroup: f.stemGroup !== false, stemPresetId: f.stemPresetId || null,
+        jobs: resolvedJobs, expanded: false, status: 'pending' });
+      added++;
     } else {
       // Fallback (no channels scanned yet or unknown type)
-      queue.push({ id: 'q_' + Date.now() + Math.random(), name: f.name, type: f.type,
-        channelIndex: f.channelIndex, mutedIndices: f.mutedIndices || [], mutedNames: f.mutedNames || [], status: 'pending' });
+      queue.push({ id: _newId(), name: f.name, type: f.type,
+        channelIndex: f.channelIndex, mutedIndices: f.mutedIndices || [], mutedNames: f.mutedNames || [],
+        channels: f.channels, status: 'pending' });
+      added++;
     }
-    added++;
   });
 
   // Restore session settings
@@ -11136,8 +11224,9 @@ function repeatSession(id) {
   saveQueue(); renderQueue(); updateBounceBtn();
   switchActTab('log');
   if (skippedNames.length > 0) {
-    toast(`↺ ${added} re-queued, ${skipped} not found`);
-    log(`Session: not found: ${skippedNames.join(', ')}`, 'warn');
+    const preview = skippedNames.slice(0, 3).join(', ') + (skippedNames.length > 3 ? ` +${skippedNames.length - 3}` : '');
+    toast(`⚠ ${added} re-queued · missing: ${preview}`);
+    log(`Session: missing channels — ${skippedNames.join(', ')}`, 'warn');
   } else {
     toast(`↺ ${added} jobs re-queued from history`);
   }
@@ -12245,6 +12334,21 @@ function toggleSidechain(on) {
 
 let _scDropdownOpen = false;
 let _scActiveFilters = new Set(); // empty = show all types
+// Sidechain mismatch modal — returns 'reselect' | 'no-sidechain' | 'cancel'
+let _scMismatchResolver = null;
+function _showSidechainMismatchModal(name) {
+  return new Promise(resolve => {
+    _scMismatchResolver = resolve;
+    const nameEl = document.getElementById('sc-mismatch-name');
+    if (nameEl) nameEl.textContent = name || '(unknown)';
+    document.getElementById('sc-mismatch-modal')?.classList.add('show');
+  });
+}
+function _scMismatchChoose(choice) {
+  document.getElementById('sc-mismatch-modal')?.classList.remove('show');
+  const r = _scMismatchResolver; _scMismatchResolver = null;
+  if (r) r(choice);
+}
 function toggleSidechainDropdown() {
   if (!sidechainEnabled) return;
   if (_scDropdownOpen) { closeSidechainDropdown(); return; }
@@ -13452,8 +13556,8 @@ if (window.api?.onHotkeyTriggered) {
     if (type === 'stems') {
       const added = [], skipped = [];
       tracks.forEach(t => {
-        const ch = channels.find(c => c.index === t.index) || { name: t.name, index: t.index, color: '#888' };
-        const _isDup = (j) => j.type === 'stem' && j.status !== 'done' && j.channelIndex === ch.index;
+        const ch = channels.find(c => c.index === t.index) || channels.find(c => c.name === t.name) || { name: t.name, index: t.index, color: '#888' };
+        const _isDup = (j) => j.type === 'stem' && j.status !== 'done' && (j.channelIndex === ch.index || j.logicName === ch.name || j.name === ch.name);
         if (queue.find(q => _isDup(q) || (q.type === 'set' && q.jobs.some(_isDup)))) {
           skipped.push(ch.name);
         } else {

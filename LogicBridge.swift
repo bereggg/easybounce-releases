@@ -940,6 +940,22 @@ case "soloIndex":
     axPress(ch[idx].soloBtn)
     jsonOut(["ok": true, "action": "solo", "channel": ch[idx].name])
 
+case "channelNameAt":
+    guard args.count >= 3, let idx = Int(args[2]) else { jsonOut(["error": "index required"]); exit(1) }
+    let ch = scanChannels(logic)
+    guard idx >= 0, idx < ch.count else { jsonOut(["ok": false, "error": "index out of range", "total": ch.count]); break }
+    jsonOut(["ok": true, "name": ch[idx].name, "total": ch.count])
+
+case "findChannelByName":
+    guard args.count >= 3 else { jsonOut(["error": "name required"]); exit(1) }
+    let wanted = args[2]
+    let ch = scanChannels(logic)
+    if let i = ch.firstIndex(where: { $0.name == wanted }) {
+        jsonOut(["ok": true, "found": true, "index": i, "name": ch[i].name])
+    } else {
+        jsonOut(["ok": true, "found": false])
+    }
+
 case "unsoloIndex":
     guard args.count >= 3, let idx = Int(args[2]) else { jsonOut(["error": "index required"]); exit(1) }
     let ch = scanChannels(logic)
