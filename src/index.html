@@ -2637,7 +2637,11 @@ async function scanLogic(isAutoRetry = false) {
   // ── Open Mixer (if wasn't open) + scroll to BNC + enable all filters ──
   if (window._scanCancelled) return;
   try {
-    const omResult = await window.api.openMixer({ skipPanelClose: true });
+    // SKIP-BNC: open mixer at cover level (~220px) instead of ~60% wide —
+    // same level we leave it at after scan finishes.
+    const omResult = SKIP_BNC
+      ? await window.api.openMixerCover()
+      : await window.api.openMixer({ skipPanelClose: true });
     console.log(`openMixer: ok=${omResult?.ok} wasOpen=${omResult?.wasOpen} hasBnc=${omResult?.hasBnc}`);
     await window.api.wait(200);
   } catch(e) { console.warn(`openMixer err: ${e}`); }
@@ -2853,15 +2857,17 @@ async function scanLogic(isAutoRetry = false) {
 
   // ── Scroll mixer to BNC strip (needed for master plugins scan) ──
   if (window._scanCancelled) return;
-  try {
-    const stbResult = await window.api.scrollToBnc();
-    console.log(`scrollToBnc: ok=${stbResult?.ok} hasBnc=${stbResult?.hasBnc}`);
-  } catch(e) { console.warn(`scrollToBnc err: ${e}`); }
+  if (!SKIP_BNC) {
+    try {
+      const stbResult = await window.api.scrollToBnc();
+      console.log(`scrollToBnc: ok=${stbResult?.ok} hasBnc=${stbResult?.hasBnc}`);
+    } catch(e) { console.warn(`scrollToBnc err: ${e}`); }
+  }
 
   // ── Step 3: Master plugins ─────────────────────────────────────────────────
   if (window._scanCancelled) return;
   let masterOk = false;
-  if (window.api.scanMasterPlugins) {
+  if (!SKIP_BNC && window.api.scanMasterPlugins) {
     try {
       log('Scanning Master plugins…', 'info');
       const mpRaw = await window.api.runShell(
@@ -3007,6 +3013,16 @@ function loadDemo() {
 let channelFilter = (() => { const v = localStorage.getItem('sb4_ch_filter'); return (v === 'hidden') ? 'hidden' : 'all'; })(); // 'hidden', 'all'
 let _mixerChCollapsed = localStorage.getItem('eb_mixer_ch_collapsed') !== '0'; // default: collapsed
 let _skipFilterScan = localStorage.getItem('eb_skip_filter_scan') === '1'; // skip Step 1b type-learning loop
+// ─── SKIP-BNC ────────────────────────────────────────────────────────────────
+// Codeword: "SKIP-BNC". When true, bypass everything tied to finding the Stereo
+// Output master channel (Bnc button) during scan and on Master Plugins modal open:
+//   • scan starts with openMixerCover (~220px) instead of openMixer (~60% wide)
+//   • scrollToBnc is skipped
+//   • scanMasterPlugins is skipped (master plugin list stays empty from scan)
+//   • _ensureMasterReady is a no-op (no auto openMixer + scrollToBnc)
+// To revert: set SKIP_BNC = false — every call site is gated by this flag,
+// no other code was removed. See memory/feedback_skip_bnc.md.
+const SKIP_BNC = true;
 let _scanInitDone = false; // mixer check + filter setup only on first scan
 
 // ═══════════════════════════════════════════════════
@@ -9297,6 +9313,7 @@ let _mpPollPausedUntil = 0;
 let _mpEscListener = null;
 let _mpLastToggleAt = 0;
 async function _ensureMasterReady() {
+  if (SKIP_BNC) return { opened: false };
   // Probe: Stereo Out Bnc already visible?
   const q = await window.api.masterPluginsQuick().catch(() => null);
   if (q?.ok && q.plugins?.length) return { opened: false };
