@@ -3635,6 +3635,207 @@ case "setAllMasterPlugins":
     }
     jsonOut(["ok": true, "toggled": samToggled, "active": samAllActive])
 
+// ── Inspector-based Master Plugins (Phase 2) ──────────────────────────────
+// These cases operate on Logic's Inspector panel (not the Mixer). Faster AX
+// tree, no scroll. Used exclusively by the Master Plugins modal — scan flow
+// does not touch these (SKIP_BNC in renderer).
+
+case "inspectorEnsureOpen":
+    // Open Inspector via 'I' keystroke if not visible. Returns current state.
+    func iioFindInspector(_ el: AXUIElement, _ d: Int = 0) -> AXUIElement? {
+        if d > 6 { return nil }
+        if axRole(el) == "AXGroup" && (axVal(el, kAXDescriptionAttribute) as? String ?? "") == "Inspector" { return el }
+        for c in axKids(el) { if let f = iioFindInspector(c, d+1) { return f } }
+        return nil
+    }
+    guard let iioWins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement] else {
+        jsonOut(["ok": false, "error": "no windows"]); break
+    }
+    let iioWin = iioWins.first(where: { (axVal($0, kAXTitleAttribute) as? String ?? "").contains("Tracks") }) ?? iioWins.first!
+    var iioInsp = iioFindInspector(iioWin)
+    var iioOpened = false
+    if iioInsp == nil {
+        activateLogic()
+        Thread.sleep(forTimeInterval: 0.15)
+        if let iioPid = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.logic10").first?.processIdentifier {
+            sendKeyToLogic(iioPid, keyCode: 34) // 'I'
+        }
+        // Poll up to 1.2s for Inspector to appear
+        let iioDeadline = Date().addingTimeInterval(1.2)
+        while Date() < iioDeadline {
+            Thread.sleep(forTimeInterval: 0.08)
+            iioInsp = iioFindInspector(iioWin)
+            if iioInsp != nil { iioOpened = true; break }
+        }
+    }
+    if iioInsp == nil { jsonOut(["ok": false, "error": "inspector not visible after 'I' toggle"]); break }
+    var iioSzRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(iioInsp!, kAXSizeAttribute as CFString, &iioSzRef)
+    var iioSz = CGSize.zero
+    if let v = iioSzRef { AXValueGetValue(v as! AXValue, .cgSize, &iioSz) }
+    jsonOut(["ok": true, "opened": iioOpened, "width": Int(iioSz.width)])
+
+case "inspectorShrink":
+    // Shrink Inspector to target width (179px) via mouse-drag on right edge.
+    // Logic's AX tree exposes no settable vertical splitter or size attribute
+    // for Inspector, so drag is the only reliable path. If Inspector width
+    // falls below 150 after attempt 1, retry with target 205.
+    func isFindInspector(_ el: AXUIElement, _ d: Int = 0) -> AXUIElement? {
+        if d > 6 { return nil }
+        if axRole(el) == "AXGroup" && (axVal(el, kAXDescriptionAttribute) as? String ?? "") == "Inspector" { return el }
+        for c in axKids(el) { if let f = isFindInspector(c, d+1) { return f } }
+        return nil
+    }
+    guard let isWins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement],
+          let isWin = isWins.first(where: { (axVal($0, kAXTitleAttribute) as? String ?? "").contains("Tracks") }) ?? isWins.first
+    else { jsonOut(["ok": false, "error": "no window"]); break }
+    guard var isInsp = isFindInspector(isWin) else { jsonOut(["ok": false, "error": "inspector not found"]); break }
+    activateLogic()
+    Thread.sleep(forTimeInterval: 0.2)
+    func isInspectorRect() -> (CGPoint, CGSize)? {
+        var pRef: CFTypeRef?; var sRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(isInsp, kAXPositionAttribute as CFString, &pRef)
+        AXUIElementCopyAttributeValue(isInsp, kAXSizeAttribute as CFString, &sRef)
+        var p = CGPoint.zero; var s = CGSize.zero
+        if let v = pRef { AXValueGetValue(v as! AXValue, .cgPoint, &p) }
+        if let v = sRef { AXValueGetValue(v as! AXValue, .cgSize, &s) }
+        return (p, s)
+    }
+    // Read window rect for clamping mouse Y
+    var isWinPosRef: CFTypeRef?; var isWinSzRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(isWin, kAXPositionAttribute as CFString, &isWinPosRef)
+    AXUIElementCopyAttributeValue(isWin, kAXSizeAttribute as CFString, &isWinSzRef)
+    var isWinPos = CGPoint.zero; var isWinSz = CGSize.zero
+    if let v = isWinPosRef { AXValueGetValue(v as! AXValue, .cgPoint, &isWinPos) }
+    if let v = isWinSzRef { AXValueGetValue(v as! AXValue, .cgSize, &isWinSz) }
+    func isDragInspectorTo(_ target: CGFloat) {
+        guard let (p, s) = isInspectorRect() else { return }
+        let fromX = p.x + s.width + 1
+        let toX   = p.x + target
+        let y     = min(p.y + min(400, s.height * 0.5), isWinPos.y + isWinSz.height - 50)
+        let src = CGEventSource(stateID: .hidSystemState)
+        CGEvent(mouseEventSource: src, mouseType: .leftMouseDown,
+                mouseCursorPosition: CGPoint(x: fromX, y: y), mouseButton: .left)?.post(tap: .cghidEventTap)
+        Thread.sleep(forTimeInterval: 0.08)
+        var cx = fromX
+        while cx > toX {
+            cx -= 3
+            CGEvent(mouseEventSource: src, mouseType: .leftMouseDragged,
+                    mouseCursorPosition: CGPoint(x: cx, y: y), mouseButton: .left)?.post(tap: .cghidEventTap)
+            Thread.sleep(forTimeInterval: 0.008)
+        }
+        CGEvent(mouseEventSource: src, mouseType: .leftMouseUp,
+                mouseCursorPosition: CGPoint(x: toX, y: y), mouseButton: .left)?.post(tap: .cghidEventTap)
+        // Move mouse away from the edge so hover states don't leak
+        let safeX = isWinPos.x + isWinSz.width * 0.5
+        let safeY = isWinPos.y + 20
+        CGEvent(mouseEventSource: src, mouseType: .mouseMoved,
+                mouseCursorPosition: CGPoint(x: safeX, y: safeY), mouseButton: .left)?.post(tap: .cghidEventTap)
+        Thread.sleep(forTimeInterval: 0.15)
+    }
+    guard let (_, isStartSz) = isInspectorRect() else { jsonOut(["ok": false, "error": "inspector rect unavailable"]); break }
+    let isStartW = Int(isStartSz.width)
+    if isStartW <= 184 {
+        jsonOut(["ok": true, "from": isStartW, "to": isStartW, "action": "already-min", "retried": false]); break
+    }
+    isDragInspectorTo(179)
+    // Re-find Inspector (drag can invalidate AX reference if tree rebuilt)
+    if let fresh = isFindInspector(isWin) { isInsp = fresh }
+    var isFinalW = isInspectorRect().map { Int($0.1.width) } ?? 0
+    var isRetried = false
+    if isFinalW < 150 {
+        isDragInspectorTo(205)
+        if let fresh = isFindInspector(isWin) { isInsp = fresh }
+        isFinalW = isInspectorRect().map { Int($0.1.width) } ?? 0
+        isRetried = true
+    }
+    jsonOut(["ok": isFinalW >= 150, "from": isStartW, "to": isFinalW, "action": "drag", "retried": isRetried])
+
+case "inspectorMasterQuick":
+    // No-side-effect probe: findInspectorMaster + read plugins.
+    if let imMaster = findInspectorMaster(logic) {
+        let imPlugins = pluginsFromMasterItem(imMaster)
+        jsonOut(["ok": true, "plugins": imPlugins])
+    } else {
+        jsonOut(["ok": false, "error": "master not in inspector"])
+    }
+
+case "setInspectorMasterPlugin":
+    // Toggle bypass on Inspector's MASTER channel. Usage: setInspectorMasterPlugin <index> <0|1>
+    guard args.count >= 4 else { jsonOut(["ok": false, "error": "Usage: setInspectorMasterPlugin <index> <0|1>"]); break }
+    let simpName = args[2]; let simpActive = args[3] == "1"
+    guard let simpMaster = findInspectorMaster(logic) else {
+        jsonOut(["ok": false, "error": "master not in inspector"]); break
+    }
+    let simpGroups = axKids(simpMaster).filter { kid -> Bool in
+        guard axRole(kid) == "AXGroup" else { return false }
+        let name = axVal(kid, kAXDescriptionAttribute) as? String ?? ""
+        guard !name.isEmpty else { return false }
+        return axKids(kid).contains { axRole($0) == "AXCheckBox" && (axVal($0, kAXDescriptionAttribute) as? String ?? "") == "bypass" }
+    }.sorted {
+        var p1: CFTypeRef?; AXUIElementCopyAttributeValue($0, kAXPositionAttribute as CFString, &p1)
+        var p2: CFTypeRef?; AXUIElementCopyAttributeValue($1, kAXPositionAttribute as CFString, &p2)
+        var pt1 = CGPoint.zero; var pt2 = CGPoint.zero
+        if let av = p1 { AXValueGetValue(av as! AXValue, .cgPoint, &pt1) }
+        if let av = p2 { AXValueGetValue(av as! AXValue, .cgPoint, &pt2) }
+        return pt1.y < pt2.y
+    }
+    var simpTarget: AXUIElement? = nil
+    if let idx = Int(simpName), idx >= 0, idx < simpGroups.count { simpTarget = simpGroups[idx] }
+    else {
+        simpTarget = simpGroups.first(where: {
+            let desc = axVal($0, kAXDescriptionAttribute) as? String ?? ""
+            return desc.lowercased().hasPrefix(simpName.lowercased().prefix(10))
+                || simpName.lowercased().hasPrefix(desc.lowercased().prefix(10))
+        })
+    }
+    guard let simpGroup = simpTarget,
+          let simpBypass = axKids(simpGroup).first(where: {
+              axRole($0) == "AXCheckBox" && (axVal($0, kAXDescriptionAttribute) as? String ?? "") == "bypass"
+          }) else {
+        jsonOut(["ok": false, "error": "plugin '\(simpName)' not found (total: \(simpGroups.count))"]); break
+    }
+    let simpCur = axIntValue(simpBypass)
+    let simpWant = simpActive ? 0 : 1
+    var simpNew = simpCur
+    if simpCur != simpWant {
+        axPress(simpBypass)
+        let simpDeadline = Date().addingTimeInterval(1.8)
+        while Date() < simpDeadline {
+            Thread.sleep(forTimeInterval: 0.05)
+            simpNew = axIntValue(simpBypass)
+            if simpNew == simpWant { break }
+        }
+    }
+    jsonOut(["ok": true, "plugin": simpName, "active": simpNew == 0, "changed": simpCur != simpNew, "confirmed": simpNew == simpWant])
+
+case "inspectorNavigateForMaster":
+    // Arrow-down through tracks until findInspectorMaster returns non-nil.
+    // Usage: inspectorNavigateForMaster [maxSteps]
+    let infmMax = args.count >= 3 ? (Int(args[2]) ?? 50) : 50
+    if findInspectorMaster(logic) != nil {
+        jsonOut(["ok": true, "steps": 0, "alreadyVisible": true]); break
+    }
+    activateLogic()
+    Thread.sleep(forTimeInterval: 0.1)
+    guard let infmPid = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.logic10").first?.processIdentifier else {
+        jsonOut(["ok": false, "error": "Logic pid not found"]); break
+    }
+    var infmSteps = 0
+    var infmFound = false
+    while infmSteps < infmMax {
+        sendKeyToLogic(infmPid, keyCode: 125) // down arrow
+        infmSteps += 1
+        // Adaptive wait for Inspector to refresh
+        let infmDeadline = Date().addingTimeInterval(0.4)
+        while Date() < infmDeadline {
+            Thread.sleep(forTimeInterval: 0.05)
+            if findInspectorMaster(logic) != nil { infmFound = true; break }
+        }
+        if infmFound { break }
+    }
+    jsonOut(["ok": infmFound, "steps": infmSteps, "alreadyVisible": false])
+
 case "debugScanMaster":
     // Step-by-step diagnostic for scanMasterPlugins
     var diag: [String: Any] = [:]
