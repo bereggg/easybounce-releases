@@ -245,6 +245,16 @@ function createWindow() {
         mainWindow.webContents.send('channel-count-live', r.total);
       }
     }).catch(() => {});
+    // Update project name + output folder if Logic project changed while away
+    execAsync(`osascript -e 'tell application "Logic Pro"\n  if (count of documents) > 0 then\n    return (name of document 1) & "|" & (path of document 1)\n  end if\nend tell'`).then(({ stdout }) => {
+      const raw = stdout.trim();
+      if (!raw || !mainWindow || mainWindow.isDestroyed()) return;
+      const [nameRaw, pathRaw] = raw.split('|');
+      const name = (nameRaw || '').replace(/\.logicx$/, '').trim();
+      const filePath = (pathRaw || '').trim();
+      const folder = filePath ? path.dirname(filePath.replace(/\/$/, '')) : null;
+      if (name) mainWindow.webContents.send('project-info-live', { name, folder });
+    }).catch(() => {});
   });
 
   // Defensive AOT release: when the window loses focus and we're idle
@@ -998,10 +1008,9 @@ ipcMain.handle('move-to-logic-space', async () => {
   if (_inBounce) return { ok: true };
   // In mini mode: keep visibleOnAllWorkspaces so the widget follows the user
   if (!_inMiniMode) {
-    mainWindow.setVisibleOnAllWorkspaces(false);
-    await new Promise(r => setTimeout(r, 80));
     mainWindow.show();
     mainWindow.focus();
+    mainWindow.setVisibleOnAllWorkspaces(false);
   }
   return { ok: true };
 });
@@ -1052,7 +1061,6 @@ let _inCompact = false;
 let _preCompact = null;
 ipcMain.handle('enter-compact-mode', () => {
   if (!mainWindow || mainWindow.isDestroyed()) return { ok: false };
-  if (_inBounce) return { ok: false };
   if (!_inCompact) {
     const cur = mainWindow.getBounds();
     _preCompact = cur;

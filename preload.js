@@ -156,6 +156,7 @@ contextBridge.exposeInMainWorld('api', {
   getSelectedTracks:     ()    => ipcRenderer.invoke('get-selected-tracks'),
   onHotkeyTriggered: (cb) => ipcRenderer.on('hotkey-triggered', (_, type) => cb(type)),
   onChannelCountLive: (cb) => ipcRenderer.on('channel-count-live', (_, count) => cb(count)),
+  onProjectInfoLive:  (cb) => ipcRenderer.on('project-info-live', (_, info) => cb(info)),
   sendFeedback:          (d)   => ipcRenderer.invoke('send-feedback', d),
   writeLog:              (msg, level) => ipcRenderer.invoke('write-log', msg, level),
   setIgnoreMouseEvents:  (ignore, opts) => ipcRenderer.invoke('set-ignore-mouse-events', ignore, opts),

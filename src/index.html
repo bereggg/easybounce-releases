@@ -112,8 +112,8 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .tree-group-name{flex:1;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;pointer-events:none;color:var(--t2);}
 .tree-group-idx{font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);color:var(--muted);flex-shrink:0;pointer-events:none;}
 .tree-q-badge{display:inline-flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;line-height:1;padding:2px 6px;border-radius:999px;background:var(--accent-a20,rgba(108,99,255,.22));color:var(--accent);border:1px solid var(--accent-a40,rgba(108,99,255,.4));flex-shrink:0;pointer-events:none;letter-spacing:.02em;}
-.tree-q-badge.q-solo{padding:2px;width:18px;height:18px;}
-.tree-q-badge.q-solo .ico{width:11px;height:11px;}
+.tree-q-badge.q-solo{padding:1px;width:14px;height:14px;}
+.tree-q-badge.q-solo .ico{width:9px;height:9px;}
 .tree-group.q-any::before{background:var(--accent)!important;}
 .tree-child.q-on .tree-child-name{color:var(--text);}
 .tree-child.q-on .tree-child-dot{opacity:1;box-shadow:0 0 0 2px var(--accent-a20,rgba(108,99,255,.22));}
@@ -246,8 +246,8 @@ svg.ico.ico-lg{width:20px;height:20px;}
 @keyframes done-flash{0%{background:var(--card)}40%{background:rgba(67,233,123,.2)}100%{background:var(--card)}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 @keyframes bounce-ready{0%,100%{box-shadow:0 8px 32px var(--accent-a30),inset 0 1px 0 rgba(255,255,255,.2);}50%{box-shadow:0 12px 40px var(--accent-a40),inset 0 1px 0 rgba(255,255,255,.25);transform:translateY(-1px);}}
-.bbtn.running{background:linear-gradient(160deg,#1a8cff 0%,#0066e0 60%,#0052b4 100%);box-shadow:0 8px 32px rgba(0,102,224,.5),inset 0 1px 0 rgba(255,255,255,.25);animation:pulse-glow-blue 1.6s ease-in-out infinite alternate;}
-@keyframes pulse-glow-blue{from{box-shadow:0 4px 16px rgba(0,102,224,.35);}to{box-shadow:0 12px 40px rgba(0,102,224,.6),inset 0 1px 0 rgba(255,255,255,.2);}}
+.bbtn.running{background:linear-gradient(160deg,var(--accent) 0%,var(--a2) 100%);box-shadow:0 8px 32px var(--accent-a30),inset 0 1px 0 rgba(255,255,255,.2);animation:pulse-glow-accent 1.6s ease-in-out infinite alternate;}
+@keyframes pulse-glow-accent{from{box-shadow:0 4px 16px var(--accent-a30);}to{box-shadow:0 12px 40px var(--accent-a60),inset 0 1px 0 rgba(255,255,255,.2);}}
 .bbtn.off{background:var(--card);color:var(--muted);box-shadow:none;cursor:not-allowed;transform:none;border:1px solid var(--b);}
 .bbtn.off::before{display:none;}
 @keyframes pulse-stems{from{box-shadow:0 0 0 transparent}to{box-shadow:0 0 12px var(--success-a40)}}
@@ -2976,7 +2976,10 @@ async function scanLogic(isAutoRetry = false) {
   document.body.classList.remove('scan-badge');
   if (window.api && window.api.exitScanBadge) { try { await window.api.exitScanBadge(); _scanBadgeActive = false; } catch(e) { console.warn('[EB]', e); } }
   if (window.api) await window.api.setAlwaysOnTop(isPinned || false).catch(()=>{});
-  if (window.api && window.api.moveToLogicSpace) { try { await window.api.moveToLogicSpace(); } catch(e) { console.warn('[EB]', e); } }
+  // In compact mode skip the moveToLogicSpace space-switch dance — it causes a visible
+  // 80ms flicker as the window goes invisible between setVisibleOnAllWorkspaces(false)
+  // and show(). Compact mode users have Logic side-by-side, no space transition needed.
+  if (!_compactOn && window.api && window.api.moveToLogicSpace) { try { await window.api.moveToLogicSpace(); } catch(e) { console.warn('[EB]', e); } }
   if (window.api && window.api.focusApp) { try { await window.api.focusApp(); } catch(e) { console.warn('[EB]', e); } }
   if (scanWarn) {
     scanWarn.style.transition = 'opacity .4s ease'; scanWarn.style.opacity = '0';
@@ -3485,6 +3488,9 @@ function _renderChannelsImpl() {
     if (q.type === 'stem' && q.status !== 'done' && q.channelIndex != null) _queuedIdx.add(q.channelIndex);
     if (q.type === 'set' && Array.isArray(q.jobs)) q.jobs.forEach(j => {
       if (j.type === 'stem' && j.status !== 'done' && j.channelIndex != null) _queuedIdx.add(j.channelIndex);
+    });
+    if (q.type === 'group' && q.status !== 'done' && Array.isArray(q.channels)) q.channels.forEach(c => {
+      if (c.channelIndex != null) _queuedIdx.add(c.channelIndex);
     });
   });
 
@@ -8171,8 +8177,11 @@ function _autoSetOutputFromProject(projFolder) {
     }
     const el = document.getElementById('out-folder');
     if (el) {
-      el.textContent = outputFolder.replace(/^\/Users\/[^/]+/, '~');
+      const display = outputFolder.replace(/^\/Users\/[^/]+/, '~');
+      el.textContent = display;
+      el.dataset.fullPath = display;
       el.classList.add('set');
+      if (_compactOn) _applyCompactTruncations();
     }
   } catch {}
 }
@@ -10987,7 +10996,7 @@ function _applyCompactTruncations() {
     out.dataset.fullPath = full;
     out.title = full;
     const segs = full.split('/').filter(Boolean);
-    out.textContent = segs.length > 2 ? '…/' + segs.slice(-1).join('/') : full;
+    out.textContent = segs.length > 3 ? '…/' + segs.slice(-3).join('/') : full;
   }
   // SIDECHAIN button — trim long names
   const sc = document.getElementById('sidechain-picker-btn');
@@ -13757,7 +13766,7 @@ if (window.api?.onHotkeyTriggered) {
           added.push(ch.name);
         }
       });
-      if (added.length || skipped.length) { saveQueue(); renderQueue(); updateBounceBtn(); }
+      if (added.length || skipped.length) { saveQueue(); renderChannels(); renderQueue(); updateBounceBtn(); }
       if (added.length && skipped.length) toast(`${added.length} added · ${skipped.length} already in queue`);
       else if (added.length) toast(`${added.length} stem${added.length > 1 ? 's' : ''} added`);
       else toast('Already in queue');
@@ -13809,6 +13818,16 @@ if (window.api?.onChannelCountLive) {
   window.api.onChannelCountLive((liveCount) => {
     if (channels.length === 0) return; // not scanned yet — nothing to compare
     _channelsStale = liveCount !== channels.length;
+  });
+}
+
+if (window.api?.onProjectInfoLive) {
+  window.api.onProjectInfoLive(({ name, folder }) => {
+    if (!name) return;
+    // Update project name display if changed
+    if (name !== projectName) setProjectName(name);
+    // Always try to auto-set output folder from latest project info
+    if (folder) _autoSetOutputFromProject(folder);
   });
 }
 
