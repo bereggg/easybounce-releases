@@ -7424,8 +7424,11 @@ function _renderItemMarkerChips(item) {
   return { fullChip, markerChips };
 }
 
+let _lastQueueLen = 0;
 function renderQueue() {
   const el = document.getElementById('qlist');
+  const prevLen = _lastQueueLen;
+  _lastQueueLen = queue.length;
   el.innerHTML = '';
 
   // Update total files label in header
@@ -7695,6 +7698,14 @@ function renderQueue() {
     el.appendChild(div);
   });
   document.getElementById('s-q').textContent = _queueTotalFiles();
+  // Auto-scroll to newly appended item(s). Only when queue grew — avoids
+  // jumping while the user is scrolled up inspecting older entries.
+  if (queue.length > prevLen) {
+    const last = el.lastElementChild;
+    if (last && typeof last.scrollIntoView === 'function') {
+      last.scrollIntoView({ block: 'end', behavior: 'smooth' });
+    }
+  }
 }
 
 // ── Clear shift-drag session on mouseup ──
@@ -8316,7 +8327,7 @@ async function doBounce() {
         etaEl.textContent = `~${timeStr}`;
       }
     }
-  }, 1000);
+  }, 250); // 250ms so countdown digits (3→2→1) refresh promptly when AX progress updates
   totalDone = 0;
   // Save sidechain state at bounce start
   const _sidechainEnabled = sidechainEnabled;
@@ -8412,6 +8423,10 @@ async function doBounce() {
     document.getElementById('s-cur').textContent = job.name;
     if (window.api?.updateBounceOverlay) window.api.updateBounceOverlay({ name: job.name, done: totalDone, total: _totalFiles }).catch(() => {});
     _stemStartTime = Date.now(); // track this stem's start
+    // Reset AX progress so the countdown (3→2→1) doesn't inherit the previous
+    // stem's final value — without this, "1" from the previous stem lingers
+    // into the next stem's setup until fresh AX reports arrive.
+    window._axLastProgress = 0;
     if (_bounceStartTime === null) { _bounceStartTime = Date.now(); _estimatedRemaining = 60; _etaRecalcAt = Date.now(); }
     // Create reference file for mtime comparison (file newer than this = fresh bounce)
     await window.api.runShell('touch /tmp/.eb_stemstart').catch(() => {});
