@@ -1970,6 +1970,7 @@ const BUILTIN_PRESETS = [
 
 // Channels, tree, groups — all cleared on launch, only populated after scan
 let channels  = [];
+let _channelsStale = false; // true when Logic channel count differs from last scan
 let trackTree = [];
 let collapsedGroups = new Set();
 let queue     = []; // Don't restore queue between sessions
@@ -2542,6 +2543,7 @@ async function _learnFilterTypes() {
   );
   if (window._scanCancelled || _baseChannels.length === 0) return;
   channels = [..._masterChannels];
+  _channelsStale = false;
   localStorage.setItem(SK.channels, JSON.stringify(channels));
   renderChannels();
   renderMixerFilters();
@@ -3883,6 +3885,7 @@ function _renderChannelsImpl() {
           if (selectedIdx.has(ch.index)) { selectedIdx.delete(ch.index); }
           else if (selectedIdx.size > 0) { selectedIdx.add(ch.index); }
           else {
+            if (_channelsStale) { toast('Channels changed in Logic — rescan first'); return; }
             const _isDup = (j) => j.type === 'stem' && j.status !== 'done' && j.channelIndex === ch.index;
             if (queue.find(q => _isDup(q) || (q.type === 'set' && q.jobs.some(_isDup)))) { toast(ch.name + ' already in queue'); return; }
             hideQueueHint(); saveUndo();
@@ -3961,6 +3964,7 @@ function _renderChannelsImpl() {
         updateAddStemsBtn();
       } else {
         // Single click — add to queue directly
+        if (_channelsStale) { toast('Channels changed in Logic — rescan first'); return; }
         const _isStemDupCh = (j) => j.type === 'stem' && j.status !== 'done' && j.channelIndex === ch.index;
         const existing = queue.find(q => _isStemDupCh(q) || (q.type === 'set' && q.jobs.some(_isStemDupCh)));
         if (existing) { toast(ch.name + ' already in queue'); return; }
@@ -3983,6 +3987,7 @@ function _renderChannelsImpl() {
 }
 
 function addChannelToQueue(ch) {
+  if (_channelsStale) { toast('Channels changed in Logic — rescan first'); return; }
   hideQueueHint();
   const _isDup = (j) => j.type === 'stem' && j.status !== 'done' && j.channelIndex === ch.index;
   const existing = queue.find(q => _isDup(q) || (q.type === 'set' && q.jobs.some(_isDup)));
@@ -5835,6 +5840,7 @@ function _mkStemItem(ch) {
 }
 
 function addSelAsStems() {
+  if (_channelsStale) { toast('Channels changed in Logic — rescan first'); return; }
   hideQueueHint();
   if (selectedIdx.size === 0) { toast('Select channels first'); return; }
   let added = 0, dupes = 0;
@@ -7987,6 +7993,7 @@ document.getElementById('ch-list').addEventListener('dragstart', (e) => {
     }
 
     if (toAdd.length === 0) { toast('Already in queue'); return; }
+    if (_channelsStale) { toast('Channels changed in Logic — rescan first'); return; }
     hideQueueHint();
     saveUndo();
     toAdd.forEach(ch => {
@@ -8390,6 +8397,20 @@ async function doBounce() {
       }
     }
     // em.opened === false → mixer was already open → proceed immediately
+  }
+  // ── Channel count sanity check ─────────────────────────────────────────────
+  // If mixer was already open above (no rescan), verify Logic's live channel count
+  // matches the last scan. Mismatch means tracks were added/removed in Logic since
+  // the scan — indices in the queue are stale and soloIndex will fail.
+  if (channels.length > 0 && window.api?.channelNameAt) {
+    const _cc = await window.api.channelNameAt(0).catch(() => null);
+    const _liveCount = _cc?.total ?? null;
+    if (_liveCount != null && _liveCount !== channels.length) {
+      toast(`⚠ Logic channels changed — rescan first`);
+      log(`✗ Bounce stopped: channel count changed since last scan (${channels.length} scanned → ${_liveCount} now) — rescan Logic and retry`, 'err');
+      if (_preExpandQueue) { queue = JSON.parse(_preExpandQueue); _preExpandQueue = null; saveQueue(); renderQueue(); }
+      return;
+    }
   }
   // ──────────────────────────────────────────────────────────────────────────
 
@@ -9189,9 +9210,10 @@ async function bounceStem(job, folder, isFirst) {
     await window.api.wait(400);
     await window.api.moveToLogicSpace().catch(() => {});
     await activateLogicForAX();
-    r = job.channelIndex != null
+    const _soloIndexStale = r?.error?.includes('index out of range');
+    r = (job.channelIndex != null && !_soloIndexStale)
       ? await window.api.soloIndex(job.channelIndex)
-      : await window.api.soloByName(job.name);
+      : await window.api.soloByName(job.logicName || job.name);
     if (!r?.ok || r?.error) { log(`✗ Solo failed after retry: "${job.name}"`, 'err'); return false; }
   }
   // Verify solo actually landed in Logic state.
@@ -9306,7 +9328,8 @@ async function bounceGroup(job, folder, isFirst) {
       await window.api.wait(400);
       await window.api.moveToLogicSpace().catch(() => {});
       await activateLogicForAX();
-      r = ch.channelIndex != null ? await window.api.soloIndex(ch.channelIndex) : await window.api.soloByName(ch.name);
+      const _grpSoloIndexStale = r?.error?.includes('index out of range');
+      r = (ch.channelIndex != null && !_grpSoloIndexStale) ? await window.api.soloIndex(ch.channelIndex) : await window.api.soloByName(ch.name);
       if (!r?.ok || r?.error) { log(`✗ Solo failed after retry for group channel "${ch.name}"`, 'err'); return false; }
     }
     window._cancelGroupNames.push(ch.name);
@@ -10513,6 +10536,8 @@ async function triggerBounce(name, folder, isFirst) {
   let dialogStuckCount = 0;  // how many polls the Bounce dialog has been visible
   let reTriggerCount = 0;    // how many times we've re-clicked Bounce (max 2)
   let _warnedTimeout = false;
+  let _lastFrozenProgressPct = -1; // last render % when progress timer was reset
+  let _lastFrozenProgressTime = 0; // timestamp of last 1%+ progress movement
   const BOUNCE_TIMEOUT_MS = 60 * 60 * 1000; // 60 minutes max per stem (heavy orchestral projects)
   while (waited < BOUNCE_TIMEOUT_MS) {
     if (!_warnedTimeout && waited >= 10 * 60 * 1000) {
@@ -10617,38 +10642,7 @@ async function triggerBounce(name, folder, isFirst) {
       '  end tell',
       'end tell'
     ].join('\n'));
-    // Freeze detection: if poll took > 12s, Logic is unresponsive (frozen app blocks System Events)
-    // Normal poll = 100-400ms. Heavy sample library load = 2-5s. Frozen = 12s+
-    // 5 consecutive slow polls = ~60s of confirmed unresponsiveness before aborting
     const _pollMs = Date.now() - _pollStart;
-    if (_pollMs > 12000 && check.ok) {
-      consecutiveErrors++;
-      log(`⚠ Poll took ${Math.round(_pollMs/1000)}s — Logic may be frozen (${consecutiveErrors}/5 slow polls)`, 'warn');
-      if (consecutiveErrors >= 5) {
-        const reason = `Logic frozen during "${name}" — no response for ~60s`;
-        log(`✗ ${reason}`, 'err');
-        toast('⚠ Logic is frozen — bounce stopped. Check Logic and restart if needed.');
-        window._lastHangReason = reason;
-        window._bounceFatalHang = true;
-        // Send notification so user gets alerted even if away from computer
-        sendBounceNotifications({
-          project: projectName || outputFolder.split('/').pop() || 'Session',
-          totalFiles: 0,
-          totalPlanned: 1,
-          errors: 1,
-          duration: `${Math.round(waited/60000)}m`,
-          format: localStorage.getItem('sb4_fmt_current') || '',
-          totalSize: '',
-          stems: [{ name, type: 'stem' }],
-          folder: outputFolder,
-          failed: true,
-          failReason: reason
-        });
-        try { if (typeof _offProgress === 'function') _offProgress(); } catch {}
-        try { await window.api.stopTrackBounce?.(); } catch {}
-        return false;
-      }
-    }
     if (check.output === 'done') {
       // AX tracker is authoritative for "render finished" — only break if it agrees.
       // This eliminates the false-positive race where AppleScript returns "done"
@@ -10683,7 +10677,33 @@ async function triggerBounce(name, folder, isFirst) {
     }
     if (check.output === 'rendering') {
       // Bounce progress window visible — render is still in progress, keep waiting
-      consecutiveErrors = 0; // Logic IS responding
+      consecutiveErrors = 0;
+      // Frozen detection: if render progress stuck at same % for 90s → truly frozen
+      const _nowPct = window._axLastProgress != null ? (window._axLastProgress * 100) : -1;
+      if (_nowPct >= 0) {
+        if (_lastFrozenProgressPct < 0) {
+          _lastFrozenProgressPct = _nowPct; _lastFrozenProgressTime = Date.now();
+        } else if (_nowPct >= _lastFrozenProgressPct + 1) {
+          _lastFrozenProgressPct = _nowPct; _lastFrozenProgressTime = Date.now();
+        } else if (_lastFrozenProgressTime > 0 && Date.now() - _lastFrozenProgressTime > 90000) {
+          const reason = `Logic frozen during "${name}" — no render progress for 90s (stuck at ${_nowPct.toFixed(0)}%)`;
+          log(`✗ ${reason}`, 'err');
+          toast('⚠ Logic is frozen — no render progress for 90s');
+          window._lastHangReason = reason;
+          window._bounceFatalHang = true;
+          sendBounceNotifications({
+            project: projectName || outputFolder.split('/').pop() || 'Session',
+            totalFiles: 0, totalPlanned: 1, errors: 1,
+            duration: `${Math.round(waited/60000)}m`,
+            format: localStorage.getItem('sb4_fmt_current') || '',
+            totalSize: '', stems: [{ name, type: 'stem' }],
+            folder: outputFolder, failed: true, failReason: reason
+          });
+          try { if (typeof _offProgress === 'function') _offProgress(); } catch {}
+          try { await window.api.stopTrackBounce?.(); } catch {}
+          return false;
+        }
+      }
     }
     if (check.output === 'quit-cancelled') {
       log('⚠ Logic tried to quit — clicked Cancel to keep it open', 'warn');
@@ -10768,7 +10788,7 @@ async function triggerBounce(name, folder, isFirst) {
       waited += 800;
       continue;
     }
-    if (_pollMs <= 12000) consecutiveErrors = 0; // fast poll = Logic is alive, reset freeze counter
+    if (check.ok) consecutiveErrors = 0; // script succeeded = Logic is alive, reset failure counter
     await window.api.wait(800);
     waited += 800;
   }
@@ -13691,6 +13711,7 @@ if (window.api?.onHotkeyTriggered) {
     }
     const tracks = result.tracks;
     if (type === 'stems') {
+      if (_channelsStale) { toast('Channels changed in Logic — rescan first'); return; }
       const added = [], skipped = [];
       tracks.forEach(t => {
         const ch = channels.find(c => c.index === t.index) || channels.find(c => c.name === t.name) || { name: t.name, index: t.index, color: '#888' };
@@ -13748,6 +13769,13 @@ function _openMergeModalWithTracks(tracks) {
   }, []);
   if (skipped.length) toast(`Not in scanned channels (re-scan): ${skipped.join(', ')}`);
   _openMergeModalWithChannels(chList);
+}
+
+if (window.api?.onChannelCountLive) {
+  window.api.onChannelCountLive((liveCount) => {
+    if (channels.length === 0) return; // not scanned yet — nothing to compare
+    _channelsStale = liveCount !== channels.length;
+  });
 }
 
 if (window.api && window.api.onCliBounce) {

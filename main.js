@@ -239,6 +239,12 @@ function createWindow() {
     if (now - _lastEnglishSwitch < 2000) return; // debounce — don't spam LogicBridge
     _lastEnglishSwitch = now;
     bridge('switchToEnglish').catch(() => {});
+    // Check if Logic channel count changed since last scan — renderer sets stale flag
+    bridge('channelNameAt', '0').then(r => {
+      if (r?.total != null && mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('channel-count-live', r.total);
+      }
+    }).catch(() => {});
   });
 
   // Defensive AOT release: when the window loses focus and we're idle
