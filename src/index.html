@@ -427,6 +427,34 @@ body.easy #panel-pr{transition:all var(--t-slow);}
 .hk-input{width:100%;padding:6px 10px;border-radius:var(--r);border:1px solid var(--b);background:var(--bg);color:var(--accent);font-size:13px;font-family:'JetBrains Mono',monospace;box-sizing:border-box;cursor:pointer;transition:border-color var(--t-fast);}
 .hk-input:focus{outline:none;border-color:var(--accent);}
 .hk-input.recording{border-color:var(--accent);background:var(--accent-a08);color:var(--text);}
+/* Settings modal tabs */
+.stab-bar{display:flex;border-bottom:1px solid var(--b);margin-bottom:16px;}
+.stab-btn{background:none;border:none;padding:7px 14px;font-size:var(--fs-xs);font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;color:var(--muted);cursor:pointer;position:relative;transition:color var(--t-fast);}
+.stab-btn::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:2px 2px 0 0;background:var(--accent);transform:scaleX(0);transition:transform var(--t-fast);}
+.stab-btn.active{color:var(--accent);}
+.stab-btn.active::after{transform:scaleX(1);}
+.stab-btn:hover:not(.active){color:var(--t2);}
+/* Rename memory */
+.rm-section{margin-bottom:16px;}
+.rm-section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.rm-section-title{font-size:var(--fs-xxs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.rm-clear-btn{display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--muted);font-size:var(--fs-xxs);cursor:pointer;padding:2px 4px;border-radius:var(--r);transition:color var(--t-fast);}
+.rm-clear-btn:hover{color:var(--red);}
+.rm-list{display:flex;flex-direction:column;gap:4px;max-height:160px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--b2) transparent;}
+.rm-list::-webkit-scrollbar{width:4px;}
+.rm-list::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px;}
+.rm-list::-webkit-scrollbar-track{background:transparent;}
+.rm-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--card);border:1px solid var(--b);border-radius:var(--r);transition:border-color var(--t-fast);}
+.rm-row:hover{border-color:var(--b2);}
+.rm-row-logic{font-size:var(--fs-xs);color:var(--t2);font-family:'JetBrains Mono',monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rm-arrow{color:var(--muted);flex-shrink:0;font-size:11px;}
+.rm-row-custom{font-size:var(--fs-xs);color:var(--text);font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;}
+.rm-row-count{font-size:var(--fs-xxs);color:var(--muted);font-family:'JetBrains Mono',monospace;flex-shrink:0;white-space:nowrap;}
+.rm-del-btn{display:flex;align-items:center;justify-content:center;background:none;border:none;color:var(--muted);cursor:pointer;padding:2px;border-radius:4px;flex-shrink:0;transition:color var(--t-fast);}
+.rm-del-btn:hover{color:var(--red);}
+.rm-empty{font-size:var(--fs-xs);color:var(--muted);text-align:center;padding:16px 0;font-family:'JetBrains Mono',monospace;}
+.rm-add-input{flex:1;min-width:80px;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:var(--font-mono);font-size:var(--fs-xs);padding:5px 8px;outline:none;transition:border-color var(--t);}
+.rm-add-input:focus{border-color:var(--accent-a30);}
 .notif-input:focus{outline:none;border-color:var(--accent);}
 .notif-code{font-size:28px;font-weight:800;letter-spacing:6px;text-align:center;color:var(--accent);font-family:'JetBrains Mono',monospace;padding:12px 0;}
 .act-pane{display:flex;flex-direction:column;flex:1;overflow:hidden;}
@@ -5842,7 +5870,8 @@ function addPresetToQueue(preset) {
 // ═══════════════════════════════════════════════════
 // Create a new pending queue item with all currently active markers excluded by default
 function _mkStemItem(ch) {
-  const item = { id:'q_'+Date.now()+Math.random(), type:'stem', name:ch.name, logicName:ch.name, channelIndex:ch.index, color:ch.color, status:'pending' };
+  const _autoName = _autoRenameApply(ch.name);
+  const item = { id:'q_'+Date.now()+Math.random(), type:'stem', name:_autoName || ch.name, logicName:ch.name, channelIndex:ch.index, color:ch.color, status:'pending' };
   // No pre-exclusions: global _activeMarkers controls which markers bounce for all stems
   // User can override per-stem by clicking marker chips (adds to markerExclusions or markerAdditions)
   return item;
@@ -7357,6 +7386,24 @@ function _setRemoveJob(setId, jobId) {
 // ── Adaptive rename dictionary (persists across app updates in userData) ─────
 let _renameDict = {};
 (async () => { try { _renameDict = await window.api?.loadRenameHistory?.() || {}; } catch { _renameDict = {}; } })();
+
+// Auto-rename: if user renames the same Logic channel to the same custom name ≥2 times,
+// future adds auto-apply that name without prompting.
+let _autoRenameMap = {};
+try { _autoRenameMap = JSON.parse(localStorage.getItem('sb4_auto_rename_map') || '{}'); } catch { _autoRenameMap = {}; }
+function _autoRenameRecord(logicName, target) {
+  if (!logicName || !target || logicName === target) return;
+  const k = String(logicName).trim();
+  const t = String(target).trim();
+  const e = _autoRenameMap[k] || { target: t, count: 0 };
+  if (e.target === t) { e.count++; } else { e.target = t; e.count = 1; }
+  _autoRenameMap[k] = e;
+  try { localStorage.setItem('sb4_auto_rename_map', JSON.stringify(_autoRenameMap)); } catch {}
+}
+function _autoRenameApply(logicName) {
+  const e = _autoRenameMap[String(logicName || '').trim()];
+  return (e && e.count >= 2) ? e.target : null;
+}
 function _renameRecord(name) {
   const k = String(name || '').trim();
   if (!k) return;
@@ -7407,7 +7454,7 @@ function _attachModalAC(inp) {
 }
 
 // ── Inline queue name editing with autocomplete (selection-based) ───────────
-function _attachQNameEdit(nameEl, getVal, setVal) {
+function _attachQNameEdit(nameEl, getVal, setVal, logicName) {
   nameEl.style.cursor = 'text';
   nameEl.title = 'Double-click to rename';
   nameEl.addEventListener('dblclick', (e) => {
@@ -7460,7 +7507,7 @@ function _attachQNameEdit(nameEl, getVal, setVal) {
       committed = true;
       // If user leaves without typing, keep old name. Otherwise keep full input (suggestion included if accepted).
       const newVal = input.value.trim();
-      if (newVal && newVal !== oldVal) { setVal(newVal); _renameRecord(newVal); }
+      if (newVal && newVal !== oldVal) { setVal(newVal); _renameRecord(newVal); if (logicName) _autoRenameRecord(logicName, newVal); }
       else if (newVal) setVal(newVal);
       saveQueue();
       renderQueue();
@@ -7646,7 +7693,7 @@ function renderQueue() {
         <button class="qdel" title="Remove from queue" onclick="event.stopPropagation();removeQItem('${item.id}')"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
       `;
       hdr.onclick = (e) => { if (e.target.closest('.qdel') || e.target.closest('.qedit')) return; item.expanded = !item.expanded; renderQueue(); };
-      _attachQNameEdit(hdr.querySelector('.qname'), () => item.name, v => { item.name = v; });
+      _attachQNameEdit(hdr.querySelector('.qname'), () => item.name, v => { item.name = v; }, item.logicName);
       wrap.appendChild(hdr);
 
       if (item.expanded) {
@@ -7682,7 +7729,7 @@ function renderQueue() {
             <button class="qdel" onclick="event.stopPropagation();_setRemoveJob('${item.id}','${job.id}')"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
           `;
           const jobNameEl = row.querySelector('.qname');
-          if (jobNameEl && job.status === 'pending') _attachQNameEdit(jobNameEl, () => job.name, v => { job.name = v; });
+          if (jobNameEl && job.status === 'pending') _attachQNameEdit(jobNameEl, () => job.name, v => { job.name = v; }, job.logicName);
           body.appendChild(row);
         });
         wrap.appendChild(body);
@@ -7796,7 +7843,7 @@ function renderQueue() {
       <button class="qdel" onclick="event.stopPropagation();removeQItem('${item.id}')"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     `;
     const stemNameEl = div.querySelector('.qname');
-    if (stemNameEl && item.status === 'pending') _attachQNameEdit(stemNameEl, () => item.name, v => { item.name = v; });
+    if (stemNameEl && item.status === 'pending') _attachQNameEdit(stemNameEl, () => item.name, v => { item.name = v; }, item.logicName);
     div.querySelectorAll('button').forEach(btn => {
       btn.addEventListener('mousedown', e => e.stopPropagation());
       btn.draggable = false;
@@ -9841,15 +9888,31 @@ async function restoreAllMasterPlugins() {
 }
 // ───────────────────────────────────────────────────────────
 
-function positionScanHint() {
+function positionScanHint(_retry = 0) {
   const isCompact = document.body.classList.contains('compact-mode');
   const btn  = document.getElementById(isCompact ? 'cm-scan-btn' : 'scan-btn');
   const hint = document.getElementById('scan-hint');
   if (!btn || !hint) return;
   const r = btn.getBoundingClientRect();
+  // If button not laid out yet (width=0 or offscreen), retry on next frame
+  if ((r.width === 0 && r.height === 0) || (r.left === 0 && r.top === 0)) {
+    if (_retry < 20) requestAnimationFrame(() => positionScanHint(_retry + 1));
+    return;
+  }
   hint.style.top       = (r.bottom + 8) + 'px';
   hint.style.left      = (r.left + r.width / 2) + 'px';
   hint.style.transform = 'translateX(-50%)';
+}
+let _scanHintRO = null;
+let _scanHintRAF = null;
+function _observeScanBtnForHint() {
+  if (_scanHintRO) { try { _scanHintRO.disconnect(); } catch {} _scanHintRO = null; }
+  const isCompact = document.body.classList.contains('compact-mode');
+  const btn = document.getElementById(isCompact ? 'cm-scan-btn' : 'scan-btn');
+  if (!btn || typeof ResizeObserver === 'undefined') return;
+  _scanHintRO = new ResizeObserver(() => positionScanHint());
+  _scanHintRO.observe(btn);
+  _scanHintRO.observe(document.body);
 }
 function showScanHint(force) {
   // force=true: always show (right after onboarding)
@@ -9859,6 +9922,15 @@ function showScanHint(force) {
   if (!hint) return;
   positionScanHint();
   hint.classList.add('show');
+  _observeScanBtnForHint();
+  // Re-run a few frames to catch window tween (mini/compact mode resize ~340ms)
+  if (_scanHintRAF) cancelAnimationFrame(_scanHintRAF);
+  let frames = 0;
+  const tick = () => {
+    positionScanHint();
+    if (++frames < 30) _scanHintRAF = requestAnimationFrame(tick);
+  };
+  _scanHintRAF = requestAnimationFrame(tick);
 }
 window.addEventListener('resize', function() {
   const hint = document.getElementById('scan-hint');
@@ -11007,6 +11079,10 @@ function _applyCompactTruncations() {
   }
 }
 async function toggleCompactMode() {
+  // Don't toggle if any modal is open — in compact mode the toolbar stays
+  // above the modal backdrop (inset:46px), so the em-wrap is accidentally
+  // reachable when the user tries to click outside the modal to close it.
+  if (document.querySelector('.modal-overlay.show, #mp-modal.show, #hotkeys-modal-bg.show, #notif-modal-bg.show, .overlay.show')) return;
   const next = !_compactOn;
 
   // Fade out — hide UI before resize
@@ -11674,16 +11750,117 @@ function hideNotifModal() {
 
 // ── Hotkeys modal ──
 const HK_KEYS = { stems: 'sb4_hk_stems', version: 'sb4_hk_version', merge: 'sb4_hk_merge' };
+function showSettingsTab(tab) {
+  ['hotkeys','rename'].forEach(t => {
+    document.getElementById('stab-' + t).style.display = t === tab ? '' : 'none';
+    document.getElementById('stab-btn-' + t).classList.toggle('active', t === tab);
+  });
+  if (tab === 'rename') renderRenameMemory();
+}
 function showHotkeysModal() {
   const el = document.getElementById('hotkeys-modal-bg');
   el.style.display = 'flex';
   requestAnimationFrame(() => el.classList.add('show'));
+  showSettingsTab('hotkeys');
   ['stems','version','merge'].forEach(k => {
     const inp = document.getElementById('hk-' + k + '-input');
     inp.value = localStorage.getItem(HK_KEYS[k]) || '';
     inp.classList.remove('recording');
     _attachHkRecorder(inp);
   });
+}
+function _escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function renderRenameMemory() {
+  // Auto-rename rules
+  const rulesList = document.getElementById('rm-rules-list');
+  const rulesEmpty = document.getElementById('rm-rules-empty');
+  const rules = Object.entries(_autoRenameMap).filter(([,e]) => e && e.target);
+  rulesList.innerHTML = rules.map(([logicName, e]) => `
+    <div class="rm-row">
+      <span class="rm-row-logic" title="${_escHtml(logicName)}">${_escHtml(logicName)}</span>
+      <svg class="rm-arrow ico ico-sm" style="color:var(--muted);flex-shrink:0;"><use href="#ico-chevron-right"/></svg>
+      <span class="rm-row-custom" title="${_escHtml(e.target)}">${_escHtml(e.target)}</span>
+      <span class="rm-row-count">${e.count}×</span>
+      <button class="rm-del-btn" title="Delete rule"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+    </div>`).join('');
+  rules.forEach(([logicName], i) => {
+    rulesList.querySelectorAll('.rm-del-btn')[i].onclick = () => rmDeleteRule(logicName);
+  });
+  rulesEmpty.style.display = rules.length ? 'none' : '';
+  // Autocomplete history
+  const histList = document.getElementById('rm-history-list');
+  const histEmpty = document.getElementById('rm-history-empty');
+  const hist = Object.entries(_renameDict).sort((a,b) => (b[1].n||0) - (a[1].n||0));
+  histList.innerHTML = hist.map(([name, e]) => `
+    <div class="rm-row">
+      <span class="rm-row-custom" style="text-align:left;">${_escHtml(name)}</span>
+      <span class="rm-row-count">used ${e.n||0}×</span>
+      <button class="rm-del-btn" title="Delete"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+    </div>`).join('');
+  hist.forEach(([name], i) => {
+    histList.querySelectorAll('.rm-del-btn')[i].onclick = () => rmDeleteHistory(name);
+  });
+  histEmpty.style.display = hist.length ? 'none' : '';
+}
+function rmToggleAddForm() {
+  const form = document.getElementById('rm-add-form');
+  if (!form) return;
+  const open = form.style.display !== 'none';
+  form.style.display = open ? 'none' : '';
+  if (!open) { document.getElementById('rm-add-logic')?.focus(); }
+}
+function rmAddRule() {
+  const logicInp = document.getElementById('rm-add-logic');
+  const customInp = document.getElementById('rm-add-custom');
+  const logicName = (logicInp?.value || '').trim();
+  const target = (customInp?.value || '').trim();
+  if (!logicName || !target) { toast('Enter both channel name and rename target'); return; }
+  const e = _autoRenameMap[logicName] || { target, count: 0 };
+  e.target = target;
+  e.count = Math.max(e.count, 2); // ensure auto-apply fires immediately
+  _autoRenameMap[logicName] = e;
+  try { localStorage.setItem('sb4_auto_rename_map', JSON.stringify(_autoRenameMap)); } catch {}
+  if (logicInp) logicInp.value = '';
+  if (customInp) customInp.value = '';
+  document.getElementById('rm-add-form').style.display = 'none';
+  renderRenameMemory();
+}
+function rmDeleteRule(logicName) {
+  delete _autoRenameMap[logicName];
+  try { localStorage.setItem('sb4_auto_rename_map', JSON.stringify(_autoRenameMap)); } catch {}
+  renderRenameMemory();
+}
+function rmClearAutoRules() {
+  _autoRenameMap = {};
+  try { localStorage.setItem('sb4_auto_rename_map', '{}'); } catch {}
+  renderRenameMemory();
+}
+function rmDeleteHistory(name) {
+  delete _renameDict[name];
+  try { window.api?.saveRenameHistory?.(_renameDict); } catch {}
+  renderRenameMemory();
+}
+function rmToggleHistForm() {
+  const form = document.getElementById('rm-hist-form');
+  if (!form) return;
+  const open = form.style.display !== 'none';
+  form.style.display = open ? 'none' : '';
+  if (!open) document.getElementById('rm-hist-inp')?.focus();
+}
+function rmAddHistory() {
+  const inp = document.getElementById('rm-hist-inp');
+  const name = (inp?.value || '').trim();
+  if (!name) return;
+  _renameDict[name] = { n: (_renameDict[name]?.n || 0) + 1 };
+  try { window.api?.saveRenameHistory?.(_renameDict); } catch {}
+  if (inp) inp.value = '';
+  document.getElementById('rm-hist-form').style.display = 'none';
+  renderRenameMemory();
+}
+function rmClearHistory() {
+  _renameDict = {};
+  try { window.api?.saveRenameHistory?.(_renameDict); } catch {}
+  renderRenameMemory();
 }
 function hideHotkeysModal() {
   const el = document.getElementById('hotkeys-modal-bg');
@@ -12269,6 +12446,8 @@ function applySkin(name) {
       .ch-item.sel{background:rgba(180,255,0,.08)!important;border-left-color:#b4ff00!important;box-shadow:inset 0 1px 0 rgba(180,255,0,.08)!important;}
       .bbtn:not(.off):not(.running){background:linear-gradient(160deg,#7acc00 0%,#b4ff00 50%,#9ae000 100%)!important;color:#0a1400!important;font-weight:800;letter-spacing:.04em;box-shadow:0 8px 32px rgba(180,255,0,.45),inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,0,0,.15)!important;}
       .bbtn:not(.off):not(.running):hover{box-shadow:0 14px 48px rgba(180,255,0,.65),inset 0 1px 0 rgba(255,255,255,.4)!important;}
+      .bbtn.running{background:linear-gradient(160deg,#6ab800 0%,#a0e000 50%,#85c800 100%)!important;color:#0a1400!important;font-weight:800;letter-spacing:.04em;box-shadow:0 6px 22px rgba(180,255,0,.30),inset 0 1px 0 rgba(255,255,255,.25),inset 0 -1px 0 rgba(0,0,0,.15)!important;animation:studio-run-pulse 1.6s ease-in-out infinite alternate!important;}
+      @keyframes studio-run-pulse{from{box-shadow:0 4px 14px rgba(180,255,0,.20);}to{box-shadow:0 10px 28px rgba(180,255,0,.38),inset 0 1px 0 rgba(255,255,255,.2);}}
       .stat-val{color:#b4ff00!important;text-shadow:0 0 20px rgba(180,255,0,.25)!important;}
       .ldot.live{background:#b4ff00!important;box-shadow:0 0 0 3px rgba(180,255,0,.2),0 0 12px rgba(180,255,0,.3)!important;}
       .prog-fill{background:linear-gradient(90deg,#7acc00,#b4ff00)!important;}
@@ -12537,6 +12716,7 @@ let _scActiveFilters = new Set(); // empty = show all types
 // Sidechain mismatch modal — returns 'reselect' | 'no-sidechain' | 'cancel'
 let _scMismatchResolver = null;
 function _showSidechainMismatchModal(name) {
+  if (!sidechainEnabled) return Promise.resolve('no-sidechain');
   return new Promise(resolve => {
     _scMismatchResolver = resolve;
     const nameEl = document.getElementById('sc-mismatch-name');
@@ -14240,32 +14420,79 @@ async function submitFeedback() {
 
 <!-- ── Hotkeys modal ───────────────────────────────────────────────── -->
 <div id="hotkeys-modal-bg" onclick="if(event.target===this)hideHotkeysModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:var(--z-modal);align-items:center;justify-content:center;backdrop-filter:blur(10px) saturate(150%);-webkit-backdrop-filter:blur(10px) saturate(150%);">
-  <div style="background:var(--card2);border:1px solid var(--b2);border-radius:var(--r2);width:360px;box-shadow:var(--sh-modal);padding:20px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <h3 style="margin:0;font-size:var(--fs-md);font-weight:var(--fw-bold);color:var(--text);font-family:var(--font-display);">Hotkey Settings</h3>
-      <button onclick="hideHotkeysModal()" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px;">&times;</button>
+  <div style="background:var(--card2);border:1px solid var(--b2);border-radius:var(--r2);width:380px;box-shadow:var(--sh-modal);padding:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <h3 style="margin:0;font-size:var(--fs-md);font-weight:var(--fw-bold);color:var(--text);font-family:var(--font-display);">Settings</h3>
+      <button onclick="hideHotkeysModal()" style="display:flex;align-items:center;justify-content:center;background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;border-radius:var(--r);transition:color var(--t-fast);" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'"><svg class="ico"><use href="#ico-close"/></svg></button>
     </div>
-    <p style="font-size:var(--fs-sm);color:var(--muted);margin:0 0 16px;line-height:1.5;">Press a key combo while focused in each field. Works system-wide — even when Logic Pro is in focus.</p>
-    <div style="display:flex;flex-direction:column;gap:10px;">
-      <div style="background:var(--card);border:1px solid var(--b);border-radius:var(--r);padding:12px;">
-        <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:6px;font-weight:700;">HOTKEY 1 — Add as Stems</div>
-        <div style="font-size:var(--fs-xxs);color:var(--muted);margin-bottom:8px;">Selected tracks → queue as individual stems</div>
-        <input id="hk-stems-input" class="hk-input" placeholder="e.g. Ctrl+Shift+1" readonly>
+    <!-- Tab bar -->
+    <div class="stab-bar">
+      <button class="stab-btn active" id="stab-btn-hotkeys" onclick="showSettingsTab('hotkeys')">Hotkeys</button>
+      <button class="stab-btn" id="stab-btn-rename" onclick="showSettingsTab('rename')">Rename Memory</button>
+    </div>
+    <!-- Hotkeys tab -->
+    <div id="stab-hotkeys">
+      <p style="font-size:var(--fs-sm);color:var(--muted);margin:0 0 14px;line-height:1.5;">Press a key combo while focused in each field. Works system-wide — even when Logic Pro is in focus.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="background:var(--card);border:1px solid var(--b);border-radius:var(--r);padding:12px;">
+          <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:6px;font-weight:700;">HOTKEY 1 — Add as Stems</div>
+          <div style="font-size:var(--fs-xxs);color:var(--muted);margin-bottom:8px;">Selected tracks → queue as individual stems</div>
+          <input id="hk-stems-input" class="hk-input" placeholder="e.g. Ctrl+Shift+1" readonly>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--b);border-radius:var(--r);padding:12px;">
+          <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:6px;font-weight:700;">HOTKEY 2 — Add as Version</div>
+          <div style="font-size:var(--fs-xxs);color:var(--muted);margin-bottom:8px;">Selected tracks → muted in bounce (opens naming)</div>
+          <input id="hk-version-input" class="hk-input" placeholder="e.g. Ctrl+Shift+2" readonly>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--b);border-radius:var(--r);padding:12px;">
+          <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:6px;font-weight:700;">HOTKEY 3 — Add as Merge</div>
+          <div style="font-size:var(--fs-xxs);color:var(--muted);margin-bottom:8px;">Selected tracks → soloed together (opens naming)</div>
+          <input id="hk-merge-input" class="hk-input" placeholder="e.g. Ctrl+Shift+3" readonly>
+        </div>
       </div>
-      <div style="background:var(--card);border:1px solid var(--b);border-radius:var(--r);padding:12px;">
-        <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:6px;font-weight:700;">HOTKEY 2 — Add as Version</div>
-        <div style="font-size:var(--fs-xxs);color:var(--muted);margin-bottom:8px;">Selected tracks → muted in bounce (opens naming)</div>
-        <input id="hk-version-input" class="hk-input" placeholder="e.g. Ctrl+Shift+2" readonly>
-      </div>
-      <div style="background:var(--card);border:1px solid var(--b);border-radius:var(--r);padding:12px;">
-        <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:6px;font-weight:700;">HOTKEY 3 — Add as Merge</div>
-        <div style="font-size:var(--fs-xxs);color:var(--muted);margin-bottom:8px;">Selected tracks → soloed together (opens naming)</div>
-        <input id="hk-merge-input" class="hk-input" placeholder="e.g. Ctrl+Shift+3" readonly>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+        <button onclick="clearHotkeys()" class="notif-btn danger">Clear all</button>
+        <button onclick="saveHotkeys()" class="notif-btn">Save</button>
       </div>
     </div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
-      <button onclick="clearHotkeys()" class="notif-btn danger">Clear all</button>
-      <button onclick="saveHotkeys()" class="notif-btn">Save</button>
+    <!-- Rename Memory tab -->
+    <div id="stab-rename" style="display:none;">
+      <div class="rm-section">
+        <div class="rm-section-hdr">
+          <span class="rm-section-title">Auto-Rename Rules</span>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <button class="rm-clear-btn" onclick="rmToggleAddForm()" title="Add rule manually">+ Add</button>
+            <button class="rm-clear-btn" onclick="rmClearAutoRules()"><svg class="ico ico-sm"><use href="#ico-trash"/></svg> Clear all</button>
+          </div>
+        </div>
+        <div id="rm-add-form" style="display:none;padding:8px 0 4px;display:none;">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <input id="rm-add-logic" class="rm-add-input" placeholder="Logic channel name…" onkeydown="if(event.key==='Enter')document.getElementById('rm-add-custom').focus()">
+            <svg class="ico ico-sm" style="color:var(--muted);flex-shrink:0;"><use href="#ico-chevron-right"/></svg>
+            <input id="rm-add-custom" class="rm-add-input" placeholder="Rename to…" onkeydown="if(event.key==='Enter')rmAddRule()">
+            <button class="rm-clear-btn" style="color:var(--a3);border-color:var(--a3);" onclick="rmAddRule()">Save</button>
+          </div>
+        </div>
+        <div class="rm-list" id="rm-rules-list"></div>
+        <div class="rm-empty" id="rm-rules-empty" style="display:none;">No rules yet</div>
+      </div>
+      <div class="rm-section">
+        <div class="rm-section-hdr">
+          <span class="rm-section-title">Autocomplete History</span>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <button class="rm-clear-btn" onclick="rmToggleHistForm()" title="Add phrase manually">+ Add</button>
+            <button class="rm-clear-btn" onclick="rmClearHistory()"><svg class="ico ico-sm"><use href="#ico-trash"/></svg> Clear all</button>
+          </div>
+        </div>
+        <div id="rm-hist-form" style="display:none;padding:8px 0 4px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input id="rm-hist-inp" class="rm-add-input" placeholder="Phrase for autocomplete…" onkeydown="if(event.key==='Enter')rmAddHistory()">
+            <button class="rm-clear-btn" style="color:var(--a3);border-color:var(--a3);" onclick="rmAddHistory()">Save</button>
+          </div>
+        </div>
+        <div class="rm-list" id="rm-history-list"></div>
+        <div class="rm-empty" id="rm-history-empty" style="display:none;">No history yet</div>
+      </div>
     </div>
   </div>
 </div>

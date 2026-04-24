@@ -1061,19 +1061,21 @@ let _inCompact = false;
 let _preCompact = null;
 ipcMain.handle('enter-compact-mode', () => {
   if (!mainWindow || mainWindow.isDestroyed()) return { ok: false };
+  const cur = mainWindow.getBounds();
+  // Save pre-compact bounds only on first entry (not on re-sync calls)
   if (!_inCompact) {
-    const cur = mainWindow.getBounds();
     _preCompact = cur;
     _inCompact = true;
-    const newW = 500;
-    // Keep window centered — both edges move inward symmetrically
-    const { workArea } = require('electron').screen.getDisplayNearestPoint({ x: cur.x, y: cur.y });
-    const centerX = cur.x + cur.width / 2;
-    const newX = Math.max(workArea.x, Math.min(Math.round(centerX - newW / 2), workArea.x + workArea.width - newW));
-    mainWindow.setMinimumSize(500, 500);
-    mainWindow.setBounds({ x: newX, y: cur.y, width: newW, height: cur.height }, true);
   }
+  // Always resize to 500px — CSS class and window size must stay in sync.
+  // If _inCompact was already true but window drifted wide (e.g. after mini-mode
+  // exit restored wrong bounds), this re-snaps the window to the correct size.
+  const newW = 500;
+  const { workArea } = require('electron').screen.getDisplayNearestPoint({ x: cur.x, y: cur.y });
+  const centerX = cur.x + cur.width / 2;
+  const newX = Math.max(workArea.x, Math.min(Math.round(centerX - newW / 2), workArea.x + workArea.width - newW));
   mainWindow.setMinimumSize(500, 500);
+  if (cur.width !== newW) mainWindow.setBounds({ x: newX, y: cur.y, width: newW, height: cur.height }, true);
   try { mainWindow.setWindowButtonVisibility(true); } catch {}
   _saveCompactState(true);
   return { ok: true };
@@ -1297,16 +1299,16 @@ ipcMain.handle('exit-scan-badge', () => {
   _inScanBadge = false;
   mainWindow.setIgnoreMouseEvents(false);
   if (mainWindow.setWindowButtonVisibility) mainWindow.setWindowButtonVisibility(true);
-  mainWindow.setVisibleOnAllWorkspaces(false);
   mainWindow.setMinimumSize(_inCompact ? 500 : 1130, _inCompact ? 500 : 640);
   mainWindow.setResizable(true);
   if (_preScan) {
     mainWindow.setBounds(_preScan, false);
     _preScan = null;
   }
-  // Reset alwaysOnTop so app doesn't stay above Logic after scan.
-  // macOS sometimes doesn't fully demote from 'screen-saver' level with a single
-  // setAlwaysOnTop(false); force a full reset, then restore user pin if needed.
+  // show() BEFORE setVisibleOnAllWorkspaces(false) — same fix as moveToLogicSpace.
+  // Without this the window disappears briefly from the user's current Space
+  // as macOS moves it back to its home Space, causing the appear→vanish→appear flicker.
+  mainWindow.show();
   mainWindow.setAlwaysOnTop(false);
   mainWindow.setVisibleOnAllWorkspaces(false);
   setTimeout(() => {
