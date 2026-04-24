@@ -9312,12 +9312,56 @@ let _mpPollInterval = null;
 let _mpPollPausedUntil = 0;
 let _mpEscListener = null;
 let _mpLastToggleAt = 0;
+// ── Inspector-based Master Plugins (Phase 2) ──────────────────────────────
+// Runs under the scan badge (with live status updates). Steps:
+//   1. inspectorEnsureOpen — press 'I' if Inspector hidden
+//   2. inspectorShrink — drag Inspector right edge to 179px (retry 205)
+//   3. inspectorMasterQuick — read MASTER plugins; if not found →
+//   4. inspectorNavigateForMaster — arrow-down through tracks until
+//      Stereo Out Bnc appears in Inspector
+//   5. inspectorMasterQuick — final read
+// Mutates `_masterPlugins` on success. Returns { ok, plugins }.
+async function _inspectorMasterFlow() {
+  let outPlugins = null;
+  await _withRecoveryBadge('Opening Inspector…', 'Preparing Logic', async () => {
+    const eo = await window.api.inspectorEnsureOpen().catch(() => null);
+    if (!eo?.ok) return;
+    _setScanTitle('Adjusting Inspector…');
+    _setScanSub('Shrinking to minimum width');
+    await window.api.inspectorShrink().catch(() => null);
+    _setScanTitle('Searching Stereo Out…');
+    _setScanSub('Looking for master channel');
+    let q = await window.api.inspectorMasterQuick().catch(() => null);
+    if (!(q?.ok && q.plugins)) {
+      _setScanTitle('Navigating tracks…');
+      _setScanSub('Finding track routed to Stereo Out');
+      await window.api.inspectorNavigateForMaster(50).catch(() => null);
+      q = await window.api.inspectorMasterQuick().catch(() => null);
+    }
+    if (q?.ok && q.plugins) {
+      _setScanTitle('Loading plugins…');
+      _setScanSub('Done');
+      outPlugins = q.plugins;
+      _masterPlugins = q.plugins;
+    }
+  });
+  return { ok: !!outPlugins, plugins: outPlugins || [] };
+}
+
 async function _ensureMasterReady() {
-  if (SKIP_BNC) return { opened: false };
-  // Probe: Stereo Out Bnc already visible?
+  if (SKIP_BNC) {
+    // Phase 2 — Inspector-based. Only kicks in if quick read fails.
+    const q = await window.api.inspectorMasterQuick().catch(() => null);
+    if (q?.ok && q.plugins) {
+      _masterPlugins = q.plugins;
+      return { opened: false };
+    }
+    const r = await _inspectorMasterFlow();
+    return { opened: r.ok };
+  }
+  // Legacy mixer flow (SKIP_BNC=false) — unchanged behavior
   const q = await window.api.masterPluginsQuick().catch(() => null);
   if (q?.ok && q.plugins?.length) return { opened: false };
-  // Not visible — open mixer + maybe scroll, under badge
   await _withRecoveryBadge('Opening mixer…', 'Checking Stereo Out', async () => {
     await window.api.openMixer({ skipPanelClose: false });
     const q2 = await window.api.masterPluginsQuick().catch(() => null);
@@ -9338,12 +9382,14 @@ async function openMasterPluginsModal() {
   const _mpEl = document.getElementById('mp-modal');
   _mpEl.style.display = 'block';
   requestAnimationFrame(() => _mpEl.classList.add('show'));
-  // If already cached from scan — show immediately; otherwise fetch
+  // If already cached from scan — show immediately; otherwise fetch.
+  // Under SKIP_BNC, the scan never populates plugins, so first open always
+  // triggers the full Inspector prep flow (forceScroll=true).
   if (_masterPlugins.length > 0) {
     renderMasterPlugins();
     const dot = document.getElementById('mp-status-dot');
     if (dot) dot.style.background = '#5abf28';
-  } else { loadMasterPlugins(); }
+  } else { loadMasterPlugins(SKIP_BNC); }
   // ESC key always closes the modal properly (clears interval)
   if (!_mpEscListener) {
     _mpEscListener = (e) => { if (e.key === 'Escape') closeMasterPluginsModal(); };
@@ -9360,8 +9406,11 @@ async function openMasterPluginsModal() {
     // #32: skip bridge spawn if Logic is not running — avoids endless spawns when Logic is offline
     const ldot = document.getElementById('ldot');
     if (ldot && ldot.classList.contains('warn')) return; // Logic offline indicator
-    const r = await window.api.masterPluginsQuick().catch(() => null);
-    if (!r || !r.ok || !r.plugins.length) return;
+    const r = await (SKIP_BNC
+      ? window.api.inspectorMasterQuick()
+      : window.api.masterPluginsQuick()
+    ).catch(() => null);
+    if (!r || !r.ok || !r.plugins || !r.plugins.length) return;
     if (r.plugins.every(p => p.name === 'audio plug-in')) return;
     // Only re-render if state actually changed
     const changed = r.plugins.some((p, i) => !_masterPlugins[i] || _masterPlugins[i].active !== p.active);
@@ -9394,15 +9443,19 @@ async function loadMasterPlugins(forceScroll = false) {
   if (grid) grid.innerHTML = '<span style="color:var(--muted);font-size:var(--fs-xs);grid-column:1/-1;">Reading Master…</span>';
 
   let result = null;
+  // Phase 2: prefer Inspector-based reads when SKIP_BNC is on.
+  const quickFn = SKIP_BNC
+    ? () => window.api.inspectorMasterQuick()
+    : () => window.api.masterPluginsQuick();
 
   if (forceScroll) {
-    // Reconnect button: probe first — skip scroll if Bnc already visible
+    // Reconnect button: run full prep flow, then quick read
     await _ensureMasterReady();
-    result = await window.api.masterPluginsQuick().catch(() => null);
+    result = await quickFn().catch(() => null);
   } else {
-    // Modal open: try quick read only — never auto-scroll/reconnect on open.
-    // User can click "Reconnect" (forceScroll=true) if master channel isn't accessible.
-    result = await window.api.masterPluginsQuick().catch(() => null);
+    // Modal open: try quick read only — never auto-reconnect on open.
+    // User can click "Reconnect" (forceScroll=true) if connection is lost.
+    result = await quickFn().catch(() => null);
   }
 
   if (refreshBtn) { refreshBtn.style.opacity = '1'; refreshBtn.disabled = false; refreshBtn.textContent = '⟳ Reconnect'; }
@@ -9466,22 +9519,25 @@ async function toggleMasterPlugin(index, wantActive) {
   _masterPlugins[index].active = wantActive;
   renderMasterPlugins();
   _mpLastToggleAt = Date.now();
-  // Pause the auto-poll long enough for Swift's adaptive confirm (up to ~1.8s) plus slack
+  // Pause the auto-poll long enough for Swift's adaptive confirm (~1.8s) plus slack
   _mpPollPausedUntil = Date.now() + 10000;
-  // Swift now adaptively waits for AX to propagate and returns the authoritative state.
-  // Trust it — no re-read, no retry here. Prevents double-press on heavy projects.
-  const setResult = await window.api.setMasterPlugin(String(index), wantActive ? 1 : 0).catch(() => null);
+  // Pick API: Inspector (Phase 2) vs Mixer (legacy)
+  const setFn = SKIP_BNC
+    ? (i, a) => window.api.setInspectorMasterPlugin(i, a)
+    : (i, a) => window.api.setMasterPlugin(String(i), a);
+  const setResult = await setFn(index, wantActive ? 1 : 0).catch(() => null);
   if (setResult?.ok && typeof setResult.active === 'boolean') {
     _masterPlugins[index].active = setResult.active;
     renderMasterPlugins();
-    // If Swift couldn't confirm within its deadline, mixer is likely closed or Bnc gone.
-    if (setResult.confirmed === false) {
-      await _ensureMasterReady();
-    }
+    if (setResult.confirmed === false) await _ensureMasterReady();
   } else {
-    // Hard failure — Stereo Out not found. Open/scroll mixer, then leave state as optimistic
-    // (next poll tick will reconcile once things settle).
+    // Inspector/Mixer lost connection — reconnect and retry once
     await _ensureMasterReady();
+    const retry = await setFn(index, wantActive ? 1 : 0).catch(() => null);
+    if (retry?.ok && typeof retry.active === 'boolean') {
+      _masterPlugins[index].active = retry.active;
+      renderMasterPlugins();
+    }
   }
   _mpPollPausedUntil = 0;
   window.api.focusApp();

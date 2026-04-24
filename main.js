@@ -524,6 +524,47 @@ ipcMain.handle('cancel-master-plugin-ops', () => {
 });
 ipcMain.handle('set-all-master-plugins', (_, active) => { invalidateBridgeCache('masterPlugins'); return bridge('setAllMasterPlugins', String(active)); });
 ipcMain.handle('master-plugins-quick', () => cachedBridge('masterPluginsQuick', 1000)); // 1s TTL — fast polling
+
+// ── Inspector-based Master Plugins (Phase 2) ───────────────────────────────
+// All routed via bridgeMP so SIGTERM on modal close cancels any in-flight work.
+ipcMain.handle('inspector-ensure-open', async () => {
+  const wasOnTop = mainWindow?.isAlwaysOnTop?.() ?? false;
+  if (mainWindow && !_inScanBadge && !_inMiniMode) mainWindow.setAlwaysOnTop(false);
+  try { return await bridgeMP('inspectorEnsureOpen'); }
+  finally {
+    if (mainWindow && !mainWindow.isDestroyed() && wasOnTop) {
+      mainWindow.setAlwaysOnTop(true, _mainAotLevel());
+      mainWindow.showInactive();
+    }
+  }
+});
+ipcMain.handle('inspector-shrink', async () => {
+  const wasOnTop = mainWindow?.isAlwaysOnTop?.() ?? false;
+  if (mainWindow && !_inScanBadge && !_inMiniMode) mainWindow.setAlwaysOnTop(false);
+  try { return await bridgeMP('inspectorShrink'); }
+  finally {
+    if (mainWindow && !mainWindow.isDestroyed() && wasOnTop) {
+      mainWindow.setAlwaysOnTop(true, _mainAotLevel());
+      mainWindow.showInactive();
+    }
+  }
+});
+ipcMain.handle('inspector-master-quick', () => bridgeMP('inspectorMasterQuick'));
+ipcMain.handle('set-inspector-master-plugin', (_, index, active) => {
+  invalidateBridgeCache('masterPlugins');
+  return bridgeMP('setInspectorMasterPlugin', String(index), String(active));
+});
+ipcMain.handle('inspector-navigate-for-master', async (_, maxSteps = 50) => {
+  const wasOnTop = mainWindow?.isAlwaysOnTop?.() ?? false;
+  if (mainWindow && !_inScanBadge && !_inMiniMode) mainWindow.setAlwaysOnTop(false);
+  try { return await bridgeMP('inspectorNavigateForMaster', String(maxSteps)); }
+  finally {
+    if (mainWindow && !mainWindow.isDestroyed() && wasOnTop) {
+      mainWindow.setAlwaysOnTop(true, _mainAotLevel());
+      mainWindow.showInactive();
+    }
+  }
+});
 ipcMain.handle('scan-tree', async () => {
   _scanTreeActive = true;
   // Scan badge is click-through (setIgnoreMouseEvents=true), so we do NOT need

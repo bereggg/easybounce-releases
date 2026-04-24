@@ -104,6 +104,12 @@ contextBridge.exposeInMainWorld('api', {
   setAllMasterPlugins: (a)   => ipcRenderer.invoke('set-all-master-plugins', a),
   setMpModalOpen:      (v)   => ipcRenderer.invoke('set-mp-modal-open', v),
   cancelMasterPluginOps: ()  => ipcRenderer.invoke('cancel-master-plugin-ops'),
+  // Inspector-based Master Plugins (Phase 2)
+  inspectorEnsureOpen:        ()        => ipcRenderer.invoke('inspector-ensure-open'),
+  inspectorShrink:            ()        => ipcRenderer.invoke('inspector-shrink'),
+  inspectorMasterQuick:       ()        => ipcRenderer.invoke('inspector-master-quick'),
+  setInspectorMasterPlugin:   (i, a)    => ipcRenderer.invoke('set-inspector-master-plugin', i, a),
+  inspectorNavigateForMaster: (maxSteps = 50) => ipcRenderer.invoke('inspector-navigate-for-master', maxSteps),
   enterMiniMode:   ()         => ipcRenderer.invoke('enter-mini-mode'),
   exitMiniMode:    ()         => ipcRenderer.invoke('exit-mini-mode'),
   enterCompactMode: ()        => ipcRenderer.invoke('enter-compact-mode'),
