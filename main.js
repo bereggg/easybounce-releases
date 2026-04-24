@@ -3,7 +3,7 @@ const http = require('http');
 // Prevent macOS from throttling JS timers in hidden/background windows
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.commandLine.appendSwitch('disable-background-timer-throttling');
-const { validateKey, getMachineId, getTrialInfo, activateTrial, STORAGE_KEY } = require('./license');
+const { validateKey, getMachineId, getTrialInfo, activateTrial, STORAGE_KEY, signLicenseData, verifyLicenseData } = require('./license');
 const notifications = require('./notifications');
 const path = require('path');
 const fs = require('fs');
@@ -351,17 +351,34 @@ app.whenReady().then(async () => {
   const GRACE_DAYS = 7; // днів офлайн для subscription
   let licensed = false;
 
+  const _writeLic = (data) => {
+    try { fs.writeFileSync(licenseFile, JSON.stringify(signLicenseData(data))); }
+    catch(e) { console.warn('[EB] license save failed:', e.message); }
+  };
+
   try {
-    const data = JSON.parse(fs.readFileSync(licenseFile, 'utf8'));
+    const raw = JSON.parse(fs.readFileSync(licenseFile, 'utf8'));
     const machineId = getMachineId();
 
-    if (data.machineId === machineId && data.key) {
+    // Verify HMAC signature. If file is unsigned (legacy, pre-HMAC users)
+    // we still allow it but force server re-validation below.
+    let data = null;
+    let unsigned = false;
+    if (raw && raw.sig) {
+      if (verifyLicenseData(raw)) { const { sig, ...rest } = raw; data = rest; }
+      // else: tampered or copied between machines → ignore
+    } else if (raw && typeof raw === 'object') {
+      data = raw;
+      unsigned = true;
+    }
 
-      if (data.type === 'lifetime') {
+    if (data && data.machineId === machineId && data.key) {
+
+      if (data.type === 'lifetime' && !unsigned) {
         // ── Lifetime: ніколи не перевіряємо Supabase повторно ──
         licensed = true;
 
-      } else if (data.type === 'subscription') {
+      } else if (data.type === 'subscription' && !unsigned) {
         // ── Subscription: grace period 7 днів ──
         const daysSinceCheck = (Date.now() - (data.lastChecked || 0)) / 86400000;
 
@@ -371,7 +388,7 @@ app.whenReady().then(async () => {
           validateKey(data.key).then(r => {
             if (r.valid) {
               data.lastChecked = Date.now();
-              try { fs.writeFileSync(licenseFile, JSON.stringify(data)); } catch(e) { console.warn('[EB] license save failed:', e.message); }
+              _writeLic(data);
             }
             // якщо !r.valid і не офлайн → підписка закінчилась, заблокує наступного разу
           }).catch(() => {});
@@ -381,7 +398,7 @@ app.whenReady().then(async () => {
             const result = await validateKey(data.key);
             if (result.valid) {
               data.lastChecked = Date.now();
-              try { fs.writeFileSync(licenseFile, JSON.stringify(data)); } catch(e) { console.warn('[EB] license save failed:', e.message); }
+              _writeLic(data);
               licensed = true;
             } else if (result.offline) {
               // Немає інтернету — блокуємо (7 днів вже минуло)
@@ -389,14 +406,14 @@ app.whenReady().then(async () => {
             }
           } catch(e) { console.warn('[EB]', e); }
         }
-      } else if (!data.type) {
-        // ── Legacy file without type — must re-validate against server ──
+      } else {
+        // Legacy file (no type or unsigned) — must re-validate against server
         try {
           const result = await validateKey(data.key);
           if (result.valid) {
-            data.type = result.licenseType || 'lifetime';
+            data.type = result.licenseType || data.type || 'lifetime';
             data.lastChecked = Date.now();
-            try { fs.writeFileSync(licenseFile, JSON.stringify(data)); } catch(e) { console.warn('[EB] license save failed:', e.message); }
+            _writeLic(data);
             licensed = true;
           }
           // якщо !result.valid (включно з offline) — не пускаємо. Юзер має одноразово підключитися.
@@ -1714,12 +1731,13 @@ ipcMain.handle('activate-and-launch', async (_, key) => {
     const machineId = getMachineId();
     const licenseFile = path.join(app.getPath('userData'), 'license.json');
     try {
-      fs.writeFileSync(licenseFile, JSON.stringify({
+      const payload = {
         key, machineId, activatedAt: Date.now(),
         schemaVersion: 1,
         type: result.licenseType || 'lifetime',
         lastChecked: Date.now()
-      }));
+      };
+      fs.writeFileSync(licenseFile, JSON.stringify(signLicenseData(payload)));
     } catch(e) { console.warn('[EB] license save failed:', e.message); }
     // Emit license-activated — whenReady handler creates window and destroys licWin
     setTimeout(() => { ipcMain.emit('license-activated'); }, 800);

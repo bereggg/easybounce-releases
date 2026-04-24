@@ -145,4 +145,30 @@ async function validateKey(key) {
   }
 }
 
-module.exports = { validateKey, getMachineId, getTrialInfo, activateTrial, STORAGE_KEY };
+// ─────────────────────────────────────────────
+// HMAC sign / verify license.json
+// Key is derived from machine_id + pepper, so the file
+// cannot be copied to another Mac (signature won't match).
+// ─────────────────────────────────────────────
+const _SIG_PEPPER = 'eb-7f3c-licsig-v1';
+function _sigKey() {
+  return crypto.createHash('sha256').update(_SIG_PEPPER + getMachineId()).digest();
+}
+function signLicenseData(data) {
+  const { sig: _ignore, ...rest } = data || {};
+  const payload = JSON.stringify(rest);
+  const sig = crypto.createHmac('sha256', _sigKey()).update(payload).digest('hex');
+  return { ...rest, sig };
+}
+function verifyLicenseData(data) {
+  if (!data || typeof data !== 'object' || !data.sig) return false;
+  const { sig, ...rest } = data;
+  const expected = crypto.createHmac('sha256', _sigKey())
+    .update(JSON.stringify(rest)).digest('hex');
+  // constant-time compare
+  if (sig.length !== expected.length) return false;
+  try { return crypto.timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expected, 'hex')); }
+  catch { return false; }
+}
+
+module.exports = { validateKey, getMachineId, getTrialInfo, activateTrial, STORAGE_KEY, signLicenseData, verifyLicenseData };
