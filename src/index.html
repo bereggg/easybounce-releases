@@ -3492,7 +3492,8 @@ function toggleAllGroups() {
 }
 function showScanDone() {
   toast('✓ Scan complete');
-  setTimeout(showQueueHint, 1800);
+  renderQueue();
+  requestAnimationFrame(showQueueHint);
 }
 
 // Opt #2: debounce — coalesce multiple calls per frame into one DOM rebuild
@@ -9961,21 +9962,33 @@ window.addEventListener('resize', function() {
 });
 
 function positionQueueHint() {
-  const addBtn = document.getElementById('add-stems-btn') || document.getElementById('stems-add-btn');
   const hint = document.getElementById('queue-hint');
   if (!hint) return;
-  // Position at vertical center of the stems panel, pointing right toward queue
-  const pl = document.querySelector('.pl');
-  if (!pl) return;
-  const r = pl.getBoundingClientRect();
-  hint.style.top  = (r.top + r.height * 0.35) + 'px';
-  hint.style.left = (r.right - 10) + 'px';
+  if (document.body.classList.contains('compact-mode')) {
+    const title = document.querySelector('.q-empty-title');
+    if (!title) return;
+    const r = title.getBoundingClientRect();
+    hint.style.top       = (r.top + r.height / 2) + 'px';
+    hint.style.left      = Math.max(4, r.left - 130) + 'px';
+    hint.style.transform = 'translateY(-50%)';
+  } else {
+    const pl = document.querySelector('.pl');
+    if (!pl) return;
+    const r = pl.getBoundingClientRect();
+    hint.style.top       = (r.top + r.height * 0.35) + 'px';
+    hint.style.left      = (r.right - 10) + 'px';
+    hint.style.transform = '';
+  }
 }
 
 function showQueueHint() {
   if (localStorage.getItem('sb4_queue_hint_done') === '1') return;
   const hint = document.getElementById('queue-hint');
   if (!hint) return;
+  if (document.body.classList.contains('compact-mode') && !document.querySelector('.q-empty-title')) {
+    setTimeout(showQueueHint, 400);
+    return;
+  }
   positionQueueHint();
   hint.classList.add('show');
 }
@@ -11239,7 +11252,10 @@ function _alignCmScanBtn() {
   const centerX = (a + b) / 2;
   const toolbar = document.getElementById('compact-toolbar');
   const toolbarLeft = toolbar.getBoundingClientRect().left;
+  btn.style.transition = 'none';
   btn.style.left = (centerX - toolbarLeft - btn.offsetWidth / 2) + 'px';
+  btn.offsetWidth; // force reflow
+  btn.style.transition = '';
 }
 
 function _alignCompactArrow() {
