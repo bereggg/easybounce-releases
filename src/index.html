@@ -9937,12 +9937,14 @@ function showScanHint(force) {
   positionScanHint();
   hint.classList.add('show');
   _observeScanBtnForHint();
-  // Re-run a few frames to catch window tween (mini/compact mode resize ~340ms)
+  // Re-run for ~5 seconds to catch late layout shifts (project name load,
+  // channel badge appear, flex re-distribution). RO only fires on size changes,
+  // not position shifts caused by sibling reflow — RAF tick covers both.
   if (_scanHintRAF) cancelAnimationFrame(_scanHintRAF);
   let frames = 0;
   const tick = () => {
     positionScanHint();
-    if (++frames < 30) _scanHintRAF = requestAnimationFrame(tick);
+    if (++frames < 300) _scanHintRAF = requestAnimationFrame(tick);
   };
   _scanHintRAF = requestAnimationFrame(tick);
 }

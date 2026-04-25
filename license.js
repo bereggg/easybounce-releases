@@ -9,7 +9,9 @@ const STORAGE_KEY = 'license.json';
 // ─────────────────────────────────────────────
 // Machine ID — серійний номер Mac (незмінний)
 // ─────────────────────────────────────────────
+let _machineIdCache = null;
 function getMachineId() {
+  if (_machineIdCache) return _machineIdCache;
   try {
     const { execSync } = require('child_process');
     const serial = execSync(
@@ -17,12 +19,14 @@ function getMachineId() {
       { encoding: 'utf8', timeout: 3000 }
     ).trim();
     if (serial && serial.length > 4) {
-      return crypto.createHash('sha256').update(serial).digest('hex').slice(0, 16);
+      _machineIdCache = crypto.createHash('sha256').update(serial).digest('hex').slice(0, 16);
+      return _machineIdCache;
     }
   } catch (e) {}
   const os = require('os');
   const fallback = [os.hostname(), os.platform(), os.arch()].join('|');
-  return crypto.createHash('sha256').update(fallback).digest('hex').slice(0, 16);
+  _machineIdCache = crypto.createHash('sha256').update(fallback).digest('hex').slice(0, 16);
+  return _machineIdCache;
 }
 
 // ─────────────────────────────────────────────
