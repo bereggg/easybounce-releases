@@ -166,4 +166,8 @@ contextBridge.exposeInMainWorld('api', {
   startCaffeinate:       ()    => ipcRenderer.invoke('start-caffeinate'),
   onForceExitMiniMode:   (cb) => ipcRenderer.on('force-exit-mini-mode', () => cb()),
   analyticsTrack:        (k)  => ipcRenderer.send('analytics-track', k),
+  analyticsBounce:       (fmt, type, durationSec) => ipcRenderer.send('analytics-bounce', fmt, type, durationSec),
+  analyticsError:        (errorType) => ipcRenderer.send('analytics-error', errorType),
+  analyticsMode:         (mode) => ipcRenderer.send('analytics-mode', mode),
+  analyticsChannels:     (count) => ipcRenderer.send('analytics-channels', count),
 });

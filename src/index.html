@@ -2218,6 +2218,7 @@ function toggleEasyMode() {
   easyMode = !easyMode;
   localStorage.setItem('sb4_easy', easyMode);
   applyEasyMode();
+  try { window.api?.analyticsMode?.(easyMode ? 'easy' : 'pro'); } catch {}
   // Also re-render channels to update right-click behavior
   if (typeof renderChannels === 'function') renderChannels();
 }
@@ -2575,6 +2576,7 @@ async function _learnFilterTypes() {
   if (window._scanCancelled || _baseChannels.length === 0) return;
   channels = [..._masterChannels];
   _channelsStale = false;
+  try { window.api?.analyticsChannels?.(channels.length); } catch {}
   localStorage.setItem(SK.channels, JSON.stringify(channels));
   renderChannels();
   renderMixerFilters();
@@ -8848,10 +8850,12 @@ async function doBounce() {
     } else {
       job.status = ok ? 'done' : 'error';
       if (ok) {
+        const _renderSec = Math.max(1, Math.floor((Date.now() - _stemStartTime) / 1000));
+        try { window.api?.analyticsBounce?.(getActiveFmtPreset()?.format || 'unknown', job.type || 'unknown', _renderSec); } catch {}
         consecutiveFails = 0;
         totalDone++;
         // Record real stem duration and immediately recalculate ETA
-        _stemTimes.push(Math.max(1, Math.floor((Date.now() - _stemStartTime) / 1000)));
+        _stemTimes.push(_renderSec);
         _recalcEta();
         // Snap all windows back to Logic's space right after render finishes
         if (window.api?.snapToLogicSpace) window.api.snapToLogicSpace().catch(() => {});
@@ -8861,6 +8865,7 @@ async function doBounce() {
         const doneEl = document.querySelector(`[data-qid="${job.id}"]`);
         if (doneEl) { doneEl.style.animation = 'done-flash .5s ease'; setTimeout(()=>doneEl.style.animation='',500); }
       } else if (!window._userCancelled) {
+        try { window.api?.analyticsError?.('bounce_failed'); } catch {}
         consecutiveFails++;
         _mlNeedsReopen = true; // next pass: close+reopen ML to recover from possible Space mismatch
         // Shake on error
@@ -11120,6 +11125,7 @@ async function toggleCompactMode() {
   } else {
     await window.api?.exitCompactMode?.();
   }
+  try { window.api?.analyticsMode?.(next ? 'compact' : (easyMode ? 'easy' : 'pro')); } catch {}
   try { localStorage.setItem(COMPACT_LS_KEY, next ? '1' : '0'); } catch {}
 
   // Fade in
@@ -11152,6 +11158,7 @@ async function showMiniPlayer() {
   if (window.api.enterMiniMode) await window.api.enterMiniMode();
   document.body.style.background = '';
   document.body.classList.add('mini-mode');
+  try { window.api?.analyticsMode?.('mini'); } catch {}
   // 3. Fade out overlay to reveal mini mode
   await new Promise(r => setTimeout(r, 40));
   if (overlay) overlay.classList.remove('visible');
@@ -11165,6 +11172,7 @@ async function exitMiniMode() {
     if (window.api && window.api.exitMiniMode) await window.api.exitMiniMode();
   } catch(e) { console.warn('[EB]', e); }
   document.body.classList.remove('mini-mode');
+  try { window.api?.analyticsMode?.(_compactOn ? 'compact' : (easyMode ? 'easy' : 'pro')); } catch {}
 }
 function resetProg() {
   document.getElementById('pfill').style.width = '0%';

@@ -45,20 +45,77 @@ let _scanTreeActive = false;
 // ── Analytics ────────────────────────────────────────────────────────────────
 const SUPABASE_URL  = 'gormgyzofsyhtamwiwao.supabase.co';
 const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdvcm1neXpvZnN5aHRhbXdpd2FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODE2NjIsImV4cCI6MjA4OTg1NzY2Mn0.S6Yv05FKEBSvvGu4EL24o143jcR-Nor-GgfeBsQRnHs';
-const _analytics    = { counts: {}, start: Date.now() };
+const _analytics = {
+  counts: {}, bounces: { count: 0, formats: {}, types: {} }, errors: {},
+  modeTime: { easy: 0, pro: 0, compact: 0, mini: 0 },
+  channels: { sum: 0, count: 0 },
+  renderTimeSec: 0,
+  currentMode: 'easy', modeStart: Date.now(),
+  start: Date.now(),
+};
+
+function _switchMode(newMode) {
+  const now = Date.now();
+  _analytics.modeTime[_analytics.currentMode] =
+    (_analytics.modeTime[_analytics.currentMode] || 0) + Math.round((now - _analytics.modeStart) / 1000);
+  _analytics.currentMode = newMode;
+  _analytics.modeStart = now;
+}
 
 ipcMain.on('analytics-track', (_, key) => {
   if (key) _analytics.counts[key] = (_analytics.counts[key] || 0) + 1;
 });
+ipcMain.on('analytics-bounce', (_, fmt, type, durationSec) => {
+  _analytics.bounces.count++;
+  if (fmt)  _analytics.bounces.formats[fmt] = (_analytics.bounces.formats[fmt] || 0) + 1;
+  if (type) _analytics.bounces.types[type]  = (_analytics.bounces.types[type]  || 0) + 1;
+  if (typeof durationSec === 'number' && durationSec > 0) {
+    _analytics.renderTimeSec += Math.round(durationSec);
+  }
+});
+ipcMain.on('analytics-error', (_, errorType) => {
+  if (errorType) _analytics.errors[errorType] = (_analytics.errors[errorType] || 0) + 1;
+});
+ipcMain.on('analytics-mode', (_, mode) => {
+  if (mode && mode !== _analytics.currentMode) _switchMode(mode);
+});
+ipcMain.on('analytics-channels', (_, count) => {
+  if (typeof count === 'number' && count > 0) {
+    _analytics.channels.sum += count;
+    _analytics.channels.count++;
+  }
+});
+
+let _logicVersionCache = null;
+function _getLogicVersion() {
+  if (_logicVersionCache !== null) return _logicVersionCache;
+  try {
+    const v = require('child_process').execSync(
+      'defaults read "/Applications/Logic Pro.app/Contents/Info" CFBundleShortVersionString 2>/dev/null',
+      { encoding: 'utf8', timeout: 1500 }
+    ).trim();
+    _logicVersionCache = v || null;
+  } catch { _logicVersionCache = null; }
+  return _logicVersionCache;
+}
 
 async function _postAnalytics() {
   const crypto   = require('crypto');
   const machineId = getMachineId();
+  _switchMode(_analytics.currentMode); // flush current mode time
   const payload  = {
-    machine_id:   crypto.createHash('sha256').update(machineId).digest('hex').slice(0, 16),
-    app_version:  app.getVersion(),
-    duration_sec: Math.round((Date.now() - _analytics.start) / 1000),
-    buttons:      _analytics.counts,
+    machine_id:    crypto.createHash('sha256').update(machineId).digest('hex').slice(0, 16),
+    app_version:   app.getVersion(),
+    duration_sec:  Math.round((Date.now() - _analytics.start) / 1000),
+    buttons:       _analytics.counts,
+    bounces:       _analytics.bounces,
+    errors:        Object.keys(_analytics.errors).length ? _analytics.errors : null,
+    os_version:    process.getSystemVersion(),
+    mac_arch:      process.arch,
+    logic_version: _getLogicVersion(),
+    mode_time:     _analytics.modeTime,
+    channels_avg:  _analytics.channels.count ? Math.round(_analytics.channels.sum / _analytics.channels.count) : null,
+    render_time_total_sec: _analytics.renderTimeSec || null,
   };
   const body = JSON.stringify(payload);
   return new Promise(resolve => {
