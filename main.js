@@ -348,7 +348,7 @@ app.whenReady().then(async () => {
 
   // ── Step 1: License / Trial check ─────────────────────────────────────────
   const licenseFile = path.join(app.getPath('userData'), 'license.json');
-  const GRACE_DAYS = 7; // днів офлайн для subscription
+  const GRACE_DAYS = 14; // днів офлайн між обовʼязковими онлайн-перевірками
   let licensed = false;
 
   const _writeLic = (data) => {
@@ -374,36 +374,37 @@ app.whenReady().then(async () => {
 
     if (data && data.machineId === machineId && data.key) {
 
-      if (data.type === 'lifetime' && !unsigned) {
-        // ── Lifetime: ніколи не перевіряємо Supabase повторно ──
-        licensed = true;
+      if (!unsigned && (data.type === 'lifetime' || data.type === 'subscription')) {
+        // ── Expiring server-stamp model: validUntil + grace ──
+        const now = Date.now();
+        const validUntilMs = (data.validUntil || 0) * 1000;
+        const graceCutoff  = validUntilMs + GRACE_DAYS * 86400000;
 
-      } else if (data.type === 'subscription' && !unsigned) {
-        // ── Subscription: grace period 7 днів ──
-        const daysSinceCheck = (Date.now() - (data.lastChecked || 0)) / 86400000;
+        const _applyServer = (r) => {
+          if (r && r.valid) {
+            if (r.validUntil) data.validUntil = r.validUntil;
+            data.lastChecked = Date.now();
+            data.type = r.licenseType || data.type;
+            _writeLic(data);
+          }
+        };
 
-        if (daysSinceCheck < GRACE_DAYS) {
-          // В межах grace period → пускаємо, перевіряємо Supabase у фоні
+        if (now < validUntilMs) {
+          // Stamp ще свіжий → пускаємо, рефрешимо у фоні
           licensed = true;
-          validateKey(data.key).then(r => {
-            if (r.valid) {
-              data.lastChecked = Date.now();
-              _writeLic(data);
-            }
-            // якщо !r.valid і не офлайн → підписка закінчилась, заблокує наступного разу
-          }).catch(() => {});
-        } else {
-          // Grace period вичерпано → потрібна перевірка Supabase
+          validateKey(data.key).then(_applyServer).catch(() => {});
+        } else if (now < graceCutoff) {
+          // Stamp прострочений, але в межах grace → пробуємо сервер
           try {
             const result = await validateKey(data.key);
-            if (result.valid) {
-              data.lastChecked = Date.now();
-              _writeLic(data);
-              licensed = true;
-            } else if (result.offline) {
-              // Немає інтернету — блокуємо (7 днів вже минуло)
-              licensed = false;
-            }
+            if (result.valid) { _applyServer(result); licensed = true; }
+            else if (result.offline) { licensed = true; } // офлайн в межах grace
+          } catch(e) { licensed = true; }
+        } else {
+          // Минув grace — обовʼязкова успішна онлайн-перевірка
+          try {
+            const result = await validateKey(data.key);
+            if (result.valid) { _applyServer(result); licensed = true; }
           } catch(e) { console.warn('[EB]', e); }
         }
       } else {
@@ -413,6 +414,7 @@ app.whenReady().then(async () => {
           if (result.valid) {
             data.type = result.licenseType || data.type || 'lifetime';
             data.lastChecked = Date.now();
+            if (result.validUntil) data.validUntil = result.validUntil;
             _writeLic(data);
             licensed = true;
           }
@@ -1748,7 +1750,8 @@ ipcMain.handle('activate-and-launch', async (_, key) => {
         key, machineId, activatedAt: Date.now(),
         schemaVersion: 1,
         type: result.licenseType || 'lifetime',
-        lastChecked: Date.now()
+        lastChecked: Date.now(),
+        validUntil: result.validUntil || null
       };
       fs.writeFileSync(licenseFile, JSON.stringify(signLicenseData(payload)));
     } catch(e) { console.warn('[EB] license save failed:', e.message); }
