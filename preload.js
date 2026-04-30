@@ -101,7 +101,7 @@ contextBridge.exposeInMainWorld('api', {
   hideWindow:      ()         => ipcRenderer.invoke('hide-window'),
   showWindow:      ()         => ipcRenderer.invoke('show-window'),
   focusApp:        ()         => ipcRenderer.invoke('focus-app'),
-  moveToLogicSpace: ()        => ipcRenderer.invoke('move-to-logic-space'),
+  moveToLogicSpace: (opts)    => ipcRenderer.invoke('move-to-logic-space', opts),
   scanMasterPlugins:  ()        => ipcRenderer.invoke('scan-master-plugins'),
   masterPlugins:      ()        => ipcRenderer.invoke('master-plugins'),
   masterPluginsQuick: ()        => ipcRenderer.invoke('master-plugins-quick'),

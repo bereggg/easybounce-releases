@@ -9165,7 +9165,7 @@ async function doBounce() {
   // minutes later → false "File missing" failure even though the file is there.
   window._bounceClockSnapshot = new Date();
   // Helper: release lock when an early-return path exits before the main bounce loop.
-  const _earlyExit = () => { bouncing = false; updateBounceBtn(); window._bounceClockSnapshot = null; };
+  const _earlyExit = () => { bouncing = false; updateBounceBtn(); window._bounceClockSnapshot = null; if (window._miniActive) exitMiniMode().catch(() => {}); };
   if (!(await _audit())) { _auditFail(); _earlyExit(); return; }
   // If a schedule timer is pending, cancel it — manual bounce replaces it
   if (_scheduleTimer) { clearTimeout(_scheduleTimer); _scheduleTimer = null; }
@@ -9188,6 +9188,9 @@ async function doBounce() {
   const pending = queue.filter(q => q.status === 'pending');
   if (pending.length === 0) { toast('Nothing to bounce'); _earlyExit(); return; }
   if (!window.api) { toast('Needs Electron'); _earlyExit(); return; }
+
+  // Enter mini mode immediately — before mixer opens, so EasyBounce doesn't block it
+  if (!window._miniActive) await showMiniPlayer();
 
   // Sort queue to minimise expensive transitions between stems.
   // Primary   (most expensive — AX plugin clicks): master on→both→off→custom
@@ -9250,7 +9253,7 @@ async function doBounce() {
   // Check metronome - ask user if click btn is red (ON)
   if (metronomeOn && window.api) {
     const action = await window.api.showMetronomeWarning();
-    if (action === 'cancel') return;
+    if (action === 'cancel') { _earlyExit(); return; }
     if (action === 'turnoff') {
       await window.api.metronomeToggle();
       metronomeOn = false;
@@ -9268,7 +9271,7 @@ async function doBounce() {
       const cycleState = await window.api.checkCycle();
       if (cycleState && cycleState.found && !cycleState.on) {
         const cycleAction = await window.api.showCycleWarning();
-        if (cycleAction === 'cancel') return;
+        if (cycleAction === 'cancel') { _earlyExit(); return; }
       }
     } catch(e) { console.warn('[EB]', e); }
   }
@@ -9302,8 +9305,8 @@ async function doBounce() {
     // 4) Not found → ask user
     if (!scOk) {
       const choice = await _showSidechainMismatchModal(sidechainChannel);
-      if (choice === 'cancel') return;
-      if (choice === 'reselect') { toggleSidechainDropdown(); return; }
+      if (choice === 'cancel') { _earlyExit(); return; }
+      if (choice === 'reselect') { _earlyExit(); toggleSidechainDropdown(); return; }
       if (choice === 'no-sidechain') {
         sidechainEnabled = false;
         localStorage.setItem('sb4_sidechain_on', 'false');
@@ -9348,40 +9351,25 @@ async function doBounce() {
   {
     const em = await window.api.ensureMixer();
     if (em && em.opened) {
-      // Mixer was closed — we just opened it; re-apply user's filter prefs
+      // Mixer was closed — we just opened it; re-apply user's filter prefs.
+      // AOT is intentionally left OFF here so the user can drag the mixer.
       log('Mixer was closed — reopened — preparing…', 'warn');
       toast('⚠ Mixer reopened — preparing bounce…');
-      await window.api.wait(500);
-      await window.api.setAlwaysOnTop(true);
+      await window.api.wait(200);
       await window.api.mixerEnableAll();
-      await window.api.wait(250);
+      await window.api.wait(150);
       const toDisable = MF_ALL_NAMES.filter(n => n in _mixerFilters && !_mixerFilters[n]);
       for (const name of toDisable) {
         await window.api.mixerFilterToggle(name);
-        await window.api.wait(80);
+        await window.api.wait(60);
       }
-      await window.api.setAlwaysOnTop(false);
-      await window.api.wait(150);
-      const reCheck = await window.api.scanChannels();
-      if (!reCheck.error && reCheck.channels && reCheck.channels.length > 0) {
-        channels = reCheck.channels.map((ch, i) => ({
-          ...ch, color: getInstrumentColor(ch.name) || COLORS[i % COLORS.length], isBus: !ch.hasMonitoring && !ch.hasRecord,
-          chType: (ch.hasMonitoring || ch.hasRecord) ? (ch.hasRecord && !ch.hasMonitoring ? 'Inst' : 'Audio') : ch.hasMidiPlugin ? 'Inst' : ch.hasInputBtn ? 'Bus' : 'Other'
-        }));
-        localStorage.setItem(SK.channels, JSON.stringify(channels));
-        renderChannels();
-        log(`✓ Mixer restored — ${channels.length} channels`, 'ok');
-        // Shrink the just-opened mixer to ~30% width (same as scanLogic does at end).
-        // Without this, the mixer stays at full size and visually delays the next step
-        // by hiding Logic's bounce dialog behind it.
-        if (window.api?.coverMixer) {
-          try { await window.api.coverMixer(); } catch(e) { console.warn('[EB] coverMixer:', e); }
-        }
-      } else {
-        toast('⚠ Could not restore mixer — is Logic running?');
-        log('Could not restore mixer after reopen', 'err');
-        _earlyExit();
-        return;
+      await window.api.wait(80);
+      // Channel data from last scan is still valid (project didn't change).
+      // The count sanity check below will catch any real mismatch.
+      log(`✓ Mixer restored — using ${channels.length} cached channels`, 'ok');
+      // Shrink the just-opened mixer so it doesn't hide Logic's bounce dialog.
+      if (window.api?.coverMixer) {
+        try { await window.api.coverMixer(); } catch(e) { console.warn('[EB] coverMixer:', e); }
       }
     }
     // em.opened === false → mixer was already open → proceed immediately
@@ -9403,9 +9391,6 @@ async function doBounce() {
   }
   // ──────────────────────────────────────────────────────────────────────────
 
-  // bouncing already true — set at the top of doBounce to prevent double-fire during prep
-  // Enter mini mode first (await so window is fully resized before overlay appears)
-  if (!window._miniActive) await showMiniPlayer();
   // Skip overlay if user closed it 3+ times (pro mode — they don't need reminders).
   if (window.api?.showBounceOverlay && !_isOverlayDisabled()) window.api.showBounceOverlay().catch(() => {});
   if (window.api?.updateBounceOverlay && !_isOverlayDisabled()) window.api.updateBounceOverlay({ name: 'Preparing…', done: 0, total: pending.length }).catch(() => {});
@@ -9443,7 +9428,6 @@ async function doBounce() {
   document.getElementById('alert-row-full').style.display = 'none';
   document.getElementById('alert-row-mini').style.display = 'none';
   if (document.getElementById('schedule-btn')) document.getElementById('schedule-btn').style.display = 'none';
-  if (window.api) await window.api.setAlwaysOnTop(true);
   if (isPinned && window.api && window.api.setAlwaysOnTop) window.api.setAlwaysOnTop(true);
   // Start countdown timer — starts only when first stem actually begins bouncing
   let _bounceStartTime = null;  // set on first stem start (not pre-bounce setup)
@@ -9955,7 +9939,7 @@ async function doBounce() {
 
   // Exit bounce mode: re-enable window anchoring, then snap back to Logic's space once.
   if (window.api?.setBounceMode) await window.api.setBounceMode(false).catch(()=>{});
-  if (!window._userCancelled && window.api?.moveToLogicSpace) await window.api.moveToLogicSpace().catch(()=>{});
+  if (!window._userCancelled && window.api?.moveToLogicSpace) await window.api.moveToLogicSpace({ noFocus: true }).catch(()=>{});
   bouncing = false; updateBounceBtn();
   // Release the clock snapshot so subsequent UI redraws (preview field) show live values.
   window._bounceClockSnapshot = null;

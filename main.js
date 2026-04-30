@@ -750,13 +750,14 @@ ipcMain.handle('open-mixer-cover', async () => {
 ipcMain.handle('ensure-mixer', async () => {
   const wasOnTop = mainWindow?.isAlwaysOnTop?.() ?? false;
   if (mainWindow && !_inScanBadge && !_inMiniMode) mainWindow.setAlwaysOnTop(false);
-  try { return await bridge('ensureMixer'); }
-  finally {
-    if (mainWindow && !mainWindow.isDestroyed() && wasOnTop) {
-      mainWindow.setAlwaysOnTop(true, _mainAotLevel());
-      mainWindow.showInactive();
-    }
+  const result = await bridge('ensureMixer');
+  // Only restore AOT if mixer was already open (result.opened = false).
+  // When the mixer was just opened, keep AOT off so the user can drag it.
+  if (mainWindow && !mainWindow.isDestroyed() && wasOnTop && !result?.opened) {
+    mainWindow.setAlwaysOnTop(true, _mainAotLevel());
+    mainWindow.showInactive();
   }
+  return result;
 });
 ipcMain.handle('send-key', (_, keyCode, ...mods) => bridge('sendKey', String(keyCode), ...mods));
 ipcMain.handle('stop-render', () => bridge('stop-render'));
@@ -1085,7 +1086,7 @@ ipcMain.handle('focus-app', () => {
   return { ok: true };
 });
 
-ipcMain.handle('move-to-logic-space', async () => {
+ipcMain.handle('move-to-logic-space', async (_, opts = {}) => {
   if (!mainWindow) return { ok: false };
   try {
     const { stdout } = await execAsync('ps aux | grep -i "logic pro" | grep -v grep');
@@ -1115,7 +1116,10 @@ ipcMain.handle('move-to-logic-space', async () => {
   // In mini mode: keep visibleOnAllWorkspaces so the widget follows the user
   if (!_inMiniMode) {
     mainWindow.show();
-    mainWindow.focus();
+    // noFocus: Logic (and its mixer) stays in front so the user can drag it immediately.
+    // Used at end-of-bounce when the mixer may have been opened during bounce prep.
+    if (opts.noFocus) mainWindow.showInactive();
+    else mainWindow.focus();
     mainWindow.setVisibleOnAllWorkspaces(false);
   }
   return { ok: true };
