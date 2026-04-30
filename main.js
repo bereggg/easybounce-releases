@@ -1069,6 +1069,15 @@ ipcMain.handle('set-locators-by-marker', async (_, name, keepML) => bridge('set-
 ipcMain.handle('focus-app', () => {
   if (_scanTreeActive) return { ok: true };
   if (mainWindow) {
+    // CRITICAL: drop setVisibleOnAllWorkspaces when not in bounce/mini.
+    // During bounce we set it to true (move-to-logic-space) so the window follows
+    // the user across Spaces. After bounce ends (or is cancelled), this flag must
+    // be cleared — leaving it on makes the window behave as an "auxiliary" window
+    // in macOS: clicks still work (forwarded), but HTML5 drag-and-drop is broken
+    // because the window is not a normal key window for native mouse-event sequences.
+    if (!_inMiniMode && !_inBounce) {
+      try { mainWindow.setVisibleOnAllWorkspaces(false); } catch(e) {}
+    }
     mainWindow.show();
     mainWindow.focus();
     app.focus({ steal: true });

@@ -2589,8 +2589,19 @@ case "applyBouncePreset":
         // Fallback: Intel Logic 10.7 checkboxes have no title — use first checkbox in MP3 row
         if abpMp3CB == nil, let firstCb = mp3RowCbs.first { abpMp3CB = firstCb }
     }
+    // M4A:AAC checkbox (row 2)
+    var abpM4aCB: AXUIElement? = nil
+    if abpRows.count > 2 {
+        let m4aRowCbs = findAll(abpRows[2], role: "AXCheckBox", depth: 5)
+        for cb in m4aRowCbs {
+            let t = axTitle(cb).lowercased()
+            if t.contains("m4a") || t.contains("aac") || t.contains("apple lossless") { abpM4aCB = cb; break }
+        }
+        if abpM4aCB == nil, let firstCb = m4aRowCbs.first { abpM4aCB = firstCb }
+    }
     let abpWavIsOn = abpWavCB.map { axIntValue($0) == 1 } ?? true
     let abpMp3IsOn = abpMp3CB.map { axIntValue($0) == 1 } ?? false
+    let abpM4aIsOn = abpM4aCB.map { axIntValue($0) == 1 } ?? false
     // wavEnabled param: "1" = ensure WAV checkbox ON, "0" = OFF, absent = don't touch
     if let wavStr = abpParams["wavEnabled"], let cb = abpWavCB {
         let wantOn = (wavStr == "1" || wavStr == "true")
@@ -2603,10 +2614,13 @@ case "applyBouncePreset":
             axPress(cb)
             Thread.sleep(forTimeInterval: 0.5)
             // Auto-dismiss "Enabling this destination disables Split Stereo and Surround. Proceed?"
+            // IMPORTANT: skip abpBounceWin — it also has an "OK" button, clicking it would
+            // close the Bounce dialog early and start the render before M4A params are set.
             var abpAllWinsAfterMp3: CFTypeRef?
             AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &abpAllWinsAfterMp3)
             if let winsArr = abpAllWinsAfterMp3 as? [AXUIElement] {
                 for w in winsArr {
+                    if CFEqual(w, abpBounceWin) { continue }
                     let btns = findAll(w, role: "AXButton", depth: 5)
                     for btn in btns {
                         let t = axTitle(btn)
@@ -2620,13 +2634,49 @@ case "applyBouncePreset":
             }
         }
     }
-    // dest param: which row to display (0=WAV row, 1=MP3 row)
+    // m4aEnabled param: "1" = ensure M4A checkbox ON, "0" = OFF, absent = don't touch
+    if let m4aStr = abpParams["m4aEnabled"], let cb = abpM4aCB {
+        let wantOn = (m4aStr == "1" || m4aStr == "true")
+        if abpM4aIsOn != wantOn {
+            axPress(cb)
+            Thread.sleep(forTimeInterval: 0.5)
+            // Auto-dismiss any "Proceed?" dialog that may appear — skip abpBounceWin (same reason as above).
+            var abpAllWinsAfterM4a: CFTypeRef?
+            AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &abpAllWinsAfterM4a)
+            if let winsArr = abpAllWinsAfterM4a as? [AXUIElement] {
+                for w in winsArr {
+                    if CFEqual(w, abpBounceWin) { continue }
+                    let btns = findAll(w, role: "AXButton", depth: 5)
+                    for btn in btns {
+                        let t = axTitle(btn)
+                        if t == "Proceed" || t == "OK" {
+                            axPress(btn)
+                            Thread.sleep(forTimeInterval: 0.3)
+                            break
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // dest param: which row to display (0=WAV row, 1=MP3 row, 2=M4A row)
+    let abpCurDest = Int(abpParams["dest"] ?? "0") ?? 0
     if let abpDestStr = abpParams["dest"], let abpDestIdx = Int(abpDestStr) {
-        let targetRow = (abpDestIdx == 1 || abpDestIdx == 2) ? 1 : 0
+        let targetRow: Int
+        switch abpDestIdx {
+            case 1: targetRow = 1
+            case 2: targetRow = 2
+            default: targetRow = 0
+        }
         if abpRows.count > targetRow {
             let already = (axVal(abpRows[targetRow], kAXSelectedAttribute as String) as? Bool) ?? false
-            if !already { abpSelectRow(abpRows[targetRow]); Thread.sleep(forTimeInterval: targetRow == 1 ? 0.7 : 0.5) }
+            if !already { abpSelectRow(abpRows[targetRow]); Thread.sleep(forTimeInterval: targetRow == 0 ? 0.5 : 0.7) }
         }
+    }
+    // SAFETY GUARD: when M4A encoding is Apple Lossless, Bit Rate and VBR controls are disabled
+    if abpCurDest == 2, abpParams["m4aEncoding"]?.lowercased().contains("lossless") == true {
+        abpParams["m4aBitRate"] = nil
+        abpParams["m4aVBR"] = nil
     }
     // Get bounce window top Y — used to convert absolute → relative Y for popup matching
     var abpWinPos: CFTypeRef?
@@ -2646,6 +2696,18 @@ case "applyBouncePreset":
         if let av = p1 as! AXValue? { AXValueGetValue(av, .cgPoint, &pt1) }
         if let av = p2 as! AXValue? { AXValueGetValue(av, .cgPoint, &pt2) }
         return pt1.y < pt2.y
+    }
+    // M4A: set VBR checkbox BEFORE the popup loop so the correct bit rate options appear.
+    // If VBR is currently ON, the bit rate popup shows VBR ranges instead of CBR values.
+    if abpCurDest == 2, let vbrVal = abpParams["m4aVBR"] {
+        let want = (vbrVal == "1" || vbrVal == "true") ? 1 : 0
+        let cbs = findAll(abpBounceWin, role: "AXCheckBox", depth: 10)
+        for cb in cbs {
+            if axTitle(cb) == "Encode with variable bit rate (VBR)" {
+                if axIntValue(cb) != want { axPress(cb); Thread.sleep(forTimeInterval: 0.3) }
+                break
+            }
+        }
     }
     // Helper: set popup value by pressing it and finding the menu item
     var abpSetResults: [String: Bool] = [:]
@@ -2735,7 +2797,23 @@ case "applyBouncePreset":
                        "End of last region","End of Last Region","Sequence End","Project Length"].contains(curVal)
                       || (curVal.lowercased().contains("locator") && !curVal.lowercased().contains("kbit"))
 
-        if isFileFormat, let val = abpParams["fileType"] {
+        // M4A-specific popups (only when dest=2 / M4A row is selected)
+        let curValLower = curVal.lowercased()
+        let isM4aEncoding = curValLower.contains("audio codec") || curValLower.contains("apple lossless") || (curValLower == "aac")
+        var handledM4a = false
+        if abpCurDest == 2 {
+            if isM4aEncoding, let val = abpParams["m4aEncoding"], abpSetResults["m4aEncoding"] == nil {
+                abpSetResults["m4aEncoding"] = abpSetPopup(abpPopup, val)
+                handledM4a = true
+            } else if curValLower.contains("kbit/s"), let val = abpParams["m4aBitRate"], abpSetResults["m4aBitRate"] == nil,
+                      abpSetResults["mp3RateStereo"] == nil, abpSetResults["mp3RateMono"] == nil {
+                abpSetResults["m4aBitRate"] = abpSetPopup(abpPopup, val)
+                handledM4a = true
+            }
+        }
+        if handledM4a {
+            // already handled above
+        } else if isFileFormat, let val = abpParams["fileType"] {
             abpSetResults["fileType"] = abpSetPopup(abpPopup, val)
         } else if isBitDepth, let val = abpParams["bitDepth"] {
             abpSetResults["bitDepth"] = abpSetPopup(abpPopup, val)
@@ -2818,6 +2896,7 @@ case "applyBouncePreset":
         ("mp3VBR",             "Use Variable Bit Rate Encoding (VBR)"),
         ("mp3BestEncoding",    "Use best encoding"),
         ("mp3Filter10hz",      "Filter frequencies below 10 Hz"),
+        ("m4aVBR",             "Encode with variable bit rate (VBR)"),
     ]
     for (key, cbName) in abpCbMap {
         if let val = abpParams[key] { abpSetCheckbox(cbName, val == "1" || val == "true") }

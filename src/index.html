@@ -245,7 +245,7 @@ svg.ico.ico-lg{width:20px;height:20px;}
 .bbtn.ready{animation:bounce-ready 2s ease-in-out infinite;}
 @keyframes done-flash{0%{background:var(--card)}40%{background:rgba(67,233,123,.2)}100%{background:var(--card)}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
-@keyframes bounce-ready{0%,100%{box-shadow:0 8px 32px var(--accent-a30),inset 0 1px 0 rgba(255,255,255,.2);}50%{box-shadow:0 12px 40px var(--accent-a40),inset 0 1px 0 rgba(255,255,255,.25);transform:translateY(-1px);}}
+@keyframes bounce-ready{0%,100%{box-shadow:0 8px 32px var(--accent-a30),inset 0 1px 0 rgba(255,255,255,.2);}50%{box-shadow:0 10px 44px var(--accent-a40),inset 0 1px 0 rgba(255,255,255,.24);}}
 .bbtn.running{background:linear-gradient(160deg,var(--accent) 0%,var(--a2) 100%);box-shadow:0 8px 32px var(--accent-a30),inset 0 1px 0 rgba(255,255,255,.2);animation:pulse-glow-accent 1.6s ease-in-out infinite alternate;}
 @keyframes pulse-glow-accent{from{box-shadow:0 4px 16px var(--accent-a30);}to{box-shadow:0 12px 40px var(--accent-a60),inset 0 1px 0 rgba(255,255,255,.2);}}
 .bbtn.off{background:var(--card);color:var(--muted);box-shadow:none;cursor:not-allowed;transform:none;border:1px solid var(--b);}
@@ -438,9 +438,11 @@ body.compact-mode .modebar{display:none!important;}
   background:linear-gradient(to bottom,var(--accent-a05),transparent);
   overflow-x:auto;
   scrollbar-width:thin;
+  scrollbar-color:var(--b2) transparent;
 }
 .modebar.expanded .modebar-expanded{display:flex;}
 .modebar-expanded::-webkit-scrollbar{height:4px;}
+.modebar-expanded::-webkit-scrollbar-track{background:transparent;}
 .modebar-expanded::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
 
 .mb-mlbl{
@@ -555,6 +557,76 @@ body.compact-mode .modebar{display:none!important;}
   padding:0 5px;border-radius:3px;
 }
 .mb-badge.hidden{display:none;}
+
+/* Wildcard chips in name-template editor */
+.name-tpl-edit{
+  flex:1;padding:5px 9px;
+  background:var(--card);border:1px solid var(--b);border-radius:var(--r);
+  color:var(--text);font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);
+  min-height:28px;line-height:18px;
+  outline:none;cursor:text;
+  display:flex;flex-wrap:wrap;align-items:center;gap:2px;
+  overflow:hidden;white-space:nowrap;
+}
+.name-tpl-edit:focus,.name-tpl-edit:focus-within{
+  border-color:var(--accent-a40);box-shadow:0 0 0 2px var(--accent-a08);
+}
+.name-tpl-edit:empty::before{
+  content:attr(data-placeholder);color:var(--muted);opacity:.55;font-style:italic;
+}
+.wc-chip{
+  display:inline-flex;align-items:center;gap:3px;
+  background:var(--accent-a12);color:var(--accent);
+  border:1px solid var(--accent-a30);border-radius:5px;
+  padding:0 3px 0 5px;height:18px;
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:-.01em;
+  cursor:grab;user-select:none;
+  transition:background var(--t-fast),border-color var(--t-fast),transform var(--t-fast);
+  flex-shrink:0;
+}
+.wc-chip:hover{background:var(--accent-a20);border-color:var(--accent-a40);}
+.wc-chip:active{cursor:grabbing;}
+.wc-chip.dragging{opacity:.4;}
+.wc-chip-drop-before{box-shadow:-2px 0 0 var(--accent);}
+.wc-chip-drop-after{box-shadow:2px 0 0 var(--accent);}
+.wc-chip-x{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:13px;height:13px;border-radius:3px;
+  color:var(--accent);opacity:.55;
+  font-size:11px;line-height:1;font-weight:700;
+  cursor:pointer;
+  transition:background var(--t-fast),opacity var(--t-fast),color var(--t-fast);
+}
+.wc-chip-x:hover{background:rgba(255,80,80,.15);color:#ff7070;opacity:1;}
+/* Wildcard insert button (left of the ▼ arrow) */
+#wc-insert-btn{
+  background:none;border:none;color:var(--muted);font-size:12px;font-weight:700;
+  padding:2px 6px;cursor:pointer;line-height:1;font-family:'JetBrains Mono',monospace;
+  transition:color var(--t-fast);flex-shrink:0;
+}
+#wc-insert-btn:hover{color:var(--accent);}
+#name-tpl-clear{
+  display:none;align-items:center;justify-content:center;
+  background:none;border:none;color:var(--muted);font-size:13px;font-weight:700;
+  padding:2px 5px;cursor:pointer;line-height:1;font-family:'JetBrains Mono',monospace;
+  transition:color var(--t-fast),opacity var(--t-fast);opacity:.55;flex-shrink:0;
+}
+#name-tpl-clear:hover{color:#ff7070;opacity:1;}
+/* Wildcards dropdown */
+#wc-dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;width:100%;min-width:240px;max-height:340px;overflow-y:auto;flex-direction:column;z-index:9999;scrollbar-width:thin;scrollbar-color:var(--b2) transparent;}
+#wc-dropdown.open{display:flex;}
+#wc-dropdown::-webkit-scrollbar{width:5px;}
+#wc-dropdown::-webkit-scrollbar-track{background:transparent;}
+#wc-dropdown::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px;}
+.wc-group-label{padding:7px 12px 4px;font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+.wc-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 12px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);transition:background var(--t-fast);}
+.wc-item:hover{background:var(--accent-a08);}
+.wc-item-name{color:var(--accent);font-weight:700;}
+.wc-item-desc{color:var(--muted);font-size:10px;}
+.wc-presets{border-top:1px solid var(--b);padding:6px 0;}
+.wc-preset-btn{display:block;width:100%;text-align:left;padding:5px 12px;background:none;border:none;color:var(--t2);font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:background var(--t-fast),color var(--t-fast);}
+.wc-preset-btn:hover{background:var(--accent-a08);color:var(--accent);}
+.wc-preset-btn .wc-preset-tpl{color:var(--muted);font-size:10px;margin-left:6px;}
 
 /* "Aa" naming editor button */
 .mb-naming-btn{
@@ -698,16 +770,43 @@ body.compact-mode .modebar{display:none!important;}
   width:6px;height:3px;border:1.5px solid #000;border-top:none;border-right:none;
   transform:rotate(-45deg) translate(0px,-1px);
 }
-/* Two-column header strip above FX channel list */
-.fx-pass-hdr{
-  display:flex;align-items:center;padding:4px 10px 4px;
-  border-bottom:1px dashed var(--b);gap:10px;flex-shrink:0;
+/* FX list scrollbar — dark, matches app style */
+#fx-list,
+.fx-wl-scroll{
+  scrollbar-width:thin;
+  scrollbar-color:var(--b2) transparent;
 }
-.fx-pass-hdr-name{flex:1;}
-.fx-pass-col-lbl{
-  width:14px;font-family:'JetBrains Mono',monospace;font-size:9px;
-  font-weight:700;letter-spacing:.06em;text-align:center;flex-shrink:0;color:var(--muted);
+#fx-list::-webkit-scrollbar,
+.fx-wl-scroll::-webkit-scrollbar{width:4px;}
+#fx-list::-webkit-scrollbar-thumb,
+.fx-wl-scroll::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+#fx-list::-webkit-scrollbar-track,
+.fx-wl-scroll::-webkit-scrollbar-track{background:transparent;}
+
+/* Sidechain picker list — dark scrollbar */
+#eb-sc-list{
+  scrollbar-width:thin;
+  scrollbar-color:var(--b2) transparent;
 }
+#eb-sc-list::-webkit-scrollbar{width:4px;}
+#eb-sc-list::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+#eb-sc-list::-webkit-scrollbar-track{background:transparent;}
+
+/* DRY / WET tab strip in +FX popover */
+.fx-tab-bar{
+  display:flex;gap:4px;padding:6px 10px 0;flex-shrink:0;
+}
+.fx-tab{
+  flex:1;padding:4px 0;border-radius:4px 4px 0 0;
+  font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;
+  border:none;background:transparent;cursor:pointer;
+  color:var(--muted);transition:color var(--t-fast),border-color var(--t-fast);
+  border-bottom:2px solid transparent;
+}
+.fx-tab.active-dry{color:var(--accent);border-bottom-color:var(--accent);}
+.fx-tab.active-wet{color:var(--teal);border-bottom-color:var(--teal);}
+.fx-tab:hover:not(.active-dry):not(.active-wet){color:var(--text);}
 
 /* ── FX channel tags in popover (single-accent palette, no rainbow) ── */
 .fx-tag{
@@ -731,11 +830,19 @@ body.compact-mode .modebar{display:none!important;}
   background:transparent;color:var(--accent);
   border-color:var(--accent-a30);
 }
-/* Audio / Inst / Output — neutral muted */
-.fx-tag-audio,
-.fx-tag-inst,
+/* Audio — blue-grey, readable */
+.fx-tag-audio{
+  background:rgba(100,140,200,.12);color:#7aa2d4;
+  border-color:rgba(100,140,200,.3);
+}
+/* Inst — warm amber, clearly distinct from Bus/FX */
+.fx-tag-inst{
+  background:rgba(210,150,60,.12);color:#d4a257;
+  border-color:rgba(210,150,60,.3);
+}
+/* Output — neutral, lowest priority */
 .fx-tag-output{
-  background:var(--b2);color:var(--muted);
+  background:var(--b2);color:var(--t2);
   border-color:var(--b);
 }
 
@@ -1070,7 +1177,7 @@ body.easy #skin-panel{z-index:9000;}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--card2);border:1px solid var(--b2);color:var(--text);font-family:var(--font-mono);font-size:var(--fs-sm);padding:9px 20px;border-radius:var(--r3);box-shadow:var(--sh-float);opacity:0;transition:all var(--t-slow) var(--ease-out);pointer-events:none;z-index:var(--z-toast);white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 /* ── Cancel overlay ─────────────────────────────────── */
-#cancel-overlay{display:none;position:fixed;inset:0;z-index:10001;align-items:center;justify-content:center;background:rgba(14,14,22,0.92);backdrop-filter:blur(40px) saturate(150%);-webkit-backdrop-filter:blur(40px) saturate(150%);border:1px solid var(--warn-a30);box-shadow:0 16px 48px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);transition:opacity var(--t-slow) ease;will-change:opacity;}
+#cancel-overlay{display:none;position:fixed;inset:0;z-index:10001;align-items:center;justify-content:center;background:rgba(14,14,22,0.92);backdrop-filter:blur(40px) saturate(150%);-webkit-backdrop-filter:blur(40px) saturate(150%);border:1px solid var(--warn-a30);box-shadow:0 16px 48px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);transition:opacity var(--t-slow) ease;will-change:opacity;pointer-events:none;}
 /* Mutex: if both scan-warning and cancel-overlay try to appear, cancel wins (it's the user-initiated action) and scan-warning is hidden */
 #cancel-overlay.show{display:flex;}
 #cancel-overlay.show ~ #scan-warning,body:has(#cancel-overlay.show) #scan-warning{display:none!important;}
@@ -1134,18 +1241,19 @@ body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini
 #compact-toolbar{display:none;height:46px;background:var(--s);border-bottom:1px solid var(--b);padding:0 10px;align-items:center;justify-content:center;gap:8px;-webkit-app-region:drag;flex-shrink:0;position:relative;}
 #compact-toolbar .cm-title{font-size:11px;color:var(--t2);text-transform:uppercase;letter-spacing:.12em;font-family:var(--font-mono,'JetBrains Mono',monospace);font-weight:700;pointer-events:none;}
 #compact-toolbar-left{position:absolute;left:74px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;-webkit-app-region:no-drag;}
+#compact-toolbar-center{display:flex;align-items:center;justify-content:center;gap:10px;-webkit-app-region:no-drag;}
 #compact-toolbar-actions{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;-webkit-app-region:no-drag;}
 #compact-toolbar-left button,#compact-toolbar-actions button{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid var(--b);background:transparent;color:var(--muted);cursor:pointer;transition:all var(--t-fast);padding:0;}
-#compact-toolbar-left button:hover,#compact-toolbar-actions button:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-a12);}
 #compact-toolbar-left button:hover{background:rgba(255,255,255,.06);}
+#compact-toolbar-left button:hover,#compact-toolbar-actions button:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-a12);}
 #compact-toolbar-left button svg,#compact-toolbar-actions button svg{width:14px;height:14px;}
-#cm-scan-btn{-webkit-app-region:no-drag;display:none;position:absolute;top:50%;transform:translateY(-50%);white-space:nowrap;}
+#cm-scan-btn{-webkit-app-region:no-drag;display:none;white-space:nowrap;flex-shrink:0;}
 body.compact-mode #cm-scan-btn{display:flex;}
 #cm-scan-btn svg{width:13px;height:13px;flex-shrink:0;}
 body.compact-mode .q-empty-normal-only{display:none!important;}
 body.compact-mode .q-empty-compact-only{display:block!important;}
 #compact-toolbar-left button.is-active,#compact-toolbar-actions button.is-active{border-color:var(--accent);color:var(--accent);background:var(--accent-a12);}
-#compact-toolbar .em-wrap{position:absolute;left:50%;transform:translateX(-50%);-webkit-app-region:no-drag;}
+#compact-toolbar .em-wrap{position:static;transform:none;-webkit-app-region:no-drag;flex-shrink:0;}
 body.compact-mode .em-thumb{left:2px!important;}
 body.compact-mode .em-lbl.em-lbl-pro{color:var(--t2)!important;opacity:.55!important;}
 body.compact-mode .em-lbl.em-lbl-easy{color:var(--accent)!important;opacity:1!important;}
@@ -1168,7 +1276,6 @@ body.compact-mode #alert-row-full,
 body.compact-mode .q-mini-btns,
 body.compact-mode #version-drop-zone,
 body.compact-mode #merge-drop-zone,
-body.compact-mode #name-preset-save-btn,
 body.compact-mode #fmt-bar-source{display:none!important;}
 
 /* Presets-bar: fully hidden in compact mode */
@@ -1241,6 +1348,8 @@ body.compact-mode .modal-overlay{inset:46px 0 0;align-items:center;padding:12px 
 .fmt-tag-wav-off { border:1px solid var(--b); background:transparent; color:var(--muted); }
 .fmt-tag-mp3 { border:1px solid var(--accent); background:var(--accent-a20); color:var(--accent); }
 .fmt-tag-mp3-off { border:1px solid var(--b); background:transparent; color:var(--muted); }
+.fmt-tag-m4a { border:1px solid var(--accent); background:var(--accent-a20); color:var(--accent); }
+.fmt-tag-m4a-off { border:1px solid var(--b); background:transparent; color:var(--muted); }
 .fmt-bar-detail { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--t2); font-size:var(--fs-xs); }
 /* Modal header format pills — see redesigned block below */
 /* Legacy */
@@ -1497,15 +1606,17 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
   <div id="compact-toolbar-left">
     <div class="tb-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 L6 12 L8 6 L10 18 L12 8 L14 16 L16 10 L18 12 L21 12"/></svg></div>
   </div>
-  <div class="em-wrap" onclick="toggleCompactMode()" title="Easy = compact mode / Pro = full mode">
-    <span class="em-lbl em-lbl-easy">Easy</span>
-    <div class="em-track"><div class="em-thumb"></div></div>
-    <span class="em-lbl em-lbl-pro">Pro</span>
+  <div id="compact-toolbar-center">
+    <div class="em-wrap" onclick="toggleCompactMode()" title="Easy = compact mode / Pro = full mode">
+      <span class="em-lbl em-lbl-easy">Easy</span>
+      <div class="em-track"><div class="em-thumb"></div></div>
+      <span class="em-lbl em-lbl-pro">Pro</span>
+    </div>
+    <button id="cm-scan-btn" class="tb-pill tb-pill-scan" onclick="scanLogic()" title="Scan Logic Pro channels. Keep Mixer open!" style="box-shadow:var(--sh-glow-sm),var(--sh-inset);">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg>
+      Scan Logic
+    </button>
   </div>
-  <button id="cm-scan-btn" class="tb-pill tb-pill-scan" onclick="scanLogic()" title="Scan Logic Pro channels. Keep Mixer open!" style="box-shadow:var(--sh-glow-sm),var(--sh-inset);">
-    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg>
-    Scan Logic
-  </button>
   <div id="compact-toolbar-actions">
     <button id="cm-hotkeys-btn" onclick="showHotkeysModal()" title="Hotkey settings"><svg class="ico ico-sm"><use href="#ico-gear"/></svg></button>
     <button id="cm-pin-btn" onclick="togglePin()" title="Always on top"><svg class="ico ico-sm"><use href="#ico-pin"/></svg></button>
@@ -1551,7 +1662,7 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
         <!-- Markers button -->
         <div id="markers-wrapper" style="position:relative;margin-left:6px;display:flex;align-items:center;gap:3px;">
           <button id="markers-btn" onclick="toggleMarkersPopup()" title="Bounce by markers — set cycle ranges per bounce pass"
-            style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:var(--r);border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-xs);cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all var(--t);white-space:nowrap;">
+            style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:var(--r);border:1px solid transparent;background:var(--card);color:var(--muted);font-size:var(--fs-xs);cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all var(--t);white-space:nowrap;">
             <span style="display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-pin"/></svg></span>
             <span id="markers-btn-lbl">Markers</span>
           </button>
@@ -1596,6 +1707,26 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
         </div>
         <!-- Expanded controls (visible only when .expanded) -->
         <div class="modebar-expanded" id="modebar-expanded">
+          <span class="mb-mlbl">Master</span>
+          <button type="button" class="mb-cycle" id="mb-master" data-state="on" onclick="cycleAxis('master')" title="Master plugins — click to cycle:&#10;  On   = master plugins active (default)&#10;  Off  = bypass master plugins&#10;  Both = render two files (M + NoM)">On</button>
+          <span class="mb-badge hidden" id="mb-master-custom-badge" title="N stems have per-stem master override">0 stems</span>
+          <button type="button" class="mb-pill mb-pill-icon" id="mb-master-edit" onclick="openMasterPluginsModal()" title="Open master plugins editor&#10;(toggle individual plugin bypass)">
+            <svg class="ico" aria-hidden="true"><use href="#ico-edit"/></svg>
+          </button>
+
+          <span class="mb-div"></span>
+
+          <span class="mb-mlbl">SC</span>
+          <button type="button" class="mb-cycle" id="mb-sc" data-state="off" onclick="cycleAxis('sc')" title="Sidechain — click to cycle:&#10;  On   = include sidechain channel in stem render&#10;  Off  = no sidechain (default)&#10;  Both = render two files (with + without SC)">Off</button>
+          <span class="mb-badge hidden" id="mb-sc-custom-badge" title="N stems have per-stem SC override">0 stems</span>
+          <button type="button" class="mb-pill mb-sc-search" id="mb-sc-channel" data-has-value="false" onclick="openSidechainFromChip(event)" title="Search sidechain channel">
+            <svg class="ico mb-search-ico" aria-hidden="true"><use href="#ico-search"/></svg>
+            <span class="mb-sc-label">Search channel…</span>
+            <span class="mb-sc-clear" id="mb-sc-clear" onclick="event.stopPropagation();_clearSidechainSelection()" title="Clear sidechain channel">×</span>
+          </button>
+
+          <span class="mb-div"></span>
+
           <span class="mb-mlbl">Effects</span>
           <button type="button" class="mb-cycle" id="mb-mode" data-state="wet" onclick="cycleAxis('mode')" title="Effects pass — click to cycle:&#10;  Wet     = with effects (default)&#10;  Dry     = mute FX channels&#10;  Wet+Dry = produce both files">Wet</button>
           <button type="button" class="mb-pill mb-pill-icon" id="mb-mode-edit" onclick="openPerStemModeEditor()" title="Define which channels count as FX&#10;(used for Dry pass mute logic)">
@@ -1616,29 +1747,13 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
                 <button data-fx-clear-btn onclick="event.stopPropagation();_clearFxSelection()" title="Clear / inherit global" style="background:transparent;border:none;color:var(--muted);font-size:var(--fs-xxs);cursor:pointer;padding:2px 4px;font-family:'JetBrains Mono',monospace;">CLEAR</button>
               </div>
               <input id="fx-search" type="text" placeholder="Search…" oninput="renderFxPopover()" style="background:var(--card);border:none;border-bottom:1px solid var(--b);color:var(--text);font-size:var(--fs-xs);padding:6px 10px;font-family:'JetBrains Mono',monospace;width:100%;box-sizing:border-box;outline:none;flex-shrink:0;">
+              <div class="fx-tab-bar" style="border-bottom:1px solid var(--b);">
+                <button class="fx-tab active-dry" id="fx-tab-dry" onclick="event.stopPropagation();_switchFxTab('dry')">DRY</button>
+                <button class="fx-tab" id="fx-tab-wet" onclick="event.stopPropagation();_switchFxTab('wet')">WET</button>
+              </div>
               <div id="fx-list" style="overflow-y:auto;flex:1;padding:4px 0;"></div>
             </div>
           </div>
-
-          <span class="mb-div"></span>
-
-          <span class="mb-mlbl">Master</span>
-          <button type="button" class="mb-cycle" id="mb-master" data-state="on" onclick="cycleAxis('master')" title="Master plugins — click to cycle:&#10;  On   = master plugins active (default)&#10;  Off  = bypass master plugins&#10;  Both = render two files (M + NoM)">On</button>
-          <span class="mb-badge hidden" id="mb-master-custom-badge" title="N stems have per-stem master override">0 stems</span>
-          <button type="button" class="mb-pill mb-pill-icon" id="mb-master-edit" onclick="openMasterPluginsModal()" title="Open master plugins editor&#10;(toggle individual plugin bypass)">
-            <svg class="ico" aria-hidden="true"><use href="#ico-edit"/></svg>
-          </button>
-
-          <span class="mb-div"></span>
-
-          <span class="mb-mlbl">SC</span>
-          <button type="button" class="mb-cycle" id="mb-sc" data-state="off" onclick="cycleAxis('sc')" title="Sidechain — click to cycle:&#10;  On   = include sidechain channel in stem render&#10;  Off  = no sidechain (default)&#10;  Both = render two files (with + without SC)">Off</button>
-          <span class="mb-badge hidden" id="mb-sc-custom-badge" title="N stems have per-stem SC override">0 stems</span>
-          <button type="button" class="mb-pill mb-sc-search" id="mb-sc-channel" data-has-value="false" onclick="openSidechainFromChip(event)" title="Search sidechain channel">
-            <svg class="ico mb-search-ico" aria-hidden="true"><use href="#ico-search"/></svg>
-            <span class="mb-sc-label">Search channel…</span>
-            <span class="mb-sc-clear" id="mb-sc-clear" onclick="event.stopPropagation();_clearSidechainSelection()" title="Clear sidechain channel">×</span>
-          </button>
           <button type="button" class="mb-naming-btn" id="mb-naming-btn" onclick="openSuffixNamingEditor(event)" title="Customize file-name suffixes">Aa</button>
         </div>
       </div>
@@ -1657,14 +1772,18 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
       <div class="out-row">
         <span class="out-lbl">Name</span>
         <div style="display:flex;flex:1;position:relative;">
-          <input class="out-inp" id="name-template" placeholder="Name_Project_bpm_Cmaj_"
-            title="Prefix added before each file name. Example: Artist_Track_120bpm_Amaj_ → Artist_Track_120bpm_Amaj_DRUMS.wav"
-            oninput="saveNameTemplate();updateNamePresetUI()" style="flex:1;padding-right:28px;">
-          <button id="name-preset-arrow" onclick="toggleNamePresetDropdown()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-size:var(--fs-sm);padding:2px 4px;cursor:pointer;transition:color var(--t-fast);line-height:1;" title="Saved prefix presets">▼</button>
-          <button id="name-preset-save-btn" onclick="quickSaveNamePreset()" style="display:none;position:absolute;right:30px;top:50%;transform:translateY(-50%);background:rgba(67,233,123,.15);border:1px solid rgba(67,233,123,.4);border-radius:var(--r);color:var(--a3);font-size:var(--fs-xxs);padding:2px 8px;cursor:pointer;white-space:nowrap;" title="Save current prefix as preset">Save</button>
+          <div class="name-tpl-edit out-inp" id="name-template" contenteditable="true" data-placeholder="Type or insert wildcards…" spellcheck="false"
+            title="Drag chips to reorder. Click { } to add wildcards." style="padding-right:62px;"></div>
+          <div id="name-btn-group" style="position:absolute;right:0;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:4px;padding-right:5px;">
+            <button id="name-preset-save-btn" onclick="quickSaveNamePreset()" style="display:none;background:rgba(67,233,123,.15);border:1px solid rgba(67,233,123,.4);border-radius:var(--r);color:var(--a3);font-size:var(--fs-xxs);padding:2px 8px;cursor:pointer;white-space:nowrap;" title="Save current prefix as preset">Save</button>
+            <button id="wc-insert-btn" onclick="toggleWildcardsDropdown(event)" title="Insert wildcards / presets">{ }</button>
+            <button id="name-preset-arrow" onclick="toggleNamePresetDropdown()" style="background:none;border:none;color:var(--muted);font-size:var(--fs-sm);padding:2px 4px;cursor:pointer;transition:color var(--t-fast);line-height:1;" title="Saved prefix presets">▼</button>
+            <button id="name-tpl-clear" onclick="clearNameTemplate()" title="Clear naming field"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+          </div>
           <div id="name-preset-dropdown" class="dropdown-panel">
             <div id="name-preset-list"></div>
           </div>
+          <div id="wc-dropdown" class="dropdown-panel"></div>
         </div>
       </div>
       <div class="out-row" id="sidechain-row">
@@ -1696,6 +1815,7 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
         <button class="fmt-main-btn" id="fmt-main-btn" onclick="openFormatModal()">
           <span class="fmt-tag fmt-tag-wav" id="fmt-bar-wav-tag">WAV</span>
           <span class="fmt-tag fmt-tag-mp3-off" id="fmt-bar-mp3-tag">MP3</span>
+          <span class="fmt-tag fmt-tag-m4a-off" id="fmt-bar-m4a-tag">M4A</span>
           <span class="fmt-bar-detail" id="fmt-bar-detail">—</span>
           <span id="fmt-bar-source" class="fmt-source-badge fmt-source-preset">PRESET</span>
         </button>
@@ -1827,6 +1947,11 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
               <span class="fmt-hdr-chk" onclick="event.stopPropagation();fmtToggleOnly('mp3')"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 5l2 2 4-4"/></svg></span>
               <span class="fmt-hdr-lbl">MP3</span>
             </div>
+            <div class="fmt-hdr-fmt" id="fmt-tab-m4a" onclick="fmtTabClick('m4a')">
+              <input type="checkbox" id="fmt-chk-m4a" style="display:none">
+              <span class="fmt-hdr-chk" onclick="event.stopPropagation();fmtToggleOnly('m4a')"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 5l2 2 4-4"/></svg></span>
+              <span class="fmt-hdr-lbl">M4A</span>
+            </div>
           </div>
           <button class="eb-close" onclick="closeFormatModal()" title="Close"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
         </div>
@@ -1915,6 +2040,25 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
                 <label class="fmt-cb-row"><input type="checkbox" id="fmt-mp3-vbr" onchange="onFmtFieldChange()"><span>Use Variable Bit Rate (VBR)</span></label>
                 <label class="fmt-cb-row"><input type="checkbox" id="fmt-mp3-best" onchange="onFmtFieldChange()"><span>Use Best Encoding</span></label>
                 <label class="fmt-cb-row"><input type="checkbox" id="fmt-mp3-filter10" onchange="onFmtFieldChange()"><span>Filter Below 10 Hz</span></label>
+              </div>
+            </div>
+            <!-- M4A fields -->
+            <div id="fmt-m4a-fields" style="display:none">
+              <div class="fmt-fields-grid">
+                <div class="fmt-field-group full">
+                  <div class="fmt-field-lbl">Encoding</div>
+                  <select class="fmt-select" id="fmt-m4a-encoding" onchange="onFmtFieldChange();updateM4aBitRateOptions();">
+                    <option>Advanced Audio Codec (AAC)</option>
+                    <option>Apple Lossless</option>
+                  </select>
+                </div>
+                <div class="fmt-field-group full" id="fmt-m4a-bitrate-group">
+                  <div class="fmt-field-lbl">Bit rate</div>
+                  <select class="fmt-select" id="fmt-m4a-bitrate" onchange="onFmtFieldChange()"></select>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:8px;" id="fmt-m4a-vbr-row">
+                <label class="fmt-cb-row"><input type="checkbox" id="fmt-m4a-vbr" onchange="onFmtFieldChange();updateM4aBitRateOptions();"><span>Use Variable Bit Rate (VBR)</span></label>
               </div>
             </div>
             <!-- Mode + Normalize (always shown) -->
@@ -2589,12 +2733,30 @@ formatPresets.forEach(p => {
   if (p.mp3BestEncoding === undefined) p.mp3BestEncoding = true;
   if (p.mp3Filter10hz   === undefined) p.mp3Filter10hz   = true;
   if (p.mp3VBR          === undefined) p.mp3VBR          = false;
+  // M4A defaults (added later — backward compatibility)
+  if (p.m4aOn          === undefined) p.m4aOn          = false;
+  if (!p.m4aEncoding)                  p.m4aEncoding    = 'Advanced Audio Codec (AAC)';
+  if (!p.m4aBitRate)                   p.m4aBitRate     = '128 kbit/s';
+  if (p.m4aVBR         === undefined) p.m4aVBR         = false;
 });
 let activeFmtId     = localStorage.getItem('sb4_fmt_active') || 'fp_d1';
 let editingFmtId    = activeFmtId;
 let sidechainChannel = localStorage.getItem('sb4_sidechain') || null;
 let sidechainIndex   = JSON.parse(localStorage.getItem('sb4_sidechain_idx') ?? 'null');
 let sidechainEnabled = localStorage.getItem('sb4_sidechain_on') === 'true';
+// Multi-sidechain: array of {name, index}. Migrates from legacy single-channel on first load.
+let sidechainChannels = (() => {
+  try {
+    const saved = localStorage.getItem('sb4_sc_channels');
+    if (saved) return JSON.parse(saved);
+    const legacy = localStorage.getItem('sb4_sidechain') || localStorage.getItem('sb4_sidechain_ch');
+    if (legacy) {
+      const idx = JSON.parse(localStorage.getItem('sb4_sidechain_idx') ?? 'null');
+      return [{ name: legacy, index: idx }];
+    }
+    return [];
+  } catch(e) { return []; }
+})();
 let hiddenMixes  = new Set(JSON.parse(localStorage.getItem('sb4_hidden_mixes') || '[]'));
 let showHidden   = localStorage.getItem('sb4_show_hidden') === 'true';
 
@@ -2754,6 +2916,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
   document.getElementById('out-folder').textContent = outputFolder;
   if (outputFolder !== '~/Desktop') document.getElementById('out-folder').classList.add('set');
+  // Init wildcard chip editor for name-template + restore saved value
+  if (typeof _initWildcardEditor === 'function') {
+    _initWildcardEditor();
+    if (nameTemplate) _renderTemplate(nameTemplate);
+    if (typeof updateNamePresetUI === 'function') updateNamePresetUI();
+  }
   const snEl = document.getElementById('session-name'); if (snEl) snEl.value = sessionName;
   if (projectName) { setProjectName(projectName); }
   // Init filter buttons
@@ -2977,32 +3145,30 @@ let _recoveryBadgeActive = false;
 async function _withRecoveryBadge(title, subtitle, asyncFn) {
   if (_recoveryBadgeActive || bouncing || _scanRunning) return;
   _recoveryBadgeActive = true;
-  // Show scan badge with recovery text
-  _setScanTitle(title || 'Restoring Logic…');
-  _setScanSub(subtitle || 'Hold on…');
+  // Reset stale cancel flag from a previous cancelled scan — without this, a leftover
+  // _scanCancelled=true would short-circuit the cleanup below and leave the badge stuck.
+  window._scanCancelled = false;
   const scanWarn = document.getElementById('scan-warning');
-  const cancelBtn = document.getElementById('scan-cancel-btn');
-  if (scanWarn) scanWarn.classList.add('show');
-  // Keep cancel button visible so user can abort the recovery
-  // Shrink to badge (click-through so Logic can receive clicks)
-  document.body.classList.add('scan-badge');
-  try { await window.api.enterScanBadge(); } catch(e) { console.warn('[EB] badge enter:', e); }
-  // Activate Logic so it's in front and can receive AX/scroll events
-  try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) { console.warn('[EB] activate Logic:', e); }
-  await window.api.wait(200);
-  // Run the recovery operation
-  try { await asyncFn(); } catch(e) { console.warn('[EB] recovery op:', e); }
-  // If user cancelled during recovery, cancelScan() already cleaned up
-  if (window._scanCancelled) { _recoveryBadgeActive = false; return; }
-  // Restore app
-  document.body.classList.remove('scan-badge');
-  try { await window.api.exitScanBadge(); } catch(e) { console.warn('[EB] badge exit:', e); }
-  if (scanWarn) scanWarn.classList.remove('show');
-  // Restore badge texts for normal scan use
-  _setScanTitle('Scanning Logic Pro…');
-  _setScanSub("Don't touch anything — we'll handle it all");
-  await window.api.focusApp();
-  _recoveryBadgeActive = false;
+  try {
+    _setScanTitle(title || 'Restoring Logic…');
+    _setScanSub(subtitle || 'Hold on…');
+    if (scanWarn) scanWarn.classList.add('show');
+    document.body.classList.add('scan-badge');
+    try { await window.api.enterScanBadge(); } catch(e) { console.warn('[EB] badge enter:', e); }
+    try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) { console.warn('[EB] activate Logic:', e); }
+    await window.api.wait(200);
+    try { await asyncFn(); } catch(e) { console.warn('[EB] recovery op:', e); }
+  } finally {
+    // ALWAYS clean up — even if asyncFn or any step above throws / cancels.
+    // Cleanup ops are idempotent, so running them again after cancelScan() is safe.
+    document.body.classList.remove('scan-badge');
+    try { await window.api.exitScanBadge(); } catch(e) { console.warn('[EB] badge exit:', e); }
+    if (scanWarn) scanWarn.classList.remove('show');
+    _setScanTitle('Scanning Logic Pro…');
+    _setScanSub("Don't touch anything — we'll handle it all");
+    try { await window.api.focusApp(); } catch(e) { console.warn('[EB] focus:', e); }
+    _recoveryBadgeActive = false;
+  }
 }
 
 async function cancelScan() {
@@ -3189,13 +3355,6 @@ async function scanLogic(isAutoRetry = false) {
   try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) { console.warn('[EB]', e); }
   await window.api.wait(300);
 
-  // ── Step 0-pre: Close plugin + editor windows (all Spaces) ──
-  if (window._scanCancelled) return;
-  try {
-    const clw = await window.api.runShell('/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/CloseLogicWindows');
-    if (clw?.stdout) { const n = parseInt(clw.stdout.trim()) || 0; if (n > 0) log(`Closed ${n} extra Logic window(s)`, 'info'); }
-  } catch(e) { console.warn(`CloseLogicWindows err: ${e}`); }
-
   await window.api.setAlwaysOnTop(true, 'pop-up-menu');
 
   // ── Step 0b: Exit fullscreen + maximize Logic ─────────────────────────────────
@@ -3207,6 +3366,14 @@ async function scanLogic(isAutoRetry = false) {
       try { await window.api.moveToLogicSpace(); await window.api.wait(150); } catch(e) { console.warn('[EB]', e); }
     }
   } catch(e) { console.warn(`maximizeLogic err: ${e}`); }
+
+  // ── Close plugin + editor windows — moved AFTER maximizeLogic so Space transition
+  // is complete and AXAllWindows call in CloseLogicWindows doesn't block ──────────
+  if (window._scanCancelled) return;
+  try {
+    const clw = await window.api.runShell('/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/CloseLogicWindows');
+    if (clw?.stdout) { const n = parseInt(clw.stdout.trim()) || 0; if (n > 0) log(`Closed ${n} extra Logic window(s)`, 'info'); }
+  } catch(e) { console.warn(`CloseLogicWindows err: ${e}`); }
 
   // ── Close panels (Inspector, Library, Browsers) + resize mixer if already open ──
   if (window._scanCancelled) return;
@@ -4044,11 +4211,19 @@ function _renderChannelsImpl() {
   }
 
   // Channels currently in queue (stems only, not done) — tree badges mark these
+  // _queuedIdx: by channel index (fast lookup for regular channels)
+  // _queuedNames: by normalized name (fallback for stack sub-channels not in channels[])
   const _queuedIdx = new Set();
+  const _queuedNames = new Set();
+  const _addQueued = (j) => {
+    if (j.channelIndex != null) _queuedIdx.add(j.channelIndex);
+    if (j.logicName) _queuedNames.add(normalizeName(j.logicName));
+    if (j.name)      _queuedNames.add(normalizeName(j.name));
+  };
   queue.forEach(q => {
-    if (q.type === 'stem' && q.status !== 'done' && q.channelIndex != null) _queuedIdx.add(q.channelIndex);
+    if (q.type === 'stem' && q.status !== 'done') _addQueued(q);
     if (q.type === 'set' && Array.isArray(q.jobs)) q.jobs.forEach(j => {
-      if (j.type === 'stem' && j.status !== 'done' && j.channelIndex != null) _queuedIdx.add(j.channelIndex);
+      if (j.type === 'stem' && j.status !== 'done') _addQueued(j);
     });
     if (q.type === 'group' && q.status !== 'done' && Array.isArray(q.channels)) q.channels.forEach(c => {
       if (c.channelIndex != null) _queuedIdx.add(c.channelIndex);
@@ -4230,13 +4405,23 @@ function _renderChannelsImpl() {
           return item && item.type === 'track';
         });
         const childCount = _descTrackNames.length;
-        // Count descendants currently queued (by channel index lookup)
+        // Count descendants currently queued — by index (regular channels) or name (stack sub-channels
+        // not visible in mixer and therefore absent from channels[])
         let queuedCount = 0;
         _descTrackNames.forEach(n => {
           const k = normalizeName(n);
           const cc = chByName[k];
-          if (cc && _queuedIdx.has(cc.index)) queuedCount++;
+          if ((cc && _queuedIdx.has(cc.index)) || _queuedNames.has(k)) queuedCount++;
         });
+        // Count selected (highlighted by click) children when collapsed — shows X/Y badge
+        let selectedCount = 0;
+        if (isCollapsed) {
+          _descTrackNames.forEach(n => {
+            const k = normalizeName(n);
+            const cc = chByName[k];
+            if (cc && selectedIdx.has(cc.index)) selectedCount++;
+          });
+        }
         // Self queued (group channel itself) + badge
         const groupChSelfQueued = ch && _queuedIdx.has(ch.index);
         const div = document.createElement('div');
@@ -4246,11 +4431,14 @@ function _renderChannelsImpl() {
         const qBadgeHtml = queuedCount > 0
           ? `<span class="tree-q-badge" title="${queuedCount} of ${childCount} in queue">${queuedCount}/${childCount}</span>`
           : (groupChSelfQueued ? `<span class="tree-q-badge q-solo" title="In queue"><svg class="ico ico-sm"><use href="#ico-check"/></svg></span>` : '');
+        const selBadgeHtml = selectedCount > 0 && queuedCount === 0
+          ? `<span class="tree-q-badge" title="${selectedCount} of ${childCount} selected">${selectedCount}/${childCount}</span>`
+          : '';
         div.innerHTML = `
           <span class="tree-toggle">${hasChildren ? `<svg class="ico ico-sm" style="transition:transform var(--t);transform:rotate(${isCollapsed ? '-90deg' : '0deg'})"><use href="#ico-chevron"/></svg>` : ''}</span>
           <span class="tree-group-dot" style="background:${color}"></span>
           <span class="tree-group-name">${t.name}</span>
-          ${qBadgeHtml}
+          ${qBadgeHtml}${selBadgeHtml}
           ${childCount > 0 ? `<span class="tree-group-idx">${childCount}</span>` : ''}
           ${groupMuted ? '<span class="ch-mute-badge">M</span>' : ''}
         `;
@@ -6717,6 +6905,16 @@ function _renderMergeChannelList() {
       nm.textContent = t.name;
       row.appendChild(nm);
       const kc = getAllDescendants(t.name).filter(k=>k.type==='track').length;
+      if (!expanded && kc > 0) {
+        const checkedKids = getAllDescendants(t.name).filter(k => k.type === 'track' && (c => c && inMerge.has(c.index))(chMap[k.num])).length;
+        if (checkedKids > 0) {
+          const badge = document.createElement('span');
+          badge.className = 'tree-q-badge';
+          badge.title = `${checkedKids} of ${kc} selected`;
+          badge.textContent = `${checkedKids}/${kc}`;
+          row.appendChild(badge);
+        }
+      }
       if (kc > 0) { const c=document.createElement('span'); c.style.cssText='font-size:var(--fs-xxs);color:var(--muted);flex-shrink:0;'; c.textContent=kc; row.appendChild(c); }
       cont.appendChild(row);
       if (expanded) {
@@ -7748,7 +7946,7 @@ function removeQItem(id) {
 }
 
 function clearDone() { queue = queue.filter(q => q.status !== 'done'); saveQueue(); renderQueue(); updateBounceBtn(); }
-function clearQueue() { if (!confirm('Clear queue?')) return; if (bouncing) cancelBounce(); queue = []; saveQueue(); renderQueue(); updateBounceBtn(); }
+function clearQueue() { if (!confirm('Clear queue?')) return; if (bouncing) cancelBounce(); queue = []; saveQueue(); renderQueue(); updateBounceBtn(); _updateGlobalOverrideIndicators(); }
 function resetQueueItem(id) {
   const item = queue.find(q => q.id === id);
   if (!item) return;
@@ -7773,7 +7971,7 @@ function _currentState() {
     versionHidden: JSON.stringify([..._versionHiddenChannels]),
     espHidden: localStorage.getItem('sb4_esp_hidden') || '[]',
     selected: JSON.stringify([...selectedIdx]),
-    nameTemplate: document.getElementById('name-template')?.value || '',
+    nameTemplate: (typeof _serializeTemplate === 'function') ? _serializeTemplate(document.getElementById('name-template')) : (document.getElementById('name-template')?.value || ''),
     clickRangeAnchor: _clickRangeAnchor ?? null,
     clickRangeAnchorOrder: _clickRangeAnchorOrder ? [..._clickRangeAnchorOrder] : null
   };
@@ -7798,7 +7996,11 @@ function _restoreState(s) {
   if (s.selected) selectedIdx = new Set(JSON.parse(s.selected));
   if (s.nameTemplate !== undefined) {
     const inp = document.getElementById('name-template');
-    if (inp) { inp.value = s.nameTemplate; saveNameTemplate(); }
+    if (inp) {
+      if (typeof _renderTemplate === 'function') _renderTemplate(s.nameTemplate);
+      else inp.value = s.nameTemplate;
+      saveNameTemplate();
+    }
   }
   if ('clickRangeAnchor' in s) {
     _clickRangeAnchor = s.clickRangeAnchor;
@@ -8455,6 +8657,9 @@ document.getElementById('ch-list').addEventListener('dragstart', (e) => {
   if (isNaN(idx)) return;
   const ch = channels.find(c => c.index === idx);
   if (!ch) return;
+  // Ensure the Electron window is the active (key) window before drag starts.
+  // After a bounce cancel, Logic may be frontmost; drag requires EasyBounce to hold focus.
+  if (window.api?.focusApp) window.api.focusApp().catch(() => {});
   div._wasDragged = true;
   e.dataTransfer.setData('channel-name', ch.name);
   e.dataTransfer.setData('channel-index', String(ch.index));
@@ -8471,6 +8676,20 @@ document.getElementById('ch-list').addEventListener('dragstart', (e) => {
   }
   e.dataTransfer.effectAllowed = 'copy';
 });
+
+// ── Ensure window focus on mousedown so drag-to-queue works after bounce cancel ──
+// Logic is activated during the async cancel cleanup; this re-focuses EasyBounce on
+// any mousedown on a channel item. We call BOTH:
+//   - window.focus() — synchronous, native browser API, fires immediately
+//   - window.api.focusApp() — IPC fallback to make the Electron BrowserWindow key window
+// HTML5 drag requires the window to be the key/focused window before the browser
+// recognises mousedown→mousemove as a drag sequence.
+document.getElementById('ch-list').addEventListener('mousedown', e => {
+  if (e.target.closest('[data-ch-idx]')) {
+    try { window.focus(); } catch(_) {}
+    if (window.api?.focusApp) window.api.focusApp().catch(() => {});
+  }
+}, true); // capture phase — fires before child handlers
 
 // ── Click / shift+drag from empty area in ch-list ──
 (function() {
@@ -8782,6 +9001,27 @@ function cancelBounce() {
   window._userCancelled = true;
   bouncing = false;
   if (window.api?.hideBounceOverlay) window.api.hideBounceOverlay().catch(() => {});
+  // 1b. Reset bounceMode immediately so any setIgnoreMouseEvents / window-flag state
+  //     applied for bounce is undone. Without this, drag-and-drop can stay broken even
+  //     after cleanup because clicks may forward through but native drag does not.
+  if (window.api?.setBounceMode) window.api.setBounceMode(false).catch(() => {});
+  // 1c. Bring EasyBounce to front. The async finally block will activate Logic for AX
+  //     cleanup (~2-4 sec), so we don't poll DURING cleanup (would fight AX writes).
+  //     After typical cleanup window we re-focus a few times — macOS sometimes needs
+  //     multiple focus attempts to make the window the key window for HTML5 drag.
+  if (window.api?.focusApp) window.api.focusApp().catch(() => {});
+  try { window.focus(); } catch(_) {}
+  // Schedule post-cleanup focus reinforcement (fires after AX cleanup typically ends)
+  if (window._postCancelFocusTimer) clearTimeout(window._postCancelFocusTimer);
+  window._postCancelFocusTimer = setTimeout(() => {
+    let n = 0;
+    const id = setInterval(() => {
+      n++;
+      try { window.focus(); } catch(_) {}
+      if (window.api?.focusApp) window.api.focusApp().catch(() => {});
+      if (n >= 6) clearInterval(id); // 6 attempts × 400ms = 2.4 sec of nudging
+    }, 400);
+  }, 4000); // wait 4s for AX cleanup to finish
   // 2. Signal main.js: sets cancelRequested=true → all wait() calls resolve instantly
   //    Fire-and-forget (no await) — message arrives before next 80ms poll
   if (window.api) window.api.cancelBounce();
@@ -8836,6 +9076,8 @@ function cancelBounce() {
   _preExpandQueue = null;
   renderQueue();
   saveQueue();
+  // Re-render channel list so draggable attributes are fresh and drag-to-queue works immediately
+  if (typeof renderChannels === 'function') renderChannels();
 }
 
 let _stemStartTime = null;    // module-level so triggerBounce() can access it
@@ -8916,7 +9158,18 @@ async function _mpRestoreAfterBounce() {
 
 async function doBounce() {
   if (bouncing) return;
-  if (!(await _audit())) { _auditFail(); return; }
+  // LOCK IMMEDIATELY — without this the long mixer-reopen pre-bounce flow (5-15 sec)
+  // is unguarded; user clicks Bounce again, two parallel doBounce() invocations start
+  // and the AX/solo/render flows step on each other.
+  bouncing = true; updateBounceBtn();
+  // Freeze "now" for the entire bounce session — $date / $time wildcards must resolve
+  // to the same value during render-name vs post-render file lookup. Without this the
+  // file gets named "...12-42..." but our findFile() searches for "...12-45..." 3
+  // minutes later → false "File missing" failure even though the file is there.
+  window._bounceClockSnapshot = new Date();
+  // Helper: release lock when an early-return path exits before the main bounce loop.
+  const _earlyExit = () => { bouncing = false; updateBounceBtn(); window._bounceClockSnapshot = null; };
+  if (!(await _audit())) { _auditFail(); _earlyExit(); return; }
   // If a schedule timer is pending, cancel it — manual bounce replaces it
   if (_scheduleTimer) { clearTimeout(_scheduleTimer); _scheduleTimer = null; }
   if (_scheduleCountdown) { clearInterval(_scheduleCountdown); _scheduleCountdown = null; }
@@ -8936,8 +9189,8 @@ async function doBounce() {
     saveQueue(); renderQueue();
   }
   const pending = queue.filter(q => q.status === 'pending');
-  if (pending.length === 0) { toast('Nothing to bounce'); return; }
-  if (!window.api) { toast('Needs Electron'); return; }
+  if (pending.length === 0) { toast('Nothing to bounce'); _earlyExit(); return; }
+  if (!window.api) { toast('Needs Electron'); _earlyExit(); return; }
 
   // Sort queue to minimise expensive transitions between stems.
   // Primary   (most expensive — AX plugin clicks): master on→both→off→custom
@@ -8968,6 +9221,26 @@ async function doBounce() {
   // Within a single doBounce session this state is preserved across automatic retries
   // (it lives on the same job object and is only cleared here, before the new run starts).
   for (const j of pending) j._passSucceeded = null;
+  // Snapshot the stable queue position for $num — without this, multi-pass jobs lose
+  // their number (job.name gets a "_Wet" suffix appended for the pass, queue.findIndex
+  // by name returns -1). Also fixes $num for duplicate-named stems (e.g. two "Drums"
+  // added via Version) — they both kept the same num, causing filename collisions.
+  pending.forEach((j, i) => { j._bounceNum = String(i + 1).padStart(2, '0'); });
+  // Snapshot format params at bounce start so $samplerate/$bitdepth/$format wildcards
+  // stay consistent between render-time naming and post-render file lookup, even if
+  // the user clicks a different preset mid-bounce.
+  try {
+    const _p = (typeof getActiveFmtPreset === 'function') ? getActiveFmtPreset() : null;
+    if (_p) {
+      window._bounceFmtSnapshot = {
+        sr: _formatSampleRate(_p.sampleRate),
+        bd: _formatBitDepth(_p.bitDepth),
+        fmt: _formatFileType(_p.fileType),
+      };
+    } else {
+      window._bounceFmtSnapshot = null;
+    }
+  } catch(_) { window._bounceFmtSnapshot = null; }
 
   // Sync metronome state from Logic right now — localStorage may be stale
   // (e.g. user toggled metronome directly in Logic since last scan)
@@ -9079,8 +9352,8 @@ async function doBounce() {
     const em = await window.api.ensureMixer();
     if (em && em.opened) {
       // Mixer was closed — we just opened it; re-apply user's filter prefs
-      log('Mixer was closed — reopened automatically', 'warn');
-      toast('⚠ Mixer reopened');
+      log('Mixer was closed — reopened — preparing…', 'warn');
+      toast('⚠ Mixer reopened — preparing bounce…');
       await window.api.wait(500);
       await window.api.setAlwaysOnTop(true);
       await window.api.mixerEnableAll();
@@ -9101,9 +9374,16 @@ async function doBounce() {
         localStorage.setItem(SK.channels, JSON.stringify(channels));
         renderChannels();
         log(`✓ Mixer restored — ${channels.length} channels`, 'ok');
+        // Shrink the just-opened mixer to ~30% width (same as scanLogic does at end).
+        // Without this, the mixer stays at full size and visually delays the next step
+        // by hiding Logic's bounce dialog behind it.
+        if (window.api?.coverMixer) {
+          try { await window.api.coverMixer(); } catch(e) { console.warn('[EB] coverMixer:', e); }
+        }
       } else {
         toast('⚠ Could not restore mixer — is Logic running?');
         log('Could not restore mixer after reopen', 'err');
+        _earlyExit();
         return;
       }
     }
@@ -9120,12 +9400,13 @@ async function doBounce() {
       toast(`⚠ Logic channels changed — rescan first`);
       log(`✗ Bounce stopped: channel count changed since last scan (${channels.length} scanned → ${_liveCount} now) — rescan Logic and retry`, 'err');
       if (_preExpandQueue) { queue = JSON.parse(_preExpandQueue); _preExpandQueue = null; saveQueue(); renderQueue(); }
+      _earlyExit();
       return;
     }
   }
   // ──────────────────────────────────────────────────────────────────────────
 
-  bouncing = true; updateBounceBtn();
+  // bouncing already true — set at the top of doBounce to prevent double-fire during prep
   // Enter mini mode first (await so window is fully resized before overlay appears)
   if (!window._miniActive) await showMiniPlayer();
   // Skip overlay if user closed it 3+ times (pro mode — they don't need reminders).
@@ -9440,7 +9721,9 @@ async function doBounce() {
 
     // Verify file actually landed in the folder AND is newer than stem start
     // Catches: bounce "finished" in 1s (dialog closed instantly), old file from prev run
-    if (ok && !window._userCancelled && window.api.findFile) {
+    // Skip when all passes were pre-existing on disk (_lastJobAllSkipped=true) — the file
+    // predates _stemStartTime by definition, so mtime check would falsely fail.
+    if (ok && !window._userCancelled && !window._lastJobAllSkipped && window.api.findFile) {
       const _mSuffix = window._currentBounceMarkerSuffix || '';
       const rawJobName = applyNameTemplate(job.name + _mSuffix).replace(/[/\\:*?"<>|]/g, '_');
       const stemPrefix = rawJobName || (job.name + _mSuffix).replace(/[/\\:*?"<>|]/g, '_');
@@ -9587,7 +9870,7 @@ async function doBounce() {
         const cancelNames   = (window._cancelMutedNames   || []).filter(n => !window._mixAlreadyMuted?.has(n));
         const hasMuted    = cancelIndices.length > 0 || cancelNames.length > 0;
         const hasSoloed   = !!window._cancelSoloedName;
-        const hasSidechain = !!window._cancelSidechainName;
+        const hasSidechain = !!(window._cancelSidechainChannels?.length || window._cancelSidechainName);
         const hasGroup    = (window._cancelGroupNames || []).length > 0;
 
         // Run unmute + unsolo in parallel (independent AX operations)
@@ -9611,11 +9894,12 @@ async function doBounce() {
         }
         if (hasSidechain) {
           restoreOps.push((async () => {
-            try {
-              window._cancelSidechainIndex != null
-                ? await window.api.unsoloIndex(window._cancelSidechainIndex)
-                : await window.api.unsoloByName(window._cancelSidechainName);
-            } catch(e) { console.warn('[EB]', e); }
+            const scList = window._cancelSidechainChannels || (window._cancelSidechainName ? [{ name: window._cancelSidechainName, index: window._cancelSidechainIndex }] : []);
+            for (const sc of scList) {
+              try {
+                sc.index != null ? await window.api.unsoloIndex(sc.index) : await window.api.unsoloByName(sc.name);
+              } catch(e) { console.warn('[EB]', e); }
+            }
           })());
         }
         if (hasGroup) {
@@ -9657,13 +9941,16 @@ async function doBounce() {
 
       // ── STEP 6: Restore EasyBounce ──
       if (window._userCancelled) {
-        if (window._miniActive) { await exitMiniMode(); }
+        // Wrap each step in try/catch so a single failure can't leave the cancel-overlay stuck.
+        if (window._miniActive) {
+          try { await exitMiniMode(); } catch(e) { console.warn('[EB] exitMiniMode:', e); }
+        }
         try { await window.api.focusApp(); } catch(e) { console.warn('[EB]', e); }
         await window.api.wait(200).catch(() => {});
-        // Now app is fully visible — fade cancel overlay and drop alwaysOnTop
         await window.api.setAlwaysOnTop(false).catch(() => {});
+        // ALWAYS fade out the cancel overlay — even if any of the steps above failed.
         const co = document.getElementById('cancel-overlay');
-        if (co) { co.classList.add('fade-out'); setTimeout(() => { co.classList.remove('show','fade-out'); co.style.willChange = 'auto'; }, 400); } // Opt #7: release GPU layer after fade
+        if (co) { co.classList.add('fade-out'); setTimeout(() => { co.classList.remove('show','fade-out'); co.style.willChange = 'auto'; }, 400); }
         toast('✓ Cancelled — channels restored');
       }
     }
@@ -9673,6 +9960,8 @@ async function doBounce() {
   if (window.api?.setBounceMode) await window.api.setBounceMode(false).catch(()=>{});
   if (!window._userCancelled && window.api?.moveToLogicSpace) await window.api.moveToLogicSpace().catch(()=>{});
   bouncing = false; updateBounceBtn();
+  // Release the clock snapshot so subsequent UI redraws (preview field) show live values.
+  window._bounceClockSnapshot = null;
   if (window.api?.releaseLogicPid) window.api.releaseLogicPid().catch(() => {});
   if (window.api?.hideBounceOverlay) window.api.hideBounceOverlay().catch(() => {});
   clearInterval(_timerInterval);
@@ -9763,7 +10052,7 @@ async function doBounce() {
         }),
         totalTime: sessionSec,
         totalFiles: totalDone,
-        namePrefix: (document.getElementById('name-template')?.value || '').trim(),
+        namePrefix: ((typeof _serializeTemplate === 'function') ? _serializeTemplate(document.getElementById('name-template')) : (document.getElementById('name-template')?.value || '')).trim(),
         format: localStorage.getItem('sb4_fmt_current') || null,
         masterPlugins: _masterPlugins.length > 0 ? [..._masterPlugins] : null,
         sidechain: sidechainEnabled ? sidechainChannel : null,
@@ -9984,22 +10273,34 @@ async function bounceStem(job, folder, isFirst) {
 
   // 2. Solo sidechain if enabled
   if (window._userCancelled) return false;
-  const _scIdx = sidechainIndex; const _scName = sidechainChannel;
   // Compare against logic name (not job.name) — in multi-pass job.name has a suffix like
   // "Audio 1_Master" so a sidechain pointing at "Audio 1" would otherwise re-press solo on
   // the same channel and toggle it OFF.
-  if (sidechainEnabled && _scName && _scName !== _jLogicName) {
-    let scr = _scIdx != null
-      ? await window.api.soloIndex(_scIdx)
-      : await window.api.soloByName(_scName);
-    if (!scr?.ok || scr?.error) {
-      await window.api.wait(400);
-      scr = _scIdx != null ? await window.api.soloIndex(_scIdx) : await window.api.soloByName(_scName);
-      if (!scr?.ok || scr?.error) { log(`✗ Sidechain solo failed: "${_scName}"`, 'err'); return false; }
+  const _scChannelsList = (window._currentPass?.scChannels) || sidechainChannels;
+  // SC active when: pass.sc !== 'off' (covers per-stem Custom even if global sidechainEnabled=false)
+  // OR legacy global sidechainEnabled=true with a non-empty list.
+  const _passScState = window._currentPass?.sc;
+  const _scActive = (_passScState != null)
+    ? (_passScState !== 'off' && _scChannelsList.length > 0)
+    : (sidechainEnabled && _scChannelsList.length > 0);
+  const _activeSc = _scActive ? _scChannelsList.filter(sc => sc.name && sc.name !== _jLogicName) : [];
+  if (_activeSc.length > 0) {
+    const soloResults = [];
+    for (const sc of _activeSc) {
+      let scr = sc.index != null ? await window.api.soloIndex(sc.index) : await window.api.soloByName(sc.name);
+      if (!scr?.ok || scr?.error) {
+        await window.api.wait(400);
+        scr = sc.index != null ? await window.api.soloIndex(sc.index) : await window.api.soloByName(sc.name);
+        if (!scr?.ok || scr?.error) { log(`✗ Sidechain solo failed: "${sc.name}"`, 'err'); return false; }
+      }
+      soloResults.push(sc);
     }
-    window._cancelSidechainName = _scName; window._cancelSidechainIndex = _scIdx;
+    window._cancelSidechainChannels = soloResults;
+    // legacy compat:
+    window._cancelSidechainName  = soloResults[0]?.name  || null;
+    window._cancelSidechainIndex = soloResults[0]?.index ?? null;
     await window.api.wait(300);
-    log('🔒 Sidechain: ' + _scName + ' + ' + job.name, 'info');
+    log('🔒 SC: ' + soloResults.map(s=>s.name).join(', ') + ' + ' + job.name, 'info');
   }
 
   // 3. Render
@@ -10015,13 +10316,13 @@ async function bounceStem(job, folder, isFirst) {
     await window.api.wait(1500);
     await window.api.moveToLogicSpace().catch(() => {});
     await activateLogicForAX();
-    // Unsolo sidechain FIRST (compare against _jLogicName for multi-pass safety)
-    if (sidechainEnabled && _scName && _scName !== _jLogicName) {
-      let _sr = _scIdx != null
-        ? await window.api.unsoloIndex(_scIdx)
-        : await window.api.unsoloByName(_scName);
-      if (!_sr?.ok) { await window.api.wait(400); _scIdx != null ? await window.api.unsoloIndex(_scIdx) : await window.api.unsoloByName(_scName); }
-      window._cancelSidechainName = null; window._cancelSidechainIndex = null;
+    // Unsolo sidechain FIRST — mirror the solo condition (don't depend on global sidechainEnabled)
+    if (_activeSc.length > 0) {
+      for (const sc of _activeSc) {
+        let _sr = sc.index != null ? await window.api.unsoloIndex(sc.index) : await window.api.unsoloByName(sc.name);
+        if (!_sr?.ok) { await window.api.wait(400); sc.index != null ? await window.api.unsoloIndex(sc.index) : await window.api.unsoloByName(sc.name); }
+      }
+      window._cancelSidechainChannels = null; window._cancelSidechainName = null; window._cancelSidechainIndex = null;
       await window.api.wait(300);
     }
     // Unsolo main stem — check result and retry once if Logic didn't respond
@@ -10098,19 +10399,30 @@ async function bounceGroup(job, folder, isFirst) {
 
   // Solo sidechain if enabled and not already in group
   if (window._userCancelled) return false;
-  const _scIdx = sidechainIndex; const _scName = sidechainChannel;
-  if (sidechainEnabled && _scName && !chans.some(c => c.name === _scName)) {
-    let scr = _scIdx != null
-      ? await window.api.soloIndex(_scIdx)
-      : await window.api.soloByName(_scName);
-    if (!scr?.ok || scr?.error) {
-      await window.api.wait(400);
-      scr = _scIdx != null ? await window.api.soloIndex(_scIdx) : await window.api.soloByName(_scName);
-      if (!scr?.ok || scr?.error) { log(`✗ Sidechain solo failed: "${_scName}"`, 'err'); return false; }
+  const _scChannelsList = (window._currentPass?.scChannels) || sidechainChannels;
+  // SC active when pass.sc !== 'off' (covers per-stem Custom even if global off) OR legacy sidechainEnabled.
+  const _passScState = window._currentPass?.sc;
+  const _scActive = (_passScState != null)
+    ? (_passScState !== 'off' && _scChannelsList.length > 0)
+    : (sidechainEnabled && _scChannelsList.length > 0);
+  const _activeSc = _scActive ? _scChannelsList.filter(sc => sc.name && !chans.some(c => c.name === sc.name)) : [];
+  if (_activeSc.length > 0) {
+    const soloResults = [];
+    for (const sc of _activeSc) {
+      let scr = sc.index != null ? await window.api.soloIndex(sc.index) : await window.api.soloByName(sc.name);
+      if (!scr?.ok || scr?.error) {
+        await window.api.wait(400);
+        scr = sc.index != null ? await window.api.soloIndex(sc.index) : await window.api.soloByName(sc.name);
+        if (!scr?.ok || scr?.error) { log(`✗ Sidechain solo failed: "${sc.name}"`, 'err'); return false; }
+      }
+      soloResults.push(sc);
     }
-    window._cancelSidechainName = _scName; window._cancelSidechainIndex = _scIdx;
+    window._cancelSidechainChannels = soloResults;
+    // legacy compat:
+    window._cancelSidechainName  = soloResults[0]?.name  || null;
+    window._cancelSidechainIndex = soloResults[0]?.index ?? null;
     await window.api.wait(300);
-    log('🔒 Sidechain: ' + _scName, 'info');
+    log('🔒 SC: ' + soloResults.map(s=>s.name).join(', '), 'info');
   }
 
   // Render
@@ -10125,12 +10437,12 @@ async function bounceGroup(job, folder, isFirst) {
     await window.api.wait(1500);
     await window.api.moveToLogicSpace().catch(() => {});
     await activateLogicForAX();
-    if (sidechainEnabled && _scName && window._cancelSidechainName) {
-      let _gsr = _scIdx != null
-        ? await window.api.unsoloIndex(_scIdx)
-        : await window.api.unsoloByName(_scName);
-      if (!_gsr?.ok) { await window.api.wait(400); _scIdx != null ? await window.api.unsoloIndex(_scIdx) : await window.api.unsoloByName(_scName); }
-      window._cancelSidechainName = null; window._cancelSidechainIndex = null;
+    if (sidechainEnabled && _activeSc.length > 0) {
+      for (const sc of _activeSc) {
+        let _gsr = sc.index != null ? await window.api.unsoloIndex(sc.index) : await window.api.unsoloByName(sc.name);
+        if (!_gsr?.ok) { await window.api.wait(400); sc.index != null ? await window.api.unsoloIndex(sc.index) : await window.api.unsoloByName(sc.name); }
+      }
+      window._cancelSidechainChannels = null; window._cancelSidechainName = null; window._cancelSidechainIndex = null;
       await window.api.wait(200);
     }
     for (let i = 0; i < chans.length; i++) {
@@ -10800,8 +11112,20 @@ function updateObStep() {
   }
 }
 
+function clearNameTemplate() {
+  const el = document.getElementById('name-template');
+  if (!el) return;
+  el.innerHTML = '';
+  el.style.paddingRight = '62px';
+  saveNameTemplate();
+  const btn = document.getElementById('name-tpl-clear');
+  if (btn) btn.style.display = 'none';
+  if (typeof updateNamePresetUI === 'function') updateNamePresetUI();
+}
+
 function saveNameTemplate() {
-  nameTemplate = document.getElementById('name-template').value;
+  const el = document.getElementById('name-template');
+  nameTemplate = (typeof _serializeTemplate === 'function') ? _serializeTemplate(el) : (el?.value || '');
   localStorage.setItem('sb4_name_tpl', nameTemplate);
 }
 
@@ -10819,7 +11143,8 @@ let _namePresets = (() => {
 })();
 
 function updateNamePresetUI() {
-  const val = (document.getElementById('name-template')?.value || '').trim();
+  const el = document.getElementById('name-template');
+  const val = ((typeof _serializeTemplate === 'function') ? _serializeTemplate(el) : (el?.value || '')).trim();
   const saveBtn = document.getElementById('name-preset-save-btn');
   if (saveBtn) saveBtn.style.display = val ? 'block' : 'none';
 }
@@ -10835,7 +11160,8 @@ function toggleNamePresetDropdown() {
 }
 
 function quickSaveNamePreset() {
-  const prefix = (document.getElementById('name-template')?.value || '').trim();
+  const _el = document.getElementById('name-template');
+  const prefix = ((typeof _serializeTemplate === 'function') ? _serializeTemplate(_el) : (_el?.value || '')).trim();
   if (!prefix) { toast('Enter a prefix first'); return; }
   // Check if already saved
   const existing = _namePresets.find(p => p.prefix === prefix);
@@ -10870,7 +11196,11 @@ function renderNamePresets() {
 function applyNamePreset(idx) {
   const p = _namePresets[idx];
   if (!p) return;
-  document.getElementById('name-template').value = p.prefix;
+  if (typeof _renderTemplate === 'function') {
+    _renderTemplate(p.prefix);
+  } else {
+    document.getElementById('name-template').value = p.prefix;
+  }
   saveNameTemplate();
   document.getElementById('name-preset-dropdown').style.display = 'none';
   updateNamePresetUI();
@@ -10991,11 +11321,32 @@ async function stopCaffeinate() {
 }
 
 function applyNameTemplate(stemName) {
-  // Always read live from input field
-  const tpl = (document.getElementById('name-template')?.value || '').trimStart();
-  if (!tpl) return stemName;
-  const sep = (tpl.endsWith('_') || tpl.endsWith('-') || tpl.endsWith(' ')) ? '' : '_';
-  return tpl + sep + stemName;
+  // Always read live from contenteditable editor
+  const el = document.getElementById('name-template');
+  const tpl = (typeof _serializeTemplate === 'function')
+    ? _serializeTemplate(el)
+    : (el?.value || el?.textContent || '');
+  const trimmed = tpl.trim();
+  if (!trimmed) return stemName;
+  // Has wildcards → resolve and append any pass-variant suffix (e.g. "_Wet", "_Dry")
+  // that the bounce engine added to stemName beyond the original queue name.
+  // Without this, $stem resolves to the clean original ("Drums") but the variant
+  // suffix is lost — Wet and Dry passes would write to the same filename.
+  if (/\$[a-z]+/i.test(trimmed)) {
+    const resolved = _resolveWildcards(trimmed, stemName);
+    if (!resolved) return stemName;
+    // Compute the pass/marker suffix that was appended to stemName.
+    // _currentBounceJob.stemName is the ORIGINAL queue name (no variant suffix).
+    let extraSuffix = '';
+    const orig = window._currentBounceJob?.stemName;
+    if (orig && stemName && stemName !== orig && stemName.startsWith(orig)) {
+      extraSuffix = stemName.slice(orig.length);  // e.g. "_Wet", " — Marker A"
+    }
+    return resolved + extraSuffix;
+  }
+  // Legacy plain-prefix template → append stemName as before
+  const sep = (trimmed.endsWith('_') || trimmed.endsWith('-') || trimmed.endsWith(' ')) ? '' : '_';
+  return trimmed + sep + stemName;
 }
 
 function saveJobSet() {
@@ -11194,7 +11545,21 @@ function reloadQueue() {
 }
 
 function showNamingHelp() {
-  alert('Variables:\n{stem} — channel name\n{project} — project name\n{date} — YYYYMMDD\n{bpm} — tempo\n\nExample: {project}_{stem}\nResult: MyTrack_DRUMS');
+  alert(
+    'Wildcards (click { } to insert as draggable chips):\n' +
+    '$project    — project name\n' +
+    '$stem       — channel / stem name\n' +
+    '$num        — track number (01, 02…)\n' +
+    '$bpm        — project tempo\n' +
+    '$date       — YYYY-MM-DD\n' +
+    '$time       — HH-MM\n' +
+    '$year / $month / $day\n' +
+    '$samplerate — e.g. 48k\n' +
+    '$bitdepth   — e.g. 24\n' +
+    '$format     — WAV / AIFF / FLAC\n\n' +
+    'Tip: drag chips inside the field to reorder. Type free text between chips.\n\n' +
+    'Example: $project_$stem_$date  →  MyTrack_DRUMS_2026-04-28'
+  );
 }
 
 async function triggerBounce(name, folder, isFirst) {
@@ -11812,12 +12177,14 @@ async function togglePin() {
   toast(on ? '📌 Pinned — app stays on top' : 'Unpinned');
 }
 window.addEventListener('DOMContentLoaded', async () => {
-  const pinned = localStorage.getItem(PIN_LS_KEY) === '1';
-  await window.api?.setUserPin?.(pinned);
-  if (pinned) {
-    _applyPinClass(true);
-    await window.api?.setAlwaysOnTop?.(true);
-  }
+  try {
+    const pinned = localStorage.getItem(PIN_LS_KEY) === '1';
+    await window.api?.setUserPin?.(pinned);
+    if (pinned) {
+      _applyPinClass(true);
+      await window.api?.setAlwaysOnTop?.(true);
+    }
+  } catch {}
 });
 
 // ── Compact Queue Mode ─────────────────────────────────────────────
@@ -11884,13 +12251,19 @@ async function toggleCompactMode() {
   const hint = document.getElementById('scan-hint');
   if (hint && hint.classList.contains('show')) positionScanHint();
 }
-// Restore on load (main.js _inCompact is false after fresh start — only apply CSS if user toggled during the session via localStorage AND main.js confirms)
+// Restore on load — only if localStorage explicitly says '1' (not null/undefined/other).
+// null !== '0' was a bug that triggered compact mode on fresh installs or cleared storage.
 window.addEventListener('DOMContentLoaded', async () => {
   try {
-    const saved = localStorage.getItem(COMPACT_LS_KEY) !== '0';
-    if (saved) {
-      const r = await window.api?.enterCompactMode?.();
-      if (r?.ok) { _applyCompactClass(true); renderQueue(); requestAnimationFrame(_alignCmScanBtn); }
+    if (localStorage.getItem(COMPACT_LS_KEY) !== '1') return;
+    const r = await window.api?.enterCompactMode?.();
+    if (r?.ok) {
+      _applyCompactClass(true);
+      renderQueue();
+      // RAF fires before the native resize animation finishes — use a short delay
+      // so _alignCmScanBtn measures the correct (post-resize) toolbar geometry.
+      requestAnimationFrame(_alignCmScanBtn);
+      setTimeout(_alignCmScanBtn, 350);
     }
   } catch {}
 });
@@ -11979,19 +12352,7 @@ window.addEventListener('resize', _checkAutoCollapsePanel);
 setTimeout(_checkAutoCollapsePanel, 0);
 
 function _alignCmScanBtn() {
-  const btn = document.getElementById('cm-scan-btn');
-  const emWrap = document.querySelector('#compact-toolbar .em-wrap');
-  const actions = document.getElementById('compact-toolbar-actions');
-  if (!btn || !emWrap || !actions) return;
-  const a = emWrap.getBoundingClientRect().right;
-  const b = actions.getBoundingClientRect().left;
-  const centerX = (a + b) / 2;
-  const toolbar = document.getElementById('compact-toolbar');
-  const toolbarLeft = toolbar.getBoundingClientRect().left;
-  btn.style.transition = 'none';
-  btn.style.left = (centerX - toolbarLeft - btn.offsetWidth / 2) + 'px';
-  btn.offsetWidth; // force reflow
-  btn.style.transition = '';
+  // Layout is now CSS flex — no JS positioning needed.
 }
 
 function _alignCompactArrow() {
@@ -12312,7 +12673,11 @@ function repeatSession(id) {
 
   // Restore session settings
   if (session.namePrefix) {
-    document.getElementById('name-template').value = session.namePrefix;
+    if (typeof _renderTemplate === 'function') {
+      _renderTemplate(session.namePrefix);
+    } else {
+      document.getElementById('name-template').value = session.namePrefix;
+    }
     saveNameTemplate();
     log(`Restored prefix: "${session.namePrefix}"`, 'info');
   }
@@ -13269,6 +13634,33 @@ function applySkin(name) {
       #scan-btn,#cm-scan-btn{background:linear-gradient(160deg,#303030,#1c1c1c)!important;color:#e8e8e8!important;border:1px solid rgba(255,255,255,.18)!important;box-shadow:0 4px 16px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.1)!important;}
       #scan-btn:hover,#cm-scan-btn:hover{background:linear-gradient(160deg,#3e3e3e,#262626)!important;border-color:rgba(255,255,255,.28)!important;box-shadow:0 6px 22px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.14)!important;}
       .bbtn.running{background:linear-gradient(160deg,#2a2a2a 0%,#1a1a1a 50%,#0e0e0e 100%)!important;color:rgba(255,255,255,.82)!important;border:1px solid #2a2a2a!important;box-shadow:0 4px 18px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.08),inset 0 -1px 0 rgba(0,0,0,.5)!important;animation:none!important;}
+      .mb-cycle[data-state="on"],.mb-cycle[data-state="wet"],
+      .mb-cycle[data-state="both"],.mb-cycle[data-state="wet+dry"]{
+        background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 55%,#000),color-mix(in srgb,var(--accent) 38%,#000))!important;
+        color:#fff!important;filter:none!important;
+        box-shadow:0 1px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.14)!important;
+      }
+      .mb-pill[data-has-value="true"]{
+        background:color-mix(in srgb,var(--accent) 16%,transparent)!important;
+        color:color-mix(in srgb,var(--accent) 80%,#fff)!important;
+        border-color:color-mix(in srgb,var(--accent) 28%,transparent)!important;
+        filter:none!important;
+      }
+      .mb-sc-search[data-has-value="true"]{
+        background:color-mix(in srgb,var(--accent) 16%,transparent)!important;
+        color:color-mix(in srgb,var(--accent) 80%,#fff)!important;
+        border-color:color-mix(in srgb,var(--accent) 28%,transparent)!important;
+        filter:none!important;
+      }
+      #ob-next{
+        background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 55%,#000),color-mix(in srgb,var(--accent) 38%,#000))!important;
+        color:#fff!important;
+        box-shadow:0 2px 14px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.12)!important;
+      }
+      #ob-icon{
+        background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 55%,#000),color-mix(in srgb,var(--accent) 38%,#000))!important;
+        box-shadow:0 4px 24px rgba(0,0,0,.5)!important;
+      }
     `,
     luxury: `
       body{
@@ -13311,6 +13703,26 @@ function applySkin(name) {
       #scan-btn,#cm-scan-btn{background:linear-gradient(160deg,#3a6200,#508a00)!important;box-shadow:0 4px 16px rgba(80,138,0,.25)!important;}
       #add-stems-btn[style*="gradient"]{background:linear-gradient(160deg,#3a6200,#508a00)!important;box-shadow:0 4px 12px rgba(80,138,0,.2)!important;}
       #merge-btn.ok[style*="gradient"]{background:linear-gradient(160deg,#3a6200,#1a5c52)!important;box-shadow:0 4px 12px rgba(26,92,82,.2)!important;}
+      .mb-cycle[data-state="on"],.mb-cycle[data-state="wet"],
+      .mb-cycle[data-state="both"],.mb-cycle[data-state="wet+dry"]{
+        background:linear-gradient(160deg,#8cb800,#a0d400)!important;
+        color:#0a1400!important;filter:none!important;
+        box-shadow:0 1px 6px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.18)!important;
+      }
+      .mb-pill[data-has-value="true"],.mb-sc-search[data-has-value="true"]{
+        background:rgba(160,212,0,.18)!important;
+        color:#a0d400!important;filter:none!important;
+        border-color:rgba(160,212,0,.35)!important;
+      }
+      #ob-next{
+        background:linear-gradient(135deg,#8cb800,#a0d400)!important;
+        color:#0a1400!important;filter:none!important;
+        box-shadow:0 2px 12px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.18)!important;
+      }
+      #ob-icon{
+        background:linear-gradient(135deg,#8cb800,#a0d400)!important;
+        filter:none!important;box-shadow:0 4px 20px rgba(0,0,0,.4)!important;
+      }
     `,
     anime: `
       body{background:#fdfdfb!important;}
@@ -13646,6 +14058,7 @@ function updateModebarSummary() {
 // ── Standalone SC popover (independent of #sidechain-dropdown which is buggy) ──
 // Replicates original UX: search input + scrollable channel list. Body-attached, fixed.
 let _ebScPopOpen = false;
+let _ebScStemId = null; // non-null when popover is in per-stem mode
 
 function _ensureEbScPop() {
   let pop = document.getElementById('eb-sc-pop');
@@ -13656,8 +14069,9 @@ function _ensureEbScPop() {
   pop.style.cssText = 'position:fixed;display:none;flex-direction:column;width:300px;max-height:340px;z-index:10002;';
   pop.innerHTML = `
     <div style="padding:8px 10px 6px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:6px;flex-shrink:0;">
-      <span style="font-size:var(--fs-xxs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);flex:1;">Sidechain channel</span>
-      <button onclick="event.stopPropagation();_clearSidechainSelection();_closeEbScPop();" title="Clear selection" style="background:transparent;border:none;color:var(--muted);font-size:var(--fs-xxs);cursor:pointer;padding:2px 4px;font-family:'JetBrains Mono',monospace;">CLEAR</button>
+      <span id="eb-sc-header-lbl" style="font-size:var(--fs-xxs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);flex:1;">Sidechain channels</span>
+      <span id="eb-sc-count" style="display:none;background:var(--accent-a12);color:var(--accent);border:1px solid var(--accent-a30);border-radius:999px;font-size:var(--fs-xxs);padding:1px 7px;font-weight:700;"></span>
+      <button onclick="event.stopPropagation();_clearSidechainSelectionCtx();_closeEbScPop();" title="Clear selection" style="background:transparent;border:none;color:var(--muted);font-size:var(--fs-xxs);cursor:pointer;padding:2px 4px;font-family:'JetBrains Mono',monospace;">CLEAR</button>
     </div>
     <input id="eb-sc-search" type="text" placeholder="Search channel…" autocomplete="off" spellcheck="false" style="background:var(--card);border:none;border-bottom:1px solid var(--b);color:var(--text);font-size:var(--fs-xs);padding:8px 10px;font-family:'JetBrains Mono',monospace;width:100%;box-sizing:border-box;outline:none;flex-shrink:0;">
     <div id="eb-sc-list" style="overflow-y:auto;flex:1;padding:4px 0;"></div>
@@ -13685,58 +14099,96 @@ function _renderEbScList() {
     list.innerHTML = `<div style="padding:14px 12px;color:var(--muted);font-size:var(--fs-xs);text-align:center;">No matches</div>`;
     return;
   }
-  const curName = (typeof sidechainChannel !== 'undefined') ? sidechainChannel : '';
+  // Effective selection: per-stem override OR global
+  const curSel = _ebScStemId
+    ? ((modebarState.perStemOverrides[_ebScStemId] || {}).scChannels || [])
+    : sidechainChannels;
+  // Identity by name+index (legacy entries without index match by name only).
+  // Two channels with the same name (e.g. multiple "SoCal" instruments) stay distinct.
+  const _scIsSelected = (ch) => curSel.some(s =>
+    s.name === ch.name && (s.index == null || ch.index == null || s.index === ch.index)
+  );
+
   list.innerHTML = filtered.map(ch => {
-    const isSel = curName && curName === ch.name;
-    // Same classification as FX popover (FX RETURN / STACK / BUS / AUDIO / INST / OUTPUT)
+    const isSel = _scIsSelected(ch);
     const tag = _classifyFxChannel(ch);
     const tagText = tag === 'FX' ? 'FX RETURN' : tag;
-    return `<div class="eb-sc-item${isSel ? ' sel' : ''}" data-name="${(ch.name || '').replace(/"/g,'&quot;')}" data-idx="${ch.index ?? ''}">
-      <span class="eb-sc-dot" style="background:${ch.color || 'var(--muted)'};"></span>
+    return `<div class="eb-sc-item${isSel ? ' sel' : ''}" data-name="${(ch.name||'').replace(/"/g,'&quot;')}" data-idx="${ch.index ?? ''}">
+      <span class="eb-sc-dot" style="background:${ch.color||'var(--muted)'};"></span>
       <span class="eb-sc-name">${ch.name}</span>
       <span class="fx-tag fx-tag-${tag.toLowerCase()}">${tagText}</span>
+      ${isSel ? '<span style="margin-left:auto;color:var(--accent);font-size:11px;padding-left:4px;">✓</span>' : ''}
     </div>`;
   }).join('');
   list.querySelectorAll('.eb-sc-item').forEach(item => {
-    item.addEventListener('mouseenter', () => { if (!item.style.background.includes('accent')) item.style.background = 'rgba(255,255,255,.04)'; });
-    item.addEventListener('mouseleave', () => { if (!item.style.background.includes('accent')) item.style.background = ''; });
+    item.addEventListener('mouseenter', () => { if (!item.classList.contains('sel')) item.style.background = 'rgba(255,255,255,.04)'; });
+    item.addEventListener('mouseleave', () => { if (!item.classList.contains('sel')) item.style.background = ''; });
     item.addEventListener('click', (e) => {
       e.stopPropagation();
       const name = item.dataset.name;
       const idxRaw = item.dataset.idx;
       const idx = idxRaw === '' ? null : parseInt(idxRaw, 10);
-      _selectEbScChannel(name, isNaN(idx) ? null : idx);
+      _toggleEbScChannel(name, isNaN(idx) ? null : idx);
     });
   });
 }
 
 function _selectEbScChannel(name, idx) {
-  // Enable SC + write channel via existing functions (they keep state in sync)
-  if (typeof toggleSidechain === 'function') toggleSidechain(true);
-  if (typeof selectSidechain === 'function') {
-    selectSidechain(name, idx);  // wrapped — also calls _setScChipLabel
+  // Legacy shim — delegates to new toggle function
+  _toggleEbScChannel(name, idx);
+}
+
+function _toggleEbScChannel(name, idx) {
+  // Match by name+index — two channels with the same name (different indices) stay distinct.
+  // Legacy entries without index fall back to name-only match.
+  const _matches = (s) => s.name === name && (s.index == null || idx == null || s.index === idx);
+  if (_ebScStemId) {
+    // Per-stem mode: modify perStemOverrides
+    if (!modebarState.perStemOverrides[_ebScStemId]) modebarState.perStemOverrides[_ebScStemId] = {};
+    let arr = (modebarState.perStemOverrides[_ebScStemId].scChannels || []).slice();
+    const i = arr.findIndex(_matches);
+    if (i >= 0) arr.splice(i, 1); else arr.push({ name, index: idx });
+    modebarState.perStemOverrides[_ebScStemId].scChannels = arr;
+    // Auto-set SC=on for this stem if adding a channel
+    if (arr.length > 0 && (modebarState.perStemOverrides[_ebScStemId].sc === undefined || modebarState.perStemOverrides[_ebScStemId].sc === 'off')) {
+      modebarState.perStemOverrides[_ebScStemId].sc = 'on';
+    }
+    _saveStemOverrides();
+    _updateGlobalOverrideIndicators();
+    if (typeof renderQueue === 'function') renderQueue();
   } else {
-    // Fallback if selectSidechain not yet available
-    if (typeof sidechainChannel !== 'undefined') sidechainChannel = name;
-    if (typeof sidechainIndex   !== 'undefined') sidechainIndex   = idx;
-    try { localStorage.setItem('sb4_sidechain_ch',  JSON.stringify(name)); } catch(e) {}
-    try { localStorage.setItem('sb4_sidechain_idx', JSON.stringify(idx));  } catch(e) {}
-    _setScChipLabel(name);
+    // Global mode
+    const i = sidechainChannels.findIndex(_matches);
+    if (i >= 0) sidechainChannels.splice(i, 1);
+    else sidechainChannels.push({ name, index: idx });
+    _saveScChannels();
+    // Auto-enable SC when adding, auto-disable when list becomes empty
+    if (sidechainChannels.length > 0 && modebarState.sc === 'off') {
+      modebarState.sc = 'on';
+      localStorage.setItem('eb_sc', 'on');
+      _renderAxisButton('sc');
+      updateModebarSummary();
+      if (typeof _refreshAllCounters === 'function') _refreshAllCounters();
+    } else if (sidechainChannels.length === 0 && modebarState.sc !== 'off') {
+      modebarState.sc = 'off';
+      localStorage.setItem('eb_sc', 'off');
+      _renderAxisButton('sc');
+      updateModebarSummary();
+    }
+    if (typeof sidechainEnabled !== 'undefined') {
+      sidechainEnabled = sidechainChannels.length > 0;
+      localStorage.setItem('sb4_sidechain_on', sidechainEnabled);
+    }
   }
-  // Reflect SC=On in cycle state
-  if (modebarState.sc === 'off') {
-    modebarState.sc = 'on';
-    localStorage.setItem('eb_sc', 'on');
-    _renderAxisButton('sc');
-    updateModebarSummary();
-    if (typeof _refreshAllCounters === 'function') _refreshAllCounters();
-  }
-  _closeEbScPop();
+  _updateEbScHeader();
+  _renderEbScList();
+  _setScChipLabel();
 }
 
 function openSidechainFromChip(ev) {
   ev?.stopPropagation();
   ev?.preventDefault();
+  if (!ev?._fromStemContext) _ebScStemId = null; // reset stem context for direct chip clicks
   if (_ebScPopOpen) { _closeEbScPop(); return; }
   const pop = _ensureEbScPop();
   const proChip = document.getElementById('mb-sc-channel');
@@ -13754,6 +14206,7 @@ function openSidechainFromChip(ev) {
   pop.style.top  = (r.bottom + 6) + 'px';
   pop.style.display = 'flex';
   _ebScPopOpen = true;
+  _updateEbScHeader();
   _renderEbScList();
   // Force-focus search after the click event finishes
   setTimeout(() => {
@@ -13797,24 +14250,93 @@ function _wrapSelectSidechain() {
   _selectSidechainWrapped = true;
 }
 function _setScChipLabel(name) {
+  // name arg is kept for backward compat but ignored — we read sidechainChannels directly
   const truncate = (s, n) => (s && s.length > n) ? (s.slice(0, n - 1) + '…') : s;
-  // Pro chip — keep ~14 chars before truncate
+  const arr = sidechainChannels;
+  let label = '';
+  let hasValue = false;
+  if (arr.length === 0) {
+    label = 'Search channel…';
+  } else if (arr.length === 1) {
+    label = truncate(arr[0].name, 14);
+    hasValue = true;
+  } else {
+    label = `${truncate(arr[0].name, 9)}+${arr.length - 1}`;
+    hasValue = true;
+  }
   const chip = document.getElementById('mb-sc-channel');
   if (chip) {
-    chip.dataset.hasValue = name ? 'true' : 'false';
+    chip.dataset.hasValue = hasValue ? 'true' : 'false';
     const lbl = chip.querySelector('.mb-sc-label');
-    if (lbl) lbl.textContent = name ? truncate(name, 14) : 'Search channel…';
-    if (lbl && name) lbl.title = name; // full on hover
+    if (lbl) { lbl.textContent = label; if (hasValue) lbl.title = arr.map(s=>s.name).join(', '); }
   }
-  // Easy-mode button — tighter, ~10 chars
   const ez = document.getElementById('sc-easy-btn');
   if (ez) {
-    ez.dataset.hasValue = name ? 'true' : 'false';
+    ez.dataset.hasValue = hasValue ? 'true' : 'false';
     const lbl = document.getElementById('sc-easy-label');
-    if (lbl) lbl.textContent = name ? truncate(name, 10) : 'Sidechain';
-    if (lbl && name) lbl.title = name;
+    if (lbl) { lbl.textContent = arr.length === 0 ? 'Sidechain' : (arr.length === 1 ? truncate(arr[0].name, 10) : `${arr.length} SC`); }
   }
   updateModebarSummary();
+}
+
+// Save multi-SC channels to localStorage + keep legacy single-channel keys in sync
+function _saveScChannels() {
+  try { localStorage.setItem('sb4_sc_channels', JSON.stringify(sidechainChannels)); } catch(e) {}
+  // Keep legacy single-channel keys in sync (first channel = primary)
+  const first = sidechainChannels[0] || null;
+  sidechainChannel = first ? first.name : null;
+  sidechainIndex   = first ? first.index : null;
+  try { localStorage.setItem('sb4_sidechain', sidechainChannel || ''); } catch(e) {}
+  try { localStorage.setItem('sb4_sidechain_idx', JSON.stringify(sidechainIndex)); } catch(e) {}
+}
+
+function _updateEbScHeader() {
+  const hdr = document.getElementById('eb-sc-header-lbl');
+  const badge = document.getElementById('eb-sc-count');
+  if (!hdr) return;
+  const curSel = _ebScStemId
+    ? ((modebarState.perStemOverrides[_ebScStemId] || {}).scChannels || [])
+    : sidechainChannels;
+  const stemItem = _ebScStemId ? (typeof queue !== 'undefined' ? queue?.find(q => q.id === _ebScStemId) : null) : null;
+  hdr.textContent = _ebScStemId
+    ? `SC for: ${stemItem?.name || _ebScStemId}`
+    : 'Sidechain channels';
+  hdr.style.color = _ebScStemId ? 'var(--teal)' : 'var(--accent)';
+  if (badge) {
+    if (curSel.length > 0) {
+      badge.style.display = 'inline';
+      badge.textContent = curSel.length;
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+}
+
+// Context-aware clear: clears per-stem or global depending on _ebScStemId
+function _clearSidechainSelectionCtx() {
+  if (_ebScStemId) {
+    if (modebarState.perStemOverrides[_ebScStemId]) {
+      modebarState.perStemOverrides[_ebScStemId].scChannels = [];
+    }
+    _saveStemOverrides();
+    _updateGlobalOverrideIndicators();
+    if (typeof renderQueue === 'function') renderQueue();
+    _updateEbScHeader();
+    _renderEbScList();
+    _setScChipLabel();
+  } else {
+    _clearSidechainSelection();
+  }
+}
+
+// Add openScChannelsForStem — opens SC popover in per-stem mode
+function openScChannelsForStem(qid) {
+  _ebScStemId = qid;
+  const chip = document.getElementById('mb-sc-channel') || document.getElementById('sc-easy-btn');
+  const fakeEv = { stopPropagation: ()=>{}, preventDefault: ()=>{}, currentTarget: chip, target: chip, _fromStemContext: true };
+  // If already open, close first so we can re-open with the new stem context
+  if (_ebScPopOpen) _closeEbScPop();
+  openSidechainFromChip(fakeEv);
 }
 
 // Clear sidechain entirely — disable + forget channel
@@ -13824,8 +14346,11 @@ function _clearSidechainSelection() {
   // Clear stored channel
   if (typeof sidechainChannel !== 'undefined') sidechainChannel = '';
   if (typeof sidechainIndex   !== 'undefined') sidechainIndex   = null;
+  sidechainChannels = [];
+  _saveScChannels();
   try { localStorage.removeItem('sb4_sidechain_ch');  } catch(e) {}
   try { localStorage.removeItem('sb4_sidechain_idx'); } catch(e) {}
+  try { localStorage.removeItem('sb4_sc_channels');   } catch(e) {}
   // Sync hidden <select> for backward-compat code paths
   const sel = document.getElementById('sidechain-select');
   if (sel) sel.value = '';
@@ -13840,10 +14365,26 @@ function _clearSidechainSelection() {
   }
 }
 
+// ── FX channel key helpers ────────────────────────────────────────────
+// Channels are identified by "name||index" so two identically-named channels
+// (e.g. two "Aux 1" strips at different indices) remain distinct.
+// Backward compat: old saved entries without "||" are matched by name only.
+function _fxKey(ch) {
+  return ch != null && ch.index != null ? `${ch.name}||${ch.index}` : (ch?.name ?? '');
+}
+function _fxKeyName(key) {   // extract display name from key
+  const s = key.indexOf('||');
+  return s !== -1 ? key.slice(0, s) : key;
+}
+function _chMatchesKey(ch, key) {  // backward-compat match: exact key OR legacy name-only
+  return key === _fxKey(ch) || key === ch.name;
+}
+
 // ── +FX popover (Phase 4: pick FX-bus channels to keep alive on Dry) ───
 // Now supports both global (qid=null) and per-stem (qid=stemId) modes.
 let _fxPopoverOpen = false;
 let _fxPopoverStemId = null;
+let _fxPopoverTab = 'dry';
 
 function openFxChannelsPopover(ev, qid) {
   ev?.stopPropagation();
@@ -13855,6 +14396,7 @@ function openFxChannelsPopover(ev, qid) {
   if (_fxPopoverOpen && _fxPopoverStemId === (qid || null)) { closeFxPopover(); return; }
   closeFxPopover();
   _fxPopoverStemId = qid || null;
+  _fxPopoverTab = 'dry';
   const r = anchor.getBoundingClientRect();
   const W = 280;
   // Center popover under chip (clamp to viewport)
@@ -13910,6 +14452,42 @@ function closeFxPopover() {
   _fxPopoverOpen = false;
   _fxPopoverStemId = null;
   document.removeEventListener('click', _fxOutsideClick);
+}
+function _openFxPopoverWetTab(ev, qid) {
+  openFxChannelsPopover(ev, qid);
+  _switchFxTab('wet');
+}
+function _switchFxTab(tab) {
+  _fxPopoverTab = tab;
+  const dry = document.getElementById('fx-tab-dry');
+  const wet = document.getElementById('fx-tab-wet');
+  if (dry) { dry.className = 'fx-tab' + (tab === 'dry' ? ' active-dry' : ''); }
+  if (wet) { wet.className = 'fx-tab' + (tab === 'wet' ? ' active-wet' : ''); }
+  renderFxPopover();
+}
+function _getWetMuteSelection() {
+  if (_fxPopoverStemId) {
+    return modebarState.perStemOverrides[_fxPopoverStemId]?.fxWetMute ?? [];
+  }
+  return modebarState.fxWetMute || [];
+}
+function _toggleWetMuteSelection(name) {
+  if (!name) return;
+  if (_fxPopoverStemId) {
+    if (!modebarState.perStemOverrides[_fxPopoverStemId]) modebarState.perStemOverrides[_fxPopoverStemId] = {};
+    let arr = modebarState.perStemOverrides[_fxPopoverStemId].fxWetMute;
+    if (!arr) arr = [...(modebarState.fxWetMute || [])];
+    const i = arr.indexOf(name);
+    if (i === -1) arr.push(name); else arr.splice(i, 1);
+    modebarState.perStemOverrides[_fxPopoverStemId].fxWetMute = arr;
+    _saveStemOverrides();
+    _updateGlobalOverrideIndicators();
+    if (typeof renderQueue === 'function') renderQueue();
+  } else {
+    _toggleFxWetMute(name);
+    return;
+  }
+  renderFxPopover();
 }
 function _fxOutsideClick(e) {
   const pop = document.getElementById('fx-popover');
@@ -14051,9 +14629,10 @@ function _ensureFxWhitelistAutoApplied(allCh) {
   const cur = new Set(modebarState.fxWhitelist || []);
   let changed = false;
   for (const c of allCh) {
-    if (_isAutoFxChannel(c) && !cur.has(c.name)) {
-      modebarState.fxWhitelist.push(c.name);
-      cur.add(c.name);
+    const key = _fxKey(c);
+    if (_isAutoFxChannel(c) && !cur.has(key) && !cur.has(c.name)) {
+      modebarState.fxWhitelist.push(key);
+      cur.add(key);
       changed = true;
     }
   }
@@ -14070,10 +14649,16 @@ function _classifyFxChannel(ch) {
   // Fallbacks when chType not yet computed (old data):
   if (ch.hasRecord || ch.hasMonitoring) return 'AUDIO';
   if (ch.hasMidiPlugin) return 'INST';
-  if (ch.chType === 'Other') return 'AUDIO'; // VCA, hardware input — never an FX channel
+  if (ch.chType === 'Other') {
+    // Only return AUDIO for true VCA/hardware channels — if _channelTypeMap knows this
+    // channel is Aux/Bus (from learning scan), fall through to bus heuristics instead.
+    const knownAux = (_channelTypeMap['Aux'] || _channelTypeMap['Bus'] || []).includes(ch.name);
+    if (!knownAux) return 'AUDIO'; // VCA, hardware input — never an FX channel
+    // else fall through to bus detection below
+  }
 
   // 1. MANUAL whitelist — user's explicit choice has highest priority
-  if (modebarState.fxWhitelist && modebarState.fxWhitelist.indexOf(ch.name) !== -1) return 'FX';
+  if (modebarState.fxWhitelist && modebarState.fxWhitelist.some(k => _chMatchesKey(ch, k))) return 'FX';
 
   // 2. REAL algorithm — prefer inputBus (AXHelp confirmed Input slot) over routingBus.
   //    inputBus is populated when standalone Mixer is on the same Space.
@@ -14082,13 +14667,12 @@ function _classifyFxChannel(ch) {
                    : (ch.routingBus && ch.routingBus.startsWith('Bus ')) ? ch.routingBus : null;
   if (busToCheck) {
     const outBuses = window._outputBusesCache || _rebuildOutputBusesCache();
-    return outBuses.has(busToCheck) ? 'STACK' : 'FX';
+    return outBuses.has(busToCheck) ? 'BUS' : 'FX';
   }
 
   // 3. Name heuristic fallback — works when routingBus isn't exposed by Logic
   const name = (ch.name || '');
   if (_FX_RETURN_RX.test(name)) return 'FX';
-  if (_STACK_RX.test(name))     return 'STACK';
   return 'BUS';
 }
 
@@ -14104,11 +14688,12 @@ function renderFxPopover() {
     if (_fxPopoverStemId) {
       const item = queue.find(q => q.id === _fxPopoverStemId);
       const stemName = item?.name || 'this stem';
-      headerLbl.textContent = `+FX for ${stemName}`;
+      headerLbl.textContent = _fxPopoverTab === 'wet' ? `Mute from Wet — ${stemName}` : `Keep on Dry — ${stemName}`;
     } else {
-      headerLbl.textContent = 'FX channels — keep on Dry';
+      headerLbl.textContent = _fxPopoverTab === 'wet' ? 'Mute from Wet' : 'Keep on Dry';
     }
   }
+  if (headerLbl) headerLbl.style.color = _fxPopoverTab === 'wet' ? 'var(--teal)' : 'var(--accent)';
   if (clearBtn) clearBtn.textContent = _fxPopoverStemId ? 'INHERIT' : 'CLEAR';
 
   const lq = (document.getElementById('fx-search')?.value || '').toLowerCase();
@@ -14121,13 +14706,12 @@ function renderFxPopover() {
     return;
   }
 
-  // Show all Bus/Aux-type channels (no record/monitor) — these are FX returns + stacks + buses.
-  // FX-tagged sorted to top. Audio/Inst/Output excluded entirely.
-  // (Proper detection via Swift inputBus mapping is planned — for now user picks from this list.)
-  const TAG_RANK = { FX: 0, BUS: 1, STACK: 2 };
+  // Show only BUS/FX channels — _classifyFxChannel is the single gatekeeper.
+  // Correctly handles chType:'Other' Aux channels via _channelTypeMap fallback.
+  const TAG_RANK = { FX: 0, BUS: 1 };
   const ranked = [...allCh]
     .map(ch => ({ ...ch, _tag: _classifyFxChannel(ch) }))
-    .filter(ch => ch._tag === 'FX' || ch._tag === 'BUS' || ch._tag === 'STACK')
+    .filter(ch => ch._tag === 'FX' || ch._tag === 'BUS')
     .filter(ch => !lq || (ch.name || '').toLowerCase().includes(lq))
     .sort((a, b) => {
       const ar = TAG_RANK[a._tag] ?? 9;
@@ -14141,46 +14725,56 @@ function renderFxPopover() {
     return;
   }
 
-  // Column header strip (sticky so it stays visible while scrolling)
-  list.innerHTML = `<div class="fx-pass-hdr" style="position:sticky;top:0;background:var(--card);z-index:1;">
-    <span class="fx-pass-hdr-name" style="font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);color:var(--muted);font-style:italic;">Mute on pass →</span>
-    <span class="fx-pass-col-lbl" title="Muted on Dry pass" style="color:var(--accent);">DRY</span>
-    <span class="fx-pass-col-lbl" title="Muted on Wet pass" style="color:var(--teal);">WET</span>
-  </div>`;
+  // Sync tab button active states
+  const dryTabBtn = document.getElementById('fx-tab-dry');
+  const wetTabBtn = document.getElementById('fx-tab-wet');
+  if (dryTabBtn) dryTabBtn.className = 'fx-tab' + (_fxPopoverTab === 'dry' ? ' active-dry' : '');
+  if (wetTabBtn) wetTabBtn.className = 'fx-tab' + (_fxPopoverTab === 'wet' ? ' active-wet' : '');
 
-  // In stem mode: if no override yet, baseline = global selection
-  const effective = _getFxSelection() ?? modebarState.fxChannels;
-  const sel = new Set(effective);
-  const wm  = new Set(modebarState.fxWetMute || []);
-  list.innerHTML += ranked.map(ch => {
-    const dryOn = sel.has(ch.name);
-    const wetOn = wm.has(ch.name);
-    const tag = ch._tag;
-    const nm = ch.name.replace(/"/g, '&quot;');
-    return `
-      <div class="fx-row${dryOn ? ' on' : ''}" data-name="${nm}">
+  if (_fxPopoverTab === 'dry') {
+    // DRY tab — selecting a channel keeps it alive on dry pass (not muted)
+    const effective = _getFxSelection() ?? modebarState.fxChannels;
+    const sel = new Set(effective);
+    list.innerHTML = ranked.map(ch => {
+      const key = _fxKey(ch);
+      const isOn = sel.has(key) || sel.has(ch.name);
+      const tag = ch._tag;
+      const safeKey = key.replace(/"/g, '&quot;');
+      return `<div class="fx-row${isOn ? ' on' : ''}" data-fxkey="${safeKey}">
         <span class="fx-row-name">${ch.name}</span>
         <span class="fx-tag fx-tag-${tag.toLowerCase()}">${tag === 'FX' ? 'FX RETURN' : tag}</span>
-        <span class="fx-cb${dryOn ? ' on' : ''}" title="Mute on Dry pass" aria-hidden="true"></span>
-        <span class="fx-wet-cb${wetOn ? ' on' : ''}" title="Mute on Wet pass" data-wet-name="${nm}" aria-hidden="true"></span>
+        <span class="fx-cb${isOn ? ' on' : ''}" aria-hidden="true"></span>
       </div>`;
-  }).join('');
-  // Wire row clicks — row body = DRY toggle, .fx-wet-cb = WET toggle
-  list.querySelectorAll('.fx-row').forEach(row => {
-    row.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const name = row.dataset.name;
-      const cur = (_getFxSelection() ?? modebarState.fxChannels) || [];
-      const isOn = cur.includes(name);
-      toggleFxChannel(name, !isOn);
+    }).join('');
+    list.querySelectorAll('.fx-row').forEach(row => {
+      row.addEventListener('click', e => {
+        e.stopPropagation();
+        const key = row.dataset.fxkey;
+        const cur = (_getFxSelection() ?? modebarState.fxChannels) || [];
+        toggleFxChannel(key, !cur.includes(key));
+      });
     });
-  });
-  list.querySelectorAll('.fx-wet-cb').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      _toggleFxWetMute(btn.dataset.wetName);
+  } else {
+    // WET tab — selecting a channel mutes it on wet pass
+    const wm = new Set(_getWetMuteSelection());
+    list.innerHTML = ranked.map(ch => {
+      const key = _fxKey(ch);
+      const isOn = wm.has(key) || wm.has(ch.name);
+      const tag = ch._tag;
+      const safeKey = key.replace(/"/g, '&quot;');
+      return `<div class="fx-row${isOn ? ' on' : ''}" data-fxkey="${safeKey}">
+        <span class="fx-row-name">${ch.name}</span>
+        <span class="fx-tag fx-tag-${tag.toLowerCase()}">${tag === 'FX' ? 'FX RETURN' : tag}</span>
+        <span class="fx-cb${isOn ? ' on' : ''}" style="background:${isOn ? 'var(--teal)' : ''};" aria-hidden="true"></span>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('.fx-row').forEach(row => {
+      row.addEventListener('click', e => {
+        e.stopPropagation();
+        _toggleWetMuteSelection(row.dataset.fxkey);
+      });
     });
-  });
+  }
 }
 
 function toggleFxChannel(name, on) {
@@ -14287,17 +14881,18 @@ function _renderFxWhitelist() {
   const allCh = (typeof _masterChannels !== 'undefined' && _masterChannels.length)
     ? _masterChannels
     : (typeof channels !== 'undefined' ? channels : []);
-  // Show only aux/bus-type (no record/no monitor). Audio/Inst can't be FX.
-  const auxes = allCh.filter(c => c.chType === 'Bus' || c.isBus);
+  // Show only genuine BUS/FX channels — use _classifyFxChannel as the single gatekeeper.
+  // This correctly handles chType:'Other' channels where _channelTypeMap knows they're Aux.
+  const allTagged = allCh.map(ch => ({ ...ch, _autoTag: _classifyFxChannel(ch) }));
+  const auxes = allTagged.filter(ch => ch._autoTag === 'BUS' || ch._autoTag === 'FX');
   // First time we see channels — auto-tick every algorithm-detected FX RETURN so the
   // user gets a sane default. Their explicit ticks/unticks after this stick.
   _ensureFxWhitelistAutoApplied(auxes);
   const wl = new Set(modebarState.fxWhitelist || []);
   const lq = (document.getElementById('fx-wl-search')?.value || '').toLowerCase();
-  // Same sort order as +FX popover: FX → BUS → STACK → alphabetical
-  const TAG_RANK = { FX: 0, BUS: 1, STACK: 2, INST: 3, AUDIO: 4, OUTPUT: 5 };
+  // Same sort order as +FX popover: FX → BUS → alphabetical
+  const TAG_RANK = { FX: 0, BUS: 1 };
   const filtered = auxes
-    .map(ch => ({ ...ch, _autoTag: _classifyFxChannel({ ...ch, fxWhitelist: undefined }) }))
     .filter(ch => !lq || (ch.name || '').toLowerCase().includes(lq))
     .sort((a, b) => {
       const ar = TAG_RANK[a._autoTag] ?? 9;
@@ -14307,50 +14902,34 @@ function _renderFxWhitelist() {
     });
 
   let html = `<div style="padding:8px 12px 6px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:6px;flex-shrink:0;">
-    <span style="font-size:var(--fs-xxs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);flex:1;">Mark your FX channels</span>
+    <span style="font-size:var(--fs-xxs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);flex:1;">FX channels</span>
     <button onclick="event.stopPropagation();_clearFxWhitelist()" style="background:transparent;border:none;color:var(--muted);font-size:var(--fs-xxs);cursor:pointer;padding:2px 4px;font-family:'JetBrains Mono',monospace;">CLEAR</button>
   </div>
-  <input id="fx-wl-search" type="text" placeholder="Search…" autocomplete="off" spellcheck="false" style="background:var(--card);border:none;border-bottom:1px solid var(--b);color:var(--text);font-size:var(--fs-xs);padding:8px 10px;font-family:'JetBrains Mono',monospace;width:100%;box-sizing:border-box;outline:none;flex-shrink:0;" oninput="_renderFxWhitelist()">
-  <div class="fx-pass-hdr">
-    <span class="fx-pass-hdr-name" style="font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);color:var(--muted);font-style:italic;">Mute on pass →</span>
-    <span class="fx-pass-col-lbl" title="Muted on Dry pass" style="color:var(--accent);">DRY</span>
-    <span class="fx-pass-col-lbl" title="Muted on Wet pass" style="color:var(--teal);">WET</span>
-  </div>
-  <div style="overflow-y:auto;flex:1;padding:4px 0;">`;
+  <input id="fx-wl-search" type="text" placeholder="Search…" autocomplete="off" spellcheck="false" style="background:var(--card);border:none;border-bottom:1px solid var(--b);color:var(--text);font-size:var(--fs-xs);padding:6px 10px;font-family:'JetBrains Mono',monospace;width:100%;box-sizing:border-box;outline:none;flex-shrink:0;" oninput="_renderFxWhitelist()">
+  <div class="fx-wl-scroll" style="overflow-y:auto;flex:1;padding:4px 0;">`;
 
   if (!filtered.length) {
     html += `<div style="padding:14px 12px;color:var(--muted);font-size:var(--fs-xs);text-align:center;">${auxes.length ? 'No matches' : 'Scan Logic first'}</div>`;
   } else {
-    const wm = new Set(modebarState.fxWetMute || []);
     html += filtered.map(ch => {
-      const dryOn = wl.has(ch.name);
-      const wetOn = wm.has(ch.name);
+      const key = _fxKey(ch);
+      const dryOn = wl.has(key) || wl.has(ch.name);
       const tag = ch._autoTag;
       const tagText = tag === 'FX' ? 'FX RETURN' : tag;
-      const nm = (ch.name || '').replace(/"/g,'&quot;');
-      return `<div class="fx-row${dryOn ? ' on' : ''}" data-name="${nm}">
+      const safeKey = key.replace(/"/g,'&quot;');
+      return `<div class="fx-row${dryOn ? ' on' : ''}" data-fxkey="${safeKey}">
         <span class="fx-row-name">${ch.name}</span>
         <span class="fx-tag fx-tag-${tag.toLowerCase()}">${tagText}</span>
-        <span class="fx-cb${dryOn ? ' on' : ''}" title="Mute on Dry pass" aria-hidden="true"></span>
-        <span class="fx-wet-cb${wetOn ? ' on' : ''}" title="Mute on Wet pass" data-wet-name="${nm}" aria-hidden="true"></span>
+        <span class="fx-cb${dryOn ? ' on' : ''}" aria-hidden="true"></span>
       </div>`;
     }).join('');
   }
   html += `</div>`;
   pop.innerHTML = html;
-  // Wire row toggles — row body = DRY, .fx-wet-cb = WET
   pop.querySelectorAll('.fx-row').forEach(row => {
     row.addEventListener('click', e => {
       e.stopPropagation();
-      const name = row.dataset.name;
-      _toggleFxWhitelist(name);
-    });
-  });
-  pop.querySelectorAll('.fx-wet-cb').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      const name = btn.dataset.wetName;
-      _toggleFxWetMute(name);
+      _toggleFxWhitelist(row.dataset.fxkey);
     });
   });
 }
@@ -14398,11 +14977,18 @@ function setStemOverride(qid, axis, value) {
   if (!modebarState.perStemOverrides[qid]) modebarState.perStemOverrides[qid] = {};
   if (value === null || value === undefined || value === 'inherit') {
     delete modebarState.perStemOverrides[qid][axis];
+    // Inheriting master also clears per-stem plugin customisation
+    if (axis === 'master') delete modebarState.perStemOverrides[qid].masterPluginsCustom;
+    // Inheriting sc also clears per-stem custom sidechain channels
+    if (axis === 'sc') delete modebarState.perStemOverrides[qid].scChannels;
     if (Object.keys(modebarState.perStemOverrides[qid]).length === 0) {
       delete modebarState.perStemOverrides[qid];
     }
   } else {
     modebarState.perStemOverrides[qid][axis] = value;
+    // Picking On/Off/Both for SC explicitly clears the Custom channel selection,
+    // otherwise both "On" and "Custom" would show ✓ in the menu.
+    if (axis === 'sc') delete modebarState.perStemOverrides[qid].scChannels;
   }
   _saveStemOverrides();
   _updateGlobalOverrideIndicators();
@@ -14419,7 +15005,7 @@ function _axisOverrideCount(axis) {
     if (q.type === 'set' && Array.isArray(q.jobs)) for (const j of q.jobs) ids.add(j.id);
   }
   return Object.entries(modebarState.perStemOverrides)
-    .filter(([id, o]) => ids.has(id) && o[axis] !== undefined)
+    .filter(([id, o]) => ids.has(id) && (o[axis] !== undefined || (axis === 'master' && o.masterPluginsCustom) || (axis === 'sc' && o.scChannels?.length > 0)))
     .length;
 }
 
@@ -14444,27 +15030,44 @@ function _updateGlobalOverrideIndicators() {
 function _renderOverridePills(qid) {
   const ovr = modebarState.perStemOverrides[qid] || {};
   const parts = [];
-  if (ovr.mode !== undefined) {
-    parts.push(`<span class="mb-stem-pill" data-axis="mode" data-active="${ovr.mode !== 'dry'}" onclick="event.stopPropagation();openStemOverrideMenu('${qid}', this)" title="Effects override for this stem — click to change">${_label('mode', ovr.mode)}</span>`);
-  }
-  // Master pill — always visible; click opens per-stem plugin editor
-  {
+  // Master — only when there's an actual override or custom plugin snapshot
+  if (ovr.master !== undefined || ovr.masterPluginsCustom) {
     const hasCustom = !!ovr.masterPluginsCustom;
     const effectiveMaster = ovr.master ?? modebarState.master;
-    const lbl = hasCustom ? 'Master <svg class="ico" style="width:8px;height:8px;flex-shrink:0;" aria-hidden="true"><use href="#ico-asterisk"/></svg>' : ('Master ' + _label('master', effectiveMaster));
+    const lbl = hasCustom ? 'Master* ' : ('Master ' + _label('master', effectiveMaster));
     const active = hasCustom ? true : (effectiveMaster !== 'off');
-    const tip = hasCustom ? 'Custom plugin snapshot for this stem — click to edit' : 'Master plugins for this stem — click to customise';
+    const tip = hasCustom ? 'Custom plugin snapshot for this stem — click to edit' : 'Master override for this stem — click to edit';
     parts.push(`<span class="mb-stem-pill" data-axis="master" data-active="${active}" onclick="event.stopPropagation();openMasterPluginsModalForStem('${qid}')" title="${tip}">${lbl}</span>`);
   }
-  if (ovr.sc !== undefined) {
-    parts.push(`<span class="mb-stem-pill" data-axis="sc" data-active="${ovr.sc !== 'off'}" onclick="event.stopPropagation();openStemOverrideMenu('${qid}', this)" title="Sidechain override for this stem — click to change"><svg class="ico" aria-hidden="true"><use href="#ico-lock"/></svg>${_label('sc', ovr.sc)}</span>`);
+  if (ovr.sc !== undefined || (ovr.scChannels && ovr.scChannels.length > 0)) {
+    const hasScCustom = !!(ovr.scChannels && ovr.scChannels.length > 0);
+    const effectiveSc = ovr.sc ?? modebarState.sc;
+    const lblText = hasScCustom
+      ? `SC* ${ovr.scChannels.length}`
+      : _label('sc', ovr.sc);
+    const tip = hasScCustom
+      ? `Custom sidechain for this stem — ${ovr.scChannels.map(s=>s.name).join(', ')} — click to edit`
+      : 'Sidechain override for this stem — click to change';
+    const onClick = hasScCustom
+      ? `openScChannelsForStem('${qid}')`
+      : `openStemOverrideMenu('${qid}', this)`;
+    const active = hasScCustom ? true : (effectiveSc !== 'off');
+    parts.push(`<span class="mb-stem-pill" data-axis="sc" data-active="${active}" onclick="event.stopPropagation();${onClick}" title="${tip}"><svg class="ico" aria-hidden="true"><use href="#ico-lock"/></svg>${lblText}</span>`);
+  }
+  if (ovr.mode !== undefined) {
+    parts.push(`<span class="mb-stem-pill" data-axis="mode" data-active="${ovr.mode !== 'dry'}" onclick="event.stopPropagation();openStemOverrideMenu('${qid}', this)" title="Effects override for this stem — click to change">${_label('mode', ovr.mode)}</span>`);
   }
   if (ovr.fxChannels !== undefined) {
     const fx = ovr.fxChannels;
     const lbl = fx.length === 0 ? 'no FX'
-      : (fx.length === 1 ? '+' + fx[0] : `+${fx[0]} +${fx.length - 1}`);
-    const titleFull = fx.length === 0 ? 'no FX kept on Dry for this stem' : 'Stem-specific FX list: ' + fx.join(', ');
+      : (fx.length === 1 ? '+' + _fxKeyName(fx[0]) : `+${_fxKeyName(fx[0])} +${fx.length - 1}`);
+    const titleFull = fx.length === 0 ? 'no FX kept on Dry for this stem' : 'Keep on Dry: ' + fx.map(_fxKeyName).join(', ');
     parts.push(`<span class="mb-stem-pill" data-axis="fx" data-active="${fx.length > 0}" onclick="event.stopPropagation();openFxChannelsPopover(event,'${qid}')" title="${titleFull} — click to edit">${lbl}</span>`);
+  }
+  if (ovr.fxWetMute !== undefined && ovr.fxWetMute.length > 0) {
+    const wm = ovr.fxWetMute;
+    const lbl = wm.length === 1 ? `–${_fxKeyName(wm[0])}` : `–${wm.length} wet`;
+    parts.push(`<span class="mb-stem-pill" data-axis="fxwet" data-active="true" onclick="event.stopPropagation();_openFxPopoverWetTab(event,'${qid}')" title="Mute from Wet: ${wm.map(_fxKeyName).join(', ')} — click to edit" style="color:var(--teal);border-color:color-mix(in srgb,var(--teal) 40%,transparent);">${lbl}</span>`);
   }
   return parts.join('');
 }
@@ -14620,11 +15223,488 @@ function _stemFileCount(qid) {
   const mode   = ovr.mode   ?? modebarState.mode;
   const master = ovr.master ?? modebarState.master;
   const sc     = ovr.sc     ?? modebarState.sc;
+  const _job   = queue.find(q => q.id === qid) || queue.flatMap(q => q.jobs || []).find(j => j.id === qid) || {};
   let n = 1;
   if (mode === 'wet+dry') n *= 2;
   if (master === 'both')  n *= 2;
-  if (sc === 'both')      n *= 2;
+  if (sc === 'both' && _job.type !== 'mix') n *= 2;
   return n;
+}
+
+// ── Wildcards system for name-template (chip-based editor) ──
+const WILDCARDS = [
+  // Project group
+  { id: 'project',    label: '$project',    desc: 'Project name',          group: 'Project' },
+  { id: 'stem',       label: '$stem',       desc: 'Stem / channel name',   group: 'Project' },
+  { id: 'num',        label: '$num',        desc: 'Track number (01, 02…)',group: 'Project' },
+  { id: 'bpm',        label: '$bpm',        desc: 'Project tempo (BPM)',   group: 'Project' },
+  // Date group
+  { id: 'date',       label: '$date',       desc: 'YYYY-MM-DD',            group: 'Date' },
+  { id: 'time',       label: '$time',       desc: 'HH-MM',                 group: 'Date' },
+  { id: 'year',       label: '$year',       desc: 'YYYY',                  group: 'Date' },
+  { id: 'month',      label: '$month',      desc: 'MM',                    group: 'Date' },
+  { id: 'day',        label: '$day',        desc: 'DD',                    group: 'Date' },
+  // Format group
+  { id: 'samplerate', label: '$samplerate', desc: 'Sample rate (48k)',     group: 'Format' },
+  { id: 'bitdepth',   label: '$bitdepth',   desc: 'Bit depth (24)',        group: 'Format' },
+  { id: 'format',     label: '$format',     desc: 'WAV / AIFF / FLAC',     group: 'Format' },
+];
+const NAME_PRESETS = [
+  { label: 'Stem only',           tpl: '$stem' },
+  { label: 'Project + Stem',      tpl: '$project_$stem' },
+  { label: 'Numbered',            tpl: '$num_$project_$stem' },
+  { label: 'With date',           tpl: '$project_$stem_$date' },
+  { label: 'Mastering format',    tpl: '$project_$stem_$samplerate_$bitdepth' },
+];
+
+// Parse "$project_$stem" → tokens [{type:'wildcard',id}|{type:'text',value}]
+function _parseTemplate(text) {
+  const out = [];
+  if (!text) return out;
+  const re = /\$([a-z]+)/g;
+  let last = 0, m;
+  const validIds = new Set(WILDCARDS.map(w => w.id));
+  while ((m = re.exec(text)) !== null) {
+    if (!validIds.has(m[1])) continue;
+    if (m.index > last) out.push({ type: 'text', value: text.slice(last, m.index) });
+    out.push({ type: 'wildcard', id: m[1] });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) out.push({ type: 'text', value: text.slice(last) });
+  return out;
+}
+
+// Convert contenteditable DOM → "$project_$stem" string
+function _serializeTemplate(rootEl) {
+  if (!rootEl) rootEl = document.getElementById('name-template');
+  if (!rootEl) return '';
+  let out = '';
+  for (const node of rootEl.childNodes) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      out += node.textContent;
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      if (node.classList?.contains('wc-chip') && node.dataset.wc) {
+        out += '$' + node.dataset.wc;
+      } else {
+        out += node.textContent || '';
+      }
+    }
+  }
+  // Browsers sometimes inject &nbsp; — normalise to space
+  return out.replace(/ /g, ' ');
+}
+
+function _makeChip(id) {
+  const wc = WILDCARDS.find(w => w.id === id);
+  if (!wc) return null;
+  const chip = document.createElement('span');
+  chip.className = 'wc-chip';
+  chip.contentEditable = 'false';
+  chip.draggable = true;
+  chip.dataset.wc = id;
+  chip.title = wc.desc;
+  // Label + close button (× deletes the chip)
+  const lbl = document.createElement('span');
+  lbl.className = 'wc-chip-lbl';
+  lbl.textContent = '$' + id;
+  chip.appendChild(lbl);
+  const x = document.createElement('span');
+  x.className = 'wc-chip-x';
+  x.textContent = '×';
+  x.title = 'Remove';
+  x.contentEditable = 'false';
+  x.draggable = false;
+  // mousedown stops drag from initiating on the X button + prevents focus shift
+  x.addEventListener('mousedown', (e) => { e.stopPropagation(); e.preventDefault(); });
+  x.addEventListener('click', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const parent = chip.parentNode;
+    chip.remove();
+    if (parent) parent.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  chip.appendChild(x);
+  return chip;
+}
+
+// Render template string into contenteditable
+function _renderTemplate(text) {
+  const el = document.getElementById('name-template');
+  if (!el) return;
+  el.innerHTML = '';
+  for (const tok of _parseTemplate(text || '')) {
+    if (tok.type === 'text') {
+      el.appendChild(document.createTextNode(tok.value));
+    } else {
+      const chip = _makeChip(tok.id);
+      if (chip) el.appendChild(chip);
+    }
+  }
+  const hasContent = !!(el.textContent.trim() || el.querySelector('.wc-chip'));
+  const btn = document.getElementById('name-tpl-clear');
+  if (btn) btn.style.display = hasContent ? 'inline-flex' : 'none';
+  el.style.paddingRight = hasContent ? '86px' : '62px';
+}
+
+function _formatSampleRate(sr) {
+  if (!sr) return '';
+  // Normalise to compact form WITHOUT spaces — spaces in filenames cause filesystem
+  // weirdness and mismatch between bounce-time and search-time lookups.
+  // "48 kHz" → "48k", "44.1 kHz" → "44.1k", 48000 → "48k"
+  const s = String(sr).replace(/\s+/g, '');
+  // Already compact: "48k" / "44.1k"
+  if (/^\d+(\.\d+)?k$/i.test(s)) return s.toLowerCase();
+  // "48kHz" / "44.1kHz" — strip Hz
+  const m = s.match(/^(\d+(?:\.\d+)?)kHz$/i);
+  if (m) return m[1] + 'k';
+  // Numeric (44100, 48000) → divide by 1000
+  const n = parseFloat(s);
+  if (!isNaN(n) && n >= 1000) {
+    const k = n / 1000;
+    return (k % 1 === 0 ? k.toFixed(0) : k.toFixed(1)) + 'k';
+  }
+  return s;
+}
+
+function _formatBitDepth(bd) {
+  if (!bd) return '';
+  // Strip "-bit", " bit", "bit float", etc. → just the number (with float suffix)
+  // "24-bit" → "24", "32-bit float" → "32f", "32 Bit Float" → "32f"
+  const s = String(bd).toLowerCase();
+  const isFloat = s.includes('float');
+  const num = (s.match(/(\d+)/) || [])[1];
+  if (!num) return s;
+  return isFloat ? `${num}f` : num;
+}
+
+function _formatFileType(ft) {
+  if (!ft) return '';
+  // "WAVE" → "WAV" (more standard / matches the file extension)
+  const s = String(ft).toUpperCase();
+  if (s === 'WAVE') return 'WAV';
+  return s;
+}
+
+// Sanitise a wildcard value so it's safe inside any filename across macOS / Windows / Linux.
+// Strips: path separators (/ \), volume colon (:), wildcards (* ?), redirects (< > |),
+// quotes ("), control chars, and collapses repeated whitespace.
+function _safeFilenameValue(v) {
+  if (v == null) return '';
+  return String(v)
+    .replace(/[\x00-\x1f\x7f]/g, '')      // control chars
+    .replace(/[\/\\:*?"<>|]/g, '_')             // FS-illegal
+    .replace(/\s+/g, ' ')                       // collapse whitespace runs
+    .trim();
+}
+
+function _resolveWildcards(template, stemName) {
+  if (!template) return '';
+  // CRITICAL: snapshot the clock ONCE per bounce, not per call. Without this,
+  // _resolveWildcards is called twice — once during render (filename sent to Logic)
+  // and once after render (lookup verifying the file landed). If `$time` is in the
+  // template, the second call resolves to a different minute than the first → file
+  // appears "missing" even though it's there. Same risk for $date at midnight.
+  const d = (window._bounceClockSnapshot instanceof Date) ? window._bounceClockSnapshot : new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+
+  // Per-stem context (set by _runJobPasses) — preferred source for $num and $stem
+  // because it captures the ORIGINAL job (no pass suffix, stable id).
+  const jobCtx = window._currentBounceJob || null;
+
+  // $num — prefer pre-computed from job context (handles multi-pass + duplicate names);
+  // fall back to live queue lookup by name for non-bounce previews.
+  let num = '';
+  if (jobCtx && jobCtx.num) {
+    num = jobCtx.num;
+  } else if (typeof queue !== 'undefined' && Array.isArray(queue)) {
+    const i = queue.findIndex(q => q.name === stemName);
+    if (i >= 0) num = pad(i + 1);
+  }
+
+  // $stem — prefer the original name from job context. The `stemName` arg may already
+  // contain a pass suffix ("Drums_Wet") which the pass system will append AGAIN later.
+  const stemVal = (jobCtx && jobCtx.stemName) ? jobCtx.stemName : (stemName || '');
+
+  // $samplerate / $bitdepth / $format — prefer the bounce-start snapshot so a mid-bounce
+  // preset change doesn't desync render-name vs file-lookup.
+  let sr = '', bd = '', fmt = '';
+  const fmtSnap = window._bounceFmtSnapshot || null;
+  if (fmtSnap) {
+    sr  = fmtSnap.sr  || '';
+    bd  = fmtSnap.bd  || '';
+    fmt = fmtSnap.fmt || '';
+  } else {
+    try {
+      const p = (typeof getActiveFmtPreset === 'function') ? getActiveFmtPreset() : null;
+      if (p) {
+        sr  = _formatSampleRate(p.sampleRate);
+        bd  = _formatBitDepth(p.bitDepth);
+        fmt = _formatFileType(p.fileType);
+      }
+    } catch(_) {}
+  }
+
+  const ctx = {
+    project: _safeFilenameValue((typeof projectName !== 'undefined' && projectName) || ''),
+    stem:    _safeFilenameValue(stemVal),
+    num,
+    bpm: '', // No API yet — populated when a Logic-side BPM read becomes available
+    date: `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,
+    time: `${pad(d.getHours())}-${pad(d.getMinutes())}`,
+    year: String(d.getFullYear()),
+    month: pad(d.getMonth()+1),
+    day: pad(d.getDate()),
+    samplerate: sr,
+    bitdepth: bd,
+    format: fmt,
+  };
+  const validIds = new Set(WILDCARDS.map(w => w.id));
+  let out = template.replace(/\$([a-z]+)/g, (m, id) => {
+    if (!validIds.has(id)) return m;
+    return ctx[id] !== undefined ? ctx[id] : '';
+  });
+  // Collapse multiple consecutive separators caused by empty wildcards
+  out = out.replace(/_{2,}/g, '_').replace(/-{2,}/g, '-').replace(/\s{2,}/g, ' ');
+  // Strip leading/trailing separator chars
+  out = out.replace(/^[_\-\s]+|[_\-\s]+$/g, '');
+  return out;
+}
+
+function _initWildcardEditor() {
+  const el = document.getElementById('name-template');
+  if (!el || el._wcInited) return;
+  el._wcInited = true;
+  // Persist on input + show/hide clear button
+  const _updateClearBtn = () => {
+    const btn = document.getElementById('name-tpl-clear');
+    const hasContent = !!(el.textContent.trim() || el.querySelector('.wc-chip'));
+    if (btn) btn.style.display = hasContent ? 'inline-flex' : 'none';
+    el.style.paddingRight = hasContent ? '86px' : '62px';
+  };
+  el.addEventListener('input', () => {
+    const text = _serializeTemplate(el);
+    nameTemplate = text;
+    localStorage.setItem('sb4_name_tpl', nameTemplate);
+    if (typeof updateNamePresetUI === 'function') updateNamePresetUI();
+    _updateClearBtn();
+  });
+  // Initial state
+  setTimeout(_updateClearBtn, 0);
+  // Backspace/Delete near a chip → remove the adjacent chip cleanly.
+  // Some browsers leave selection inside the chip (contenteditable=false sub-node)
+  // and the default Backspace doesn't always remove it — handle explicitly.
+  el.addEventListener('keydown', (e) => {
+    if (e.key !== 'Backspace' && e.key !== 'Delete') return;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    if (!range.collapsed) return; // typed selection — let default handle it
+    // Walk up if cursor landed inside a chip's child (label/x span)
+    let inChip = range.startContainer.nodeType === Node.ELEMENT_NODE
+      ? range.startContainer.closest?.('.wc-chip')
+      : range.startContainer.parentElement?.closest?.('.wc-chip');
+    if (inChip && el.contains(inChip)) {
+      e.preventDefault();
+      inChip.remove();
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      return;
+    }
+    // Cursor in text node — find adjacent chip to delete
+    const isBackspace = e.key === 'Backspace';
+    const node = range.startContainer;
+    const offset = range.startOffset;
+    let target = null;
+    if (node.nodeType === Node.TEXT_NODE) {
+      // Backspace at start of text node, or Delete at end → check sibling
+      if (isBackspace && offset === 0) target = node.previousSibling;
+      else if (!isBackspace && offset === node.textContent.length) target = node.nextSibling;
+    } else if (node === el) {
+      // Cursor between elements at the editor root
+      const children = el.childNodes;
+      if (isBackspace && offset > 0) target = children[offset - 1];
+      else if (!isBackspace && offset < children.length) target = children[offset];
+    }
+    if (target?.classList?.contains?.('wc-chip')) {
+      e.preventDefault();
+      target.remove();
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  });
+  let _draggingChip = null;
+  el.addEventListener('dragstart', (e) => {
+    const chip = e.target.closest?.('.wc-chip');
+    if (!chip) return;
+    _draggingChip = chip;
+    chip.classList.add('dragging');
+    try { e.dataTransfer.setData('text/wildcard', chip.dataset.wc); } catch(_) {}
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  el.addEventListener('dragend', () => {
+    if (_draggingChip) _draggingChip.classList.remove('dragging');
+    el.querySelectorAll('.wc-chip-drop-before,.wc-chip-drop-after').forEach(c => {
+      c.classList.remove('wc-chip-drop-before','wc-chip-drop-after');
+    });
+    _draggingChip = null;
+  });
+  el.addEventListener('dragover', (e) => {
+    if (!_draggingChip) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    el.querySelectorAll('.wc-chip-drop-before,.wc-chip-drop-after').forEach(c => {
+      c.classList.remove('wc-chip-drop-before','wc-chip-drop-after');
+    });
+    const target = e.target.closest?.('.wc-chip');
+    if (target && target !== _draggingChip) {
+      const r = target.getBoundingClientRect();
+      const before = e.clientX < r.left + r.width / 2;
+      target.classList.add(before ? 'wc-chip-drop-before' : 'wc-chip-drop-after');
+    }
+  });
+  el.addEventListener('drop', (e) => {
+    if (!_draggingChip) return;
+    e.preventDefault();
+    const target = e.target.closest?.('.wc-chip');
+    if (target && target !== _draggingChip) {
+      const r = target.getBoundingClientRect();
+      const before = e.clientX < r.left + r.width / 2;
+      target.parentNode.insertBefore(_draggingChip, before ? target : target.nextSibling);
+    } else if (!target) {
+      el.appendChild(_draggingChip);
+    }
+    // Auto-insert '_' separator between adjacent chips so they don't stick together
+    const _isChip = n => n && n.nodeType === Node.ELEMENT_NODE && n.classList?.contains('wc-chip');
+    if (_isChip(_draggingChip.previousSibling)) {
+      _draggingChip.parentNode.insertBefore(document.createTextNode('_'), _draggingChip);
+    }
+    if (_isChip(_draggingChip.nextSibling)) {
+      _draggingChip.parentNode.insertBefore(document.createTextNode('_'), _draggingChip.nextSibling);
+    }
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+}
+
+function _buildWildcardsDropdown() {
+  const dd = document.getElementById('wc-dropdown');
+  if (!dd) return;
+  const groups = {};
+  for (const w of WILDCARDS) {
+    if (!groups[w.group]) groups[w.group] = [];
+    groups[w.group].push(w);
+  }
+  let html = '';
+  for (const [groupName, items] of Object.entries(groups)) {
+    html += `<div class="wc-group-label">${groupName}</div>`;
+    for (const w of items) {
+      html += `<div class="wc-item" data-wc="${w.id}"><span class="wc-item-name">${w.label}</span><span class="wc-item-desc">${w.desc}</span></div>`;
+    }
+  }
+  html += `<div class="wc-presets"><div class="wc-group-label">Presets</div>`;
+  for (const p of NAME_PRESETS) {
+    html += `<button class="wc-preset-btn" data-tpl="${p.tpl.replace(/"/g,'&quot;')}">${p.label}<span class="wc-preset-tpl">${p.tpl}</span></button>`;
+  }
+  html += `</div>`;
+  dd.innerHTML = html;
+  dd.querySelectorAll('.wc-item').forEach(it => {
+    it.addEventListener('click', (e) => {
+      e.stopPropagation();
+      _insertWildcardAtCursor(it.dataset.wc);
+    });
+  });
+  dd.querySelectorAll('.wc-preset-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      _renderTemplate(btn.dataset.tpl);
+      const el = document.getElementById('name-template');
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      _closeWildcardsDropdown();
+    });
+  });
+}
+
+function _insertWildcardAtCursor(id) {
+  const el = document.getElementById('name-template');
+  if (!el) return;
+  const chip = _makeChip(id);
+  if (!chip) return;
+  el.focus();
+  // Decide whether to auto-insert a "_" separator before the new chip.
+  // Yes when: the previous sibling at the insertion point is a chip OR a text node
+  // that doesn't already end with a separator character. Without this, sequential
+  // chips concatenate ("$num$bpm$date" → "0112048k") which is unreadable.
+  const SEPS = ['_', '-', ' '];
+  const _prevNeedsSep = (node) => {
+    if (!node) return false;
+    if (node.nodeType === Node.ELEMENT_NODE && node.classList?.contains('wc-chip')) return true;
+    if (node.nodeType === Node.TEXT_NODE) {
+      const t = node.textContent || '';
+      if (!t) return false;
+      return !SEPS.includes(t[t.length - 1]);
+    }
+    return false;
+  };
+  const _insertSepIfNeeded = (range) => {
+    let prev = null;
+    if (range.startContainer === el) {
+      // Cursor between top-level children — peek the one to the left
+      if (range.startOffset > 0) prev = el.childNodes[range.startOffset - 1];
+    } else if (range.startContainer.nodeType === Node.TEXT_NODE) {
+      // Cursor inside a text node — split-insert: previous content stays before chip
+      // We treat the text-node as the "prev" (already not-a-separator if cursor mid-text)
+      const tn = range.startContainer;
+      if (range.startOffset === 0) prev = tn.previousSibling;
+      else {
+        const left = tn.textContent.slice(0, range.startOffset);
+        prev = left ? tn : tn.previousSibling;
+      }
+    }
+    if (_prevNeedsSep(prev)) {
+      range.insertNode(document.createTextNode('_'));
+      range.collapse(false);
+    }
+  };
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount > 0) {
+    const range = sel.getRangeAt(0);
+    if (el.contains(range.startContainer) || el === range.startContainer) {
+      range.deleteContents();
+      _insertSepIfNeeded(range);
+      range.insertNode(chip);
+      range.setStartAfter(chip);
+      range.setEndAfter(chip);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      return;
+    }
+  }
+  // Fallback: append at end. If the last child is a chip or non-separator text — add "_"
+  if (_prevNeedsSep(el.lastChild)) el.appendChild(document.createTextNode('_'));
+  el.appendChild(chip);
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+let _wcDropdownOpen = false;
+function toggleWildcardsDropdown(ev) {
+  ev?.stopPropagation();
+  ev?.preventDefault();
+  if (_wcDropdownOpen) { _closeWildcardsDropdown(); return; }
+  document.getElementById('name-preset-dropdown')?.classList.remove('open');
+  const presetDD = document.getElementById('name-preset-dropdown');
+  if (presetDD) presetDD.style.display = 'none';
+  _buildWildcardsDropdown();
+  document.getElementById('wc-dropdown')?.classList.add('open');
+  _wcDropdownOpen = true;
+  setTimeout(() => document.addEventListener('click', _wcOutsideClick), 0);
+}
+function _closeWildcardsDropdown() {
+  document.getElementById('wc-dropdown')?.classList.remove('open');
+  _wcDropdownOpen = false;
+  document.removeEventListener('click', _wcOutsideClick);
+}
+function _wcOutsideClick(e) {
+  if (!e.target.closest('#wc-dropdown') && !e.target.closest('#wc-insert-btn')) {
+    _closeWildcardsDropdown();
+  }
 }
 
 // User-customizable suffix names. Persists across sessions.
@@ -14748,31 +15828,59 @@ function _passesForJob(job) {
   const sc      = ovr.sc      !== undefined ? ovr.sc      : modebarState.sc;
   const fxKeep    = ovr.fxChannels !== undefined ? ovr.fxChannels : modebarState.fxChannels;
   const fxWetMute = ovr.fxWetMute  !== undefined ? ovr.fxWetMute  : (modebarState.fxWetMute || []);
+  const scChannelsOvr = ovr.scChannels; // may be undefined (inherit global sidechainChannels)
 
   const masterPluginsCustom = ovr.masterPluginsCustom || null;
 
   const modeStates   = mode   === 'wet+dry' ? ['wet', 'dry']  : [mode === 'dry' ? 'dry' : 'wet'];
   const masterStates = master === 'both'    ? ['on',  'off']  : [master === 'off' ? 'off' : 'on'];
-  const scStates     = sc     === 'both'    ? ['on',  'off']  : [sc === 'on' ? 'on' : 'off'];
+  // Versions (mix type) mute instruments — adding a sidechain solo pass on top is meaningless
+  const _scEff  = (job.type === 'mix' && sc === 'both') ? 'off' : sc;
+  const scStates     = _scEff  === 'both'    ? ['on',  'off']  : [_scEff  === 'on' ? 'on' : 'off'];
 
-  // Suffixes only when Both is active on that axis (per spec)
-  const showMS = masterStates.length > 1;
-  const showSC = scStates.length > 1;
-  const showMD = modeStates.length > 1;
-
+  // Suffix rules — fully driven by input fields in the suffix editor:
+  //   - Field has text → suffix is added whenever that state is active (single OR both).
+  //   - Field is empty → no suffix added for that pass (clean filename).
+  // This gives the user full control: keep "Wet" filled to always tag wet renders,
+  // clear "Wet" to never tag them, etc. Defaults (Wet / Dry / Master / NoMaster / SC / NoSC)
+  // are pre-filled so the typical case works out-of-the-box; the user can edit or empty any.
+  //
+  // Collision protection: if multiple passes end up with identical suffix (e.g. user
+  // emptied both Wet and Dry while rendering Both), we force the built-in defaults so
+  // files don't overwrite each other silently. A warning is logged in that case.
   const passes = [];
   for (const md of modeStates) {
     for (const ms of masterStates) {
       for (const ss of scStates) {
         let suffix = '';
-        if (showMS) suffix += (ms === 'on' ? _sfx('master') : _sfx('noMaster'));
-        if (showSC) suffix += (ss === 'on' ? _sfx('sc')     : _sfx('noSc'));
-        if (showMD) suffix += (md === 'dry' ? _sfx('dry')   : _sfx('wet'));
+        suffix += (ms === 'on' ? _sfx('master') : _sfx('noMaster'));
+        suffix += (ss === 'on' ? _sfx('sc')     : _sfx('noSc'));
+        suffix += (md === 'dry' ? _sfx('dry')   : _sfx('wet'));
         // masterPluginsCustom only applies when master is not already 'both' (custom overrides a single state)
-        passes.push({ mode: md, master: ms, sc: ss, fxKeep, fxWetMute, suffix, masterPluginsCustom: masterPluginsCustom && ms !== 'off' ? masterPluginsCustom : null });
+        // scChannels: per-stem override or undefined (bounceStem falls back to global sidechainChannels)
+        passes.push({ mode: md, master: ms, sc: ss, fxKeep, fxWetMute, suffix, _ms: ms, _ss: ss, _md: md, masterPluginsCustom: masterPluginsCustom && ms !== 'off' ? masterPluginsCustom : null, scChannels: scChannelsOvr !== undefined ? scChannelsOvr : undefined });
       }
     }
   }
+  // Collision detection — if multiple passes share a suffix, fall back to default labels
+  // for axes where Both is active. Single-state axes don't need disambiguation.
+  if (passes.length > 1) {
+    const counts = {};
+    for (const p of passes) counts[p.suffix] = (counts[p.suffix] || 0) + 1;
+    const hasCollision = Object.values(counts).some(c => c > 1);
+    if (hasCollision) {
+      for (const p of passes) {
+        let safe = '';
+        if (masterStates.length > 1) safe += '_' + (p._ms === 'on' ? (_SUFFIX_DEFAULTS.master   || 'Master')   : (_SUFFIX_DEFAULTS.noMaster || 'NoMaster'));
+        if (scStates.length > 1)     safe += '_' + (p._ss === 'on' ? (_SUFFIX_DEFAULTS.sc       || 'SC')       : (_SUFFIX_DEFAULTS.noSc     || 'NoSC'));
+        if (modeStates.length > 1)   safe += '_' + (p._md === 'dry' ? (_SUFFIX_DEFAULTS.dry     || 'Dry')      : (_SUFFIX_DEFAULTS.wet      || 'Wet'));
+        p.suffix = safe;
+      }
+      try { log('⚠ Suffix fields would cause filename collision — using default labels to keep files unique', 'warn'); } catch(_) {}
+    }
+  }
+  // Strip transient _ms/_ss/_md helper fields before returning
+  for (const p of passes) { delete p._ms; delete p._ss; delete p._md; }
   return passes;
 }
 
@@ -14798,15 +15906,27 @@ async function _applyPassPre(pass) {
       const auxes = allCh.filter(c => c.chType === 'Bus' || c.isBus);
       _ensureFxWhitelistAutoApplied(auxes);
     }
-    const muteSet = new Set(modebarState.fxWhitelist || []);
-    const toMute = allCh.filter(c => muteSet.has(c.name));
+    // Build mute set from global whitelist, then subtract per-stem keep list (fxKeep).
+    // fxKeep = "+FX DRY tab" selection — channels this stem wants alive on dry pass.
+    const keepSet = new Set(pass.fxKeep || []);
+    // Also build a name-only set so legacy "Name" entries in whitelist match new "Name||idx"
+    // entries in keepSet and vice-versa (backward-compatible key comparison).
+    const keepNames = new Set([...keepSet].map(k => _fxKeyName(k)));
+    const muteKeys = (modebarState.fxWhitelist || []).filter(k => {
+      if (keepSet.has(k)) return false;          // exact key match (new format)
+      if (keepSet.has(_fxKeyName(k))) return false; // new-format key in keepSet, legacy in whitelist
+      if (keepNames.has(k)) return false;        // legacy name in whitelist, new-format in keepSet
+      if (keepNames.has(_fxKeyName(k))) return false; // both new-format
+      return true;
+    });
+    const toMute = allCh.filter(c => muteKeys.some(k => _chMatchesKey(c, k)));
     if (toMute.length > 0 && window.api?.muteManyByIndex) {
       const indices = toMute.map(c => c.index).filter(i => i != null);
       if (indices.length) {
         try {
           await window.api.muteManyByIndex(indices.join('|'));
           captured.mutedIndices = indices;
-          if (typeof log === 'function') log(`💧 Dry pass: muted ${indices.length} FX/Bus channels`, 'info');
+          if (typeof log === 'function') log(`💧 Dry pass: muted ${indices.length} FX/Bus channel(s)${keepSet.size ? ` (kept: ${[...keepSet].join(', ')})` : ''}`, 'info');
         } catch (e) { console.warn('[EB] Dry mute failed', e); }
       }
     }
@@ -14817,8 +15937,8 @@ async function _applyPassPre(pass) {
     const allCh = (typeof _masterChannels !== 'undefined' && _masterChannels.length)
       ? _masterChannels
       : (typeof channels !== 'undefined' ? channels : []);
-    const wetMuteSet = new Set(pass.fxWetMute);
-    const toMuteWet = allCh.filter(c => wetMuteSet.has(c.name));
+    const wetMuteKeys = pass.fxWetMute;
+    const toMuteWet = allCh.filter(c => wetMuteKeys.some(k => _chMatchesKey(c, k)));
     if (toMuteWet.length > 0 && window.api?.muteManyByIndex) {
       const indices = toMuteWet.map(c => c.index).filter(i => i != null)
         .filter(i => !captured.mutedIndices.includes(i));
@@ -14902,6 +16022,14 @@ function _setRenderingLabel(text) {
 }
 
 async function _runJobPasses(job, folder, isFirst, origFn) {
+  // Snapshot the original job context for wildcard resolution. Without this, multi-pass
+  // names (job.name + "_Wet") and duplicate-named stems break $num and $stem.
+  window._currentBounceJob = {
+    id: job.id,
+    num: job._bounceNum || '',
+    stemName: job.name,           // ORIGINAL name, before any pass suffix
+    logicName: job.logicName || job.name,
+  };
   const passes = _passesForJob(job);
   if (passes.length > 1 && typeof log === 'function') {
     log(`📦 ${job.name} — ${passes.length} variants`, 'info');
@@ -14912,6 +16040,7 @@ async function _runJobPasses(job, folder, isFirst, origFn) {
     job._passSucceeded = new Array(passes.length).fill(false);
   }
   let allOk = true;
+  let _anyActuallyRendered = false; // tracks whether we actually bounced at least one pass
   // isFirst (folder navigation in triggerBounce) must run on the first pass that ACTUALLY
   // renders, not always on i===0 — otherwise a retry that skips pass 0 never navigates.
   let firstRendered = true;
@@ -14942,6 +16071,7 @@ async function _runJobPasses(job, folder, isFirst, origFn) {
         continue;
       }
     }
+    _anyActuallyRendered = true;
     // Variant suffix exposed via global (used by prog() wrapper for marker passes etc.)
     window._currentPassSuffix = passes.length > 1
       ? pass.suffix.replace(/^_/, '').replace(/_/g, ' ')
@@ -14955,10 +16085,12 @@ async function _runJobPasses(job, folder, isFirst, origFn) {
       }
     }
     const captured = await _applyPassPre(pass);
+    window._currentPass = pass; // expose for bounceStem/bounceGroup to read scChannels
     let ok = false;
     try {
       ok = await origFn.call(this, passJob, folder, isFirst && firstRendered);
     } finally {
+      window._currentPass = null;
       await _applyPassPost(captured);
     }
     if (!ok) {
@@ -14980,6 +16112,10 @@ async function _runJobPasses(job, folder, isFirst, origFn) {
   // queue item doesn't silently skip everything.
   if (allOk) job._passSucceeded = null;
   window._currentPassSuffix = '';   // clear when stem fully done
+  window._currentBounceJob = null;  // release wildcard context for this stem
+  // Signal to the outer loop whether we actually rendered or only skipped pre-existing files.
+  // The stale-mtime check must NOT fire when all passes were skipped (file predates stem start).
+  window._lastJobAllSkipped = allOk && !_anyActuallyRendered;
   return allOk;
 }
 
@@ -15101,7 +16237,7 @@ function _renderSuffixNamingHtml() {
   });
   html += `</div>`;
   html += `<div style="padding:6px 12px 8px;border-top:1px solid var(--b);font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);color:var(--muted);font-style:italic;">
-    Empty = no suffix on that pass. Used only when Both is active on that axis.
+    Filled field = suffix is always added when that state is active. Empty field = no suffix on that pass. Collisions are auto-resolved with default labels.
   </div>`;
   return html;
 }
@@ -15217,15 +16353,34 @@ function _renderStemMenuHtml(qid) {
   <div class="mb-stem-menu-body" style="overflow-y:auto;flex:1;min-height:0;">`;
   sections.forEach((sec, si) => {
     const cur = ovr[sec.axis];
-    const inheritActive = cur === undefined;
+    // Custom flags that suppress the regular state checkmarks (Inherit / On / Off / Both):
+    const hasCustomMaster = sec.axis === 'master' && !!ovr.masterPluginsCustom;
+    const hasCustomSc     = sec.axis === 'sc'     && !!(ovr.scChannels && ovr.scChannels.length > 0);
+    const hasCustom       = hasCustomMaster || hasCustomSc;
+    // "Inherit" is active only when there's no explicit override AND no per-stem custom config
+    const inheritActive   = cur === undefined && !hasCustom;
     html += `<div class="mb-stem-menu-sec" style="${si > 0 ? 'border-top:1px solid var(--b);' : ''}padding:6px 0;">`;
     html += `<div style="padding:2px 12px 4px;font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);font-weight:700;color:var(--muted);letter-spacing:.08em;">${sec.label}</div>`;
     // Inherit option
     html += `<button class="mb-stem-menu-item" data-active="${inheritActive}" onclick="setStemOverride('${qid}','${sec.axis}','inherit');closeStemOverrideMenu();"><span class="mb-menu-mark">${inheritActive ? '✓' : ''}</span><span class="mb-menu-lbl">Inherit global</span><span class="mb-menu-val">${_label(sec.axis, modebarState[sec.axis])}</span></button>`;
     sec.states.forEach(s => {
-      const active = cur === s;
+      const active = cur === s && !hasCustom;
       html += `<button class="mb-stem-menu-item" data-active="${active}" onclick="setStemOverride('${qid}','${sec.axis}','${s}');closeStemOverrideMenu();"><span class="mb-menu-mark">${active ? '✓' : ''}</span><span class="mb-menu-lbl">${_label(sec.axis, s)}</span><span class="mb-menu-val"></span></button>`;
     });
+    // Master axis gets an extra "Custom…" option to configure per-stem plugin bypass
+    if (sec.axis === 'master') {
+      const hasCustom = !!ovr.masterPluginsCustom;
+      const customLbl = hasCustom ? 'Custom — edit…' : 'Custom…';
+      html += `<button class="mb-stem-menu-item" data-active="${hasCustom}" onclick="closeStemOverrideMenu();openMasterPluginsModalForStem('${qid}');"><span class="mb-menu-mark">${hasCustom ? '✓' : ''}</span><span class="mb-menu-lbl">${customLbl}</span><span class="mb-menu-val">${hasCustom ? ovr.masterPluginsCustom.length + ' plugins' : ''}</span></button>`;
+    }
+    // SC axis gets an extra "Custom…" option to configure per-stem sidechain channels
+    if (sec.axis === 'sc') {
+      const hasSCCustom = !!(ovr.scChannels && ovr.scChannels.length > 0);
+      const customLbl = hasSCCustom
+        ? `Custom — ${ovr.scChannels.length} ch${ovr.scChannels.length > 1 ? 's' : ''}`
+        : 'Custom…';
+      html += `<button class="mb-stem-menu-item" data-active="${hasSCCustom}" onclick="closeStemOverrideMenu();openScChannelsForStem('${qid}');"><span class="mb-menu-mark">${hasSCCustom ? '✓' : ''}</span><span class="mb-menu-lbl">${customLbl}</span><span class="mb-menu-val"></span></button>`;
+    }
     html += `</div>`;
   });
   // +FX section — opens the FX popover bound to this stem
@@ -15263,15 +16418,12 @@ function _initModebar() {
   if (fxPop && fxPop.parentElement && !fxPop.parentElement.isSameNode(document.body)) {
     document.body.appendChild(fxPop);
   }
-  // Restore SC chip label from cached sidechainChannel (localStorage) — fallback to hidden <select>.
-  // Without this the chip showed "Search channel…" even when a cached channel was active,
-  // hiding which channel the bounce would actually solo as sidechain.
+  // Restore SC chip label from cached sidechainChannels (localStorage).
+  // _setScChipLabel reads sidechainChannels directly (arg is kept for backward compat only).
   const sel = document.getElementById('sidechain-select');
   const _cachedSc = (typeof sidechainChannel !== 'undefined' && sidechainChannel) || (sel && sel.value) || '';
-  if (_cachedSc) {
-    if (sel && !sel.value) sel.value = _cachedSc; // keep hidden select in sync
-    _setScChipLabel(_cachedSc);
-  }
+  if (sel && _cachedSc && !sel.value) sel.value = _cachedSc; // keep hidden select in sync
+  _setScChipLabel(); // always call — reads sidechainChannels for multi-select display
   _refreshFxChip();
   _updateGlobalOverrideIndicators();
   updateModebarSummary();
@@ -15472,15 +16624,47 @@ function applyFmtSource() {
   // 'logic' case: banner is shown by setFmtSource after Logic dialog
 }
 
+const M4A_BITRATES_CBR = ['16 kbit/s','20 kbit/s','24 kbit/s','28 kbit/s','32 kbit/s','40 kbit/s','48 kbit/s','56 kbit/s','64 kbit/s','80 kbit/s','96 kbit/s','112 kbit/s','128 kbit/s','160 kbit/s','192 kbit/s','224 kbit/s','256 kbit/s','320 kbit/s'];
+const M4A_BITRATES_VBR = ['96 - 110 kbit/s','128 - 146 kbit/s','160 - 182 kbit/s','192 - 218 kbit/s','256 - 292 kbit/s'];
+
+function updateM4aBitRateOptions() {
+  const sel = document.getElementById('fmt-m4a-bitrate');
+  if (!sel) return;
+  const enc = document.getElementById('fmt-m4a-encoding')?.value || 'Advanced Audio Codec (AAC)';
+  const vbr = !!document.getElementById('fmt-m4a-vbr')?.checked;
+  const grp = document.getElementById('fmt-m4a-bitrate-group');
+  const vbrRow = document.getElementById('fmt-m4a-vbr-row');
+  const vbrCb = document.getElementById('fmt-m4a-vbr');
+  if (enc.toLowerCase().includes('lossless')) {
+    if (grp) grp.style.opacity = '0.4';
+    if (vbrRow) vbrRow.style.opacity = '0.4';
+    sel.disabled = true;
+    if (vbrCb) vbrCb.disabled = true;
+    return;
+  }
+  if (grp) grp.style.opacity = '1';
+  if (vbrRow) vbrRow.style.opacity = '1';
+  sel.disabled = false;
+  if (vbrCb) vbrCb.disabled = false;
+  const list = vbr ? M4A_BITRATES_VBR : M4A_BITRATES_CBR;
+  const cur = sel.value;
+  sel.innerHTML = list.map(v => `<option>${v}</option>`).join('');
+  if (list.includes(cur)) sel.value = cur;
+  else sel.value = vbr ? '96 - 110 kbit/s' : '128 kbit/s';
+}
+
 function updateFmtBar() {
   const p = getActiveFmtPreset();
   const wavTag = document.getElementById('fmt-bar-wav-tag');
   const mp3Tag = document.getElementById('fmt-bar-mp3-tag');
+  const m4aTag = document.getElementById('fmt-bar-m4a-tag');
   const detail = document.getElementById('fmt-bar-detail');
-  const wavOn = !p || p.dest === 0 || p.dest === 2;
+  const wavOn = !p || ((p.dest === 0 || p.dest === 2) && !p.wavOff);
   const mp3On = p && (p.dest === 1 || p.dest === 2);
+  const m4aOn = !!(p && p.m4aOn);
   if (wavTag) wavTag.className = wavOn ? 'fmt-tag fmt-tag-wav' : 'fmt-tag fmt-tag-wav-off';
   if (mp3Tag) mp3Tag.className = mp3On ? 'fmt-tag fmt-tag-mp3' : 'fmt-tag fmt-tag-mp3-off';
+  if (m4aTag) m4aTag.className = m4aOn ? 'fmt-tag fmt-tag-m4a' : 'fmt-tag fmt-tag-m4a-off';
   // Detail text
   if (p && detail) {
     const parts = [];
@@ -15491,6 +16675,10 @@ function updateFmtBar() {
     }
     const mp3r = p.mp3RateStereo || p.mp3Rate;
     if (mp3On && mp3r) parts.push('MP3 ' + mp3r);
+    if (m4aOn) {
+      const isLossless = (p.m4aEncoding || '').toLowerCase().includes('lossless');
+      parts.push('M4A ' + (isLossless ? 'ALAC' : (p.m4aBitRate || '128 kbit/s')));
+    }
     if (detail) detail.textContent = parts.join(' / ') || p.name || '—';
   } else if (detail) detail.textContent = '—';
   const srcBadge = document.getElementById('fmt-bar-source');
@@ -15505,13 +16693,17 @@ function updateFmtModalTabs() {
   const p = getEditingFmtPreset();
   const wavChk = document.getElementById('fmt-chk-wav');
   const mp3Chk = document.getElementById('fmt-chk-mp3');
+  const m4aChk = document.getElementById('fmt-chk-m4a');
   const wavTab = document.getElementById('fmt-tab-wav');
   const mp3Tab = document.getElementById('fmt-tab-mp3');
+  const m4aTab = document.getElementById('fmt-tab-m4a');
   if (!wavChk || !mp3Chk) return;
-  const wavOn = !p || p.dest === 0 || p.dest === 2;
+  const wavOn = !p || ((p.dest === 0 || p.dest === 2) && !p.wavOff);
   const mp3On = p && (p.dest === 1 || p.dest === 2);
+  const m4aOn = !!(p && p.m4aOn);
   wavChk.checked = !!wavOn;
   mp3Chk.checked = !!mp3On;
+  if (m4aChk) m4aChk.checked = !!m4aOn;
   if (wavTab) {
     wavTab.classList.toggle('active-view', _fmtViewTab === 'wav');
     wavTab.classList.toggle('fmt-enabled', !!wavOn);
@@ -15520,15 +16712,20 @@ function updateFmtModalTabs() {
     mp3Tab.classList.toggle('active-view', _fmtViewTab === 'mp3');
     mp3Tab.classList.toggle('fmt-enabled', !!mp3On);
   }
+  if (m4aTab) {
+    m4aTab.classList.toggle('active-view', _fmtViewTab === 'm4a');
+    m4aTab.classList.toggle('fmt-enabled', !!m4aOn);
+  }
 }
 
 // Called by checkbox onchange — toggles whether format is included in bounce
 function onFmtFormatToggle(format, checked) {
   const p = getEditingFmtPreset(); if (!p) return;
-  const wavOn = p.dest === 0 || p.dest === 2;
+  const wavOn = (p.dest === 0 || p.dest === 2) && !p.wavOff;
   const mp3On = p.dest === 1 || p.dest === 2;
+  const m4aOn = !!p.m4aOn;
   if (format === 'wav') {
-    if (!checked && !mp3On) { // can't disable both
+    if (!checked && !mp3On && !m4aOn) { // can't disable all three
       document.getElementById('fmt-chk-wav').checked = true; return;
     }
     if (checked) {
@@ -15536,23 +16733,41 @@ function onFmtFormatToggle(format, checked) {
       if (!p.bitDepth)   p.bitDepth   = '24-bit';
       if (!p.sampleRate) p.sampleRate = '48 kHz';
       p.dest = mp3On ? 2 : 0;
+      p.wavOff = false;
       _fmtViewTab = 'wav';
     } else {
-      p.dest = 1; // only MP3
-      if (_fmtViewTab === 'wav') _fmtViewTab = 'mp3';
+      p.dest = mp3On ? 1 : 0; // 1 if MP3 still on; 0 if only M4A (wavOff flag tells apply to disable WAV)
+      p.wavOff = !mp3On; // mark WAV off when only M4A remains
+      if (_fmtViewTab === 'wav') _fmtViewTab = mp3On ? 'mp3' : 'm4a';
     }
-  } else {
-    if (!checked && !wavOn) { // can't disable both
+  } else if (format === 'mp3') {
+    if (!checked && !wavOn && !m4aOn) { // can't disable all three
       document.getElementById('fmt-chk-mp3').checked = true; return;
     }
     if (checked) {
       if (!p.mp3Rate)       p.mp3Rate       = '320 kbit/s';
       if (!p.mp3StereoMode) p.mp3StereoMode = 'Joint Stereo';
       p.dest = wavOn ? 2 : 1;
+      if (wavOn) p.wavOff = false;
       _fmtViewTab = 'mp3';
     } else {
-      p.dest = 0; // only WAV
-      if (_fmtViewTab === 'mp3') _fmtViewTab = 'wav';
+      // MP3 off: keep WAV bit if set, else only M4A
+      p.dest = wavOn ? 0 : 0;
+      p.wavOff = !wavOn; // if WAV was on, keep it; otherwise mark off
+      if (_fmtViewTab === 'mp3') _fmtViewTab = wavOn ? 'wav' : 'm4a';
+    }
+  } else if (format === 'm4a') {
+    if (!checked && !wavOn && !mp3On) { // can't disable all three
+      document.getElementById('fmt-chk-m4a').checked = true; return;
+    }
+    if (checked) {
+      if (!p.m4aEncoding) p.m4aEncoding = 'Advanced Audio Codec (AAC)';
+      if (!p.m4aBitRate)  p.m4aBitRate  = '128 kbit/s';
+      p.m4aOn = true;
+      _fmtViewTab = 'm4a';
+    } else {
+      p.m4aOn = false;
+      if (_fmtViewTab === 'm4a') _fmtViewTab = wavOn ? 'wav' : 'mp3';
     }
   }
   saveFmtPresets(); updateFmtBar(); renderFmtSettings();
@@ -15567,9 +16782,10 @@ function switchFmtTabView(tab) {
 // Clicking the pill label/body — switches view to this tab (enables if not enabled)
 function fmtTabClick(fmt) {
   const p = getEditingFmtPreset(); if (!p) return;
-  const wavOn = p.dest === 0 || p.dest === 2;
+  const wavOn = (p.dest === 0 || p.dest === 2) && !p.wavOff;
   const mp3On = p.dest === 1 || p.dest === 2;
-  const isOn  = fmt === 'wav' ? wavOn : mp3On;
+  const m4aOn = !!p.m4aOn;
+  const isOn  = fmt === 'wav' ? wavOn : (fmt === 'mp3' ? mp3On : m4aOn);
   if (!isOn) {
     // Not enabled yet — enable and switch view
     onFmtFormatToggle(fmt, true);
@@ -15584,9 +16800,10 @@ function fmtTabClick(fmt) {
 // Clicking the checkbox inside the pill — toggles on/off WITHOUT switching view
 function fmtToggleOnly(fmt) {
   const p = getEditingFmtPreset(); if (!p) return;
-  const wavOn = p.dest === 0 || p.dest === 2;
+  const wavOn = (p.dest === 0 || p.dest === 2) && !p.wavOff;
   const mp3On = p.dest === 1 || p.dest === 2;
-  const isOn  = fmt === 'wav' ? wavOn : mp3On;
+  const m4aOn = !!p.m4aOn;
+  const isOn  = fmt === 'wav' ? wavOn : (fmt === 'mp3' ? mp3On : m4aOn);
   onFmtFormatToggle(fmt, !isOn);
 }
 
@@ -15607,7 +16824,7 @@ function renderFmtPresetList() {
     div.appendChild(nameEl);
     // Badge row — specs summary
     const parts = [];
-    const wavOn = p.dest === 0 || p.dest === 2;
+    const wavOn = (p.dest === 0 || p.dest === 2) && !p.wavOff;
     const mp3On = p.dest === 1 || p.dest === 2;
     if (wavOn) {
       if (p.fileType) parts.push(p.fileType);
@@ -15615,6 +16832,10 @@ function renderFmtPresetList() {
       if (p.sampleRate) parts.push(p.sampleRate);
     }
     if (mp3On && (p.mp3RateStereo || p.mp3Rate)) parts.push('MP3 ' + (p.mp3RateStereo || p.mp3Rate));
+    if (p.m4aOn) {
+      const isLossless = (p.m4aEncoding || '').toLowerCase().includes('lossless');
+      parts.push('M4A ' + (isLossless ? 'ALAC' : (p.m4aBitRate || '128 kbit/s')));
+    }
     if (parts.length) {
       const badge = document.createElement('div');
       badge.className = 'fmt-preset-badge';
@@ -15639,24 +16860,33 @@ function renderFmtSettings() {
   const p = getEditingFmtPreset();
   if (!p) return;
   document.getElementById('fmt-name-inp').value = p.name;
-  // Show WAV or MP3 fields based on which tab is being viewed
-  const viewWAV = _fmtViewTab === 'wav';
-  document.getElementById('fmt-uncompressed-fields').style.display = viewWAV ? '' : 'none';
-  document.getElementById('fmt-mp3-fields').style.display = viewWAV ? 'none' : '';
+  // Show WAV / MP3 / M4A fields based on which tab is being viewed
+  const view = _fmtViewTab;
+  const wavBlk = document.getElementById('fmt-uncompressed-fields');
+  const mp3Blk = document.getElementById('fmt-mp3-fields');
+  const m4aBlk = document.getElementById('fmt-m4a-fields');
+  if (wavBlk) wavBlk.style.display = view === 'wav' ? '' : 'none';
+  if (mp3Blk) mp3Blk.style.display = view === 'mp3' ? '' : 'none';
+  if (m4aBlk) m4aBlk.style.display = view === 'm4a' ? '' : 'none';
   const setCb = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
-  if (viewWAV) {
+  if (view === 'wav') {
     setSelectVal('fmt-filetype',    p.fileType    || 'WAVE');
     setSelectVal('fmt-bitdepth',    p.bitDepth    || '24-bit');
     setSelectVal('fmt-samplerate',  p.sampleRate  || '48 kHz');
     setSelectVal('fmt-dithering',   p.dithering   || 'None');
     setSelectVal('fmt-interleaved', p.interleaved || 'Interleaved');
-  } else {
+  } else if (view === 'mp3') {
     setSelectVal('fmt-mp3rate-stereo', p.mp3RateStereo || p.mp3Rate || '320 kbit/s');
     setSelectVal('fmt-mp3rate-mono',   p.mp3RateMono   || p.mp3Rate || '320 kbit/s');
     setSelectVal('fmt-mp3stereo',      p.mp3StereoMode || 'Joint Stereo');
     setCb('fmt-mp3-vbr',     p.mp3VBR);
     setCb('fmt-mp3-best',    p.mp3BestEncoding !== undefined ? p.mp3BestEncoding : true);
     setCb('fmt-mp3-filter10', p.mp3Filter10hz  !== undefined ? p.mp3Filter10hz  : true);
+  } else if (view === 'm4a') {
+    setSelectVal('fmt-m4a-encoding', p.m4aEncoding || 'Advanced Audio Codec (AAC)');
+    setCb('fmt-m4a-vbr', p.m4aVBR);
+    updateM4aBitRateOptions();
+    setSelectVal('fmt-m4a-bitrate', p.m4aBitRate || (p.m4aVBR ? '96 - 110 kbit/s' : '128 kbit/s'));
   }
   setSelectVal('fmt-mode',      p.mode      || 'Offline');
   setSelectVal('fmt-normalize', p.normalize || 'Off');
@@ -15706,13 +16936,20 @@ function onFmtFieldChange() {
     p.sampleRate  = document.getElementById('fmt-samplerate').value;
     p.dithering   = document.getElementById('fmt-dithering').value;
     p.interleaved = document.getElementById('fmt-interleaved').value;
-  } else {
+  } else if (_fmtViewTab === 'mp3') {
     p.mp3RateStereo  = document.getElementById('fmt-mp3rate-stereo').value;
     p.mp3RateMono    = document.getElementById('fmt-mp3rate-mono').value;
     p.mp3StereoMode  = document.getElementById('fmt-mp3stereo').value;
     p.mp3VBR         = document.getElementById('fmt-mp3-vbr').checked;
     p.mp3BestEncoding = document.getElementById('fmt-mp3-best').checked;
     p.mp3Filter10hz  = document.getElementById('fmt-mp3-filter10').checked;
+  } else if (_fmtViewTab === 'm4a') {
+    const encEl = document.getElementById('fmt-m4a-encoding');
+    const brEl  = document.getElementById('fmt-m4a-bitrate');
+    const vbrEl = document.getElementById('fmt-m4a-vbr');
+    if (encEl) p.m4aEncoding = encEl.value;
+    if (brEl)  p.m4aBitRate  = brEl.value;
+    if (vbrEl) p.m4aVBR      = vbrEl.checked;
   }
   p.mode               = document.getElementById('fmt-mode').value;
   p.normalize          = document.getElementById('fmt-normalize').value;
@@ -15774,13 +17011,18 @@ function updateMarkersBtnLabel() {
   const lblEl = document.getElementById('markers-btn-lbl');
   if (!lblEl || !btnEl) return;
   const activeCount = _projectMarkers.filter(m => _activeMarkers.has(markerId(m)) && !_hiddenMarkers.has(markerId(m))).length;
-  const hasAny = _fullActive || activeCount > 0;
+  const hasActive  = activeCount > 0; // only explicit marker selections (not _fullActive alone)
+  const hasAny     = _fullActive || hasActive; // icon color: full mode OR markers active
+  const hasScanned = _projectMarkers.length > 0;
   lblEl.textContent = 'Markers';
   lblEl.style.color = 'var(--text)';
   const svgEl = btnEl.querySelector('svg');
   if (svgEl) svgEl.style.color = hasAny ? 'var(--a2)' : 'var(--muted)';
   btnEl.style.color = 'var(--text)';
-  btnEl.style.borderColor = hasAny ? 'var(--a2-a30)' : 'var(--b)';
+  // No scan yet → invisible border (no visual noise)
+  // Scanned, markers found but none active → dim border (user knows data is there)
+  // Markers explicitly selected → accent border (NOT just because _fullActive is on)
+  btnEl.style.borderColor = hasActive ? 'var(--a2-a30)' : hasScanned ? 'var(--b)' : 'transparent';
   btnEl.style.background = 'var(--card)';
 }
 
@@ -15995,8 +17237,9 @@ async function openFormatModal() {
   if (!(await _audit())) { _auditFail(); return; }
   editingFmtId = activeFmtId;
   const _p = getEditingFmtPreset();
-  const _wavOn = !_p || _p.dest === 0 || _p.dest === 2;
-  _fmtViewTab = _wavOn ? 'wav' : 'mp3'; // default to WAV if enabled
+  const _wavOn = !_p || ((_p.dest === 0 || _p.dest === 2) && !_p.wavOff);
+  const _mp3On = _p && (_p.dest === 1 || _p.dest === 2);
+  _fmtViewTab = _wavOn ? 'wav' : (_mp3On ? 'mp3' : 'm4a'); // default to first enabled
   setFmtSource(fmtSource); // sync button states
   renderFmtPresetList();
   renderFmtSettings();
@@ -16014,7 +17257,7 @@ function closeFormatModal() {
 }
 
 function addFormatPreset() {
-  const newP = { id:'fp_'+Date.now(), name:'New Preset', dest:0, fileType:'WAVE', bitDepth:'24-bit', sampleRate:'48 kHz', dithering:'None', interleaved:'Interleaved', mode:'Offline', normalize:'Off', includeTempo:true, includeAudioTail:false, bounce2ndCyclePass:false, mp3RateStereo:'320 kbit/s', mp3RateMono:'320 kbit/s', mp3StereoMode:'Joint Stereo', mp3VBR:false, mp3BestEncoding:true, mp3Filter10hz:true };
+  const newP = { id:'fp_'+Date.now(), name:'New Preset', dest:0, fileType:'WAVE', bitDepth:'24-bit', sampleRate:'48 kHz', dithering:'None', interleaved:'Interleaved', mode:'Offline', normalize:'Off', includeTempo:true, includeAudioTail:false, bounce2ndCyclePass:false, mp3RateStereo:'320 kbit/s', mp3RateMono:'320 kbit/s', mp3StereoMode:'Joint Stereo', mp3VBR:false, mp3BestEncoding:true, mp3Filter10hz:true, m4aOn:false, m4aEncoding:'Advanced Audio Codec (AAC)', m4aBitRate:'128 kbit/s', m4aVBR:false };
   formatPresets.push(newP);
   editingFmtId = newP.id;
   saveFmtPresets(); renderFmtPresetList(); renderFmtSettings();
@@ -16068,8 +17311,9 @@ async function applyFmtPreset(p, mode = false) {
   if (p.bitDepth && p.bitDepth.includes('-')) {
     p = {...p, bitDepth: p.bitDepth.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())};
   }
-  const wavOn = p.dest == 0 || p.dest == 2;
+  const wavOn = (p.dest == 0 || p.dest == 2) && !p.wavOff;
   const mp3On = p.dest == 1 || p.dest == 2;
+  const m4aOn = !!p.m4aOn;
 
   if (mode === 'sr_bd' || mode === true) {
     // Subsequent bounces in same queue:
@@ -16097,7 +17341,8 @@ async function applyFmtPreset(p, mode = false) {
     const wavParams = {
       dest: '0',
       wavEnabled: wavOn ? '1' : '0',
-      mp3Enabled: mp3On ? '1' : '0'
+      mp3Enabled: mp3On ? '1' : '0',
+      m4aEnabled: m4aOn ? '1' : '0'
     };
     if (wavOn) {
       if (p.fileType)    wavParams.fileType    = p.fileType;
@@ -16114,7 +17359,7 @@ async function applyFmtPreset(p, mode = false) {
     wavParams.bounce2ndCyclePass = p.bounce2ndCyclePass ? '1' : '0';
     await window.api.applyBouncePreset(wavParams);
 
-    // ── Step 2: Switch to MP3 row, apply all MP3 params, switch back ─────────
+    // ── Step 2: Switch to MP3 row, apply all MP3 params ─────────
     if (mp3On) {
       const mp3Params = { dest: '1' };
       if (p.mp3RateStereo || p.mp3Rate) mp3Params.mp3RateStereo = p.mp3RateStereo || p.mp3Rate;
@@ -16124,7 +17369,20 @@ async function applyFmtPreset(p, mode = false) {
       mp3Params.mp3BestEncoding = (p.mp3BestEncoding !== undefined ? p.mp3BestEncoding : true) ? '1' : '0';
       mp3Params.mp3Filter10hz  = (p.mp3Filter10hz   !== undefined ? p.mp3Filter10hz  : true) ? '1' : '0';
       await window.api.applyBouncePreset(mp3Params);
-      // Switch back to WAV row
+    }
+    // ── Step 3: Switch to M4A row, apply all M4A params ─────────
+    if (m4aOn) {
+      const m4aParams = { dest: '2' };
+      if (p.m4aEncoding) m4aParams.m4aEncoding = p.m4aEncoding;
+      const isAAC = !((p.m4aEncoding || '').toLowerCase().includes('lossless'));
+      if (isAAC) {
+        if (p.m4aBitRate) m4aParams.m4aBitRate = p.m4aBitRate;
+        m4aParams.m4aVBR = p.m4aVBR ? '1' : '0';
+      }
+      await window.api.applyBouncePreset(m4aParams);
+    }
+    // Switch back to WAV row at the end if we left it
+    if (mp3On || m4aOn) {
       await window.api.applyBouncePreset({ dest: '0' });
     }
     return true;

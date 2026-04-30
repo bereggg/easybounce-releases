@@ -30,7 +30,11 @@ func osascript(_ script: String, timeout: Double = 5.0) {
 
 func axCloseAll() -> Int {
     var closed = 0
-    if let wins = axVal(logic, "AXWindows") as? [AXUIElement] {
+    // "AXAllWindows" works across Spaces — "AXWindows" blocks 30s when Logic is on a different Space
+    let wins: [AXUIElement] = (axVal(logic, "AXAllWindows") as? [AXUIElement])
+                           ?? (axVal(logic, "AXWindows")    as? [AXUIElement])
+                           ?? []
+    if !wins.isEmpty {
         for w in wins {
             let t = (axVal(w, "AXTitle") as? String) ?? ""
             if keep.contains(where: { t.contains($0) }) { continue }
