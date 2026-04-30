@@ -1241,19 +1241,18 @@ body.mini-mode .titlebar,body.mini-mode .shell,body.mini-mode .overlay,body.mini
 #compact-toolbar{display:none;height:46px;background:var(--s);border-bottom:1px solid var(--b);padding:0 10px;align-items:center;justify-content:center;gap:8px;-webkit-app-region:drag;flex-shrink:0;position:relative;}
 #compact-toolbar .cm-title{font-size:11px;color:var(--t2);text-transform:uppercase;letter-spacing:.12em;font-family:var(--font-mono,'JetBrains Mono',monospace);font-weight:700;pointer-events:none;}
 #compact-toolbar-left{position:absolute;left:74px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;-webkit-app-region:no-drag;}
-#compact-toolbar-center{display:flex;align-items:center;justify-content:center;gap:10px;-webkit-app-region:no-drag;}
 #compact-toolbar-actions{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;-webkit-app-region:no-drag;}
 #compact-toolbar-left button,#compact-toolbar-actions button{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid var(--b);background:transparent;color:var(--muted);cursor:pointer;transition:all var(--t-fast);padding:0;}
 #compact-toolbar-left button:hover{background:rgba(255,255,255,.06);}
 #compact-toolbar-left button:hover,#compact-toolbar-actions button:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-a12);}
 #compact-toolbar-left button svg,#compact-toolbar-actions button svg{width:14px;height:14px;}
-#cm-scan-btn{-webkit-app-region:no-drag;display:none;white-space:nowrap;flex-shrink:0;}
+#cm-scan-btn{-webkit-app-region:no-drag;display:none;position:absolute;top:50%;transform:translateY(-50%);white-space:nowrap;}
 body.compact-mode #cm-scan-btn{display:flex;}
 #cm-scan-btn svg{width:13px;height:13px;flex-shrink:0;}
 body.compact-mode .q-empty-normal-only{display:none!important;}
 body.compact-mode .q-empty-compact-only{display:block!important;}
 #compact-toolbar-left button.is-active,#compact-toolbar-actions button.is-active{border-color:var(--accent);color:var(--accent);background:var(--accent-a12);}
-#compact-toolbar .em-wrap{position:static;transform:none;-webkit-app-region:no-drag;flex-shrink:0;}
+#compact-toolbar .em-wrap{position:absolute;left:50%;transform:translateX(-50%);-webkit-app-region:no-drag;}
 body.compact-mode .em-thumb{left:2px!important;}
 body.compact-mode .em-lbl.em-lbl-pro{color:var(--t2)!important;opacity:.55!important;}
 body.compact-mode .em-lbl.em-lbl-easy{color:var(--accent)!important;opacity:1!important;}
@@ -1606,17 +1605,15 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
   <div id="compact-toolbar-left">
     <div class="tb-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 L6 12 L8 6 L10 18 L12 8 L14 16 L16 10 L18 12 L21 12"/></svg></div>
   </div>
-  <div id="compact-toolbar-center">
-    <div class="em-wrap" onclick="toggleCompactMode()" title="Easy = compact mode / Pro = full mode">
-      <span class="em-lbl em-lbl-easy">Easy</span>
-      <div class="em-track"><div class="em-thumb"></div></div>
-      <span class="em-lbl em-lbl-pro">Pro</span>
-    </div>
-    <button id="cm-scan-btn" class="tb-pill tb-pill-scan" onclick="scanLogic()" title="Scan Logic Pro channels. Keep Mixer open!" style="box-shadow:var(--sh-glow-sm),var(--sh-inset);">
-      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg>
-      Scan Logic
-    </button>
+  <div class="em-wrap" onclick="toggleCompactMode()" title="Easy = compact mode / Pro = full mode">
+    <span class="em-lbl em-lbl-easy">Easy</span>
+    <div class="em-track"><div class="em-thumb"></div></div>
+    <span class="em-lbl em-lbl-pro">Pro</span>
   </div>
+  <button id="cm-scan-btn" class="tb-pill tb-pill-scan" onclick="scanLogic()" title="Scan Logic Pro channels. Keep Mixer open!" style="box-shadow:var(--sh-glow-sm),var(--sh-inset);">
+    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 4v1.5M7 8.5V10M4 7H2.5M11.5 7H10" stroke-linecap="round"/></svg>
+    Scan Logic
+  </button>
   <div id="compact-toolbar-actions">
     <button id="cm-hotkeys-btn" onclick="showHotkeysModal()" title="Hotkey settings"><svg class="ico ico-sm"><use href="#ico-gear"/></svg></button>
     <button id="cm-pin-btn" onclick="togglePin()" title="Always on top"><svg class="ico ico-sm"><use href="#ico-pin"/></svg></button>
@@ -12352,7 +12349,19 @@ window.addEventListener('resize', _checkAutoCollapsePanel);
 setTimeout(_checkAutoCollapsePanel, 0);
 
 function _alignCmScanBtn() {
-  // Layout is now CSS flex — no JS positioning needed.
+  const btn = document.getElementById('cm-scan-btn');
+  const emWrap = document.querySelector('#compact-toolbar .em-wrap');
+  const actions = document.getElementById('compact-toolbar-actions');
+  if (!btn || !emWrap || !actions) return;
+  const a = emWrap.getBoundingClientRect().right;
+  const b = actions.getBoundingClientRect().left;
+  const centerX = (a + b) / 2;
+  const toolbar = document.getElementById('compact-toolbar');
+  const toolbarLeft = toolbar.getBoundingClientRect().left;
+  btn.style.transition = 'none';
+  btn.style.left = (centerX - toolbarLeft - btn.offsetWidth / 2) + 'px';
+  btn.offsetWidth;
+  btn.style.transition = '';
 }
 
 function _alignCompactArrow() {
