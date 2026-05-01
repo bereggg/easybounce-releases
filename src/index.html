@@ -430,10 +430,10 @@ body.compact-mode .modebar{display:none!important;}
 }
 .mb-sum-sep{color:var(--muted);}
 
-/* Expanded row — all controls in ONE line, never wrap */
+/* Expanded row — single row, compact to fit minimum window width */
 .modebar-expanded{
-  padding:8px 10px;display:none;
-  align-items:center;gap:6px;flex-wrap:nowrap;
+  padding:6px 8px;display:none;
+  align-items:center;gap:4px;flex-wrap:nowrap;
   border-top:.5px solid var(--b);
   background:linear-gradient(to bottom,var(--accent-a05),transparent);
   overflow-x:auto;
@@ -454,16 +454,16 @@ body.compact-mode .modebar{display:none!important;}
 
 .mb-div{
   width:1px;height:14px;background:rgba(255,255,255,.10);flex-shrink:0;
-  margin:0 2px;
+  margin:0 1px;
 }
 
 /* Cycle button — used for MODE, MASTER, SC */
 .mb-cycle{
-  font:700 11px/1.2 'Space Grotesk',sans-serif;
+  font:700 10.5px/1.2 'Space Grotesk',sans-serif;
   letter-spacing:-.01em;
-  padding:5px 4px;border-radius:6px;
+  padding:4px 3px;border-radius:6px;
   border:.5px solid;cursor:pointer;
-  min-width:78px;flex-shrink:0;          /* fits "Wet + Dry" / "SC + NoSC" / "M + NoM" */
+  min-width:68px;flex-shrink:0;
   display:inline-flex;align-items:center;justify-content:center;
   transition:all var(--t);white-space:nowrap;
 }
@@ -516,7 +516,7 @@ body.compact-mode .modebar{display:none!important;}
 .mb-caret-sm{width:9px;height:9px;}
 
 /* +FX chip — never grow with long channel name; ellipsis-truncate label */
-#mb-fx{max-width:120px;}
+#mb-fx{max-width:90px;}
 .mb-fx-label{
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   min-width:0;display:inline-block;max-width:100%;
@@ -524,7 +524,7 @@ body.compact-mode .modebar{display:none!important;}
 
 /* SC channel chip — search-style. Shrinks first, never wraps. */
 .mb-sc-search{
-  min-width:90px;max-width:170px;
+  min-width:65px;max-width:120px;
   justify-content:flex-start;flex-shrink:1;flex-grow:0;
 }
 .mb-search-ico{width:11px!important;height:11px!important;opacity:.6;flex-shrink:0;}
@@ -1732,7 +1732,6 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
 
           <span class="mb-div"></span>
 
-          <span class="mb-mlbl">+FX</span>
           <div style="position:relative;display:inline-flex;">
             <button type="button" class="mb-pill" id="mb-fx" data-has-value="false" onclick="openFxChannelsPopover(event)" title="FX channels to keep alive on Dry pass&#10;(e.g. keep Saturator while muting reverbs)">
               <span class="mb-fx-label">+FX</span>
@@ -14653,9 +14652,22 @@ function _classifyFxChannel(ch) {
   // 1. MANUAL whitelist — user's explicit choice has highest priority
   if (modebarState.fxWhitelist && modebarState.fxWhitelist.some(k => _chMatchesKey(ch, k))) return 'FX';
 
-  // 2. REAL algorithm — prefer inputBus (AXHelp confirmed Input slot) over routingBus.
-  //    inputBus is populated when standalone Mixer is on the same Space.
-  //    routingBus is the legacy fallback from embedded Mixer scan.
+  // 2. Send knob signal — most structurally reliable.
+  //    FX Return strips have NO send knobs in Logic's AX tree (they receive, not send).
+  //    Stacks without sends also have hasSends=false, so combine with outputBusesCache.
+  if (ch.hasSends === false) {
+    const busToCheck2 = (ch.inputBus && ch.inputBus.startsWith('Bus ')) ? ch.inputBus
+                      : (ch.routingBus && ch.routingBus.startsWith('Bus ')) ? ch.routingBus : null;
+    if (busToCheck2) {
+      const outBuses2 = window._outputBusesCache || _rebuildOutputBusesCache();
+      // Stack without sends: inputBus IS in outputBusesCache (sub-tracks route Output there)
+      // FX Return: inputBus NOT in outputBusesCache (only Send knobs feed it, not Output routing)
+      return outBuses2.has(busToCheck2) ? 'BUS' : 'FX';
+    }
+    // No inputBus either → no sends + no routing info → name heuristic decides
+  }
+
+  // 3. Bus routing — inputBus/routingBus vs outputBusesCache
   const busToCheck = (ch.inputBus && ch.inputBus.startsWith('Bus ')) ? ch.inputBus
                    : (ch.routingBus && ch.routingBus.startsWith('Bus ')) ? ch.routingBus : null;
   if (busToCheck) {
@@ -14663,7 +14675,7 @@ function _classifyFxChannel(ch) {
     return outBuses.has(busToCheck) ? 'BUS' : 'FX';
   }
 
-  // 3. Name heuristic fallback — works when routingBus isn't exposed by Logic
+  // 4. Name heuristic fallback — works when routing info isn't available
   const name = (ch.name || '');
   if (_FX_RETURN_RX.test(name)) return 'FX';
   return 'BUS';
@@ -14773,6 +14785,36 @@ function renderFxPopover() {
 function toggleFxChannel(name, on) {
   _setFxSelectionFromTogglе(name, on);
   renderFxPopover();
+}
+
+function _getFxReturnChannels() {
+  const allCh = (_masterChannels?.length ? _masterChannels : channels) || [];
+  return allCh
+    .map(ch => ({ ...ch, _tag: _classifyFxChannel(ch) }))
+    .filter(ch => ch._tag === 'FX')
+    .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+}
+
+function addFxReturnsToQueue() {
+  const fxChs = _getFxReturnChannels();
+  if (!fxChs.length) { toast('No FX Return channels found — scan Logic first'); return; }
+  let added = 0, dupes = 0;
+  for (const ch of fxChs) {
+    const isDup = q => q.type === 'stem' && q.status !== 'done' && q.channelIndex === ch.index;
+    if (queue.some(q => isDup(q) || (q.type === 'set' && q.jobs?.some(isDup)))) { dupes++; continue; }
+    queue.push(_mkStemItem(ch));
+    added++;
+  }
+  saveQueue(); renderQueue(); updateBounceBtn(); hideQueueHint(); _closeFxWhitelistEditor();
+  toast(added ? `✓ Added ${added} FX Return${added > 1 ? 's' : ''} to queue${dupes ? ` (${dupes} already in queue)` : ''}` : 'All FX Returns already in queue');
+}
+
+function addFxReturnsAsSet() {
+  const fxChs = _getFxReturnChannels();
+  if (!fxChs.length) { toast('No FX Return channels found — scan Logic first'); return; }
+  queue.push({ id: 'q_' + Date.now() + Math.random(), type: 'group', name: 'FX Returns', channels: fxChs.map(ch => ({...ch})), status: 'pending' });
+  saveQueue(); renderQueue(); updateBounceBtn(); hideQueueHint(); _closeFxWhitelistEditor();
+  toast(`✓ Added FX Returns group (${fxChs.length} channels → 1 file)`);
 }
 
 // Now context-aware: Clear (global) or Inherit (stem)
@@ -14917,7 +14959,11 @@ function _renderFxWhitelist() {
       </div>`;
     }).join('');
   }
-  html += `</div>`;
+  html += `</div>
+  <div style="border-top:1px solid var(--b);padding:6px 8px;display:flex;gap:6px;flex-shrink:0;">
+    <button onclick="event.stopPropagation();addFxReturnsToQueue()" title="Add each FX Return as a separate stem in the queue" class="btn-secondary" style="flex:1;height:24px;font-size:11px;padding:0 8px;">Each to Queue</button>
+    <button onclick="event.stopPropagation();addFxReturnsAsSet()" title="Bounce all FX Returns together" class="btn-secondary" style="flex:1;height:24px;font-size:11px;padding:0 8px;">Bounce All</button>
+  </div>`;
   pop.innerHTML = html;
   pop.querySelectorAll('.fx-row').forEach(row => {
     row.addEventListener('click', e => {

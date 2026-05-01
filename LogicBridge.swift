@@ -343,6 +343,8 @@ struct Channel {
     let outputBus: String
     // inputBus:  "Bus N" when the Input  slot is a bus (AXHelp = "Input slot") — aux channels only.
     let inputBus: String
+    // hasSends: true if the strip has at least one AXSlider "send knob" — false for FX Returns.
+    let hasSends: Bool
 }
 
 func scanChannels(_ logicApp: AXUIElement) -> [Channel] {
@@ -390,10 +392,12 @@ func scanChannels(_ logicApp: AXUIElement) -> [Channel] {
             var routingBus = ""    // first "Bus N" found (backward-compat)
             var outputBus  = ""    // "Bus N" from Output slot (AXHelp starts with "Output slot")
             var inputBus   = ""    // "Bus N" from Input  slot (AXHelp starts with "Input slot")
+            var hasSends   = false // true if any AXSlider "send knob" found in strip
             for kid in kids {
                 let role = axRole(kid)
                 let title = axTitle(kid)
                 if role == "AXTextField" && title == "name" { nameField = kid }
+                else if role == "AXSlider" && title == "send knob" { hasSends = true }
                 else if role == "AXButton" {
                     switch title {
                     case "mute": muteBtn = kid
@@ -410,6 +414,12 @@ func scanChannels(_ logicApp: AXUIElement) -> [Channel] {
                             if outputBus.isEmpty && help.hasPrefix("Output slot") { outputBus = title }
                             if inputBus.isEmpty  && help.hasPrefix("Input slot")  { inputBus  = title }
                         }
+                    }
+                }
+                // Send knobs may be nested one level inside an AXGroup
+                else if !hasSends && role == "AXGroup" {
+                    for gk in axKids(kid) where axRole(gk) == "AXSlider" && axTitle(gk) == "send knob" {
+                        hasSends = true; break
                     }
                 }
             }
@@ -440,7 +450,8 @@ func scanChannels(_ logicApp: AXUIElement) -> [Channel] {
                                     muteBtn: mb, soloBtn: sb, isBus: isBus,
                                     hasMonitoring: hasMonitoring, hasRecord: hasRecord,
                                     hasBnc: hasBnc, hasInputBtn: hasInputBtn, hasMidiPlugin: hasMidiPlugin,
-                                    routingBus: routingBus, outputBus: outputBus, inputBus: inputBus))
+                                    routingBus: routingBus, outputBus: outputBus, inputBus: inputBus,
+                                    hasSends: hasSends))
         }
         if !channels.isEmpty { return channels }
     }
@@ -942,7 +953,7 @@ case "getSelectedTracks":
 
 case "scan":
     let channels = scanChannels(logic)
-    var scanResult: [String: Any] = ["channels": channels.map { ["name": $0.name, "index": $0.index, "isBus": $0.isBus, "hasMonitoring": $0.hasMonitoring, "hasRecord": $0.hasRecord, "isMuted": axIntValue($0.muteBtn) == 1, "hasBnc": $0.hasBnc, "hasInputBtn": $0.hasInputBtn, "hasMidiPlugin": $0.hasMidiPlugin, "routingBus": $0.routingBus, "outputBus": $0.outputBus, "inputBus": $0.inputBus] }]
+    var scanResult: [String: Any] = ["channels": channels.map { ["name": $0.name, "index": $0.index, "isBus": $0.isBus, "hasMonitoring": $0.hasMonitoring, "hasRecord": $0.hasRecord, "isMuted": axIntValue($0.muteBtn) == 1, "hasBnc": $0.hasBnc, "hasInputBtn": $0.hasInputBtn, "hasMidiPlugin": $0.hasMidiPlugin, "routingBus": $0.routingBus, "outputBus": $0.outputBus, "inputBus": $0.inputBus, "hasSends": $0.hasSends] }]
     if channels.isEmpty {
         // Debug info: why scan found 0 channels
         var dbg: [String: Any] = [:]
