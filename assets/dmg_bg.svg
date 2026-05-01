@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="75%">
+      <stop offset="0%" stop-color="#1e1630"/>
+      <stop offset="100%" stop-color="#080810"/>
+    </radialGradient>
+    <radialGradient id="glow1" cx="28%" cy="55%" r="38%">
+      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="72%" cy="55%" r="38%">
+      <stop offset="0%" stop-color="#db2777" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#db2777" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="badgegrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9333ea"/>
+      <stop offset="100%" stop-color="#e8409a"/>
+    </linearGradient>
+    <linearGradient id="arrgrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#9333ea" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#e8409a" stop-opacity="0.8"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <rect width="1600" height="900" fill="url(#glow1)"/>
+  <rect width="1600" height="900" fill="url(#glow2)"/>
+
+  <g stroke="rgba(255,255,255,0.02)" stroke-width="1">
+    <line x1="0" y1="225" x2="1600" y2="225"/>
+    <line x1="0" y1="450" x2="1600" y2="450"/>
+    <line x1="0" y1="675" x2="1600" y2="675"/>
+    <line x1="400" y1="0" x2="400" y2="900"/>
+    <line x1="800" y1="0" x2="800" y2="900"/>
+    <line x1="1200" y1="0" x2="1200" y2="900"/>
+  </g>
+
+  <!--
+    Реальні іконки Finder зі скріну (1512px wide screenshot → scale to 1600):
+    scale = 1600/1512 = 1.058
+
+    Patcher cx≈415  → 415
+    App     cx≈705  → 705
+    Folder  cx≈997  → 997
+    іконки cy≈345, Finder підписи cy≈440
+
+    Стрілки між іконками:
+    Arrow1 cx = (415+705)/2 = 560, cy=345
+    Arrow2 cx = (705+997)/2 = 851, cy=345
+
+    Верхні підписи: y=200 (бейдж), y=232 (заголовок)
+    Нижні підписи: y=530 (під Finder-назвами які на ~440)
+  -->
+
+  <!-- ══ STEP 1 над Patcher cx=415 ══ -->
+  <rect x="391" y="188" width="88" height="26" rx="13" fill="url(#badgegrad)" opacity="0.9"/>
+  <text x="435" y="206"
+    font-family="-apple-system,BlinkMacSystemFont,Helvetica,sans-serif"
+    font-size="12" font-weight="700" fill="white" text-anchor="middle" letter-spacing="1.5">STEP 1</text>
+  <text x="435" y="238"
+    font-family="-apple-system,BlinkMacSystemFont,Helvetica,sans-serif"
+    font-size="22" font-weight="700" fill="white" text-anchor="middle">Click to Run</text>
+
+  <!-- ══ STEP 2 над EasyBounce cx=705 ══ -->
+  <rect x="681" y="188" width="88" height="26" rx="13" fill="url(#badgegrad)" opacity="0.9"/>
+  <text x="725" y="206"
+    font-family="-apple-system,BlinkMacSystemFont,Helvetica,sans-serif"
+    font-size="12" font-weight="700" fill="white" text-anchor="middle" letter-spacing="1.5">STEP 2</text>
+  <text x="725" y="238"
+    font-family="-apple-system,BlinkMacSystemFont,Helvetica,sans-serif"
+    font-size="22" font-weight="700" fill="white" text-anchor="middle">Drag to install</text>
+
+  <!-- ══ Стрілки cy=345 ══ -->
+  <!-- Arrow 1 -->
+  <polygon points="566,333 590,345 566,357" fill="#e8409a" opacity="0.85"/>
+  <!-- Arrow 2 -->
+  <polygon points="857,333 881,345 857,357" fill="#e8409a" opacity="0.85"/>
+
+  <!-- ══ Нижні підписи y=530 — більші, під Finder-назвами ══ -->
+  <text x="435" y="530"
+    font-family="-apple-system,BlinkMacSystemFont,Helvetica,sans-serif"
+    font-size="22" font-weight="600" fill="rgba(255,255,255,0.50)" text-anchor="middle">double-click first</text>
+
+  <text x="725" y="530"
+    font-family="-apple-system,BlinkMacSystemFont,Helvetica,sans-serif"
+    font-size="22" font-weight="600" fill="rgba(255,255,255,0.50)" text-anchor="middle">then drag here →</text>
+
+</svg>

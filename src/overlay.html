@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="shared.css">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; overflow:hidden; background:transparent; -webkit-font-smoothing:antialiased; }
+
+.card {
+  width:100%; height:100%;
+  background: rgba(12,12,16,.96);
+  border: 1px solid var(--w-a12);
+  border-radius: var(--r2);
+  backdrop-filter: blur(40px) saturate(150%);
+  -webkit-backdrop-filter: blur(40px) saturate(150%);
+  box-shadow:
+    0 16px 48px rgba(0,0,0,.5),
+    inset 0 1px 0 var(--w-a08);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  padding: 0 18px 0 20px;
+  -webkit-app-region: drag;
+  user-select: none;
+  animation: eb-fade-in .28s var(--ease-out) both;
+  position: relative;
+  overflow: hidden;
+  font-family: var(--font-display);
+}
+.card::before {
+  content:'';
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse at 30% 50%, var(--accent-a08) 0%, transparent 60%);
+  pointer-events:none;
+}
+.card.fading { animation: eb-fade-out .22s ease-in forwards; }
+
+.close-btn {
+  position:absolute; top:6px; right:6px;
+  width:30px; height:30px; border-radius:var(--r-sm);
+  background: var(--w-a05);
+  border: 1px solid var(--w-a12);
+  color: var(--t2);
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  -webkit-app-region: no-drag;
+  transition: all var(--t-fast);
+  flex-shrink:0;
+}
+.close-btn:hover { background:var(--red-a30); color:#fff; border-color:var(--red-a50); }
+
+.icon {
+  width:36px; height:36px; border-radius:var(--r);
+  background: linear-gradient(135deg, var(--accent-a20), var(--a2-a12));
+  border: 1px solid var(--accent-a30);
+  display:flex; align-items:center; justify-content:center;
+  color: #fff;
+  position:relative; z-index:1;
+  flex-shrink:0;
+}
+
+.main-col {
+  display:flex; flex-direction:column; gap:2px;
+  flex:1; min-width:0;
+  position:relative; z-index:1;
+}
+
+.title {
+  font-size:var(--fs-base); font-weight:var(--fw-xbold);
+  color:#fff; letter-spacing:var(--ls-tight);
+  white-space:nowrap;
+}
+
+.status {
+  display:flex; align-items:center; gap:6px;
+  font-family:var(--font-mono);
+  font-size:var(--fs-xs); color:var(--warn);
+}
+.status-text { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:calc(100% - 120px); flex-shrink:1; }
+
+.right-col {
+  display:flex; flex-direction:column; align-items:flex-end; gap:2px;
+  position:relative; z-index:1;
+  flex-shrink:0;
+}
+
+.swap-slot {
+  display: grid;
+  justify-items: end;
+}
+.swap-slot > * { grid-area: 1 / 1; }
+
+.warn-text, .countdown-text, .tip-inline {
+  transition: opacity .18s ease;
+}
+.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.warn-text {
+  font-size:var(--fs-sm); font-weight:var(--fw-bold);
+  color: var(--t2);
+  text-align:right; white-space:nowrap;
+}
+.warn-text strong { color:var(--red); font-weight:var(--fw-xbold); font-size:var(--fs-base); }
+
+.countdown-text {
+  font-size:var(--fs-sm); font-weight:var(--fw-bold); color:#fff; text-align:right; white-space:nowrap;
+}
+.countdown-sec { color: var(--warn); font-weight: var(--fw-xbold); }
+
+.tip-inline {
+  font-size:var(--fs-sm); color:var(--accent); opacity:.85; text-align:right; white-space:nowrap;
+}
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden;" aria-hidden="true"><defs><symbol id="ico-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 L6 12 L8 6 L10 18 L12 8 L14 16 L16 10 L18 12 L21 12"/></symbol><symbol id="ico-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6 L18 18 M18 6 L6 18"/></symbol><symbol id="ico-coffee" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10 H18 V16 A4 4 0 0 1 14 20 H8 A4 4 0 0 1 4 16 Z"/><path d="M18 12 H20 A2 2 0 0 1 22 14 V15 A2 2 0 0 1 20 17 H18"/><path d="M8 3 Q8 5 9 6 M12 3 Q12 5 13 6 M16 3 Q16 5 17 6" opacity="0.6"/></symbol></defs></svg>
+
+<div class="card" id="card">
+  <button class="close-btn" id="close-btn" aria-label="Hide overlay"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
+  <div class="icon"><svg class="ico ico-lg"><use href="#ico-bounce"/></svg></div>
+  <div class="main-col">
+    <div class="title">Bouncing in progress</div>
+    <div class="status">
+      <span class="status-text" id="status-text"></span>
+    </div>
+  </div>
+  <div class="right-col">
+    <div class="swap-slot">
+      <div class="warn-text" id="warn-normal"><strong>Don't touch</strong> your Mac</div>
+      <div class="countdown-text is-hidden" id="countdown-text"></div>
+    </div>
+    <div class="tip-inline" id="tip-inline"><svg class="ico ico-sm" style="vertical-align:-2px;margin-right:3px;"><use href="#ico-coffee"/></svg>Grab a coffee</div>
+  </div>
+</div>
+
+<script>
+const card = document.getElementById('card');
+const closeBtn = document.getElementById('close-btn');
+
+function _fadeOut(cb) {
+  card.classList.add('fading');
+  setTimeout(cb, 230);
+}
+
+closeBtn.addEventListener('click', () => {
+  _fadeOut(() => window.overlayBridge.dismiss());
+});
+
+window.overlayBridge.onUpdate((data) => {
+  const st = document.getElementById('status-text');
+  if (st) {
+    const name = data.name || '…';
+    const count = data.total > 0 ? ` — ${data.done + 1} / ${data.total}` : '';
+    st.textContent = name + count;
+  }
+});
+
+window.overlayBridge.onFadeOut(() => {
+  _fadeOut(() => {});
+});
+
+window.overlayBridge.onCountdown((sec) => {
+  const warn      = document.getElementById('warn-normal');
+  const countdown = document.getElementById('countdown-text');
+  const tip       = document.getElementById('tip-inline');
+  const showing   = sec > 0;
+  if (warn)      warn.classList.toggle('is-hidden', showing);
+  if (tip)       tip.classList.toggle('is-hidden', showing);
+  if (countdown) {
+    countdown.classList.toggle('is-hidden', !showing);
+    if (showing) countdown.innerHTML = `Returning to Logic in <span class="countdown-sec">${sec}</span>…`;
+  }
+});
+</script>
+</body>
+</html>
