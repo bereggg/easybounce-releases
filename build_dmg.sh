@@ -47,14 +47,16 @@ echo "▶ Preparing DMG contents…"
 rm -rf "$TMP_DIR"
 mkdir -p "$TMP_DIR"
 
-# ── Copy app + README ─────────────────────────────────────────────────────────
+# ── Copy app + README + Manual ────────────────────────────────────────────────
 ditto "$APP_SRC" "$TMP_DIR/EasyBounce.app"
 cp "$ROOT/README.txt" "$TMP_DIR/README.txt"
+cp "$ROOT/manual/easybounce-manual_full.pdf" "$TMP_DIR/EasyBounce Manual.pdf"
 ln -s /Applications "$TMP_DIR/Applications"
 
 # Follow symlinks (-L) for accurate size, add 300MB buffer for HFS+ overhead
 APP_SIZE=$(du -smL "$APP_SRC" 2>/dev/null | cut -f1)
-DMG_SIZE=$((APP_SIZE + 300))
+PDF_SIZE=$(du -sm "$ROOT/manual/easybounce-manual_full.pdf" 2>/dev/null | cut -f1)
+DMG_SIZE=$((APP_SIZE + PDF_SIZE + 300))
 
 # ── Create empty writable DMG ─────────────────────────────────────────────────
 echo "▶ Creating DMG (${DMG_SIZE}MB)…"
@@ -77,6 +79,7 @@ sleep 1
 echo "▶ Copying files…"
 ditto "$TMP_DIR/EasyBounce.app" "$MOUNT_DIR/EasyBounce.app"
 cp "$TMP_DIR/README.txt" "$MOUNT_DIR/"
+cp "$TMP_DIR/EasyBounce Manual.pdf" "$MOUNT_DIR/EasyBounce Manual.pdf"
 ln -s /Applications "$MOUNT_DIR/Applications"
 sleep 1
 
@@ -99,9 +102,10 @@ tell application "Finder"
     set arrangement of theViewOptions to not arranged
     set icon size of theViewOptions to 72
     set background picture of theViewOptions to file ".background:bg.png"
-    set position of item "README.txt"   of container window to {220, 184}
-    set position of item "EasyBounce"   of container window to {374, 184}
-    set position of item "Applications" of container window to {528, 184}
+    set position of item "README.txt"          of container window to {140, 184}
+    set position of item "EasyBounce Manual.pdf" of container window to {294, 184}
+    set position of item "EasyBounce"          of container window to {498, 184}
+    set position of item "Applications"        of container window to {672, 184}
     close
     open
     update without registering applications

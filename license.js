@@ -74,12 +74,16 @@ async function getTrialInfo() {
       { p_machine_id: machineId }
     );
 
-    if (res.status !== 200 || !res.data || typeof res.data !== 'object') {
-      return { started: false, active: false, expired: false, offline: true, error: 'No internet connection' };
+    // Got a response — network is working
+    if (res.status === 200 && res.data && typeof res.data === 'object') {
+      return res.data;
     }
-    return res.data;
+    // Supabase returned an error (bad request, function missing, etc.) — NOT a network error
+    // Treat as: trial not started, but internet is available
+    return { started: false, active: false, expired: false, offline: false, apiError: true };
 
   } catch (e) {
+    // Real network failure (ECONNREFUSED, ENOTFOUND, ETIMEDOUT, etc.)
     return {
       started: false,
       active: false,
@@ -93,23 +97,27 @@ async function getTrialInfo() {
 // ─────────────────────────────────────────────
 // TRIAL — активувати тріал (тільки якщо ще не починався)
 // ─────────────────────────────────────────────
-async function activateTrial() {
+async function activateTrial(email) {
   const machineId = getMachineId();
 
   try {
+    const body = { p_machine_id: machineId, p_trial_days: TRIAL_DAYS };
+    if (email && typeof email === 'string' && email.includes('@')) {
+      body.p_email = email.trim().toLowerCase();
+    }
     const res = await supabaseRequest(
       'POST',
       '/rest/v1/rpc/activate_trial',
-      { p_machine_id: machineId, p_trial_days: TRIAL_DAYS }
+      body
     );
 
-    if (res.status !== 200 || !res.data || typeof res.data !== 'object') {
-      return { ok: false, reason: 'No internet connection. Please connect to start your trial.' };
+    if (res.status === 200 && res.data && typeof res.data === 'object') {
+      return res.data;
     }
-    return res.data;
+    return { ok: false, offline: false, reason: `Server error (${res.status}). Try again.` };
 
   } catch (e) {
-    return { ok: false, reason: 'No internet connection. Please connect to start your trial.' };
+    return { ok: false, offline: true, reason: 'No internet connection. Please connect to start your trial.' };
   }
 }
 

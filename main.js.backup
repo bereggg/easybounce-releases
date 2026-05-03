@@ -153,8 +153,7 @@ function _loadBounds() {
 }
 const _compactFile = path.join(app.getPath('userData'), 'compact-state.json');
 function _loadCompactState() {
-  try { return JSON.parse(fs.readFileSync(_compactFile, 'utf8')).compact === true; }
-  catch { return true; } // default: compact mode for new users
+  try { return JSON.parse(fs.readFileSync(_compactFile, 'utf8')).compact === true; } catch { return false; }
 }
 function _saveCompactState(compact) {
   try { fs.writeFileSync(_compactFile, JSON.stringify({ compact })); } catch {}
@@ -329,7 +328,7 @@ function createWindow() {
 
 function createLicenseWindow() {
   const licWin = new BrowserWindow({
-    width: 480, height: 640,
+    width: 480, height: 540,
     resizable: false,
     titleBarStyle: 'hiddenInset',
     vibrancy: 'under-window',
@@ -529,27 +528,17 @@ let _currentBridgeProc = null;
 // AX operations (setMasterPlugin / openMixer / scrollToBnc) don't land 30s later.
 const _mpInflight = new Set();
 
-const _bridgeLogStart = Date.now();
-function _bt() { return '+' + ((Date.now() - _bridgeLogStart) / 1000).toFixed(3) + 's'; }
-const _BRIDGE_LOG_CMDS = new Set(['soloIndex','unsoloIndex','soloByName','unsoloByName','readStates','unsoloAll']);
-
 async function bridge(...args) {
   if (!fs.existsSync(BRIDGE)) {
     return { error: 'LogicBridge not found — run: swiftc LogicBridge.swift -o LogicBridge -framework ApplicationServices -framework AppKit' };
   }
-  const cmd = args[0];
-  const shouldLog = _BRIDGE_LOG_CMDS.has(cmd);
-  if (shouldLog) console.log(`[EB-BRIDGE] ${_bt()} → ${args.join(' ')}`);
   return new Promise((resolve) => {
     const { execFile } = require('child_process');
     const proc = execFile(BRIDGE, args, { timeout: 30000 }, (err, stdout) => {
       if (_currentBridgeProc === proc) _currentBridgeProc = null;
       _mpInflight.delete(proc);
-      let result;
-      try { result = JSON.parse((stdout || '').trim()); }
-      catch { result = { error: err?.message || 'parse error' }; }
-      if (shouldLog) console.log(`[EB-BRIDGE] ${_bt()} ← ${cmd} result: ${JSON.stringify(result)}`);
-      resolve(result);
+      try { resolve(JSON.parse((stdout || '').trim())); }
+      catch { resolve({ error: err?.message || 'parse error' }); }
     });
     _currentBridgeProc = proc;
   });
@@ -751,14 +740,13 @@ ipcMain.handle('open-mixer-cover', async () => {
 ipcMain.handle('ensure-mixer', async () => {
   const wasOnTop = mainWindow?.isAlwaysOnTop?.() ?? false;
   if (mainWindow && !_inScanBadge && !_inMiniMode) mainWindow.setAlwaysOnTop(false);
-  const result = await bridge('ensureMixer');
-  // Only restore AOT if mixer was already open (result.opened = false).
-  // When the mixer was just opened, keep AOT off so the user can drag it.
-  if (mainWindow && !mainWindow.isDestroyed() && wasOnTop && !result?.opened) {
-    mainWindow.setAlwaysOnTop(true, _mainAotLevel());
-    mainWindow.showInactive();
+  try { return await bridge('ensureMixer'); }
+  finally {
+    if (mainWindow && !mainWindow.isDestroyed() && wasOnTop) {
+      mainWindow.setAlwaysOnTop(true, _mainAotLevel());
+      mainWindow.showInactive();
+    }
   }
-  return result;
 });
 ipcMain.handle('send-key', (_, keyCode, ...mods) => bridge('sendKey', String(keyCode), ...mods));
 ipcMain.handle('stop-render', () => bridge('stop-render'));
@@ -853,9 +841,11 @@ ipcMain.handle('stop-track-bounce', () => {
 });
 
 // ── Cancel support ────────────────────────────────────────────────────────────
-ipcMain.handle('cancel-bounce', () => { cancelRequested = true; _cancelEmitter.emit('cancel'); return { ok: true }; });
-ipcMain.handle('reset-cancel',  () => { cancelRequested = false; return { ok: true }; });
-ipcMain.handle('check-cancel',  () => ({ cancelled: cancelRequested }));
+ipcMain.handle('cancel-bounce', () => { console.log('[EB dbg] cancel-bounce called — cancelRequested=true', new Error().stack.split('\n')[2]); cancelRequested = true; _cancelEmitter.emit('cancel'); return { ok: true }; });
+ipcMain.handle('reset-cancel',  () => { console.log('[EB dbg] reset-cancel called — cancelRequested=false'); cancelRequested = false; _cancelLoggedOnce = false; return { ok: true }; });
+let _cancelLoggedOnce = false;
+ipcMain.handle('check-cancel',  () => { if (cancelRequested && !_cancelLoggedOnce) { _cancelLoggedOnce = true; console.log('[EB dbg] check-cancel → CANCELLED=true (first hit)'); } return { cancelled: cancelRequested }; });
+// reset log flag when cancel is cleared
 
 
 // ── Shell commands (for caffeinate etc.) ─────────────────────────────────────
@@ -1071,15 +1061,6 @@ ipcMain.handle('set-locators-by-marker', async (_, name, keepML) => bridge('set-
 ipcMain.handle('focus-app', () => {
   if (_scanTreeActive) return { ok: true };
   if (mainWindow) {
-    // CRITICAL: drop setVisibleOnAllWorkspaces when not in bounce/mini.
-    // During bounce we set it to true (move-to-logic-space) so the window follows
-    // the user across Spaces. After bounce ends (or is cancelled), this flag must
-    // be cleared — leaving it on makes the window behave as an "auxiliary" window
-    // in macOS: clicks still work (forwarded), but HTML5 drag-and-drop is broken
-    // because the window is not a normal key window for native mouse-event sequences.
-    if (!_inMiniMode && !_inBounce) {
-      try { mainWindow.setVisibleOnAllWorkspaces(false); } catch(e) {}
-    }
     mainWindow.show();
     mainWindow.focus();
     app.focus({ steal: true });
@@ -1087,7 +1068,7 @@ ipcMain.handle('focus-app', () => {
   return { ok: true };
 });
 
-ipcMain.handle('move-to-logic-space', async (_, opts = {}) => {
+ipcMain.handle('move-to-logic-space', async () => {
   if (!mainWindow) return { ok: false };
   try {
     const { stdout } = await execAsync('ps aux | grep -i "logic pro" | grep -v grep');
@@ -1117,10 +1098,7 @@ ipcMain.handle('move-to-logic-space', async (_, opts = {}) => {
   // In mini mode: keep visibleOnAllWorkspaces so the widget follows the user
   if (!_inMiniMode) {
     mainWindow.show();
-    // noFocus: Logic (and its mixer) stays in front so the user can drag it immediately.
-    // Used at end-of-bounce when the mixer may have been opened during bounce prep.
-    if (opts.noFocus) mainWindow.showInactive();
-    else mainWindow.focus();
+    mainWindow.focus();
     mainWindow.setVisibleOnAllWorkspaces(false);
   }
   return { ok: true };
@@ -1799,25 +1777,12 @@ ipcMain.handle('get-machine-id', () => getMachineId());
 ipcMain.handle('get-trial-info', async () => getTrialInfo());
 
 let _trialActivating = false;
-ipcMain.handle('activate-trial', async (_e, email) => {
+ipcMain.handle('activate-trial', async () => {
   if (_trialActivating) return { ok: false, reason: 'Already activating…' };
   _trialActivating = true;
   try {
-    const trial = await activateTrial(email || '');
+    const trial = await activateTrial();
     if (trial.ok && trial.active) {
-      // Write trial entry to license.json so _chk passes
-      try {
-        const machineId = getMachineId();
-        const licenseFile = path.join(app.getPath('userData'), 'license.json');
-        const payload = signLicenseData({
-          type: 'trial',
-          machineId,
-          activatedAt: Date.now(),
-          schemaVersion: 1,
-          daysRemaining: trial.daysRemaining || 7,
-        });
-        fs.writeFileSync(licenseFile, JSON.stringify(payload, null, 2));
-      } catch(e) {}
       setTimeout(() => { ipcMain.emit('license-activated'); }, 600);
     }
     return trial;
@@ -1828,25 +1793,13 @@ ipcMain.handle('activate-trial', async (_e, email) => {
 
 // Cached integrity state: license.json was verified at startup or after activation.
 // Renderer pings this before critical actions; if it returns false, UI must block.
-ipcMain.handle('get-license-info', () => {
-  try {
-    const f = path.join(app.getPath('userData'), 'license.json');
-    const raw = JSON.parse(fs.readFileSync(f, 'utf8'));
-    return { type: raw.type || 'unknown', validUntil: raw.validUntil || null, daysRemaining: raw.daysRemaining || null };
-  } catch { return { type: 'none' }; }
-});
-
 ipcMain.handle('_chk', () => {
   try {
     const f = path.join(app.getPath('userData'), 'license.json');
     const raw = JSON.parse(fs.readFileSync(f, 'utf8'));
     if (!raw || !raw.sig) return false;
     const machineId = getMachineId();
-    if (raw.machineId !== machineId) return false;
-    // Trial license: valid sig + type, no key required
-    if (raw.type === 'trial') return verifyLicenseData(raw);
-    // Regular license: requires key
-    if (!raw.key) return false;
+    if (raw.machineId !== machineId || !raw.key) return false;
     return verifyLicenseData(raw);
   } catch { return false; }
 });

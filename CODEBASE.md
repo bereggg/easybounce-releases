@@ -30,10 +30,15 @@ EasyBounce/
 │   ├── shared.css          Design tokens (colors, spacing, radii, fonts)
 │   ├── icons-sprite.svg    (unused — icons are inline <symbol> in index.html)
 │   └── fonts/              Space Grotesk, JetBrains Mono
-├── build_release.sh        Builds universal dmg
+├── build_dmg.sh            Full release DMG: sign + notarize + staple [arm64|x64]
+├── build_dmg_test.sh       Quick test DMG without notarization (for layout checks)
+├── publish.sh              One-command release: bump version + git + 2×DMG + GitHub upload
+├── make_dmg_bg.py          Generates assets/dmg_bg.png via PIL (4-icon layout, glass cards)
 ├── SyncEasyBounce.sh       Rsyncs dev build → /Applications/EasyBounce.app
 ├── assign_key.js, generate_key.js, hash_keys.js, issued_keys.json
 │                           Licensing (local key verification)
+├── assets/
+│   └── dmg_bg.png          DMG background (820×480): README + Manual + App + Applications
 └── dist/                   electron-builder output
 ```
 
@@ -132,13 +137,28 @@ On drop of a failed item: auto-resets to `pending` (`_attachQNameEdit` area, ~li
   status: 'pending' | 'running' | 'done' | 'error' | 'cancelled',
   channelIndex, channelName, color, // for stem
   channels: [{name, channelIndex, color}],  // for group (merge)
-  jobs: [{...stem/mix}],            // for set (versions)
+  jobs: [{...stem/mix/group}],      // for set — nested items
   mutedIndices, mutedNames,         // for mix (version)
   markers: [...], markerMode,
   sidechainEnabled, sidechainIndex, sidechainChannel,
   stemGroup, stemPresetId,
   error?: string
 }
+```
+
+### Per-stem render overrides
+`modebarState.perStemOverrides` — `{ [jobId]: { master, sc, mode } }`
+Allows each queue item to have its own master/sc/mode axis values, overriding global modebar.
+- `_injectStemOverrideUI()` — injects ⊞ sliders button + pills into every queue row
+- `_injectSetOverrideUI()` — injects ⊞ into set headers and set body rows
+- Both called from a monkey-patch that wraps `renderQueue()` and fires after each render
+
+### Queue drag & drop
+- `dataTransfer.setData('qid', id)` — standard mechanism for all drag operations
+- Drop on `#qlist` → reorder
+- Drop on `.qset-body` → move item into set (set-in-set forbidden)
+- Alt+drag set header → duplicate set with incremented name (`_qIncrName`)
+- `saveUndo()` called before every destructive mutation → Cmd+Z restores via `undoQueue()`
 ```
 
 ### History session (persisted, array in localStorage)
@@ -168,10 +188,29 @@ Restore via `repeatSession(id)` at `src/index.html:~11060` — re-adds everythin
   index: <AX position, 0-based>,
   name, color,
   isMuted: bool,
-  isHidden: bool,
-  type?: 'audio'|'instrument'|'aux'|'bus'|'output'|'master'
+  isBus: bool,               // !hasMonitoring && !hasRecord
+  hasRecord: bool,           // record button visible in AX
+  hasMonitoring: bool,       // input monitoring button visible in AX
+  hasInputBtn: bool,         // "input" slot button — present on Audio + Aux, absent on Inst/VCA
+  hasMidiPlugin: bool,       // "MIDI plug-in" button — exclusive to Software Instrument strips
+  hasBnc: bool,              // Bnc (bounce) button → Output channel
+  routingBus: string,        // first "Bus N" found (backward-compat)
+  outputBus: string,         // "Bus N" from Output slot (AXHelp = "Output slot")
+  inputBus: string           // "Bus N" from Input slot (AXHelp = "Input slot") — aux only
 }
 ```
+
+#### Channel type derivation (JS, `chType`)
+Computed in renderer after scan — LogicBridge does NOT emit `chType` directly:
+```
+hasBnc                               → 'Output'
+hasRecord || hasMonitoring           → 'Audio' (or 'Inst' if hasRecord && !hasMonitoring)
+hasMidiPlugin                        → 'Inst'  (Software Instrument, drum machine sub-outs)
+hasInputBtn (no rec/mon/midi)        → 'Bus'   (true Aux: FX returns + summing stacks)
+none of above                        → 'Other' (VCA, hardware inputs)
+```
+
+**Why `hasInputBtn` matters:** in a narrow Mixer, Logic hides `record` and `monitoring` from the AX tree. Without them, Instrument sub-outs (e.g. drum machine samples like `ILAN_RUBIN_*`) look identical to Aux channels. `hasMidiPlugin` is always visible regardless of strip width and definitively identifies Software Instrument channels.
 
 ---
 
@@ -272,6 +311,8 @@ Search-friendly anchors (approximate line numbers — use Grep):
 |---|---|---|
 | Queue render | `src/index.html` | `function renderQueue` |
 | Queue rename + autocomplete | `src/index.html` | `_attachQNameEdit` |
+| Queue undo | `src/index.html` | `saveUndo`, `undoQueue` |
+| Per-stem overrides inject | `src/index.html` | `_injectStemOverrideUI`, `_injectSetOverrideUI` |
 | History render | `src/index.html` | `hist-item` template |
 | Bounce loop | `src/index.html` | `doBounce` + `for (let i = 0; i < queue.length; i++)` |
 | Scan | `src/index.html` | `scanLogic` |
@@ -297,13 +338,28 @@ npm start
 # Sync dev build to /Applications
 ./SyncEasyBounce.sh
 
-# Full release build (universal dmg → dist/)
-./build_release.sh
-# or
-npm run release
+# Test DMG layout quickly (no notarization)
+bash build_dmg_test.sh [arm64]
+
+# Full release DMG for one arch (sign + notarize + staple)
+bash build_dmg.sh arm64
+bash build_dmg.sh x64
+
+# Regenerate DMG background image
+python3 make_dmg_bg.py
+
+# Full publish: bump version + build both arches + GitHub release
+bash publish.sh             # auto-bump patch
+bash publish.sh 1.2.0       # specific version
+bash publish.sh --dry-run   # build only, no GitHub upload
 ```
 
 Requires Xcode command-line tools to rebuild LogicBridge (`swiftc LogicBridge.swift -o LogicBridge`).
+
+### DMG layout (820×480)
+Icons at y=184, x positions: README=140, Manual=294, EasyBounce=498, Applications=672.
+Two glass cards: left (70–375), right (435–760). Arrow between cards at x=405, inner arrow at x=590.
+Background generated by `make_dmg_bg.py` using PIL with `ImageChops.add` (screen blend glows).
 
 ---
 
@@ -316,9 +372,45 @@ Requires Xcode command-line tools to rebuild LogicBridge (`swiftc LogicBridge.sw
 
 ---
 
+## FX Channel Classification (`_classifyFxChannel`)
+
+Used by the +FX popover (Wet+Dry pass) and auto-whitelist seeding.
+
+### Channel types in popover
+Only `Bus`-type channels (true Aux) appear. Audio, Inst, Output, Other are excluded.
+
+### Classification priority
+1. `chType === 'Audio'` → excluded
+2. `chType === 'Inst'` → excluded
+3. `chType === 'Output'` → excluded
+4. `hasRecord || hasMonitoring` → excluded (fallback when chType not set)
+5. `hasMidiPlugin` → excluded (Instrument, always reliable)
+6. `chType === 'Other'` → excluded (VCA, hardware input)
+7. Channel is in `fxWhitelist` → **FX** (user's explicit choice)
+8. `inputBus` ∈ outputBusesCache → **STACK** (summing stack)
+9. `inputBus` ∉ outputBusesCache → **FX** (send return)
+10. Name matches `_FX_RETURN_RX` → **FX** (heuristic fallback)
+11. Name matches `_STACK_RX` → **STACK** (heuristic fallback)
+12. Otherwise → **BUS** (shown in popover but not auto-selected)
+
+### `_FX_RETURN_RX` regex notes
+All terms use `\b` word boundaries to avoid false matches on preset names containing words like `plate` (e.g. `ILAN_RUBIN_snare_QDC_brass_plate_rimshot`).
+
+### `_outputBusesCache`
+Built from `_masterChannels` after each scan. Uses `outputBus` (AXHelp-confirmed) as primary, falls back to `routingBus`. Determines which buses are "output" (fed by source tracks) vs "input" (FX return targets).
+
+### Wet+Dry two-pass muting
+- `fxWhitelist` (`sessionStorage eb_fx_whitelist`) — channels muted on **DRY** pass
+- `fxWetMute` (`sessionStorage eb_fx_wet_mute`) — channels muted on **WET** pass
+- Both editable via +FX popover (DRY checkbox left, WET checkbox right per row)
+
+---
+
 ## Todo / Known Issues
 
 Keep honest — annotate as resolved when fixed.
 
 - Compact-mode toggle during bounce can visually mismatch window size briefly. User opted OUT of blocking (wants to preview), so this is by-design.
 - History entries with missing channels: warning shown but restoration still proceeds with best-effort name match.
+- `inputBus` only populated when standalone Mixer is on the same Space as EasyBounce. On other Spaces: falls back to name heuristics.
+- `CloseLogicWindows` can hang ~30s when Logic is on a different Space (AX blocks). Deferred fix.

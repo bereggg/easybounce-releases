@@ -17,6 +17,9 @@ func axTitle(_ e: AXUIElement) -> String {
     if let s = axVal(e, kAXValueAttribute) as? String, !s.isEmpty { return s }
     return ""
 }
+func axHelp(_ e: AXUIElement) -> String {
+    return axVal(e, kAXHelpAttribute) as? String ?? ""
+}
 @discardableResult
 func axPress(_ e: AXUIElement) -> Bool {
     // Logic AX often returns non-.success even when the action succeeded — known Logic AX quirk.
@@ -332,19 +335,45 @@ struct Channel {
     let hasMonitoring: Bool
     let hasRecord: Bool
     let hasBnc: Bool
+    let hasInputBtn: Bool   // "input" button visible — present on Audio AND Aux, absent on Inst/VCA
+    let hasMidiPlugin: Bool // "MIDI plug-in" button — present only on Software Instrument strips
+    // routingBus: kept for backward-compat — first "Bus N" button found (any slot).
+    let routingBus: String
+    // outputBus: "Bus N" when the Output slot explicitly routes to a bus (AXHelp = "Output slot").
+    let outputBus: String
+    // inputBus:  "Bus N" when the Input  slot is a bus (AXHelp = "Input slot") — aux channels only.
+    let inputBus: String
+    // hasSends: true if the strip has at least one AXSlider "send knob" — false for FX Returns.
+    let hasSends: Bool
 }
 
 func scanChannels(_ logicApp: AXUIElement) -> [Channel] {
-    var wins: CFTypeRef?
-    AXUIElementCopyAttributeValue(logicApp, kAXWindowsAttribute as CFString, &wins)
-    guard let windows = wins as? [AXUIElement] else { return [] }
+    // Use kAXAllWindowsAttribute so the standalone Mixer on another Space is included.
+    // If that returns nothing, fall back to current-Space windows.
+    var allWinsRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(logicApp, "AXAllWindows" as CFString, &allWinsRef)
+    var windows = (allWinsRef as? [AXUIElement]) ?? []
+    if windows.isEmpty {
+        var wins: CFTypeRef?
+        AXUIElementCopyAttributeValue(logicApp, kAXWindowsAttribute as CFString, &wins)
+        windows = (wins as? [AXUIElement]) ?? []
+    }
+    guard !windows.isEmpty else { return [] }
 
+    // Collect all Mixer layouts across all windows; pick the one with the most items
+    // (standalone Mixer window typically has more channels than embedded Tracks Mixer)
+    var bestLayout: (layout: AXUIElement, count: Int)? = nil
     for win in windows {
-        let allLayouts = findAll(win, role: "AXLayoutArea", title: "Mixer")
-        guard let mixerLayout = allLayouts.max(by: { axKids($0).count < axKids($1).count }) else { continue }
-        
+        for layout in findAll(win, role: "AXLayoutArea", title: "Mixer") {
+            let count = axKids(layout).filter { axRole($0) == "AXLayoutItem" }.count
+            if count > (bestLayout?.count ?? 0) { bestLayout = (layout, count) }
+        }
+    }
+    guard let mixerLayout = bestLayout?.layout else { return [] }
+
+    do {
         let items = axKids(mixerLayout).filter { axRole($0) == "AXLayoutItem" }
-        guard items.count > 1 else { continue }
+        guard items.count > 1 else { return [] }
         
         var channels: [Channel] = []
 
@@ -358,10 +387,17 @@ func scanChannels(_ logicApp: AXUIElement) -> [Channel] {
             var hasRecord = false
 
             var hasBnc = false
+            var hasInputBtn = false
+            var hasMidiPlugin = false
+            var routingBus = ""    // first "Bus N" found (backward-compat)
+            var outputBus  = ""    // "Bus N" from Output slot (AXHelp starts with "Output slot")
+            var inputBus   = ""    // "Bus N" from Input  slot (AXHelp starts with "Input slot")
+            var hasSends   = false // true if any AXSlider "send knob" found in strip
             for kid in kids {
                 let role = axRole(kid)
                 let title = axTitle(kid)
                 if role == "AXTextField" && title == "name" { nameField = kid }
+                else if role == "AXSlider" && title == "send knob" { hasSends = true }
                 else if role == "AXButton" {
                     switch title {
                     case "mute": muteBtn = kid
@@ -369,7 +405,34 @@ func scanChannels(_ logicApp: AXUIElement) -> [Channel] {
                     case "Bnc": soloBtn = kid; hasBnc = true
                     case "monitoring": hasMonitoring = true
                     case "record": hasRecord = true
-                    default: break
+                    case "input": hasInputBtn = true
+                    case "MIDI plug-in": hasMidiPlugin = true
+                    default:
+                        if title.hasPrefix("Bus ") {
+                            if routingBus.isEmpty { routingBus = title }
+                            let help = axHelp(kid)
+                            if outputBus.isEmpty && help.hasPrefix("Output slot") { outputBus = title }
+                            if inputBus.isEmpty  && help.hasPrefix("Input slot")  { inputBus  = title }
+                        }
+                    }
+                }
+                // Send knobs may be nested one level inside an AXGroup
+                else if !hasSends && role == "AXGroup" {
+                    for gk in axKids(kid) where axRole(gk) == "AXSlider" && axTitle(gk) == "send knob" {
+                        hasSends = true; break
+                    }
+                }
+            }
+
+            // If record/monitoring not found at top level, scan one level deeper (sub-groups).
+            // Logic hides these buttons in a nested group when the strip is narrow or in
+            // certain instrument/stack configurations.
+            if !hasRecord || !hasMonitoring {
+                for kid in kids where axRole(kid) == "AXGroup" {
+                    for gk in axKids(kid) where axRole(gk) == "AXButton" {
+                        let gt = axTitle(gk)
+                        if gt == "record" || gt.lowercased().hasPrefix("record") { hasRecord = true }
+                        else if gt == "monitoring" { hasMonitoring = true }
                     }
                 }
             }
@@ -386,7 +449,9 @@ func scanChannels(_ logicApp: AXUIElement) -> [Channel] {
             channels.append(Channel(name: name, index: channels.count,
                                     muteBtn: mb, soloBtn: sb, isBus: isBus,
                                     hasMonitoring: hasMonitoring, hasRecord: hasRecord,
-                                    hasBnc: hasBnc))
+                                    hasBnc: hasBnc, hasInputBtn: hasInputBtn, hasMidiPlugin: hasMidiPlugin,
+                                    routingBus: routingBus, outputBus: outputBus, inputBus: inputBus,
+                                    hasSends: hasSends))
         }
         if !channels.isEmpty { return channels }
     }
@@ -888,7 +953,7 @@ case "getSelectedTracks":
 
 case "scan":
     let channels = scanChannels(logic)
-    var scanResult: [String: Any] = ["channels": channels.map { ["name": $0.name, "index": $0.index, "isBus": $0.isBus, "hasMonitoring": $0.hasMonitoring, "hasRecord": $0.hasRecord, "isMuted": axIntValue($0.muteBtn) == 1, "hasBnc": $0.hasBnc] }]
+    var scanResult: [String: Any] = ["channels": channels.map { ["name": $0.name, "index": $0.index, "isBus": $0.isBus, "hasMonitoring": $0.hasMonitoring, "hasRecord": $0.hasRecord, "isMuted": axIntValue($0.muteBtn) == 1, "hasBnc": $0.hasBnc, "hasInputBtn": $0.hasInputBtn, "hasMidiPlugin": $0.hasMidiPlugin, "routingBus": $0.routingBus, "outputBus": $0.outputBus, "inputBus": $0.inputBus, "hasSends": $0.hasSends] }]
     if channels.isEmpty {
         // Debug info: why scan found 0 channels
         var dbg: [String: Any] = [:]
@@ -932,6 +997,47 @@ case "scan":
         scanResult["debugInfo"] = (try? String(data: JSONSerialization.data(withJSONObject: dbg), encoding: .utf8)) ?? "{}"
     }
     jsonOut(scanResult)
+
+case "dumpStrips":
+    var allWinsRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(logic, "AXAllWindows" as CFString, &allWinsRef)
+    var dumpWins = (allWinsRef as? [AXUIElement]) ?? []
+    if dumpWins.isEmpty {
+        var wRef: CFTypeRef?; AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &wRef)
+        dumpWins = (wRef as? [AXUIElement]) ?? []
+    }
+    var bestLayout: (layout: AXUIElement, count: Int)? = nil
+    for w in dumpWins {
+        for lay in findAll(w, role: "AXLayoutArea", title: "Mixer") {
+            let cnt = axKids(lay).filter { axRole($0) == "AXLayoutItem" }.count
+            if cnt > (bestLayout?.count ?? 0) { bestLayout = (lay, cnt) }
+        }
+    }
+    if let layout = bestLayout?.layout {
+        let items = axKids(layout).filter { axRole($0) == "AXLayoutItem" }
+        var strips: [[String: Any]] = []
+        for item in items {
+            var name = ""; var buttons: [[String: String]] = []; var other: [[String: String]] = []
+            for kid in axKids(item) {
+                let role = axRole(kid); let title = axTitle(kid)
+                let desc = (axVal(kid, kAXDescriptionAttribute) as? String) ?? ""
+                let help = String((axVal(kid, kAXHelpAttribute) as? String ?? "").prefix(60))
+                if role == "AXTextField" { name = (axVal(kid, kAXValueAttribute) as? String) ?? "" }
+                else if role == "AXButton" { buttons.append(["t": title, "d": desc, "h": help]) }
+                else { other.append(["role": role, "t": title, "d": desc]) }
+                // also recurse into AXGroup
+                if role == "AXGroup" {
+                    for gk in axKids(kid) where axRole(gk) == "AXButton" {
+                        let gt = axTitle(gk); let gd = (axVal(gk, kAXDescriptionAttribute) as? String) ?? ""
+                        let gh = String((axVal(gk, kAXHelpAttribute) as? String ?? "").prefix(60))
+                        buttons.append(["t": gt, "d": gd, "h": gh, "group": "1"])
+                    }
+                }
+            }
+            strips.append(["name": name, "buttons": buttons, "other": other])
+        }
+        jsonOut(["strips": strips])
+    } else { jsonOut(["error": "no mixer"]) }
 
 case "soloIndex":
     guard args.count >= 3, let idx = Int(args[2]) else { jsonOut(["error": "index required"]); exit(1) }
@@ -2494,8 +2600,19 @@ case "applyBouncePreset":
         // Fallback: Intel Logic 10.7 checkboxes have no title — use first checkbox in MP3 row
         if abpMp3CB == nil, let firstCb = mp3RowCbs.first { abpMp3CB = firstCb }
     }
+    // M4A:AAC checkbox (row 2)
+    var abpM4aCB: AXUIElement? = nil
+    if abpRows.count > 2 {
+        let m4aRowCbs = findAll(abpRows[2], role: "AXCheckBox", depth: 5)
+        for cb in m4aRowCbs {
+            let t = axTitle(cb).lowercased()
+            if t.contains("m4a") || t.contains("aac") || t.contains("apple lossless") { abpM4aCB = cb; break }
+        }
+        if abpM4aCB == nil, let firstCb = m4aRowCbs.first { abpM4aCB = firstCb }
+    }
     let abpWavIsOn = abpWavCB.map { axIntValue($0) == 1 } ?? true
     let abpMp3IsOn = abpMp3CB.map { axIntValue($0) == 1 } ?? false
+    let abpM4aIsOn = abpM4aCB.map { axIntValue($0) == 1 } ?? false
     // wavEnabled param: "1" = ensure WAV checkbox ON, "0" = OFF, absent = don't touch
     if let wavStr = abpParams["wavEnabled"], let cb = abpWavCB {
         let wantOn = (wavStr == "1" || wavStr == "true")
@@ -2508,10 +2625,13 @@ case "applyBouncePreset":
             axPress(cb)
             Thread.sleep(forTimeInterval: 0.5)
             // Auto-dismiss "Enabling this destination disables Split Stereo and Surround. Proceed?"
+            // IMPORTANT: skip abpBounceWin — it also has an "OK" button, clicking it would
+            // close the Bounce dialog early and start the render before M4A params are set.
             var abpAllWinsAfterMp3: CFTypeRef?
             AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &abpAllWinsAfterMp3)
             if let winsArr = abpAllWinsAfterMp3 as? [AXUIElement] {
                 for w in winsArr {
+                    if CFEqual(w, abpBounceWin) { continue }
                     let btns = findAll(w, role: "AXButton", depth: 5)
                     for btn in btns {
                         let t = axTitle(btn)
@@ -2525,13 +2645,49 @@ case "applyBouncePreset":
             }
         }
     }
-    // dest param: which row to display (0=WAV row, 1=MP3 row)
+    // m4aEnabled param: "1" = ensure M4A checkbox ON, "0" = OFF, absent = don't touch
+    if let m4aStr = abpParams["m4aEnabled"], let cb = abpM4aCB {
+        let wantOn = (m4aStr == "1" || m4aStr == "true")
+        if abpM4aIsOn != wantOn {
+            axPress(cb)
+            Thread.sleep(forTimeInterval: 0.5)
+            // Auto-dismiss any "Proceed?" dialog that may appear — skip abpBounceWin (same reason as above).
+            var abpAllWinsAfterM4a: CFTypeRef?
+            AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &abpAllWinsAfterM4a)
+            if let winsArr = abpAllWinsAfterM4a as? [AXUIElement] {
+                for w in winsArr {
+                    if CFEqual(w, abpBounceWin) { continue }
+                    let btns = findAll(w, role: "AXButton", depth: 5)
+                    for btn in btns {
+                        let t = axTitle(btn)
+                        if t == "Proceed" || t == "OK" {
+                            axPress(btn)
+                            Thread.sleep(forTimeInterval: 0.3)
+                            break
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // dest param: which row to display (0=WAV row, 1=MP3 row, 2=M4A row)
+    let abpCurDest = Int(abpParams["dest"] ?? "0") ?? 0
     if let abpDestStr = abpParams["dest"], let abpDestIdx = Int(abpDestStr) {
-        let targetRow = (abpDestIdx == 1 || abpDestIdx == 2) ? 1 : 0
+        let targetRow: Int
+        switch abpDestIdx {
+            case 1: targetRow = 1
+            case 2: targetRow = 2
+            default: targetRow = 0
+        }
         if abpRows.count > targetRow {
             let already = (axVal(abpRows[targetRow], kAXSelectedAttribute as String) as? Bool) ?? false
-            if !already { abpSelectRow(abpRows[targetRow]); Thread.sleep(forTimeInterval: targetRow == 1 ? 0.7 : 0.5) }
+            if !already { abpSelectRow(abpRows[targetRow]); Thread.sleep(forTimeInterval: targetRow == 0 ? 0.5 : 0.7) }
         }
+    }
+    // SAFETY GUARD: when M4A encoding is Apple Lossless, Bit Rate and VBR controls are disabled
+    if abpCurDest == 2, abpParams["m4aEncoding"]?.lowercased().contains("lossless") == true {
+        abpParams["m4aBitRate"] = nil
+        abpParams["m4aVBR"] = nil
     }
     // Get bounce window top Y — used to convert absolute → relative Y for popup matching
     var abpWinPos: CFTypeRef?
@@ -2551,6 +2707,18 @@ case "applyBouncePreset":
         if let av = p1 as! AXValue? { AXValueGetValue(av, .cgPoint, &pt1) }
         if let av = p2 as! AXValue? { AXValueGetValue(av, .cgPoint, &pt2) }
         return pt1.y < pt2.y
+    }
+    // M4A: set VBR checkbox BEFORE the popup loop so the correct bit rate options appear.
+    // If VBR is currently ON, the bit rate popup shows VBR ranges instead of CBR values.
+    if abpCurDest == 2, let vbrVal = abpParams["m4aVBR"] {
+        let want = (vbrVal == "1" || vbrVal == "true") ? 1 : 0
+        let cbs = findAll(abpBounceWin, role: "AXCheckBox", depth: 10)
+        for cb in cbs {
+            if axTitle(cb) == "Encode with variable bit rate (VBR)" {
+                if axIntValue(cb) != want { axPress(cb); Thread.sleep(forTimeInterval: 0.3) }
+                break
+            }
+        }
     }
     // Helper: set popup value by pressing it and finding the menu item
     var abpSetResults: [String: Bool] = [:]
@@ -2640,7 +2808,23 @@ case "applyBouncePreset":
                        "End of last region","End of Last Region","Sequence End","Project Length"].contains(curVal)
                       || (curVal.lowercased().contains("locator") && !curVal.lowercased().contains("kbit"))
 
-        if isFileFormat, let val = abpParams["fileType"] {
+        // M4A-specific popups (only when dest=2 / M4A row is selected)
+        let curValLower = curVal.lowercased()
+        let isM4aEncoding = curValLower.contains("audio codec") || curValLower.contains("apple lossless") || (curValLower == "aac")
+        var handledM4a = false
+        if abpCurDest == 2 {
+            if isM4aEncoding, let val = abpParams["m4aEncoding"], abpSetResults["m4aEncoding"] == nil {
+                abpSetResults["m4aEncoding"] = abpSetPopup(abpPopup, val)
+                handledM4a = true
+            } else if curValLower.contains("kbit/s"), let val = abpParams["m4aBitRate"], abpSetResults["m4aBitRate"] == nil,
+                      abpSetResults["mp3RateStereo"] == nil, abpSetResults["mp3RateMono"] == nil {
+                abpSetResults["m4aBitRate"] = abpSetPopup(abpPopup, val)
+                handledM4a = true
+            }
+        }
+        if handledM4a {
+            // already handled above
+        } else if isFileFormat, let val = abpParams["fileType"] {
             abpSetResults["fileType"] = abpSetPopup(abpPopup, val)
         } else if isBitDepth, let val = abpParams["bitDepth"] {
             abpSetResults["bitDepth"] = abpSetPopup(abpPopup, val)
@@ -2723,6 +2907,7 @@ case "applyBouncePreset":
         ("mp3VBR",             "Use Variable Bit Rate Encoding (VBR)"),
         ("mp3BestEncoding",    "Use best encoding"),
         ("mp3Filter10hz",      "Filter frequencies below 10 Hz"),
+        ("m4aVBR",             "Encode with variable bit rate (VBR)"),
     ]
     for (key, cbName) in abpCbMap {
         if let val = abpParams[key] { abpSetCheckbox(cbName, val == "1" || val == "true") }
@@ -3826,7 +4011,9 @@ case "setInspectorMasterPlugin":
     jsonOut(["ok": true, "plugin": simpName, "active": simpNew == 0, "changed": simpCur != simpNew, "confirmed": simpNew == simpWant])
 
 case "inspectorNavigateForMaster":
-    // Arrow-down through tracks until findInspectorMaster returns non-nil.
+    // Bidirectional search: arrow-down first; if stuck at bottom (no track change) or
+    // exhausted → reverse to arrow-up. Detects "stuck" by reading the focused element
+    // title before/after keypress — 2 consecutive identical reads = end of list.
     // Usage: inspectorNavigateForMaster [maxSteps]
     let infmMax = args.count >= 3 ? (Int(args[2]) ?? 50) : 50
     if findInspectorMaster(logic) != nil {
@@ -3837,20 +4024,99 @@ case "inspectorNavigateForMaster":
     guard let infmPid = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.logic10").first?.processIdentifier else {
         jsonOut(["ok": false, "error": "Logic pid not found"]); break
     }
+
+    // Read the title of Logic's currently focused element (changes as arrow keys move selection)
+    func focusedTitle() -> String {
+        var v: CFTypeRef?
+        AXUIElementCopyAttributeValue(logic, kAXFocusedUIElementAttribute as CFString, &v)
+        guard let el = v else { return "" }
+        var t: CFTypeRef?
+        AXUIElementCopyAttributeValue(el as! AXUIElement, kAXTitleAttribute as CFString, &t)
+        return (t as? String) ?? ""
+    }
+
     var infmSteps = 0
     var infmFound = false
-    while infmSteps < infmMax {
+    var stuckCount = 0
+    var lastTitle = focusedTitle()
+
+    // Phase 1: go down
+    while infmSteps < infmMax && !infmFound {
         sendKeyToLogic(infmPid, keyCode: 125) // down arrow
         infmSteps += 1
-        // Adaptive wait for Inspector to refresh
         let infmDeadline = Date().addingTimeInterval(0.4)
         while Date() < infmDeadline {
             Thread.sleep(forTimeInterval: 0.05)
             if findInspectorMaster(logic) != nil { infmFound = true; break }
         }
         if infmFound { break }
+        let newTitle = focusedTitle()
+        if !newTitle.isEmpty && newTitle == lastTitle {
+            stuckCount += 1
+            if stuckCount >= 2 { break } // at bottom — switch direction
+        } else {
+            stuckCount = 0
+            lastTitle = newTitle
+        }
     }
+
+    // Phase 2: go up if not found
+    if !infmFound {
+        stuckCount = 0
+        lastTitle = focusedTitle()
+        var upSteps = 0
+        while upSteps < infmMax && !infmFound {
+            sendKeyToLogic(infmPid, keyCode: 126) // up arrow
+            upSteps += 1
+            infmSteps += 1
+            let infmDeadline = Date().addingTimeInterval(0.4)
+            while Date() < infmDeadline {
+                Thread.sleep(forTimeInterval: 0.05)
+                if findInspectorMaster(logic) != nil { infmFound = true; break }
+            }
+            if infmFound { break }
+            let newTitle = focusedTitle()
+            if !newTitle.isEmpty && newTitle == lastTitle {
+                stuckCount += 1
+                if stuckCount >= 2 { break } // at top — give up
+            } else {
+                stuckCount = 0
+                lastTitle = newTitle
+            }
+        }
+    }
+
     jsonOut(["ok": infmFound, "steps": infmSteps, "alreadyVisible": false])
+
+case "ensureInspectorOpen":
+    // Open Logic's Inspector panel if it is currently hidden. Uses AX checkbox, not keystroke.
+    var eioWins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement] ?? []
+    if eioWins.isEmpty {
+        // Windows not yet accessible — activate Logic and retry (same pattern as openMixer)
+        runScript("tell application id \"com.apple.logic10\" to activate")
+        Thread.sleep(forTimeInterval: 0.5)
+        eioWins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement] ?? []
+    }
+    let eioWin = eioWins.first(where: {
+        let t = axVal($0, kAXTitleAttribute) as? String ?? ""
+        return t.contains("Tracks") || t.contains("Logic")
+    }) ?? eioWins.first
+    guard let eioWin = eioWin else {
+        jsonOut(["ok": false, "error": "main window not found"]); break
+    }
+    // Try known labels for the Inspector toggle button across Logic versions
+    let eioCB = findCheckboxByLabel(eioWin, label: "Inspector")
+             ?? findCheckboxByLabel(eioWin, label: "Show/Hide Inspector")
+    if let cb = eioCB {
+        let eioWasOpen = axIntValue(cb) == 1
+        if !eioWasOpen {
+            axPress(cb)
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+        jsonOut(["ok": true, "wasOpen": eioWasOpen, "opened": !eioWasOpen])
+    } else {
+        jsonOut(["ok": false, "error": "Inspector checkbox not found"])
+    }
 
 case "debugScanMaster":
     // Step-by-step diagnostic for scanMasterPlugins
