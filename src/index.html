@@ -1893,13 +1893,6 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
       <!-- LOG tab -->
       <div class="act-pane" id="act-log">
         <div class="log-body" id="log-body"></div>
-        <!-- Trial countdown badge — shown only when trial is active -->
-        <div id="trial-countdown" style="display:none;padding:5px 10px;border-top:1px solid var(--b);background:rgba(255,149,0,.06);font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);color:#ffb340;display:none;align-items:center;gap:8px;flex-shrink:0;">
-          <span style="opacity:.6;display:inline-flex;align-items:center;gap:4px;"><svg class="ico ico-sm"><use href="#ico-clock"/></svg> Trial:</span>
-          <span id="trial-time-left" style="font-weight:700;letter-spacing:.04em;">—</span>
-          <span style="margin-left:auto;opacity:.5;font-size:var(--fs-xxs);">remaining</span>
-          <a href="#" onclick="if(window.api&&window.api.openExternal)window.api.openExternal('https://project-1z26v.vercel.app')" style="color:#ffb340;font-size:var(--fs-xxs);text-decoration:underline;opacity:.7;">Buy →</a>
-        </div>
       </div>
       <!-- HISTORY tab -->
       <div class="act-pane" id="act-history" style="display:none;">
@@ -1911,6 +1904,13 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
       <!-- STATS tab -->
       <div class="act-pane" id="act-stats" style="display:none;">
         <div class="stats-pane" id="stats-body"></div>
+      </div>
+      <!-- Trial countdown — shown in stats bar when trial is active -->
+      <div id="trial-countdown" style="display:none;padding:5px 12px;border-top:1px solid var(--b);background:rgba(255,149,0,.06);font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);color:#ffb340;align-items:center;gap:8px;flex-shrink:0;">
+        <span style="opacity:.6;display:inline-flex;align-items:center;gap:4px;"><svg class="ico ico-sm"><use href="#ico-clock"/></svg> Trial:</span>
+        <span id="trial-time-left" style="font-weight:700;letter-spacing:.04em;">—</span>
+        <span style="opacity:.5;font-size:var(--fs-xxs);">remaining</span>
+        <a href="#" onclick="if(window.api&&window.api.openExternal)window.api.openExternal('https://easyoneaudio.com');return false;" style="margin-left:auto;color:#ffb340;font-size:var(--fs-xxs);text-decoration:underline;opacity:.7;">Buy →</a>
       </div>
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-val" id="s-done">0</div><div class="stat-lbl">Bounced</div></div>
@@ -2388,59 +2388,99 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
 <!-- LICENSE ACTIVATION OVERLAY -->
 <div id="license-overlay" style="
   display:none;position:fixed;inset:0;z-index:1000;
-  background:rgba(0,0,0,.95);
+  background:radial-gradient(ellipse at 30% 40%, #0d0b1e 0%, #09090f 100%);
   align-items:center;justify-content:center;flex-direction:column;
   font-family:'Inter',sans-serif;
+  -webkit-app-region:drag;
 ">
+  <!-- drag handle top -->
+  <div style="position:absolute;top:0;left:0;right:0;height:48px;-webkit-app-region:drag;"></div>
+
   <div style="
-    background:#17171e;border:1px solid rgba(255,255,255,.08);border-radius:20px;
-    padding:40px;width:440px;text-align:center;
-    box-shadow:0 40px 100px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.06);
+    width:400px;text-align:center;
+    -webkit-app-region:no-drag;
   ">
     <!-- Logo -->
-    <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#6c63ff,#ff6584);margin:0 auto 20px;display:flex;align-items:center;justify-content:center;">
-      <svg width="28" height="28" viewBox="0 0 14 14" fill="white"><circle cx="7" cy="7" r="5"/></svg>
+    <div style="width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#6c63ff,#ff6584);margin:0 auto 18px;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 40px rgba(108,99,255,.45);">
+      <svg width="30" height="30" viewBox="0 0 14 14" fill="white"><circle cx="7" cy="7" r="5"/></svg>
     </div>
-    <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#e2e2f0;margin-bottom:6px;letter-spacing:-.02em;">EasyBounce</div>
-    <div style="font-size:12px;color:#666;margin-bottom:28px;">Enter your license key to activate</div>
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:#e2e2f0;margin-bottom:6px;letter-spacing:-.02em;">EasyBounce</div>
+    <div style="font-size:13px;color:#555;margin-bottom:36px;">Enter your license key to activate.<br>Or start your free 7-day trial.</div>
+
+    <!-- Trial status badge (shown dynamically) -->
+    <div id="license-trial-badge" style="display:none;margin-bottom:16px;padding:10px 14px;border-radius:10px;font-size:12px;font-weight:500;text-align:center;"></div>
+
+    <!-- Start Trial button -->
+    <div id="license-trial-section">
+      <!-- Email input for trial -->
+      <input id="trial-email-input" type="email" placeholder="your@email.com"
+        style="
+          width:100%;background:#111116;border:1px solid #252530;border-radius:10px;
+          color:#e2e2f0;font-family:'Inter',sans-serif;font-size:14px;
+          padding:12px 16px;text-align:center;
+          outline:none;transition:border-color .2s;margin-bottom:10px;
+          box-sizing:border-box;
+        "
+        onfocus="this.style.borderColor='rgba(108,99,255,.5)'"
+        onblur="this.style.borderColor='#252530'"
+      />
+      <div style="font-size:11px;color:#3a3a4a;margin-bottom:14px;">Same email you used to download</div>
+      <button onclick="startTrialFromOverlay()" style="
+        width:100%;height:50px;border-radius:12px;border:1px solid rgba(99,255,180,.3);cursor:pointer;
+        background:rgba(99,255,180,.07);color:#63ffb4;
+        font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;
+        letter-spacing:.02em;transition:all .2s;margin-bottom:24px;
+        display:flex;align-items:center;justify-content:center;gap:8px;
+      " onmouseover="this.style.background='rgba(99,255,180,.13)'" onmouseout="this.style.background='rgba(99,255,180,.07)'">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="#63ffb4"><polygon points="3,1 13,7 3,13"/></svg>
+        Start Free Trial — 7 days
+      </button>
+    </div>
+
+    <!-- Divider -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+      <div style="flex:1;height:1px;background:#1e1e2a;"></div>
+      <div style="font-size:11px;color:#333;letter-spacing:.08em;">OR</div>
+      <div style="flex:1;height:1px;background:#1e1e2a;"></div>
+    </div>
 
     <!-- Key input -->
-    <input id="license-key-input" type="text" placeholder="EB1-XXXX-XXXX-XXXX-XXXX"
+    <input id="license-key-input" type="text" placeholder="EB-XXXX-XXXX-XXXX"
       style="
         width:100%;background:#111116;border:1px solid #252530;border-radius:10px;
         color:#e2e2f0;font-family:'JetBrains Mono',monospace;font-size:14px;
         padding:12px 16px;text-align:center;letter-spacing:.08em;text-transform:uppercase;
-        outline:none;transition:border-color var(--t);margin-bottom:8px;
+        outline:none;transition:border-color .2s;margin-bottom:8px;
+        box-sizing:border-box;
       "
+      onfocus="this.style.borderColor='rgba(108,99,255,.5)'"
+      onblur="this.style.borderColor='#252530'"
       oninput="this.value=this.value.toUpperCase()"
       onkeydown="if(event.key==='Enter')activateLicense()"
     />
-    <div id="license-error" style="font-size:var(--fs-sm);color:#ff4757;min-height:16px;margin-bottom:16px;"></div>
+    <div id="license-error" style="font-size:12px;color:#ff4757;min-height:16px;margin-bottom:12px;"></div>
 
     <!-- Activate button -->
     <button onclick="activateLicense()" style="
-      width:100%;height:48px;border-radius:12px;border:none;cursor:pointer;
+      width:100%;height:50px;border-radius:12px;border:none;cursor:pointer;
       background:linear-gradient(135deg,#6c63ff,#ff6584);color:white;
       font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;
-      letter-spacing:.03em;transition:all var(--t);
-      box-shadow:0 6px 24px rgba(108,99,255,.4),inset 0 1px 0 rgba(255,255,255,.2);
-      margin-bottom:16px;
+      letter-spacing:.03em;transition:all .2s;
+      box-shadow:0 6px 24px rgba(108,99,255,.35),inset 0 1px 0 rgba(255,255,255,.2);
+      margin-bottom:20px;
     " onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
       Activate EasyBounce
     </button>
 
-    <!-- Trial status badge (shown dynamically) -->
-    <div id="license-trial-badge" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:10px;font-size:12px;font-weight:500;text-align:center;"></div>
-
     <!-- Buy link -->
-    <div style="font-size:var(--fs-sm);color:#444458;">
+    <div style="font-size:12px;color:#3a3a4a;">
       Don't have a key?
       <a href="#" onclick="window.api&&window.api.openExternal?window.api.openExternal('https://project-1z26v.vercel.app'):null;return false;" style="color:#6c63ff;">Purchase at easybounce.app →</a>
     </div>
 
     <!-- Machine ID for support -->
-    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #1e1e2a;">
-      <div style="font-size:var(--fs-xxs);color:#333;font-family:'JetBrains Mono',monospace;">
+    <div style="margin-top:24px;">
+      <div style="font-size:10px;color:#2a2a38;font-family:'JetBrains Mono',monospace;">
         Machine ID: <span id="machine-id-display">—</span>
       </div>
     </div>
@@ -2984,11 +3024,35 @@ window.addEventListener('DOMContentLoaded', async () => {
 // ── Trial countdown timer ──────────────────────────────────────────────────
 let _trialTimerInterval = null;
 async function initTrialCountdown() {
-  if (!window.api || !window.api.getTrialInfo) return;
+  if (!window.api) return;
   try {
+    // Check license type first
+    const lic = window.api.getLicenseInfo ? await window.api.getLicenseInfo() : { type: 'none' };
+
+    // Full lifetime license — hide countdown
+    if (lic.type === 'lifetime') return;
+
+    // Subscription — show countdown only if expiring within 3 days
+    if (lic.type === 'subscription' && lic.validUntil) {
+      const msLeft = new Date(lic.validUntil * 1000) - Date.now();
+      const threeDays = 3 * 24 * 60 * 60 * 1000;
+      if (msLeft > 0 && msLeft <= threeDays) {
+        const badge = document.getElementById('trial-countdown');
+        if (badge) {
+          badge.style.background = 'rgba(108,99,255,.08)';
+          badge.style.color = '#a09aff';
+          badge.querySelector('span:first-child').innerHTML = '<svg class="ico ico-sm"><use href="#ico-clock"/></svg> Sub expires:';
+        }
+        showTrialCountdown(msLeft);
+      }
+      return;
+    }
+
+    // Trial license — show countdown
+    if (!window.api.getTrialInfo) return;
     const t = await window.api.getTrialInfo();
-    if (!t.active) return; // no trial or expired — don't show
-    const msRemaining = t.expiresAt ? (new Date(t.expiresAt) - Date.now()) : (t.daysRemaining * 24 * 60 * 60 * 1000);
+    if (!t.active) return;
+    const msRemaining = t.expiresAt ? (new Date(t.expiresAt) - Date.now()) : ((t.daysRemaining || 7) * 24 * 60 * 60 * 1000);
     showTrialCountdown(msRemaining);
   } catch(e) { console.warn('[EB]', e); }
 }
@@ -3034,7 +3098,7 @@ function showTrialExpiredOverlay() {
       <div style="color:var(--warn);display:flex;justify-content:center;"><svg class="ico ico-hero" style="width:44px;height:44px;"><use href="#ico-clock"/></svg></div>
       <div style="font-size:22px;font-weight:700;color:#fff;">Your trial has ended</div>
       <div style="font-size:14px;color:#888;text-align:center;max-width:320px;line-height:1.6;">Get full access to EasyBounce — one-time purchase or monthly subscription.</div>
-      <button onclick="if(window.api&&window.api.openExternal)window.api.openExternal('https://project-1z26v.vercel.app')" style="margin-top:8px;padding:14px 36px;border-radius:12px;border:none;background:linear-gradient(135deg,#6c63ff,#ff6584);color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">Buy EasyBounce →</button>
+      <button onclick="if(window.api&&window.api.openExternal)window.api.openExternal('https://easyoneaudio.com')" style="margin-top:8px;padding:14px 36px;border-radius:12px;border:none;background:linear-gradient(135deg,#6c63ff,#ff6584);color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">Buy EasyBounce →</button>
       <div style="font-size:12px;color:#555;">Already have a key? <a href="#" onclick="document.getElementById('trial-expired-overlay').remove();showLicenseOverlay()" style="color:#6c63ff;">Enter license key</a></div>
     `;
     document.body.appendChild(ov);
@@ -17875,35 +17939,42 @@ async function checkLicenseOnStart() {
 function showLicenseOverlay() {
   const o = document.getElementById('license-overlay');
   if (!o) return;
-  o.style.cssText = 'display:flex!important;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.95);align-items:center;justify-content:center;flex-direction:column;font-family:Inter,sans-serif;';
+  o.style.display = 'flex';
   if (window.api && window.api.getMachineId)
     window.api.getMachineId().then(id => { const el=document.getElementById('machine-id-display'); if(el) el.textContent=id; });
-  // Show trial status badge
+  // Show/hide trial section based on trial state
+  const section = document.getElementById('license-trial-section');
   const badge = document.getElementById('license-trial-badge');
-  if (badge && window.api && window.api.getTrialInfo) {
+  if (badge) badge.style.display = 'none';
+  if (window.api && window.api.getTrialInfo) {
     window.api.getTrialInfo().then(t => {
       if (t.expired) {
-        badge.style.display = 'block';
-        badge.style.background = 'rgba(255,71,87,.08)';
-        badge.style.border = '1px solid rgba(255,71,87,.2)';
-        badge.style.color = '#ff4757';
-        badge.innerHTML = '<svg class="ico ico-sm" style="vertical-align:-2px;margin-right:5px;"><use href="#ico-close"/></svg>Free trial expired — purchase to continue';
-      } else if (!t.started) {
-        badge.style.display = 'block';
-        badge.style.background = 'rgba(99,255,180,.06)';
-        badge.style.border = '1px solid rgba(99,255,180,.18)';
-        badge.style.color = '#63ffb4';
-        badge.innerHTML = '<svg class="ico ico-sm" style="vertical-align:-2px;margin-right:4px;"><use href="#ico-clock"/></svg>Free trial available — <a href="#" onclick="startTrialFromOverlay();return false;" style="color:#63ffb4;font-weight:700;">Start 7-day trial →</a>';
+        if (section) section.style.display = 'none';
+        if (badge) {
+          badge.style.display = 'block';
+          badge.style.background = 'rgba(255,71,87,.08)';
+          badge.style.border = '1px solid rgba(255,71,87,.2)';
+          badge.style.color = '#ff4757';
+          badge.innerHTML = '<svg class="ico ico-sm" style="vertical-align:-2px;margin-right:5px;"><use href="#ico-close"/></svg>Free trial expired — purchase to continue';
+        }
+      } else if (t.started && t.active) {
+        if (section) section.style.display = 'none';
+      } else {
+        if (section) section.style.display = 'block';
       }
-    }).catch(()=>{});
+    }).catch(()=>{ if (section) section.style.display = 'block'; });
   }
   setTimeout(() => document.getElementById('license-key-input')?.focus(), 100);
 }
 async function startTrialFromOverlay() {
   if (!window.api || !window.api.activateTrial) return;
-  const trial = await window.api.activateTrial();
-  if (trial.offline) {
-    alert('No internet connection. Please connect to start your trial.');
+  const emailInput = document.getElementById('trial-email-input');
+  const email = emailInput ? emailInput.value.trim() : '';
+  const err = document.getElementById('license-error');
+  if (err) err.textContent = '';
+  const trial = await window.api.activateTrial(email);
+  if (trial.offline || !trial.ok) {
+    if (err) err.textContent = trial.reason || 'No internet connection. Please connect to start your trial.';
     return;
   }
   if (trial.ok && trial.active) {

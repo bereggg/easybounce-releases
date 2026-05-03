@@ -153,7 +153,8 @@ function _loadBounds() {
 }
 const _compactFile = path.join(app.getPath('userData'), 'compact-state.json');
 function _loadCompactState() {
-  try { return JSON.parse(fs.readFileSync(_compactFile, 'utf8')).compact === true; } catch { return false; }
+  try { return JSON.parse(fs.readFileSync(_compactFile, 'utf8')).compact === true; }
+  catch { return true; } // default: compact mode for new users
 }
 function _saveCompactState(compact) {
   try { fs.writeFileSync(_compactFile, JSON.stringify({ compact })); } catch {}
@@ -328,7 +329,7 @@ function createWindow() {
 
 function createLicenseWindow() {
   const licWin = new BrowserWindow({
-    width: 480, height: 540,
+    width: 480, height: 640,
     resizable: false,
     titleBarStyle: 'hiddenInset',
     vibrancy: 'under-window',
@@ -1798,12 +1799,25 @@ ipcMain.handle('get-machine-id', () => getMachineId());
 ipcMain.handle('get-trial-info', async () => getTrialInfo());
 
 let _trialActivating = false;
-ipcMain.handle('activate-trial', async () => {
+ipcMain.handle('activate-trial', async (_e, email) => {
   if (_trialActivating) return { ok: false, reason: 'Already activating…' };
   _trialActivating = true;
   try {
-    const trial = await activateTrial();
+    const trial = await activateTrial(email || '');
     if (trial.ok && trial.active) {
+      // Write trial entry to license.json so _chk passes
+      try {
+        const machineId = getMachineId();
+        const licenseFile = path.join(app.getPath('userData'), 'license.json');
+        const payload = signLicenseData({
+          type: 'trial',
+          machineId,
+          activatedAt: Date.now(),
+          schemaVersion: 1,
+          daysRemaining: trial.daysRemaining || 7,
+        });
+        fs.writeFileSync(licenseFile, JSON.stringify(payload, null, 2));
+      } catch(e) {}
       setTimeout(() => { ipcMain.emit('license-activated'); }, 600);
     }
     return trial;
@@ -1814,13 +1828,25 @@ ipcMain.handle('activate-trial', async () => {
 
 // Cached integrity state: license.json was verified at startup or after activation.
 // Renderer pings this before critical actions; if it returns false, UI must block.
+ipcMain.handle('get-license-info', () => {
+  try {
+    const f = path.join(app.getPath('userData'), 'license.json');
+    const raw = JSON.parse(fs.readFileSync(f, 'utf8'));
+    return { type: raw.type || 'unknown', validUntil: raw.validUntil || null, daysRemaining: raw.daysRemaining || null };
+  } catch { return { type: 'none' }; }
+});
+
 ipcMain.handle('_chk', () => {
   try {
     const f = path.join(app.getPath('userData'), 'license.json');
     const raw = JSON.parse(fs.readFileSync(f, 'utf8'));
     if (!raw || !raw.sig) return false;
     const machineId = getMachineId();
-    if (raw.machineId !== machineId || !raw.key) return false;
+    if (raw.machineId !== machineId) return false;
+    // Trial license: valid sig + type, no key required
+    if (raw.type === 'trial') return verifyLicenseData(raw);
+    // Regular license: requires key
+    if (!raw.key) return false;
     return verifyLicenseData(raw);
   } catch { return false; }
 });
