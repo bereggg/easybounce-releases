@@ -8432,8 +8432,13 @@ function renderQueue() {
               muted = `${_shown}${_hidden}<span class="qmuted-tog" onclick="event.stopPropagation();_togMuted(this,${_mn.length - _lim})">+${_mn.length - _lim} more</span>`;
             } else { muted = _shown; }
           } else if (isMix) { muted = '<span style="color:var(--muted);font-size:var(--fs-xxs)">✓ All tracks</span>'; }
-          const editBtn = isMix && job.status === 'pending'
-            ? `<button class="qedit" onclick="event.stopPropagation();editQueueMix('${job.id}')" title="Edit mix"><svg class="ico ico-sm"><use href="#ico-edit"/></svg></button>` : '';
+          const editBtn = job.status === 'pending'
+            ? (isMix
+                ? `<button class="qedit" onclick="event.stopPropagation();editQueueMix('${job.id}')" title="Edit mix"><svg class="ico ico-sm"><use href="#ico-edit"/></svg></button>`
+                : job.type === 'group'
+                  ? `<button class="qedit" onclick="event.stopPropagation();openEditGroupModal('${job.id}')" title="Edit merge"><svg class="ico ico-sm"><use href="#ico-edit"/></svg></button>`
+                  : '')
+            : '';
           row.innerHTML = `
             <div class="qnum">${String(ji+1).padStart(2,'0')}</div>
             <div class="qbody">
@@ -8451,8 +8456,80 @@ function renderQueue() {
           if (jobNameEl && job.status === 'pending') _attachQNameEdit(jobNameEl, () => job.name, v => { job.name = v; }, job.logicName);
           body.appendChild(row);
         });
+
+        // ── Drop zone: drag existing queue item INTO this set ─────────────────
+        body.addEventListener('dragover', e => {
+          if (!e.dataTransfer.types.includes('qid')) return;
+          e.preventDefault(); e.stopPropagation();
+          body.style.outline = '2px solid var(--accent)';
+          body.style.outlineOffset = '-2px';
+        });
+        body.addEventListener('dragleave', e => {
+          if (!body.contains(e.relatedTarget)) {
+            body.style.outline = ''; body.style.outlineOffset = '';
+          }
+        });
+        body.addEventListener('drop', e => {
+          if (!e.dataTransfer.types.includes('qid')) return;
+          e.preventDefault(); e.stopPropagation();
+          body.style.outline = ''; body.style.outlineOffset = '';
+          const fromId = e.dataTransfer.getData('qid');
+          if (!fromId || fromId === item.id) return;
+          const fromIdx = queue.findIndex(q => q.id === fromId);
+          if (fromIdx < 0) return;
+          if (queue[fromIdx].type === 'set') return; // не можна сет в сет
+          saveUndo();
+          const [moved] = queue.splice(fromIdx, 1);
+          moved.status = 'pending';
+          item.jobs.push(moved);
+          saveQueue(); renderQueue();
+        });
+
         wrap.appendChild(body);
       }
+
+      // ── Drag set to reorder / alt+drag to duplicate ───────────────────────
+      wrap.dataset.qid = item.id;
+      wrap.draggable = true;
+      wrap.addEventListener('dragstart', e => {
+        if (e.target.closest('.qdel') || e.target.closest('.qedit')) { e.preventDefault(); return; }
+        _qDragAlt = e.altKey || _altKeyDown;
+        e.dataTransfer.setData('qid', item.id);
+        setTimeout(() => wrap.style.opacity = '0.5', 0);
+      });
+      wrap.addEventListener('dragend', () => {
+        wrap.style.opacity = '';
+        _qDragAlt = false;
+        document.querySelectorAll('.qset-row,.qitem').forEach(el => el.style.borderTop = '');
+      });
+      hdr.addEventListener('dragover', e => {
+        if (!e.dataTransfer.types.includes('qid')) return;
+        const fromId = e.dataTransfer.getData('qid'); if (fromId === item.id) return;
+        e.preventDefault(); e.stopPropagation();
+        wrap.style.borderTop = '2px solid var(--teal)';
+      });
+      hdr.addEventListener('dragleave', e => { if (!wrap.contains(e.relatedTarget)) wrap.style.borderTop = ''; });
+      hdr.addEventListener('drop', e => {
+        if (!e.dataTransfer.types.includes('qid')) return;
+        e.preventDefault(); e.stopPropagation(); wrap.style.borderTop = '';
+        const fromId = e.dataTransfer.getData('qid'); if (!fromId || fromId === item.id) return;
+        const fromIdx = queue.findIndex(q => q.id === fromId);
+        const toIdx   = queue.findIndex(q => q.id === item.id);
+        if (fromIdx < 0 || toIdx < 0) return;
+        if (e.altKey || _altKeyDown || _qDragAlt) {
+          saveUndo();
+          const copy = JSON.parse(JSON.stringify(queue[fromIdx]));
+          copy.id = 'q_' + Date.now() + '_' + Math.random();
+          copy.name = _qIncrName(copy.name);
+          copy.status = 'pending';
+          if (copy.jobs) copy.jobs.forEach(j => { j.id = 'q_' + Date.now() + '_' + Math.random(); j.status = 'pending'; });
+          queue.splice(toIdx, 0, copy);
+        } else {
+          const [moved] = queue.splice(fromIdx, 1); queue.splice(toIdx, 0, moved);
+        }
+        saveQueue(); renderQueue();
+      });
+
       el.appendChild(wrap);
       return;
     }
@@ -12477,10 +12554,10 @@ function renderHistory() {
       <div class="hist-hdr" onclick="toggleHistExpand(${s.id})">
         <div class="hist-meta">
           <span class="hist-proj" data-tip="${proj}">${proj}</span>
-          <div style="margin-top:4px;display:flex;align-items:center;gap:8px;">
-            <span style="padding:2px 7px;border-radius:5px;border:1px solid var(--b2);font-size:var(--fs-xxs);font-weight:600;color:var(--t2);font-family:'JetBrains Mono',monospace;">${countLabel}</span>
-            <span style="font-size:var(--fs-xxs);font-weight:600;color:var(--muted);font-family:'JetBrains Mono',monospace;white-space:nowrap;">${dateStr}</span>
+          <div style="margin-top:4px;display:flex;align-items:center;gap:6px;">
+            <span style="padding:2px 7px;border-radius:5px;border:1px solid var(--b2);font-size:var(--fs-xxs);font-weight:600;color:var(--t2);font-family:'JetBrains Mono',monospace;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis;">${countLabel}</span>
           </div>
+          <span style="margin-top:2px;font-size:var(--fs-xxs);font-weight:600;color:var(--muted);font-family:'JetBrains Mono',monospace;display:block;">${dateStr}</span>
         </div>
         <div class="hist-right">
           <span class="hist-arrow">▶</span>
@@ -15161,6 +15238,73 @@ function _injectStemOverrideUI() {
   });
 }
 
+// ── Inject sliders button into set header + set job rows ─────────────────────
+function _injectSetOverrideUI() {
+  // 1. Set header row (uses wrap.dataset.qid = item.id)
+  document.querySelectorAll('#qlist .qset-row[data-qid]').forEach(wrap => {
+    const qid = wrap.dataset.qid;
+    if (!qid || wrap.dataset.setMbInjected === '1') return;
+    wrap.dataset.setMbInjected = '1';
+    const ovr = modebarState.perStemOverrides[qid];
+    const overrideCount = ovr ? Object.keys(ovr).length : 0;
+    const hdr = wrap.querySelector('.qset-hdr');
+    if (!hdr) return;
+    const qdel = hdr.querySelector('.qdel');
+    const slBtn = document.createElement('button');
+    slBtn.className = 'mb-stem-slider-btn' + (overrideCount > 0 ? ' has-overrides' : '');
+    slBtn.title = overrideCount > 0
+      ? `${overrideCount} render override${overrideCount > 1 ? 's' : ''} for this set — click to edit`
+      : 'Render overrides for this set — click to set';
+    slBtn.innerHTML = `<svg class="ico" aria-hidden="true"><use href="#ico-sliders"/></svg>${overrideCount > 0 ? `<span class="mb-slider-counter">${overrideCount}</span>` : ''}`;
+    slBtn.onclick = (ev) => { ev.stopPropagation(); openStemOverrideMenu(qid, slBtn); };
+    slBtn.addEventListener('mousedown', e => e.stopPropagation());
+    if (qdel) qdel.parentElement.insertBefore(slBtn, qdel);
+    else hdr.appendChild(slBtn);
+  });
+
+  // 2. Job rows inside expanded sets (row.dataset.qid = job.id)
+  document.querySelectorAll('#qlist .qset-body > div[data-qid]').forEach(row => {
+    const qid = row.dataset.qid;
+    if (!qid || row.dataset.setMbInjected === '1') return;
+    row.dataset.setMbInjected = '1';
+    const ovr = modebarState.perStemOverrides[qid];
+    const overrideCount = ovr ? Object.keys(ovr).length : 0;
+
+    // Pills row
+    const pillsHtml = _renderOverridePills(qid);
+    if (pillsHtml) {
+      const body = row.querySelector('.qbody');
+      if (body) {
+        const pillsRow = document.createElement('div');
+        pillsRow.className = 'qsub mb-stem-pills-row';
+        pillsRow.style.cssText = 'gap:4px;margin-top:3px;flex-wrap:wrap;';
+        pillsRow.innerHTML = pillsHtml;
+        body.appendChild(pillsRow);
+      }
+    }
+
+    // Sliders button
+    const qdel = row.querySelector('.qdel');
+    const slBtn = document.createElement('button');
+    slBtn.className = 'mb-stem-slider-btn' + (overrideCount > 0 ? ' has-overrides' : '');
+    slBtn.title = overrideCount > 0
+      ? `${overrideCount} render override${overrideCount > 1 ? 's' : ''} — click to edit`
+      : 'Per-item render overrides — click to set';
+    slBtn.innerHTML = `<svg class="ico" aria-hidden="true"><use href="#ico-sliders"/></svg>${overrideCount > 0 ? `<span class="mb-slider-counter">${overrideCount}</span>` : ''}`;
+    slBtn.onclick = (ev) => { ev.stopPropagation(); openStemOverrideMenu(qid, slBtn); };
+    slBtn.addEventListener('mousedown', e => e.stopPropagation());
+    if (qdel) qdel.parentElement.insertBefore(slBtn, qdel);
+    else row.appendChild(slBtn);
+
+    // Right-click shortcut
+    row.addEventListener('contextmenu', (ev) => {
+      if (ev.target.closest('input,textarea,select,button:not(.mb-stem-slider-btn):not(.mb-stem-pill)')) return;
+      ev.preventDefault(); ev.stopPropagation();
+      openStemOverrideMenu(qid, slBtn);
+    });
+  });
+}
+
 // Monkey-patch renderQueue: run injection after every render
 (function _patchRenderQueueForOverrides(){
   if (typeof window.renderQueue !== 'function') {
@@ -15172,6 +15316,7 @@ function _injectStemOverrideUI() {
   window.renderQueue = function() {
     const r = orig.apply(this, arguments);
     try { _injectStemOverrideUI(); } catch(e) { console.warn('mb inject error', e); }
+    try { _injectSetOverrideUI(); } catch(e) { console.warn('mb set inject error', e); }
     return r;
   };
   window.renderQueue.__mbPatched = true;
