@@ -4541,6 +4541,21 @@ case "set-locators-by-marker":
         jsonOut(["ok": false, "error": "Marker List window not found"]); break
     }
 
+    // Move Marker List to the right so it doesn't block mixer view.
+    // Only if not already positioned there (x < 800).
+    do {
+        var curPos = CGPoint.zero
+        var posRef2: CFTypeRef?
+        AXUIElementCopyAttributeValue(mlWin2, kAXPositionAttribute as CFString, &posRef2)
+        if let p = posRef2 { AXValueGetValue(p as! AXValue, .cgPoint, &curPos) }
+        if curPos.x < 800 {
+            var targetPos = CGPoint(x: 1000, y: 100)
+            if let posVal = AXValueCreate(.cgPoint, &targetPos) {
+                AXUIElementSetAttributeValue(mlWin2, kAXPositionAttribute as CFString, posVal)
+            }
+        }
+    }
+
     // Find table
     func findTable2(_ el: AXUIElement, depth: Int) -> AXUIElement? {
         if depth > 8 { return nil }

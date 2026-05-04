@@ -2703,6 +2703,7 @@ const BUILTIN_PRESETS = [
 // Channels, tree, groups — all cleared on launch, only populated after scan
 let channels  = [];
 let _channelsStale = false; // true when Logic channel count differs from last scan
+let _mixerClosed   = false; // true when live count = 0 (mixer truly closed)
 let trackTree = [];
 let collapsedGroups = new Set();
 let queue     = []; // Don't restore queue between sessions
@@ -3252,7 +3253,7 @@ async function _ensureMixerVisible() {
       await window.api.coverMixer();
     }
   });
-  _channelsStale = false;
+  _mixerClosed = false;
 }
 
 async function cancelScan() {
@@ -4802,7 +4803,7 @@ function _renderChannelsImpl() {
         updateAddStemsBtn();
       } else {
         // Single click — add to queue directly
-        if (_channelsStale) { await _ensureMixerVisible(); }
+        if (_mixerClosed) { await _ensureMixerVisible(); }
         const _isStemDupCh = (j) => j.type === 'stem' && j.status !== 'done' && j.channelIndex === ch.index;
         const existing = queue.find(q => _isStemDupCh(q) || (q.type === 'set' && q.jobs.some(_isStemDupCh)));
         if (existing) { toast(ch.name + ' already in queue'); return; }
@@ -6679,7 +6680,7 @@ function _mkStemItem(ch) {
 }
 
 async function addSelAsStems() {
-  if (_channelsStale) { await _ensureMixerVisible(); }
+  if (_mixerClosed) { await _ensureMixerVisible(); }
   hideQueueHint();
   if (selectedIdx.size === 0) { toast('Select channels first'); return; }
   let added = 0, dupes = 0;
@@ -8978,7 +8979,7 @@ document.getElementById('ch-list').addEventListener('mousedown', e => {
     }
 
     if (toAdd.length === 0) { toast('Already in queue'); return; }
-    if (_channelsStale) { await _ensureMixerVisible(); }
+    if (_mixerClosed) { await _ensureMixerVisible(); }
     hideQueueHint();
     saveUndo();
     toAdd.forEach(ch => {
@@ -9740,6 +9741,7 @@ async function doBounce() {
   _mpBounceApplied  = 'on';
 
   let _mlNeedsReopen = false; // set true when a stem fails — next setLocatorsByMarker will close+reopen ML
+  let _mlPositioned  = false; // move marker list window to right side only once per bounce session
   try {
   for (const _mPass of _markerPasses) {
     if (!bouncing) break;
@@ -9765,7 +9767,12 @@ async function doBounce() {
         await window.api.wait(200);
         _mlNeedsReopen = false;
       }
-      await window.api.setLocatorsByMarker(_mPass.name, !_isLastPass);
+      await window.api.setLocatorsByMarker(String(_mPass.index ?? _mPass.name), !_isLastPass);
+      if (!_mlPositioned) {
+        await window.api.wait(150);
+        try { await window.api.positionMarkerList(); } catch(e) {}
+        _mlPositioned = true;
+      }
       await window.api.wait(500);
       await activateLogicForAX(); // refocus Logic main window after marker list interaction
       _markerLocatorSet = true;
@@ -9838,7 +9845,7 @@ async function doBounce() {
           await window.api.setAlwaysOnTop(false).catch(() => {});
           try { await window.api.closeMarkerList(); } catch(e) {}
           await window.api.wait(200);
-          await window.api.setLocatorsByMarker(_mPass.name, !_isLastPass);
+          await window.api.setLocatorsByMarker(String(_mPass.index ?? _mPass.name), !_isLastPass);
           await window.api.wait(500);
           await activateLogicForAX();
         } catch(e) { log('Re-set locators error: ' + (e.message||e), 'warn'); }
@@ -18046,7 +18053,7 @@ if (window.api?.onHotkeyTriggered) {
       return;
     }
     // Ensure mixer is open — only if channels are stale (mixer was closed)
-    if (_channelsStale) { await _ensureMixerVisible(); }
+    if (_mixerClosed) { await _ensureMixerVisible(); }
     const tracks = result.tracks;
     if (type === 'stems') {
       const added = [], skipped = [];
@@ -18111,6 +18118,7 @@ function _openMergeModalWithTracks(tracks) {
 if (window.api?.onChannelCountLive) {
   window.api.onChannelCountLive((liveCount) => {
     if (channels.length === 0) return; // not scanned yet — nothing to compare
+    _mixerClosed = (liveCount === 0);  // mixer truly closed — AX can't see channels
     _channelsStale = liveCount !== channels.length;
   });
 }

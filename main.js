@@ -1079,6 +1079,20 @@ ipcMain.handle('apply-bounce-preset', async (_, params) => {
 ipcMain.handle('get-bounce-params', () => bridge('getBounceParams'));
 ipcMain.handle('scan-markers', () => bridge('scan-markers'));
 ipcMain.handle('set-locators-by-marker', async (_, name, keepML) => bridge('set-locators-by-marker', name, ...(keepML ? ['keep-ml'] : [])));
+ipcMain.handle('position-marker-list', async () => {
+  try {
+    await execAsync(`osascript -e '
+tell application "System Events"
+  tell process "Logic Pro"
+    set wins to (every window whose name contains "Marker List")
+    if (count of wins) > 0 then
+      set position of item 1 of wins to {1000, 100}
+    end if
+  end tell
+end tell'`);
+    return { ok: true };
+  } catch(e) { return { ok: false }; }
+});
 ipcMain.handle('focus-app', () => {
   if (_scanTreeActive) return { ok: true };
   if (mainWindow) {
@@ -1104,6 +1118,31 @@ ipcMain.handle('move-to-logic-space', async (_, opts = {}) => {
     const { stdout } = await execAsync('ps aux | grep -i "logic pro" | grep -v grep');
     if (!stdout.trim()) return { ok: false, reason: 'Logic not running' };
   } catch { return { ok: false, reason: 'Logic not running' }; }
+
+  // ── Multi-monitor guard ───────────────────────────────────────────────────
+  // If Logic's window is on an external display, skip the Space-switch dance.
+  // EasyBounce stays on the primary screen; AX/bounce still works fine.
+  try {
+    const { screen } = require('electron');
+    const displays = screen.getAllDisplays();
+    if (displays.length > 1) {
+      const primary = screen.getPrimaryDisplay();
+      const { stdout: boundsRaw } = await execAsync(
+        `osascript -e 'tell application "Logic Pro" to get bounds of window 1'`
+      );
+      // bounds = "x, y, x2, y2"
+      const parts = boundsRaw.trim().split(',').map(Number);
+      if (parts.length === 4) {
+        const [lx, ly] = parts;
+        const onExternal = displays.some(d =>
+          d.id !== primary.id &&
+          lx >= d.bounds.x && lx < d.bounds.x + d.bounds.width &&
+          ly >= d.bounds.y && ly < d.bounds.y + d.bounds.height
+        );
+        if (onExternal) return { ok: true, skipped: 'logic-on-external-display' };
+      }
+    }
+  } catch(e) { /* ignore — proceed normally */ }
 
   // Make EasyBounce visible on all spaces first, then activate Logic via
   // AppleScript 'activate' (unlike `open -a`, it does NOT trigger a Space switch
