@@ -52,6 +52,7 @@ contextBridge.exposeInMainWorld('api', {
   captureLogicPid: ()   => ipcRenderer.invoke('capture-logic-pid'),
   releaseLogicPid: ()   => ipcRenderer.invoke('release-logic-pid'),
   getProjectName: ()    => ipcRenderer.invoke('get-project-name'),
+  getProjectBpm:  ()    => ipcRenderer.invoke('get-project-bpm'),
   openFolder:     ()    => ipcRenderer.invoke('open-folder'),
   revealFolder:   (p)   => ipcRenderer.invoke('reveal-folder', p),
   openLogsFolder: ()    => ipcRenderer.invoke('open-logs-folder'),

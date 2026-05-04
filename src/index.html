@@ -2122,8 +2122,11 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
         <span id="mix-hidden-eye" style="display:inline-flex;align-items:center;"><svg class="ico ico-sm"><use href="#ico-eye"/></svg></span><span class="hidden-lbl">Hidden</span>
       </button>
     </div>
+    <div style="padding:5px 0;font-size:12px;color:#ff8f8f;flex-shrink:0;line-height:1.4;">
+      <b>Uncheck ☐ for mute</b> — channels you don't want in this version
+    </div>
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-      <span style="font-size:var(--fs-xs);color:var(--muted);font-style:italic;flex:1;">Active channels included · others muted</span>
+      <span style="flex:1;"></span>
       <button id="mix-tree-toggle-btn" onclick="mixToggleExpandAll()" style="padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-xs);font-weight:700;cursor:pointer;display:none;" title="Expand / Collapse all groups">⇅</button>
       <button id="mix-toggle-all-btn" onclick="mixToggleAllNone()" oncontextmenu="event.preventDefault();mixHideShowAll();" style="padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-xs);font-weight:700;cursor:pointer;" title="Click: select all/none | Right-click: hide/show all">All</button>
       <button id="mix-clear-sel-btn" onclick="_mixClearSel()" class="clear-sel-btn" title="Clear selection"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
@@ -2182,8 +2185,13 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
         <button id="merge-save-preset-btn" onclick="_saveMergePreset()" title="Save as preset" style="display:none;flex-shrink:0;padding:6px 11px;border-radius:var(--r);border:1px dashed rgba(108,99,255,.45);background:rgba(108,99,255,.07);color:var(--accent);font-size:var(--fs-xs);font-weight:700;cursor:pointer;white-space:nowrap;transition:all var(--t-fast);">+ Save</button>
       </div>
     </div>
+    <div style="padding:5px 0;font-size:12px;color:#ff8f8f;flex-shrink:0;line-height:1.4;">
+      <b>Check ☑ for solo</b> — channels you want to merge into one file
+    </div>
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-bottom:5px;">
-      <div style="font-size:var(--fs-xxs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);flex:1;">Channels <span id="merge-ch-count" style="color:var(--accent);font-family:'JetBrains Mono',monospace;"></span></div>
+      <div style="flex:1;">
+        <span style="font-size:var(--fs-xxs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);">Channels <span id="merge-ch-count" style="color:var(--accent);font-family:'JetBrains Mono',monospace;"></span></span>
+      </div>
       <button id="merge-tree-toggle-btn" onclick="_mergeToggleExpandAll()" style="display:none;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--card);color:var(--muted);font-size:var(--fs-xs);font-weight:700;cursor:pointer;" title="Expand / Collapse all groups">⇅</button>
       <button id="merge-clear-sel-btn" onclick="_mergeClearSel()" class="clear-sel-btn" title="Clear selection"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
     </div>
@@ -2726,6 +2734,7 @@ let stemPresets = (() => {
 })();
 let outputFolder = localStorage.getItem(SK.folder)  || '~/Desktop';
 let projectName  = localStorage.getItem(SK.project) || null;
+let _projectBpm  = null;
 let busOnly      = localStorage.getItem(SK.busOnly) !== 'false';
 let sessionName  = localStorage.getItem('sb4_session') || '';
 // hiddenChannels — global Set<string> of "index::name" keys.
@@ -3231,6 +3240,21 @@ async function _withRecoveryBadge(title, subtitle, asyncFn) {
   }
 }
 
+// Opens mixer (if closed) via scan badge so EasyBounce doesn't block Logic.
+// If mixer was just opened and is wide → coverMixer minimizes it.
+// Call before any action that requires mixer to be visible.
+async function _ensureMixerVisible() {
+  if (_recoveryBadgeActive || bouncing || _scanRunning) return;
+  await _withRecoveryBadge('Opening Mixer…', 'One moment…', async () => {
+    const emRes = await window.api.ensureMixer();
+    if (emRes?.opened) {
+      await window.api.wait(400);
+      await window.api.coverMixer();
+    }
+  });
+  _channelsStale = false;
+}
+
 async function cancelScan() {
   window._scanCancelled = true;
   _scanRunning = false; // allow new scan to start immediately after cancel
@@ -3507,6 +3531,7 @@ async function scanLogic(isAutoRetry = false) {
   // ── Step 1: Mixer channels ─────────────────────────────────────────────────
   if (window._scanCancelled) return;
   const proj = await window.api.getProjectName();
+  window.api.getProjectBpm().then(r => { if (r && r.bpm) _projectBpm = r.bpm; }).catch(() => {});
   if (proj.name) {
     const oldProject = projectName;
     setProjectName(proj.name);
@@ -4753,7 +4778,7 @@ function _renderChannelsImpl() {
     div.onmousedown = (e) => {
       div._wasDragged = false;
     };
-    div.onclick = (e) => {
+    div.onclick = async (e) => {
       if (div._wasDragged) return;
       e.preventDefault();
       saveUndo();
@@ -4777,7 +4802,7 @@ function _renderChannelsImpl() {
         updateAddStemsBtn();
       } else {
         // Single click — add to queue directly
-        if (_channelsStale) { toast('Channels changed in Logic — rescan first'); return; }
+        if (_channelsStale) { await _ensureMixerVisible(); }
         const _isStemDupCh = (j) => j.type === 'stem' && j.status !== 'done' && j.channelIndex === ch.index;
         const existing = queue.find(q => _isStemDupCh(q) || (q.type === 'set' && q.jobs.some(_isStemDupCh)));
         if (existing) { toast(ch.name + ' already in queue'); return; }
@@ -6653,8 +6678,8 @@ function _mkStemItem(ch) {
   return item;
 }
 
-function addSelAsStems() {
-  if (_channelsStale) { toast('Channels changed in Logic — rescan first'); return; }
+async function addSelAsStems() {
+  if (_channelsStale) { await _ensureMixerVisible(); }
   hideQueueHint();
   if (selectedIdx.size === 0) { toast('Select channels first'); return; }
   let added = 0, dupes = 0;
@@ -8896,7 +8921,7 @@ document.getElementById('ch-list').addEventListener('mousedown', e => {
     }
   });
   ql.addEventListener('dragleave', e => { if (!ql.contains(e.relatedTarget)) ql.style.outline = ''; });
-  ql.addEventListener('drop', e => {
+  ql.addEventListener('drop', async e => {
     ql.style.outline = '';
     const isAlt = e.altKey || _altKeyDown || _qDragAlt;
     const fromQid = e.dataTransfer.getData('qid');
@@ -8953,7 +8978,7 @@ document.getElementById('ch-list').addEventListener('mousedown', e => {
     }
 
     if (toAdd.length === 0) { toast('Already in queue'); return; }
-    if (_channelsStale) { toast('Channels changed in Logic — rescan first'); return; }
+    if (_channelsStale) { await _ensureMixerVisible(); }
     hideQueueHint();
     saveUndo();
     toAdd.forEach(ch => {
@@ -15696,7 +15721,7 @@ function _resolveWildcards(template, stemName) {
     project: _safeFilenameValue((typeof projectName !== 'undefined' && projectName) || ''),
     stem:    _safeFilenameValue(stemVal),
     num,
-    bpm: '', // No API yet — populated when a Logic-side BPM read becomes available
+    bpm: _projectBpm ? String(_projectBpm) : '',
     date: `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,
     time: `${pad(d.getHours())}-${pad(d.getMinutes())}`,
     year: String(d.getFullYear()),
@@ -18020,18 +18045,10 @@ if (window.api?.onHotkeyTriggered) {
       toast('No tracks selected in Logic Pro');
       return;
     }
-    // Ensure mixer is open and positioned; coverMixer if it was just opened
-    if (window.api?.ensureMixer && window.api?.coverMixer) {
-      try {
-        const emRes = await window.api.ensureMixer();
-        if (emRes?.opened) {
-          await window.api.coverMixer();
-        }
-      } catch(e) { console.warn('[EB] hotkey ensureMixer/coverMixer:', e); }
-    }
+    // Ensure mixer is open — only if channels are stale (mixer was closed)
+    if (_channelsStale) { await _ensureMixerVisible(); }
     const tracks = result.tracks;
     if (type === 'stems') {
-      if (_channelsStale) { toast('Channels changed in Logic — rescan first'); return; }
       const added = [], skipped = [];
       tracks.forEach(t => {
         const ch = channels.find(c => c.index === t.index) || channels.find(c => c.name === t.name) || { name: t.name, index: t.index, color: '#888' };

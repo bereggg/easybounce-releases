@@ -944,6 +944,17 @@ end tell'`);
   } catch { return { name: null, path: null, folder: null }; }
 });
 
+ipcMain.handle('get-project-bpm', async () => {
+  try {
+    const { stdout } = await execAsync(
+      `osascript -e 'tell app "System Events" to tell process "Logic Pro" to tell window 1 to tell UI element 6 to tell group 1 to get value of slider 1'`
+    );
+    const val = parseFloat(stdout.trim());
+    if (!isNaN(val) && val > 0) return { bpm: Math.round(val) };
+    return { bpm: null };
+  } catch { return { bpm: null }; }
+});
+
 // ── File system ───────────────────────────────────────────────────────────────
 ipcMain.handle('open-folder', async () => {
   const r = await dialog.showOpenDialog(mainWindow, {

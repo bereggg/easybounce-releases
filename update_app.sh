@@ -44,6 +44,7 @@ cp "$SRC/BlockInput" ea/BlockInput
 cp "$SRC/main.js" ea/main.js
 cp "$SRC/preload.js" ea/preload.js
 cp "$SRC/license.js" ea/license.js
+cp "$SRC/license.html" ea/license.html
 cp "$SRC/notifications.js" ea/notifications.js
 cp "$SRC/src/index.html" ea/src/index.html
 mkdir -p ea/src/fonts
