@@ -104,7 +104,7 @@ async function _postAnalytics() {
   const machineId = getMachineId();
   _switchMode(_analytics.currentMode); // flush current mode time
   const payload  = {
-    machine_id:    crypto.createHash('sha256').update(machineId).digest('hex').slice(0, 16),
+    machine_id:    machineId,
     app_version:   app.getVersion(),
     duration_sec:  Math.round((Date.now() - _analytics.start) / 1000),
     buttons:       _analytics.counts,
