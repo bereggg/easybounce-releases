@@ -2016,7 +2016,8 @@ ipcMain.handle('register-hotkeys', (_, hk) => {
   return { ok: true };
 });
 
-ipcMain.handle('get-selected-tracks', () => bridge('getSelectedTracks'));
+ipcMain.handle('get-selected-tracks',   () => bridge('getSelectedTracks'));
+ipcMain.handle('deselect-all-tracks',  () => bridge('deselectAllTracks'));
 
 ipcMain.handle('notif-test-telegram', async () => {
   const s = notifications.loadSettings();

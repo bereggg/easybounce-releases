@@ -160,6 +160,7 @@ contextBridge.exposeInMainWorld('api', {
   setBounceMode:         (v)   => ipcRenderer.invoke('set-bounce-mode', v),
   registerHotkeys:       (hk)  => ipcRenderer.invoke('register-hotkeys', hk),
   getSelectedTracks:     ()    => ipcRenderer.invoke('get-selected-tracks'),
+  deselectAllTracks:     ()    => ipcRenderer.invoke('deselect-all-tracks'),
   onHotkeyTriggered: (cb) => ipcRenderer.on('hotkey-triggered', (_, type) => cb(type)),
   onChannelCountLive: (cb) => ipcRenderer.on('channel-count-live', (_, count) => cb(count)),
   onProjectInfoLive:  (cb) => ipcRenderer.on('project-info-live', (_, info) => cb(info)),

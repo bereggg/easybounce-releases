@@ -8353,9 +8353,9 @@ function _attachQNameEdit(nameEl, getVal, setVal, logicName) {
         }
       } else if (ke.key === 'Enter') {
         ke.preventDefault();
-        // If there's an active suggestion, accept it (cursor to end).
+        // Reject suggestion — commit only what the user typed (Tab/→ accepts suggestion).
         if (suggestPos >= 0) {
-          input.setSelectionRange(input.value.length, input.value.length);
+          input.value = input.value.slice(0, suggestPos);
           suggestPos = -1;
         }
         input.blur();
@@ -9576,6 +9576,12 @@ async function doBounce() {
       }
     } catch(e) { console.warn('[EB]', e); }
   }
+  // Deselect extra tracks — if >1 track selected in Logic, click first visible selected
+  // one so Logic deselects all others (prevents multi-track solo during bounce)
+  if (window.api?.deselectAllTracks) {
+    try { await window.api.deselectAllTracks(); } catch(e) { console.warn('[EB] deselectAllTracks:', e); }
+  }
+
   // Prevent Mac from sleeping during bounce — capture PID so we kill only our caffeinate
   try {
     if (window.api?.runShell) {
@@ -14935,7 +14941,13 @@ function renderFxPopover() {
   } else {
     // WET tab — selecting a channel mutes it on wet pass
     const wm = new Set(_getWetMuteSelection());
-    list.innerHTML = ranked.map(ch => {
+    const ranked_wet = [...ranked].sort((a, b) => {
+      const aOn = wm.has(_fxKey(a)) || wm.has(a.name);
+      const bOn = wm.has(_fxKey(b)) || wm.has(b.name);
+      if (aOn !== bOn) return aOn ? -1 : 1;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+    list.innerHTML = ranked_wet.map(ch => {
       const key = _fxKey(ch);
       const isOn = wm.has(key) || wm.has(ch.name);
       const tag = ch._tag;
@@ -17245,7 +17257,7 @@ function onFmtFieldChange() {
 let _projectMarkers   = [];      // [{name,position,length,index}] from Logic
 // v2 keys use "name::index" IDs to distinguish duplicate-named markers
 let _hiddenMarkers    = new Set(JSON.parse(localStorage.getItem('sb4_hidden_markers_v2')||'[]'));
-let _activeMarkers    = new Set(JSON.parse(localStorage.getItem('sb4_active_markers_v3')||'[]'));
+let _activeMarkers    = new Set(); // always start empty — stale markers from prev session cause silent bounce failures
 let _fullActive       = JSON.parse(localStorage.getItem('sb4_full_active') ?? 'true');
 let _markersPopupOpen = false;
 let _markersShowHidden = false;  // toggle: show hidden section

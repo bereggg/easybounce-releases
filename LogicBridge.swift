@@ -951,6 +951,96 @@ case "getSelectedTracks":
     }
     jsonOut(["ok": true, "tracks": result])
 
+case "deselectAllTracks":
+    // If >1 tracks selected: click on the first selected one (no modifier) →
+    // Logic selects only that track and deselects the rest.
+    // Restores mouse cursor to original position after click.
+    guard let wins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement] else {
+        jsonOut(["ok": false, "error": "no windows"]); break
+    }
+    var dtSelected: [AXUIElement] = []
+    func dtFindSelected(_ el: AXUIElement, _ depth: Int) {
+        if depth > 8 { return }
+        if axRole(el) == "AXLayoutItem" {
+            let desc = (axVal(el, kAXDescriptionAttribute) as? String) ?? ""
+            guard desc.hasPrefix("Track ") else { return }
+            var selRef: CFTypeRef?
+            AXUIElementCopyAttributeValue(el, kAXSelectedAttribute as CFString, &selRef)
+            if (selRef as? Bool) == true { dtSelected.append(el) }
+            return
+        }
+        for kid in axKids(el) { dtFindSelected(kid, depth + 1) }
+    }
+    for win in wins { dtFindSelected(win, 0) }
+
+    guard dtSelected.count > 1 else {
+        jsonOut(["ok": true, "clicked": false, "selectedCount": dtSelected.count]); break
+    }
+
+    // Click on first VISIBLE selected track; if none visible — any visible track
+    let screenH2 = CGDisplayBounds(CGMainDisplayID()).height
+    // Get scroll area bounds by walking up AXParent until AXScrollArea
+    func dtScrollAreaRect(_ el: AXUIElement) -> CGRect {
+        var cur = el
+        for _ in 0..<8 {
+            var parentRef: CFTypeRef?
+            AXUIElementCopyAttributeValue(cur, kAXParentAttribute as CFString, &parentRef)
+            guard let parent = parentRef else { break }
+            cur = parent as! AXUIElement
+            if axRole(cur) == "AXScrollArea" {
+                var pRef: CFTypeRef?; var sRef: CFTypeRef?
+                AXUIElementCopyAttributeValue(cur, kAXPositionAttribute as CFString, &pRef)
+                AXUIElementCopyAttributeValue(cur, kAXSizeAttribute as CFString, &sRef)
+                var sp = CGPoint.zero; var ss = CGSize.zero
+                if let p = pRef { AXValueGetValue(p as! AXValue, .cgPoint, &sp) }
+                if let s = sRef { AXValueGetValue(s as! AXValue, .cgSize,  &ss) }
+                return CGRect(origin: sp, size: ss)
+            }
+        }
+        return CGRect(x: 0, y: 0, width: screenH2, height: screenH2)
+    }
+    let dtScrollRect: CGRect = dtSelected.first.map { dtScrollAreaRect($0) }
+        ?? CGRect(x: 0, y: 0, width: screenH2, height: screenH2)
+
+    func dtVisiblePos(_ el: AXUIElement) -> (CGPoint, CGSize)? {
+        var posRef: CFTypeRef?; var szRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(el, kAXPositionAttribute as CFString, &posRef)
+        AXUIElementCopyAttributeValue(el, kAXSizeAttribute as CFString, &szRef)
+        var pt = CGPoint.zero; var sz = CGSize.zero
+        if let p = posRef { AXValueGetValue(p as! AXValue, .cgPoint, &pt) }
+        if let s = szRef  { AXValueGetValue(s as! AXValue, .cgSize,  &sz) }
+        guard pt.y >= dtScrollRect.minY && pt.y + sz.height <= dtScrollRect.maxY && sz.width > 10 else { return nil }
+        return (pt, sz)
+    }
+    var clickTarget: (CGPoint, CGSize)? = dtSelected.lazy.compactMap { dtVisiblePos($0) }.first
+    if clickTarget == nil {
+        // fallback: siblings of the first selected track (same parent group, no extra DFS)
+        var parentRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(dtSelected[0], kAXParentAttribute as CFString, &parentRef)
+        if let parent = parentRef {
+            for sibling in axKids(parent as! AXUIElement) {
+                if let pos = dtVisiblePos(sibling) { clickTarget = pos; break }
+            }
+        }
+    }
+    guard let (pt, sz) = clickTarget else {
+        jsonOut(["ok": false, "error": "no visible tracks found", "selectedCount": dtSelected.count]); break
+    }
+
+    let savedMouse = CGEvent(source: nil)?.location ?? .zero
+    // click at 35% of track width — past triangle/icon, well before M/S/R/I buttons
+    let clickPt = CGPoint(x: pt.x + sz.width * 0.35, y: pt.y + sz.height / 2)
+    let src = CGEventSource(stateID: .hidSystemState)
+    CGEvent(mouseEventSource: src, mouseType: .leftMouseDown,
+            mouseCursorPosition: clickPt, mouseButton: .left)?.post(tap: .cghidEventTap)
+    CGEvent(mouseEventSource: src, mouseType: .leftMouseUp,
+            mouseCursorPosition: clickPt, mouseButton: .left)?.post(tap: .cghidEventTap)
+    Thread.sleep(forTimeInterval: 0.12)
+    CGWarpMouseCursorPosition(savedMouse)
+    CGEvent(mouseEventSource: nil, mouseType: .mouseMoved,
+            mouseCursorPosition: savedMouse, mouseButton: .left)?.post(tap: .cghidEventTap)
+    jsonOut(["ok": true, "clicked": true, "selectedCount": dtSelected.count])
+
 case "scan":
     let channels = scanChannels(logic)
     var scanResult: [String: Any] = ["channels": channels.map { ["name": $0.name, "index": $0.index, "isBus": $0.isBus, "hasMonitoring": $0.hasMonitoring, "hasRecord": $0.hasRecord, "isMuted": axIntValue($0.muteBtn) == 1, "hasBnc": $0.hasBnc, "hasInputBtn": $0.hasInputBtn, "hasMidiPlugin": $0.hasMidiPlugin, "routingBus": $0.routingBus, "outputBus": $0.outputBus, "inputBus": $0.inputBus, "hasSends": $0.hasSends] }]
