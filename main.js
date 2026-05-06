@@ -140,6 +140,12 @@ async function _postAnalytics() {
 
 let _analyticsPosted = false;
 app.on('before-quit', async e => {
+  // Kill any running LogicBridge subprocesses immediately so they don't
+  // keep clicking Logic's UI as orphan processes after the app closes.
+  if (_currentBridgeProc) { try { _currentBridgeProc.kill('SIGTERM'); } catch(e) {} _currentBridgeProc = null; }
+  if (_activeTrackProc)   { try { _activeTrackProc.kill('SIGTERM');   } catch(e) {} _activeTrackProc = null; }
+  for (const p of _mpInflight) { try { p.kill('SIGTERM'); } catch(e) {} }
+  _mpInflight.clear();
   if (_analyticsPosted) return;
   _analyticsPosted = true;
   e.preventDefault();

@@ -17922,7 +17922,7 @@ function _updParseNotes(md) {
   return md.split('\n').map(line => {
     line = line.trim();
     if (!line) return '';
-    if (/^[-*•]\s+/.test(line)) return '<li>' + line.replace(/^[-*•]\s+/, '') + '</li>';
+    if (/^[-*•]\s+/.test(line)) return '<li style="font-size:13px;color:var(--t1);line-height:1.4;padding-left:2px">' + line.replace(/^[-*•]\s+/, '') + '</li>';
     if (/^#+\s/.test(line)) return '<b style="color:var(--t2);display:block;margin:10px 0 4px">' + line.replace(/^#+\s*/, '') + '</b>';
     return ''; // skip plain text (installation instructions etc)
   }).filter(Boolean).join('');
@@ -17940,13 +17940,12 @@ function showUpdateModal(mode, version, notes, downloadUrl) {
   overlay.style.cssText = 'position:fixed;inset:0;z-index:10500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)';
 
   overlay.innerHTML = `
-    <div style="width:400px;max-width:90vw;background:#141414;border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:32px 28px 24px;box-shadow:0 32px 80px rgba(0,0,0,.8);position:relative;font-family:'JetBrains Mono',monospace;">
-      <div style="font-size:32px;text-align:center;margin-bottom:12px">${isUpdate ? '🆕' : '🎉'}</div>
+    <div style="width:400px;max-width:90vw;background:#141414;border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:32px 28px 24px;box-shadow:0 32px 80px rgba(0,0,0,.8);position:relative;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;">
       <div style="font-size:17px;font-weight:700;color:#f0f0f0;text-align:center;letter-spacing:-.02em;margin-bottom:4px">
         ${isUpdate ? 'Update Available' : 'What\'s New'}
       </div>
-      <div style="font-size:12px;color:var(--accent);text-align:center;margin-bottom:${notesHtml ? '18px' : '24px'}">EasyBounce v${version}</div>
-      ${notesHtml ? `<ul style="list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;border-top:1px solid rgba(255,255,255,.06);padding-top:14px">${notesHtml}</ul>` : ''}
+      <div style="font-size:12px;color:var(--accent);text-align:center;margin-bottom:${notesHtml ? '20px' : '24px'}">EasyBounce v${version}</div>
+      ${notesHtml ? `<ul style="list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;border-top:1px solid rgba(255,255,255,.06);padding-top:18px">${notesHtml}</ul>` : ''}
       <div style="display:flex;gap:10px;${isUpdate ? '' : 'justify-content:center'}">
         ${isUpdate ? `<button id="upd-later" style="flex:1;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:var(--t2);font-size:12px;cursor:pointer;font-family:inherit;transition:all var(--t-fast)" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--t2)'">Later</button>` : ''}
         <button id="upd-action" style="flex:2;padding:10px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent),var(--a2));color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(108,99,255,.35);transition:opacity var(--t-fast)" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
