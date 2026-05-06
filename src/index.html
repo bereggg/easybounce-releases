@@ -11806,6 +11806,15 @@ async function triggerBounce(name, folder, isFirst) {
       // Subsequent bounces: re-apply SR + bitDepth only if they differ from project defaults
       await applyFmtPreset(_fmtPreset, 'sr_bd');
     }
+  } else if (fmtSource === 'logic') {
+    // 'Set in Logic' mode: Logic auto-resets sample rate to project default each
+    // bounce, but we captured user's pick during their Set-in-Logic session.
+    // Re-apply that saved sample rate (only) before clicking Bounce.
+    const _logicSR = localStorage.getItem('sb4_logic_sample_rate');
+    if (_logicSR) {
+      try { await window.api.applyBouncePreset({ dest: '0', sampleRate: _logicSR }); }
+      catch(e) { console.warn('[EB] applyBouncePreset (logic SR):', e); }
+    }
   }
   await window.api.wait(200);
 
@@ -17775,6 +17784,8 @@ async function openBounceInLogic() {
   // Format dialog has "OK" button; Save panel has "Bounce" button — no "OK".
   // When OK button disappears → user clicked it → Save panel is open → press Escape → return.
   // When Bounce window disappears entirely → user clicked Cancel → just return.
+  // ALSO: poll bounce params periodically so we can capture a sample rate the user
+  // changes (Logic doesn't persist sample rate when it differs from project default).
   (async () => {
     await window.api.wait(300);
 
@@ -17796,7 +17807,23 @@ async function openBounceInLogic() {
       } catch { return -1; }
     };
 
+    // Snapshot the sample rate currently visible in Logic's bounce dialog.
+    // Saved as user-preference for subsequent bounces in 'logic' mode.
+    let _lastSeenSR = null;
+    const captureSR = async () => {
+      try {
+        const r = await window.api.getBounceParams();
+        const sr = r?.params?.sampleRate;
+        if (sr && sr !== _lastSeenSR) {
+          _lastSeenSR = sr;
+          localStorage.setItem('sb4_logic_sample_rate', sr);
+          console.log('[EB] Logic SR captured:', sr);
+        }
+      } catch(e) { /* ignore */ }
+    };
+
     const finishWithBanner = async () => {
+      await captureSR(); // final snapshot before banner
       if (window.api.focusApp) await window.api.focusApp();
       showFormatSavedBanner();
     };
@@ -17811,17 +17838,24 @@ async function openBounceInLogic() {
     }
     if (!seenDialog) { await finishWithBanner(); return; }
 
-    // Phase 2: poll for Save panel (cnt=3) or cancel (cnt=-1)
+    // Initial capture once dialog is up
+    await captureSR();
+
+    // Phase 2: poll for Save panel (cnt=3) or cancel (cnt=-1).
+    // Capture SR every ~600ms (every 4th iteration of the 150ms loop).
     let sawSave = false;
-    let sawClose = false;
     for (let i = 0; i < 400; i++) {
       await window.api.wait(150);
       const cnt = await getBtnCount();
 
       if (cnt === -1) { await finishWithBanner(); return; }
 
+      // Periodically refresh SR snapshot while dialog is still open
+      if (cnt === 2 && i % 4 === 3) await captureSR();
+
       if (cnt === 3 && !sawSave) {
         sawSave = true;
+        await captureSR(); // capture right before we dismiss the save panel
         // KEY FIX: hide EasyBounce window so its alwaysOnTop floating panel
         // releases key focus — then Logic's Bounce dialog can receive the key event.
         await window.api.hideWindow();
