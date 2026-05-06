@@ -3445,11 +3445,14 @@ async function scanLogic(isAutoRetry = false) {
   // ── Step 0b: Exit fullscreen + maximize Logic ─────────────────────────────────
   if (window._scanCancelled) return;
   try {
+    // Float over all Spaces BEFORE fullscreen-exit so EasyBounce window survives
+    // the destruction of Logic's fullscreen Space and follows us to Logic's new one.
+    try { await window.api.floatOverAllSpaces(); } catch(e) {}
     const mxResult = await window.api.maximizeLogic();
     await window.api.wait(mxResult?.exitedFullscreen ? 500 : 150);
-    if (mxResult?.exitedFullscreen) {
-      try { await window.api.moveToLogicSpace(); await window.api.wait(150); } catch(e) { console.warn('[EB]', e); }
-    }
+    // Anchor to wherever macOS auto-transitioned us (Logic's now-windowed Space).
+    // No extra activate — we're already with Logic, just re-anchor the window.
+    try { await window.api.anchorToCurrentSpace(); } catch(e) {}
   } catch(e) { console.warn(`maximizeLogic err: ${e}`); }
 
   // ── Close plugin + editor windows — moved AFTER maximizeLogic so Space transition
@@ -3519,6 +3522,12 @@ async function scanLogic(isAutoRetry = false) {
       }
       log(`✗ Scan failed after auto-retry: ${reason}`, 'err');
       toast('⚠ Scan failed — see log');
+    } else if (window._scanCancelled) {
+      // User cancelled — do NOT auto-retry, just clean up
+      _scanRunning = false;
+      document.body.classList.remove('scan-badge');
+      if (window.api.exitScanBadge) { try { await window.api.exitScanBadge(); _scanBadgeActive = false; } catch(e) {} }
+      log(`✗ Scan cancelled`, 'warn');
     } else {
       log(`⚠ ${reason} — auto-retrying…`, 'warn');
       _scanRunning = false; // release before retry so scanLogic(true) can run

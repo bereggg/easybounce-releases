@@ -1689,6 +1689,28 @@ case "switchToEnglish":
     }
     jsonOut(["ok": switched])
 
+// Cross-Space fullscreen exit attempt via AXAllWindows + AXFullScreen setter.
+// macOS hides AX tree of fullscreen apps on other Spaces, so this returns
+// exited=false in that case — user-initiated Space switch is then required.
+// Kept as a free-cost optimistic try (~28ms): if macOS ever allows cross-Space
+// AX for fullscreen apps, this will start working automatically.
+case "preExitFullscreen":
+    var exited = false
+    if let allWins = axVal(logic, "AXAllWindows") as? [AXUIElement] {
+        for w in allWins {
+            let title = (axVal(w, kAXTitleAttribute) as? String) ?? ""
+            guard title.contains("Tracks") else { continue }
+            var fsRef: CFTypeRef?
+            AXUIElementCopyAttributeValue(w, "AXFullScreen" as CFString, &fsRef)
+            if (fsRef as? Bool) == true {
+                AXUIElementSetAttributeValue(w, "AXFullScreen" as CFString, kCFBooleanFalse)
+                exited = true
+                break
+            }
+        }
+    }
+    jsonOut(["ok": true, "exited": exited])
+
 case "maximizeLogic":
     // Exit fullscreen (if active), then resize to fill visible screen
     guard let screen = NSScreen.main else { jsonOut(["ok": false, "error": "no screen"]); break }

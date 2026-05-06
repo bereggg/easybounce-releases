@@ -140,11 +140,18 @@ async function _postAnalytics() {
 
 let _analyticsPosted = false;
 app.on('before-quit', async e => {
-  // Kill any running LogicBridge subprocesses immediately so they don't
-  // keep clicking Logic's UI as orphan processes after the app closes.
-  if (_currentBridgeProc) { try { _currentBridgeProc.kill('SIGTERM'); } catch(e) {} _currentBridgeProc = null; }
-  if (_activeTrackProc)   { try { _activeTrackProc.kill('SIGTERM');   } catch(e) {} _activeTrackProc = null; }
-  for (const p of _mpInflight) { try { p.kill('SIGTERM'); } catch(e) {} }
+  // Kill any running LogicBridge subprocesses AND their osascript children
+  // (via process group) so they don't keep clicking Logic's UI as orphans.
+  const _killGroup = (proc) => {
+    if (!proc) return;
+    try { process.kill(-proc.pid, 'SIGTERM'); } catch(e) {
+      try { proc.kill('SIGTERM'); } catch(e2) {}
+    }
+  };
+  _killGroup(_currentBridgeProc);   _currentBridgeProc = null;
+  _killGroup(_currentRunShellProc); _currentRunShellProc = null;
+  _killGroup(_activeTrackProc);     _activeTrackProc = null;
+  for (const p of _mpInflight) _killGroup(p);
   _mpInflight.clear();
   if (_analyticsPosted) return;
   _analyticsPosted = true;
@@ -544,17 +551,20 @@ async function bridge(...args) {
     return { error: 'LogicBridge not found — run: swiftc LogicBridge.swift -o LogicBridge -framework ApplicationServices -framework AppKit' };
   }
   const cmd = args[0];
-  const shouldLog = _BRIDGE_LOG_CMDS.has(cmd);
-  if (shouldLog) console.log(`[EB-BRIDGE] ${_bt()} → ${args.join(' ')}`);
+  const t0 = Date.now();
+  console.log(`[SCAN] ${_bt()} → bridge ${args.join(' ')}`);
   return new Promise((resolve) => {
     const { execFile } = require('child_process');
-    const proc = execFile(BRIDGE, args, { timeout: 30000 }, (err, stdout) => {
+    // detached: true → child becomes new process group leader, so we can kill
+    // the whole group (incl. osascript children) via process.kill(-pid)
+    const proc = execFile(BRIDGE, args, { timeout: 30000, detached: true }, (err, stdout) => {
       if (_currentBridgeProc === proc) _currentBridgeProc = null;
       _mpInflight.delete(proc);
       let result;
       try { result = JSON.parse((stdout || '').trim()); }
       catch { result = { error: err?.message || 'parse error' }; }
-      if (shouldLog) console.log(`[EB-BRIDGE] ${_bt()} ← ${cmd} result: ${JSON.stringify(result)}`);
+      const dt = Date.now() - t0;
+      console.log(`[SCAN] ${_bt()} ← bridge ${cmd} (${dt}ms)`);
       resolve(result);
     });
     _currentBridgeProc = proc;
@@ -566,7 +576,7 @@ async function bridgeMP(...args) {
   if (!fs.existsSync(BRIDGE)) return { error: 'LogicBridge not found' };
   return new Promise((resolve) => {
     const { execFile } = require('child_process');
-    const proc = execFile(BRIDGE, args, { timeout: 30000 }, (err, stdout) => {
+    const proc = execFile(BRIDGE, args, { timeout: 30000, detached: true }, (err, stdout) => {
       if (_currentBridgeProc === proc) _currentBridgeProc = null;
       _mpInflight.delete(proc);
       try { resolve(JSON.parse((stdout || '').trim())); }
@@ -623,12 +633,18 @@ function invalidateBridgeCache(cmd) {
 // ── IPC handlers ──────────────────────────────────────────────────────────────
 ipcMain.handle('switch-to-english', () => bridge('switchToEnglish'));
 ipcMain.handle('scan-channels', () => { invalidateBridgeCache('scan'); return bridge('scan'); }); // scan always fresh
-// #11: kill the running bridge process immediately so AX actions in Logic stop within ~200ms
+// #11: kill the running bridge process AND any in-flight run-shell (CloseLogicWindows etc)
+// AND their osascript children (process group). Stops AX actions within ~200ms.
 ipcMain.handle('cancel-scan', () => {
-  if (_currentBridgeProc) {
-    try { _currentBridgeProc.kill('SIGTERM'); } catch(e) { console.warn('[EB]', e); }
-    _currentBridgeProc = null;
-  }
+  const _killGroup = (proc, label) => {
+    if (!proc) return;
+    const pid = proc.pid;
+    try { process.kill(-pid, 'SIGTERM'); }
+    catch(e) { try { proc.kill('SIGTERM'); } catch(e2) {} }
+    console.log(`[SCAN] ${_bt()} ✗ cancel-scan killed ${label} pid=${pid}`);
+  };
+  _killGroup(_currentBridgeProc, 'bridge');   _currentBridgeProc = null;
+  _killGroup(_currentRunShellProc, 'shell');  _currentRunShellProc = null;
   return { ok: true };
 });
 ipcMain.handle('scan-master-plugins', () => cachedBridge('scanMasterPlugins', 3000));
@@ -640,10 +656,12 @@ ipcMain.handle('set-master-plugin', (_, name, active) => {
   return (_mpModalOpen ? bridgeMP : bridge)('setMasterPlugin', name, String(active));
 });
 // Kill any in-flight master-plugin bridge operations (called on MP modal close).
+// Uses process group kill to also terminate osascript children.
 ipcMain.handle('cancel-master-plugin-ops', () => {
   let killed = 0;
   for (const p of _mpInflight) {
-    try { p.kill('SIGTERM'); killed++; } catch(e) {}
+    try { process.kill(-p.pid, 'SIGTERM'); killed++; }
+    catch(e) { try { p.kill('SIGTERM'); killed++; } catch(e2) {} }
   }
   _mpInflight.clear();
   return { ok: true, killed };
@@ -700,6 +718,21 @@ ipcMain.handle('scan-tree', async () => {
   finally { _scanTreeActive = false; }
 });
 ipcMain.handle('maximize-logic',         () => bridge('maximizeLogic'));
+ipcMain.handle('pre-exit-fullscreen',    () => bridge('preExitFullscreen'));
+// Anchor EasyBounce to current Space without activating Logic (no Space transition).
+// Used after fullscreen-exit when macOS already auto-transitioned us to Logic's new Space.
+ipcMain.handle('anchor-to-current-space', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return { ok: false };
+  mainWindow.setVisibleOnAllWorkspaces(false);
+  return { ok: true };
+});
+// Make EasyBounce visible on ALL Spaces — so the window survives a Space destruction
+// (e.g. when Logic exits fullscreen). Pair with anchorToCurrentSpace afterwards.
+ipcMain.handle('float-over-all-spaces', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return { ok: false };
+  mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  return { ok: true };
+});
 ipcMain.handle('exit-fullscreen-only',   () => bridge('exitFullscreenOnly'));
 ipcMain.handle('close-panels', async () => {
   const wasOnTop = mainWindow?.isAlwaysOnTop?.() ?? false;
@@ -872,11 +905,21 @@ ipcMain.handle('start-caffeinate', () => {
   return { ok: true, pid: proc.pid };
 });
 
+let _currentRunShellProc = null;
 ipcMain.handle('run-shell', async (_, cmd) => {
   const { exec } = require('child_process');
   return new Promise(resolve => {
     const utf8Env = { ...process.env, LANG: 'en_US.UTF-8', LC_ALL: 'en_US.UTF-8' };
-    exec(cmd, { timeout: 30000, env: utf8Env }, (err, stdout) => resolve({ ok: !err, stdout: (stdout || '').trim() }));
+    const cmdShort = cmd.length > 80 ? cmd.slice(0, 80) + '…' : cmd;
+    const t0 = Date.now();
+    console.log(`[SCAN] ${_bt()} → run-shell ${cmdShort}`);
+    // detached: true → new process group so we can kill the shell + its osascript children
+    const proc = exec(cmd, { timeout: 30000, env: utf8Env, detached: true }, (err, stdout) => {
+      if (_currentRunShellProc === proc) _currentRunShellProc = null;
+      console.log(`[SCAN] ${_bt()} ← run-shell (${Date.now()-t0}ms)`);
+      resolve({ ok: !err, stdout: (stdout || '').trim() });
+    });
+    _currentRunShellProc = proc;
   });
 });
 ipcMain.handle('escape-logic', () => {
@@ -1119,11 +1162,14 @@ ipcMain.handle('focus-app', () => {
 });
 
 ipcMain.handle('move-to-logic-space', async (_, opts = {}) => {
-  if (!mainWindow) return { ok: false };
+  const _t0 = Date.now();
+  console.log(`[SCAN] ${_bt()} → move-to-logic-space`);
+  const _logEnd = (r) => { console.log(`[SCAN] ${_bt()} ← move-to-logic-space (${Date.now()-_t0}ms)`); return r; };
+  if (!mainWindow) return _logEnd({ ok: false });
   try {
     const { stdout } = await execAsync('ps aux | grep -i "logic pro" | grep -v grep');
-    if (!stdout.trim()) return { ok: false, reason: 'Logic not running' };
-  } catch { return { ok: false, reason: 'Logic not running' }; }
+    if (!stdout.trim()) return _logEnd({ ok: false, reason: 'Logic not running' });
+  } catch { return _logEnd({ ok: false, reason: 'Logic not running' }); }
 
   // ── Multi-monitor guard ───────────────────────────────────────────────────
   // If Logic's window is on an external display, skip the Space-switch dance.
@@ -1145,7 +1191,7 @@ ipcMain.handle('move-to-logic-space', async (_, opts = {}) => {
           lx >= d.bounds.x && lx < d.bounds.x + d.bounds.width &&
           ly >= d.bounds.y && ly < d.bounds.y + d.bounds.height
         );
-        if (onExternal) return { ok: true, skipped: 'logic-on-external-display' };
+        if (onExternal) return _logEnd({ ok: true, skipped: 'logic-on-external-display' });
       }
     }
   } catch(e) { /* ignore — proceed normally */ }
@@ -1169,7 +1215,7 @@ ipcMain.handle('move-to-logic-space', async (_, opts = {}) => {
   await new Promise(r => setTimeout(r, 200));
   // During bounce: keep windows on all spaces so overlay+mini-mode follow the user.
   // Only anchor to Logic's space after bounce ends (setBounceMode(false) + final moveToLogicSpace).
-  if (_inBounce) return { ok: true };
+  if (_inBounce) return _logEnd({ ok: true });
   // In mini mode: keep visibleOnAllWorkspaces so the widget follows the user
   if (!_inMiniMode) {
     mainWindow.show();
@@ -1179,7 +1225,7 @@ ipcMain.handle('move-to-logic-space', async (_, opts = {}) => {
     else mainWindow.focus();
     mainWindow.setVisibleOnAllWorkspaces(false);
   }
-  return { ok: true };
+  return _logEnd({ ok: true });
 });
 
 // Snap all windows (main + overlay) to Logic's Space after a stem render completes.
