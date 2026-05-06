@@ -8694,7 +8694,9 @@ function renderQueue() {
         div.addEventListener('dragover', e => { if (e.dataTransfer.types.includes('channel-name')) return; const isAlt = e.altKey || _altKeyDown || _qDragAlt; if (isAlt) return; e.preventDefault(); div.style.borderTop = '2px solid var(--teal)'; });
         div.addEventListener('dragleave', () => { div.style.borderTop = ''; });
         div.addEventListener('drop', e => {
-          e.preventDefault(); div.style.borderTop = '';
+          e.preventDefault();
+          e.stopPropagation(); // prevent queue-list-level handler from creating a 2nd copy
+          div.style.borderTop = '';
           const fromId = e.dataTransfer.getData('qid'); if (fromId === item.id) return;
           const fromIdx = queue.findIndex(q => q.id === fromId);
           const toIdx = queue.findIndex(q => q.id === item.id);
@@ -8788,6 +8790,7 @@ function renderQueue() {
       div.addEventListener('dragleave', () => { div.style.borderTop = ''; });
       div.addEventListener('drop', e => {
         e.preventDefault();
+        e.stopPropagation(); // prevent queue-list-level handler from creating a 2nd copy
         div.style.borderTop = '';
         const fromId = e.dataTransfer.getData('qid');
         if (fromId === item.id) return;
@@ -15540,6 +15543,14 @@ function closeStemOverrideMenu() {
   document.removeEventListener('click', _stemMenuOutsideClick);
 }
 
+// Re-render menu in place (for keeping it open after option click while updating
+// ✓ marks and visibility of the reset button)
+function _rerenderStemMenu(qid) {
+  const menu = document.getElementById('mb-stem-menu');
+  if (!menu || _stemMenuQid !== qid) return;
+  menu.innerHTML = _renderStemMenuHtml(qid);
+}
+
 function _stemMenuOutsideClick(e) {
   const menu = document.getElementById('mb-stem-menu');
   if (menu && !menu.contains(e.target) && !e.target.closest('.mb-stem-slider-btn') && !e.target.closest('.mb-stem-pill')) {
@@ -16708,7 +16719,9 @@ function _resetStemOverride(qid) {
   if (typeof renderQueue === 'function') renderQueue();
   if (typeof _refreshAllCounters === 'function') _refreshAllCounters();
   if (typeof _updateNamingWarningIndicator === 'function') _updateNamingWarningIndicator();
-  closeStemOverrideMenu();
+  // Keep menu open after reset — re-render to reflect cleared state.
+  // User dismisses via ✕, click outside, or the slider button itself.
+  _rerenderStemMenu(qid);
 }
 
 function _renderStemMenuHtml(qid) {
@@ -16722,7 +16735,11 @@ function _renderStemMenuHtml(qid) {
     { axis: 'sc',     label: 'SC',      states: ['on', 'off', 'both'] }
   ];
   // Fixed header (never scrolls) + scrollable body — keeps "FOR:" always visible
-  let html = `<div class="mb-stem-menu-hdr" style="padding:8px 12px 6px;border-bottom:1px solid var(--b);font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:6px;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">FOR: ${stemName}</span>${hasAnyOverride ? `<button onclick="_resetStemOverride('${qid}')" title="Reset all overrides" style="flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--muted);padding:0 2px;font-size:12px;line-height:1;opacity:.8;" onmouseenter="this.style.color='var(--accent)';this.style.opacity=1" onmouseleave="this.style.color='var(--muted)';this.style.opacity=.8">↺</button>` : ''}</div>
+  const _resetBtn = hasAnyOverride
+    ? `<button onclick="event.stopPropagation();_resetStemOverride('${qid}')" title="Reset all overrides" style="flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--muted);padding:2px 6px;font-size:16px;line-height:1;opacity:.8;border-radius:4px;" onmouseenter="this.style.color='var(--accent)';this.style.opacity=1;this.style.background='rgba(108,99,255,0.1)'" onmouseleave="this.style.color='var(--muted)';this.style.opacity=.8;this.style.background='none'">↺</button>`
+    : '';
+  const _cancelBtn = `<button onclick="closeStemOverrideMenu()" title="Close" style="flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--muted);padding:2px 6px;font-size:14px;line-height:1;opacity:.8;border-radius:4px;font-family:inherit;" onmouseenter="this.style.color='var(--t1)';this.style.opacity=1;this.style.background='rgba(255,255,255,0.06)'" onmouseleave="this.style.color='var(--muted)';this.style.opacity=.8;this.style.background='none'">✕</button>`;
+  let html = `<div class="mb-stem-menu-hdr" style="padding:8px 8px 6px 12px;border-bottom:1px solid var(--b);font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:4px;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">FOR: ${stemName}</span>${_resetBtn}${_cancelBtn}</div>
   <div class="mb-stem-menu-body" style="overflow-y:auto;flex:1;min-height:0;">`;
   sections.forEach((sec, si) => {
     const cur = ovr[sec.axis];
@@ -16735,10 +16752,10 @@ function _renderStemMenuHtml(qid) {
     html += `<div class="mb-stem-menu-sec" style="${si > 0 ? 'border-top:1px solid var(--b);' : ''}padding:6px 0;">`;
     html += `<div style="padding:2px 12px 4px;font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);font-weight:700;color:var(--muted);letter-spacing:.08em;">${sec.label}</div>`;
     // Inherit option
-    html += `<button class="mb-stem-menu-item" data-active="${inheritActive}" onclick="setStemOverride('${qid}','${sec.axis}','inherit');closeStemOverrideMenu();"><span class="mb-menu-mark">${inheritActive ? '✓' : ''}</span><span class="mb-menu-lbl">Inherit global</span><span class="mb-menu-val">${_label(sec.axis, modebarState[sec.axis])}</span></button>`;
+    html += `<button class="mb-stem-menu-item" data-active="${inheritActive}" onclick="event.stopPropagation();setStemOverride('${qid}','${sec.axis}','inherit');_rerenderStemMenu('${qid}');"><span class="mb-menu-mark">${inheritActive ? '✓' : ''}</span><span class="mb-menu-lbl">Inherit global</span><span class="mb-menu-val">${_label(sec.axis, modebarState[sec.axis])}</span></button>`;
     sec.states.forEach(s => {
       const active = cur === s && !hasCustom;
-      html += `<button class="mb-stem-menu-item" data-active="${active}" onclick="setStemOverride('${qid}','${sec.axis}','${s}');closeStemOverrideMenu();"><span class="mb-menu-mark">${active ? '✓' : ''}</span><span class="mb-menu-lbl">${_label(sec.axis, s)}</span><span class="mb-menu-val"></span></button>`;
+      html += `<button class="mb-stem-menu-item" data-active="${active}" onclick="event.stopPropagation();setStemOverride('${qid}','${sec.axis}','${s}');_rerenderStemMenu('${qid}');"><span class="mb-menu-mark">${active ? '✓' : ''}</span><span class="mb-menu-lbl">${_label(sec.axis, s)}</span><span class="mb-menu-val"></span></button>`;
     });
     // Master axis gets an extra "Custom…" option to configure per-stem plugin bypass
     if (sec.axis === 'master') {
@@ -16764,7 +16781,7 @@ function _renderStemMenuHtml(qid) {
     : (arr.length === 1 ? '+' + arr[0] : `+${arr[0]} +${arr.length - 1}`);
   html += `<div class="mb-stem-menu-sec" style="border-top:1px solid var(--b);padding:6px 0;">`;
   html += `<div style="padding:2px 12px 4px;font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);font-weight:700;color:var(--muted);letter-spacing:.08em;">+FX</div>`;
-  html += `<button class="mb-stem-menu-item" data-active="${fxInherit}" onclick="setStemOverride('${qid}','fxChannels','inherit');closeStemOverrideMenu();"><span class="mb-menu-mark">${fxInherit ? '✓' : ''}</span><span class="mb-menu-lbl">Inherit global</span><span class="mb-menu-val">${_fxLbl(globalFx)}</span></button>`;
+  html += `<button class="mb-stem-menu-item" data-active="${fxInherit}" onclick="event.stopPropagation();setStemOverride('${qid}','fxChannels','inherit');_rerenderStemMenu('${qid}');"><span class="mb-menu-mark">${fxInherit ? '✓' : ''}</span><span class="mb-menu-lbl">Inherit global</span><span class="mb-menu-val">${_fxLbl(globalFx)}</span></button>`;
   html += `<button class="mb-stem-menu-item" data-active="${!fxInherit}" onclick="closeStemOverrideMenu();openFxChannelsPopover(event,'${qid}');"><span class="mb-menu-mark">${!fxInherit ? '✓' : ''}</span><span class="mb-menu-lbl">${fxInherit ? 'Custom\u2026' : _fxLbl(fxOvr) + ' \u2014 edit\u2026'}</span><span class="mb-menu-val"></span></button>`;
   html += `</div>`;
   html += `</div>`;   // close .mb-stem-menu-body (scrollable area)
