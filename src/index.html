@@ -2843,33 +2843,18 @@ function _applyShiftRange(toIdx, orderedList) {
     return;
   }
   const start = Math.min(anchorPos, toPos), end = Math.max(anchorPos, toPos);
-  // Collect visible range items
+  // Collect visible range items only — no descent into collapsed subgroups.
+  // If a subgroup is expanded, its children are already in useList and get included.
+  // If collapsed, only the subgroup row itself is selected.
   const rangeItems = [];
   for (let i = start; i <= end; i++) rangeItems.push(useList[i]);
-  // Helper: recursively add/remove all descendants of a group
-  function _withDesc(idx, fn) {
-    fn(idx);
-    const grpCh = channels.find(c => c.index === idx);
-    const grpNode = grpCh ? trackTree.find(t => t.name.toLowerCase() === grpCh.name.toLowerCase() && t.type === 'group') : null;
-    if (grpNode) {
-      (function walk(parentName) {
-        trackTree.filter(t => t.parent === parentName).forEach(child => {
-          const cch = channels.find(c => c.name.toLowerCase() === child.name.toLowerCase());
-          if (cch) fn(cch.index);
-          if (child.type === 'group') walk(child.name);
-        });
-      })(grpNode.name);
-    }
-  }
-  // Toggle: if ALL visible range items + their descendants are already selected → deselect all
-  const expandedRange = new Set();
-  rangeItems.forEach(i => _withDesc(i, x => expandedRange.add(x)));
-  const allSelected = [...expandedRange].every(i => selectedIdx.has(i));
+  // Toggle: if ALL visible range items are already selected → deselect; else select them
+  const allSelected = rangeItems.every(i => selectedIdx.has(i));
   if (allSelected) {
-    expandedRange.forEach(i => selectedIdx.delete(i));
+    rangeItems.forEach(i => selectedIdx.delete(i));
   } else {
     selectedIdx.clear();
-    rangeItems.forEach(i => _withDesc(i, x => selectedIdx.add(x)));
+    rangeItems.forEach(i => selectedIdx.add(i));
   }
 }
 let _shiftPrevRange = null; // previous shift range (to undo on drag back)
@@ -16098,30 +16083,60 @@ function _stemFileSuffixes(qid) {
 }
 
 // Override _queueTotalFiles to return MULTIPLIED count
+// Compute the list of marker pass ids that will actually run during bounce —
+// same logic as the bounce builder so file counters match what bounce produces.
+function _activeMarkerPassIds() {
+  const passes = [];
+  if (_fullActive) passes.push('full');
+  const activeArr = _projectMarkers.filter(m => _activeMarkers.has(markerId(m)) && !_hiddenMarkers.has(markerId(m)));
+  for (const m of activeArr) passes.push(markerId(m));
+  // Item-only markers: globally off but added to a specific pending job
+  const itemOnly = new Set();
+  for (const q of queue) {
+    const jobs = q.type === 'set' ? (q.jobs || []) : [q];
+    for (const j of jobs) {
+      if (j.status && j.status !== 'pending') continue;
+      for (const id of (j.markerAdditions || [])) {
+        if (!_activeMarkers.has(id) && !_hiddenMarkers.has(id)) itemOnly.add(id);
+      }
+    }
+  }
+  for (const id of itemOnly) passes.push(id);
+  return passes;
+}
+
+// Render-file count for a single job × all its applicable marker passes.
+// stemCount is the per-pass file count (mode/master/sc multipliers).
+function _jobTotalFiles(job, passIds) {
+  const stemCount = _stemFileCount(job.id);
+  const matchingPasses = passIds.filter(pid => shouldBounceJobForMarker(job, pid)).length;
+  return stemCount * matchingPasses;
+}
+
 window._queueTotalFiles = function() {
+  const passes = _activeMarkerPassIds();
+  if (passes.length === 0) return 0;
   let total = 0;
   for (const q of queue) {
-    if (q.type === 'set') {
-      for (const job of q.jobs) total += _stemFileCount(job.id);
-    } else {
-      total += _stemFileCount(q.id);
-    }
+    const jobs = q.type === 'set' ? (q.jobs || []) : [q];
+    for (const j of jobs) total += _jobTotalFiles(j, passes);
   }
   return total;
 };
 
-// Override updateBounceBtn to use multiplied PENDING count
+// Override updateBounceBtn to count PENDING jobs × matching marker passes.
 window.updateBounceBtn = function() {
   const btn = document.getElementById('bbtn');
   if (!btn) return;
+  const passes = _activeMarkerPassIds();
   let pending = 0;
-  for (const q of queue) {
-    if (q.type === 'set') {
-      for (const job of q.jobs) {
-        if (job.status === 'pending') pending += _stemFileCount(job.id);
+  if (passes.length > 0) {
+    for (const q of queue) {
+      const jobs = q.type === 'set' ? (q.jobs || []) : [q];
+      for (const j of jobs) {
+        if (j.status && j.status !== 'pending') continue;
+        pending += _jobTotalFiles(j, passes);
       }
-    } else if (q.status === 'pending') {
-      pending += _stemFileCount(q.id);
     }
   }
   if (typeof bouncing !== 'undefined' && bouncing) { btn.className = 'bbtn running'; return; }
@@ -17454,6 +17469,7 @@ function toggleFullActive() {
   updateMarkersBtnLabel();
   renderMarkersPopupList();
   renderQueue();
+  updateBounceBtn(); _refreshAllCounters();
 }
 
 function toggleMarkerActive(id, on) {
@@ -17462,6 +17478,7 @@ function toggleMarkerActive(id, on) {
   updateMarkersBtnLabel();
   renderMarkersPopupList();
   renderQueue();
+  updateBounceBtn(); _refreshAllCounters();
 }
 
 function hideMarker(id) {
@@ -17471,6 +17488,7 @@ function hideMarker(id) {
   updateMarkersBtnLabel();
   renderMarkersPopupList();
   renderQueue();
+  updateBounceBtn(); _refreshAllCounters();
 }
 
 function restoreMarker(id) {
@@ -17548,6 +17566,7 @@ function toggleJobFull(jobId) {
   if (!job) return;
   job.fullExclusion = !job.fullExclusion;
   saveQueue(); renderQueue();
+  updateBounceBtn(); _refreshAllCounters();
 }
 
 function toggleJobMarker(jobId, markerId_) {
@@ -17570,6 +17589,7 @@ function toggleJobMarker(jobId, markerId_) {
     else job.markerAdditions.push(markerId_);
   }
   saveQueue(); renderQueue();
+  updateBounceBtn(); _refreshAllCounters();
 }
 
 // Is a specific job going to be bounced for a given marker pass?
