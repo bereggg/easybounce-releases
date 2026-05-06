@@ -4470,8 +4470,8 @@ function _renderChannelsImpl() {
       const sel   = ch && selectedIdx.has(ch.index);
       const depth = getDepth(t);
 
-      // Skip if any ancestor is collapsed
-      if (t.parent && isAncestorCollapsed(t.parent, t.parentNum >= 0 ? t.parentNum : undefined)) return;
+      // Skip if any ancestor is collapsed (in hidden mode: ignore collapse state so hidden tracks always show)
+      if (channelFilter !== 'hidden' && t.parent && isAncestorCollapsed(t.parent, t.parentNum >= 0 ? t.parentNum : undefined)) return;
 
       if (t.type === 'group') {
         const groupSelfVisible = treeItemVisible(ch);
@@ -5170,7 +5170,11 @@ function _renderEspStems() {
   // Now just updates the count badge — list is replaced by checkboxes in _renderEspChannels
   const p = stemPresets.find(x => x.id === _editingStemPresetId);
   const countBadge = document.getElementById('esp-stems-count');
-  if (countBadge) countBadge.textContent = (p?.names || []).length || '';
+  if (countBadge) {
+    const count = (p?.names || []).length;
+    const total = (_masterChannels.length > 0 ? _masterChannels : channels).length;
+    countBadge.textContent = total > 0 ? `${count} of ${total}` : (count || '');
+  }
 }
 
 let _espPresetSectionOpen = false;
@@ -5189,7 +5193,11 @@ function _renderEspChannels() {
   cont.innerHTML = '';
   _espRenderOrder = [];
   const badge = document.getElementById('esp-stems-count');
-  if (badge) badge.textContent = (p?.names || []).length || '';
+  if (badge) {
+    const _cnt = (p?.names || []).length;
+    const _tot = allCh.length;
+    badge.textContent = _tot > 0 ? `${_cnt} of ${_tot}` : (_cnt || '');
+  }
   // Empty-state hint when preset has no channels selected
   if (p && (p.names || []).length === 0) {
     const hint = document.createElement('div');
@@ -7014,6 +7022,9 @@ function _renderMergeChannelList() {
       if (t.type==='group') renderGroupRow(t, 0);
       else { const ch=chMap[t.num]; if(ch&&chVisible(ch)) cont.appendChild(makeTrackRow(ch, 6)); }
     });
+    // Orphan fallback: channels not matched by any tree entry (e.g. duplicate-named channels)
+    const _mrgMapped = new Set(Object.values(chMap).map(c => c.index));
+    allCh.filter(c => !_mrgMapped.has(c.index) && chVisible(c)).forEach(ch => cont.appendChild(makeTrackRow(ch, 8)));
     if (cont.children.length === 0) cont.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:var(--fs-sm);padding:10px;">No channels match</div>';
   } else {
     // ── Flat list ──
@@ -7732,6 +7743,20 @@ function renderMixList(initIndices) {
         if (t.type === 'group') renderGroupRow(t, 0);
         else renderTrackRow(t, 0);
       });
+      // Orphan fallback: channels not matched by any tree entry (e.g. duplicate-named channels)
+      const _mixMapped = new Set(Object.values(chMap).map(c => c.index));
+      allCh.filter(c => isMixVisible(c) && !_mixMapped.has(c.index)).forEach(ch => {
+        _mixRenderOrder.push(ch.index);
+        const lbl = document.createElement('label');
+        lbl.className = 'tcb-item';
+        lbl.appendChild(makeCb(ch));
+        lbl.insertAdjacentHTML('beforeend', `
+          <div class="tcb-idx">${ch.index}</div>
+          <div class="tcb-dot" style="background:${ch.color||'var(--muted)'}"></div>
+          <span class="tcb-name">${ch.name}</span>
+          ${ch.isMuted ? '<span class="ch-mute-badge" style="margin-left:auto;">M</span>' : ''}`);
+        list.appendChild(lbl);
+      });
     }
   } else {
     // ── Flat list (search mode or no tree) ────────────────
@@ -8433,6 +8458,16 @@ let _lastQueueLen = 0;
 function renderQueue() {
   const el = document.getElementById('qlist');
   const prevLen = _lastQueueLen;
+  // Show "Reset all" only when there are non-pending items to reset
+  const _reloadBtn = document.getElementById('reload-queue-btn');
+  if (_reloadBtn) {
+    const _hasNonPending = queue.some(q => {
+      if (q.status && q.status !== 'pending') return true;
+      if (q.type === 'set' && Array.isArray(q.jobs)) return q.jobs.some(j => j.status && j.status !== 'pending');
+      return false;
+    });
+    _reloadBtn.style.display = _hasNonPending ? 'inline-flex' : 'none';
+  }
   _lastQueueLen = queue.length;
   el.innerHTML = '';
   // Refresh tree badges (queued-state markers) — queue composition may have changed
@@ -15205,6 +15240,8 @@ function setStemOverride(qid, axis, value) {
     if (axis === 'master') delete modebarState.perStemOverrides[qid].masterPluginsCustom;
     // Inheriting sc also clears per-stem custom sidechain channels
     if (axis === 'sc') delete modebarState.perStemOverrides[qid].scChannels;
+    // Inheriting fxChannels also clears per-stem wet-mute state
+    if (axis === 'fxChannels') delete modebarState.perStemOverrides[qid].fxWetMute;
     if (Object.keys(modebarState.perStemOverrides[qid]).length === 0) {
       delete modebarState.perStemOverrides[qid];
     }
@@ -16631,17 +16668,28 @@ function _updateNamingWarningIndicator() {
   window.doBounce.__mbCollisionCheck = true;
 })();
 
+function _resetStemOverride(qid) {
+  delete modebarState.perStemOverrides[qid];
+  _saveStemOverrides();
+  _updateGlobalOverrideIndicators();
+  if (typeof renderQueue === 'function') renderQueue();
+  if (typeof _refreshAllCounters === 'function') _refreshAllCounters();
+  if (typeof _updateNamingWarningIndicator === 'function') _updateNamingWarningIndicator();
+  closeStemOverrideMenu();
+}
+
 function _renderStemMenuHtml(qid) {
   const item = queue.find(q => q.id === qid);
   const stemName = item?.name || 'this stem';
   const ovr = modebarState.perStemOverrides[qid] || {};
+  const hasAnyOverride = Object.keys(ovr).length > 0;
   const sections = [
     { axis: 'mode',   label: 'EFFECTS', states: ['wet', 'dry', 'wet+dry'] },
     { axis: 'master', label: 'MASTER',  states: ['on', 'off', 'both'] },
     { axis: 'sc',     label: 'SC',      states: ['on', 'off', 'both'] }
   ];
   // Fixed header (never scrolls) + scrollable body — keeps "FOR:" always visible
-  let html = `<div class="mb-stem-menu-hdr" style="padding:8px 12px 6px;border-bottom:1px solid var(--b);font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0;">FOR: ${stemName}</div>
+  let html = `<div class="mb-stem-menu-hdr" style="padding:8px 12px 6px;border-bottom:1px solid var(--b);font-family:'JetBrains Mono',monospace;font-size:var(--fs-xxs);font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:6px;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">FOR: ${stemName}</span>${hasAnyOverride ? `<button onclick="_resetStemOverride('${qid}')" title="Reset all overrides" style="flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--muted);padding:0 2px;font-size:12px;line-height:1;opacity:.8;" onmouseenter="this.style.color='var(--accent)';this.style.opacity=1" onmouseleave="this.style.color='var(--muted)';this.style.opacity=.8">↺</button>` : ''}</div>
   <div class="mb-stem-menu-body" style="overflow-y:auto;flex:1;min-height:0;">`;
   sections.forEach((sec, si) => {
     const cur = ovr[sec.axis];

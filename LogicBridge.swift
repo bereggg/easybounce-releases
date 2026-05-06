@@ -4810,99 +4810,63 @@ case "set-locators-by-marker":
         fputs("[set-locators-by-marker] WARNING: Tracks window not found\n", stderr)
     }
 
-    // Raise ML window FIRST, then get positions (window may move on raise)
-    var lpidML: pid_t = 0; AXUIElementGetPid(rowToClick, &lpidML)
+    // Raise ML window and bring Logic front
     if let mlWin2raise = findMarkerListWin2(logic) {
         AXUIElementPerformAction(mlWin2raise, kAXRaiseAction as CFString)
     }
     NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.logic10").first?
         .activate(options: .activateIgnoringOtherApps)
     Thread.sleep(forTimeInterval: 0.25)
-    // Re-fetch table/rows after raise so positions are current
-    var clickPt: CGPoint? = nil
-    if let mlWin2b = findMarkerListWin2(logic) {
-        func findTable2b(_ el: AXUIElement, _ d: Int) -> AXUIElement? {
-            if d > 8 { return nil }
-            if axRole(el) == "AXTable" { return el }
-            for k in axKids(el) { if let f = findTable2b(k, d+1) { return f } }
-            return nil
-        }
-        if let tbl = findTable2b(mlWin2b, 0) {
-            let rows2b = axKids(tbl).filter { axRole($0) == "AXRow" }
-            for (i, row) in rows2b.enumerated() {
-                let cells = axKids(row)
-                guard cells.count >= 3 else { continue }
-                var name2 = ""
-                if let nameEl = axKids(cells[2]).first {
-                    name2 = (axVal(nameEl, kAXDescriptionAttribute) as? String) ?? ""
-                    if name2.isEmpty { name2 = (axVal(nameEl, kAXValueAttribute) as? String) ?? "" }
-                }
-                if name2.isEmpty { name2 = (axVal(cells[2], kAXDescriptionAttribute) as? String) ?? "" }
-                let matches = (targetIndex != nil) ? (i == targetIndex!) : (name2 == markerTarget)
-                if matches {
-                    // Get position from name cell (cells[2]) — most reliable
-                    func cp(_ el: AXUIElement) -> CGPoint? {
-                        var pRef: CFTypeRef?; var sRef: CFTypeRef?
-                        AXUIElementCopyAttributeValue(el, kAXPositionAttribute as CFString, &pRef)
-                        AXUIElementCopyAttributeValue(el, kAXSizeAttribute as CFString, &sRef)
-                        guard let p = pRef, let s = sRef else { return nil }
-                        var pt = CGPoint.zero; var sz = CGSize.zero
-                        AXValueGetValue(p as! AXValue, .cgPoint, &pt)
-                        AXValueGetValue(s as! AXValue, .cgSize, &sz)
-                        guard sz.width > 0 && sz.height > 0 else { return nil }
-                        return CGPoint(x: pt.x + sz.width/2, y: pt.y + sz.height/2)
-                    }
-                    // Prefer name cell, then position cell, then row
-                    for ci in [2, 1, 3] {
-                        if ci < cells.count, let p = cp(cells[ci]) { clickPt = p; break }
-                    }
-                    if clickPt == nil { clickPt = cp(row) }
-                    break
-                }
+
+    // Re-find the target row fresh (rowToClick from before GT interaction may be stale)
+    var freshRow: AXUIElement? = nil
+    if let mlWin2fresh = findMarkerListWin2(logic),
+       let table2fresh = findTable2(mlWin2fresh, depth: 0) {
+        let freshRows = axKids(table2fresh).filter { axRole($0) == "AXRow" }
+        for (i, row) in freshRows.enumerated() {
+            let cells = axKids(row)
+            guard cells.count >= 3 else { continue }
+            var name2 = ""
+            if let nameEl = axKids(cells[2]).first {
+                name2 = (axVal(nameEl, kAXDescriptionAttribute) as? String) ?? ""
+                if name2.isEmpty { name2 = (axVal(nameEl, kAXValueAttribute) as? String) ?? "" }
             }
+            if name2.isEmpty { name2 = (axVal(cells[2], kAXDescriptionAttribute) as? String) ?? "" }
+            let matches = (targetIndex != nil) ? (i == targetIndex!) : (name2 == markerTarget)
+            if matches { freshRow = row; break }
+        }
+        if let row = freshRow {
+            AXUIElementSetAttributeValue(table2fresh, "AXSelectedRows" as CFString, [row] as CFArray)
+            Thread.sleep(forTimeInterval: 0.1)
+            AXUIElementPerformAction(row, "AXPress" as CFString)
+            Thread.sleep(forTimeInterval: 0.4)
         }
     }
-    fputs("[set-locators-by-marker] clickPt=\(String(describing: clickPt)), pid=\(lpidML)\n", stderr)
-    // Click the marker row name cell via real HID event (cghidEventTap)
-    // Save and restore mouse position so it's non-intrusive
-    let hidSrc = CGEventSource(stateID: .hidSystemState)
-    let savedMouse = CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: .zero, mouseButton: .left)?.location ?? .zero
+
+    // Navigate menu → "Set Locators by Selection and Enable Cycle"
     var setLocatorsOk = false
-    if let cp = clickPt {
-        if let ev1 = CGEvent(mouseEventSource: hidSrc, mouseType: .leftMouseDown, mouseCursorPosition: cp, mouseButton: .left),
-           let ev2 = CGEvent(mouseEventSource: hidSrc, mouseType: .leftMouseUp,   mouseCursorPosition: cp, mouseButton: .left) {
-            ev1.post(tap: .cghidEventTap); ev2.post(tap: .cghidEventTap)
-        }
-        // Wait longer so Logic registers the marker row selection before menu access
-        Thread.sleep(forTimeInterval: 0.4)
-        // Navigate menu → "Set Locators by Selection and Enable Cycle"
-        if let menuBar3Raw = axVal(logic, kAXMenuBarAttribute) {
-            let menuBar3 = menuBar3Raw as! AXUIElement
-            for menu in axKids(menuBar3) {
-                let t = (axVal(menu, kAXTitleAttribute) as? String) ?? ""
-                if t == "Navigate" {
-                    axPress(menu); Thread.sleep(forTimeInterval: 0.2)
-                    for item in findAll(menu, role: "AXMenuItem", depth: 5) {
-                        let it = (axVal(item, kAXTitleAttribute) as? String) ?? ""
-                        if it.contains("Set Locators by Selection") && !it.contains("Rounded") {
-                            axPress(item); Thread.sleep(forTimeInterval: 0.2)
-                            setLocatorsOk = true; break
-                        }
+    if let menuBar3Raw = axVal(logic, kAXMenuBarAttribute) {
+        let menuBar3 = menuBar3Raw as! AXUIElement
+        for menu in axKids(menuBar3) {
+            let t = (axVal(menu, kAXTitleAttribute) as? String) ?? ""
+            if t == "Navigate" {
+                axPress(menu); Thread.sleep(forTimeInterval: 0.2)
+                for item in findAll(menu, role: "AXMenuItem", depth: 5) {
+                    let it = (axVal(item, kAXTitleAttribute) as? String) ?? ""
+                    if it.contains("Set Locators by Selection") && !it.contains("Rounded") {
+                        axPress(item); Thread.sleep(forTimeInterval: 0.2)
+                        setLocatorsOk = true; break
                     }
-                    if !setLocatorsOk {
-                        let src3 = CGEventSource(stateID: .hidSystemState)
-                        if let dn = CGEvent(keyboardEventSource: src3, virtualKey: 53, keyDown: true),
-                           let up = CGEvent(keyboardEventSource: src3, virtualKey: 53, keyDown: false) {
-                            dn.post(tap: .cghidEventTap); up.post(tap: .cghidEventTap)
-                        }
-                    }
-                    break
                 }
+                if !setLocatorsOk {
+                    let src3 = CGEventSource(stateID: .hidSystemState)
+                    if let dn = CGEvent(keyboardEventSource: src3, virtualKey: 53, keyDown: true),
+                       let up = CGEvent(keyboardEventSource: src3, virtualKey: 53, keyDown: false) {
+                        dn.post(tap: .cghidEventTap); up.post(tap: .cghidEventTap)
+                    }
+                }
+                break
             }
-        }
-        // Restore mouse position
-        if let mv = CGEvent(mouseEventSource: hidSrc, mouseType: .mouseMoved, mouseCursorPosition: savedMouse, mouseButton: .left) {
-            mv.post(tap: .cghidEventTap)
         }
     }
 
