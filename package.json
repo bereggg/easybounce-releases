@@ -1,6 +1,6 @@
 {
     "name": "easybounce",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "EasyBounce — Logic Pro stem bouncer",
     "main": "main.js",
     "productName": "EasyBounce",
