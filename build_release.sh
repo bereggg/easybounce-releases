@@ -56,7 +56,66 @@ BUILT_PLIST="$APP_SRC/Contents/Info.plist"
 if ! /usr/libexec/PlistBuddy -c "Print :NSAppleEventsUsageDescription" "$BUILT_PLIST" &>/dev/null; then
   /usr/libexec/PlistBuddy -c "Add :NSAppleEventsUsageDescription string 'EasyBounce needs to control Logic Pro and System Events to automate bouncing.'" "$BUILT_PLIST"
 fi
-codesign --force --deep --sign - "$APP_SRC" 2>/dev/null
+
+# ── 2b. Code signing with Developer ID ────────────────────────────────────────
+# Why: TCC (Accessibility / Screen Recording / Apple Events) keys permissions to
+# the app's Designated Requirement, which is derived from the code signature.
+# Ad-hoc signing (--sign -) gives a different requirement each build, so users
+# must re-grant permissions every time. Using a stable Developer ID identity
+# yields a stable Designated Requirement → permissions persist across versions.
+SIGN_IDENTITY="Developer ID Application: Dmytro Berezhnyi (2VKTV5VPVB)"
+ENTITLEMENTS="$ROOT/entitlements.mac.plist"
+
+# Sanity check identity is in the keychain
+if ! security find-identity -v -p codesigning | grep -q "$SIGN_IDENTITY"; then
+  echo "❌ Signing identity not found in keychain: $SIGN_IDENTITY"
+  echo "   Run: security find-identity -v -p codesigning"
+  exit 1
+fi
+
+echo ""
+echo "▶ Code signing with: $SIGN_IDENTITY"
+
+# Sign nested Swift binaries first (deepest first → app last).
+# Each gets the same hardened runtime + entitlements as the main app.
+for bin in LogicBridge CloseLogicWindows EscapeLogic BlockInput; do
+  BIN_PATH="$APP_SRC/Contents/Resources/app.asar.unpacked/$bin"
+  if [ -f "$BIN_PATH" ]; then
+    codesign --force --options=runtime --timestamp \
+      --entitlements "$ENTITLEMENTS" \
+      --sign "$SIGN_IDENTITY" \
+      "$BIN_PATH"
+    echo "  ✓ Signed $bin"
+  fi
+done
+
+# Sign Electron's helper apps and frameworks (these have their own bundle structure).
+# --deep is OK here because they all share the same identity + runtime.
+find "$APP_SRC/Contents/Frameworks" -maxdepth 2 -name "*.framework" -print0 2>/dev/null | \
+  while IFS= read -r -d '' fw; do
+    codesign --force --options=runtime --timestamp --sign "$SIGN_IDENTITY" "$fw" 2>&1 | grep -v "is already signed" || true
+  done
+find "$APP_SRC/Contents/Frameworks" -maxdepth 2 -name "*.app" -print0 2>/dev/null | \
+  while IFS= read -r -d '' helper; do
+    codesign --force --options=runtime --timestamp \
+      --entitlements "$ENTITLEMENTS" \
+      --sign "$SIGN_IDENTITY" \
+      "$helper" 2>&1 | grep -v "is already signed" || true
+  done
+
+# Finally sign the main .app with hardened runtime + entitlements.
+codesign --force --options=runtime --timestamp \
+  --entitlements "$ENTITLEMENTS" \
+  --sign "$SIGN_IDENTITY" \
+  "$APP_SRC"
+echo "  ✓ Signed main .app"
+
+# Verify the result
+if codesign --verify --deep --strict --verbose=2 "$APP_SRC" 2>&1 | grep -q "valid on disk"; then
+  echo "  ✓ Signature verified"
+else
+  echo "  ⚠ codesign --verify did not confirm 'valid on disk' — check signing output"
+fi
 
 # ── 3. Build PKG payload ───────────────────────────────────────────────────────
 echo ""

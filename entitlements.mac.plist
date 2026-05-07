@@ -8,6 +8,10 @@
     <true/>
     <key>com.apple.security.cs.allow-dyld-environment-variables</key>
     <true/>
+    <!-- Required so Electron's helpers can load Swift bridges
+         (and any node-native modules signed with a different identity). -->
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
     <key>com.apple.security.automation.apple-events</key>
     <true/>
 </dict>

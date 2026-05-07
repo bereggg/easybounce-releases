@@ -80,9 +80,34 @@ if ! /usr/libexec/PlistBuddy -c "Print :NSAppleEventsUsageDescription" "$PLIST" 
   /usr/libexec/PlistBuddy -c "Add :NSAppleEventsUsageDescription string 'EasyBounce needs to control Logic Pro and System Events to automate bouncing.'" "$PLIST"
 fi
 
-# Re-sign. Use the SAME identity each time to avoid TCC invalidation
-echo "Re-signing app…"
-codesign --force --deep --sign - "/Applications/EasyBounce.app" 2>/dev/null
+# Re-sign with Developer ID so TCC permissions persist across update_app.sh runs.
+# Ad-hoc (--sign -) gives a different Designated Requirement each build → TCC
+# treats every dev iteration as a "new app" and re-prompts. A stable identity
+# yields a stable Designated Requirement → permissions persist.
+SIGN_IDENTITY="Developer ID Application: Dmytro Berezhnyi (2VKTV5VPVB)"
+ENTITLEMENTS="$SRC/entitlements.mac.plist"
+
+if ! security find-identity -v -p codesigning | grep -q "$SIGN_IDENTITY"; then
+  echo "⚠️  Signing identity not found: $SIGN_IDENTITY"
+  echo "   Falling back to ad-hoc (TCC will prompt again)."
+  codesign --force --deep --sign - "/Applications/EasyBounce.app" 2>/dev/null
+else
+  echo "Re-signing with Developer ID…"
+  # Sign the binaries we just copied (cp invalidated their signatures).
+  # --timestamp=none keeps dev iteration fast (no network round-trip);
+  # release builds use --timestamp for notarization compatibility.
+  for bin in LogicBridge CloseLogicWindows EscapeLogic BlockInput MixerScroll; do
+    BIN_PATH="/Applications/EasyBounce.app/Contents/Resources/app.asar.unpacked/$bin"
+    [ -f "$BIN_PATH" ] && codesign --force --options=runtime --timestamp=none \
+      --entitlements "$ENTITLEMENTS" \
+      --sign "$SIGN_IDENTITY" "$BIN_PATH" 2>/dev/null
+  done
+  # Re-sign the main .app last (also re-validates app.asar after asar repack).
+  codesign --force --options=runtime --timestamp=none \
+    --entitlements "$ENTITLEMENTS" \
+    --sign "$SIGN_IDENTITY" \
+    "/Applications/EasyBounce.app" 2>/dev/null && echo "  ✓ Signed"
+fi
 
 # DON'T reset TCC! The ad-hoc signature is stable enough.
 # Only reset if the user explicitly asks or if they have issues.
