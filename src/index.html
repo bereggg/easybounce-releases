@@ -3763,8 +3763,9 @@ async function scanLogic(isAutoRetry = false) {
         trackTree = treeResult.tracks;
         localStorage.setItem('sb4_track_tree', JSON.stringify(trackTree));
         collapsedGroups.clear();
+        // Key by trackNum (unique) — duplicate-named groups get independent collapse state
         trackTree.filter(t => t.type === 'group' && trackTree.some(c => c.parent === t.name))
-          .forEach(t => collapsedGroups.add(t.name));
+          .forEach(t => collapsedGroups.add(t.num));
         localStorage.setItem('sb4_collapsed_groups', JSON.stringify([...collapsedGroups]));
         log(`✓ Track tree: ${_tg} groups, ${_tt} tracks`, 'ok');
         treeOk = true;
@@ -4255,9 +4256,11 @@ function toggleHideGroup(groupName, groupCh) {
 }
 
 let _toggleGroupTimer = null;
-function toggleGroup(name) {
-  if (collapsedGroups.has(name)) collapsedGroups.delete(name);
-  else collapsedGroups.add(name);
+// collapsedGroups holds trackNum (Number) — keys by unique track ID so duplicate-named
+// stacks get independent collapse state. Use _isGroupCollapsed(t) / toggleGroup(t.num).
+function toggleGroup(num) {
+  if (collapsedGroups.has(num)) collapsedGroups.delete(num);
+  else collapsedGroups.add(num);
   localStorage.setItem('sb4_collapsed_groups', JSON.stringify([...collapsedGroups]));
   clearTimeout(_toggleGroupTimer); _toggleGroupTimer = null;
   _toggleGroupTimer = setTimeout(renderChannels, 30);
@@ -4269,13 +4272,13 @@ function expandAllGroups() {
   renderChannels();
 }
 function collapseAllGroups() {
-  trackTree.filter(t => t.type === 'group').forEach(t => collapsedGroups.add(t.name));
+  trackTree.filter(t => t.type === 'group').forEach(t => collapsedGroups.add(t.num));
   localStorage.setItem('sb4_collapsed_groups', JSON.stringify([...collapsedGroups]));
   renderChannels();
 }
 function toggleAllGroups() {
   const withKids = trackTree.filter(t => t.type==='group' && trackTree.some(c=>c.parent===t.name));
-  const anyExpanded = withKids.some(t => !collapsedGroups.has(t.name));
+  const anyExpanded = withKids.some(t => !collapsedGroups.has(t.num));
   if (anyExpanded) collapseAllGroups(); else expandAllGroups();
 }
 function showScanDone() {
@@ -4309,7 +4312,7 @@ function _renderChannelsImpl() {
   if (treeToggleBtn) {
     treeToggleBtn.style.display = showTreeBtns ? '' : 'none';
     const withKids = trackTree.filter(t => t.type==='group' && trackTree.some(c=>c.parent===t.name));
-    const anyExpanded = withKids.some(t => !collapsedGroups.has(t.name));
+    const anyExpanded = withKids.some(t => !collapsedGroups.has(t.num));
     treeToggleBtn.innerHTML = anyExpanded ? '<svg class="ico ico-sm"><use href="#ico-chevrons-up"/></svg>' : '<svg class="ico ico-sm"><use href="#ico-chevrons-down"/></svg>';
     treeToggleBtn.title = anyExpanded ? 'Collapse all groups' : 'Expand all groups';
   }
@@ -4410,7 +4413,7 @@ function _renderChannelsImpl() {
       const kids = getDirectChildren(parentName);
       kids.forEach(k => {
         result.push(k.name);
-        if (k.type === 'group' && !collapsedGroups.has(k.name)) {
+        if (k.type === 'group' && !collapsedGroups.has(k.num)) {
           result.push(...getVisibleDescendantNames(k.name));
         }
       });
@@ -4430,7 +4433,7 @@ function _renderChannelsImpl() {
           const kch = allCh[ui] || null;
           if (kch && k.type === 'track') localUsed[kk] = ui + 1;
           if (kch && treeItemVisible(kch)) result.push(kch);
-          if (k.type === 'group' && !collapsedGroups.has(k.name)) walk(k.name);
+          if (k.type === 'group' && !collapsedGroups.has(k.num)) walk(k.name);
         });
       }
       walk(parentName);
@@ -4451,11 +4454,11 @@ function _renderChannelsImpl() {
     // Check if ANY ancestor is collapsed
     function isAncestorCollapsed(parentName, parentNum) {
       if (!parentName && (parentNum === undefined || parentNum < 0)) return false;
-      if (parentName && collapsedGroups.has(parentName)) return true;
-      // find parent node by num if available, else by name
+      // Resolve parent item — prefer num (unique), fall back to name
       const parentItem = (parentNum >= 0)
         ? trackTree.find(t => t.num === parentNum)
         : trackTree.find(t => t.name === parentName && t.type === 'group');
+      if (parentItem && collapsedGroups.has(parentItem.num)) return true;
       if (parentItem && parentItem.parent) return isAncestorCollapsed(parentItem.parent, parentItem.parentNum);
       return false;
     }
@@ -4513,7 +4516,7 @@ function _renderChannelsImpl() {
 
         const _usedSnapshot = Object.assign({}, chByNameUsed); // snapshot before children are counted
         const hasChildren = trackTree.some(c => c.parent === t.name);
-        const isCollapsed = collapsedGroups.has(t.name);
+        const isCollapsed = collapsedGroups.has(t.num);
         const indent = 14 + depth * 18;
         // Count ALL descendant tracks (not subgroups)
         const _descNames = getAllDescendantNames(t.name);
@@ -4568,15 +4571,15 @@ function _renderChannelsImpl() {
         div.querySelector('.tree-toggle')?.addEventListener('click', (e) => {
           e.stopPropagation();
           if (!hasChildren) return;
-          const wasCollapsed = collapsedGroups.has(t.name);
+          const wasCollapsed = collapsedGroups.has(t.num);
           if (e.altKey) {
-            const allGroupNames = trackTree.filter(t=>t.type==='group' && trackTree.some(c=>c.parent===t.name)).map(t=>t.name);
-            if (collapsedGroups.has(t.name)) { collapsedGroups.clear(); }
-            else { allGroupNames.forEach(n => collapsedGroups.add(n)); }
+            const allGroupNums = trackTree.filter(tt=>tt.type==='group' && trackTree.some(c=>c.parent===tt.name)).map(tt=>tt.num);
+            if (collapsedGroups.has(t.num)) { collapsedGroups.clear(); }
+            else { allGroupNums.forEach(n => collapsedGroups.add(n)); }
             localStorage.setItem('sb4_collapsed_groups', JSON.stringify([...collapsedGroups]));
             renderChannels();
           } else {
-            toggleGroup(t.name);
+            toggleGroup(t.num);
             // If expanding and group has no children in channels at all (mixer closed/inspector narrowed view) → auto-recover
             // Guard: skip if a filter explains the empty state — only recover if chByName truly lacks children
             if (wasCollapsed && !bouncing && !_scanRunning && hasChildren) {
@@ -4609,7 +4612,7 @@ function _renderChannelsImpl() {
             const toggle = div.querySelector('.tree-toggle');
             if (toggle) {
               const tr = toggle.getBoundingClientRect();
-              if (e.clientX <= tr.right + 28) { if (ch) _setAnchor(ch.index, _currentVisibleOrder); toggleGroup(t.name); return; }
+              if (e.clientX <= tr.right + 28) { if (ch) _setAnchor(ch.index, _currentVisibleOrder); toggleGroup(t.num); return; }
             }
           }
           if (channelFilter === 'hidden') { toggleHideGroup(t.name, ch); return; }
@@ -4633,7 +4636,7 @@ function _renderChannelsImpl() {
           _shiftAnchor = null; _shiftPrevRange = null;
 
           // Regular click (no shift):
-          if (collapsedGroups.has(t.name)) {
+          if (collapsedGroups.has(t.num)) {
             // Collapsed → select/deselect only the group itself
             if (sel) { selectedIdx.delete(ch.index); } else { selectedIdx.add(ch.index); }
           } else {
@@ -4665,6 +4668,7 @@ function _renderChannelsImpl() {
         if (ch) {
           div.draggable = true;
           div._groupName = t.name;       // used by delegated dragstart for group-children logic
+          div._groupNum = t.num;          // unique key for collapse-state lookup (duplicate names safe)
           div._hasChildren = hasChildren;
         }
         if (ch) _treeVisibleOrder.push(ch.index);
@@ -4892,8 +4896,8 @@ function selectAllChannels() {
     // Check if ANY ancestor is collapsed (recursive)
     function _isAncestorCollapsed(parentName) {
       if (!parentName) return false;
-      if (collapsedGroups.has(parentName)) return true;
-      const parentItem = trackTree.find(t => t.name === parentName);
+      const parentItem = trackTree.find(t => t.name === parentName && t.type === 'group');
+      if (parentItem && collapsedGroups.has(parentItem.num)) return true;
       return parentItem && parentItem.parent ? _isAncestorCollapsed(parentItem.parent) : false;
     }
 
@@ -8951,7 +8955,7 @@ document.getElementById('ch-list').addEventListener('dragstart', (e) => {
   e.dataTransfer.setData('channel-index', String(ch.index));
   e.dataTransfer.setData('channel-color', ch.color || '');
   // Tree-group: include expanded children if group is open and not explicitly shift-selected
-  if (div._groupName && div._hasChildren && !collapsedGroups.has(div._groupName) && !selectedIdx.has(ch.index)) {
+  if (div._groupName && div._hasChildren && !collapsedGroups.has(div._groupNum) && !selectedIdx.has(ch.index)) {
     const childNames = getVisibleDescendantNames(div._groupName);
     e.dataTransfer.setData('group-children', JSON.stringify(childNames));
     _pendingDragCount = 1 + childNames.length;
@@ -18671,7 +18675,19 @@ if (window.api?.onHotkeyTriggered) {
     }
     // Ensure mixer is open — only if channels are stale (mixer was closed)
     if (_mixerClosed) { await _ensureMixerVisible(); }
-    const tracks = result.tracks;
+    // Sort tracks by their position in trackTree (Arrange top-to-bottom order)
+    // Logic's AXSelectedChildren returns selection in arbitrary order; we want the
+    // queue to mirror what user sees in EasyBounce's tree (which mirrors Arrange).
+    const _treeOrderKey = (t) => {
+      if (!Array.isArray(trackTree) || trackTree.length === 0) return 1e9;
+      // Match by mixerIndex first (duplicate-safe, baked at scan-tree)
+      let i = trackTree.findIndex(n => n.mixerIndex != null && n.mixerIndex === t.index);
+      if (i >= 0) return i;
+      // Fallback by name (unique-named tracks have no mixerIndex baked)
+      i = trackTree.findIndex(n => n.name === t.name);
+      return i >= 0 ? i : 1e9;
+    };
+    const tracks = [...result.tracks].sort((a, b) => _treeOrderKey(a) - _treeOrderKey(b));
     if (type === 'stems') {
       const added = [], skipped = [];
       // Log to terminal so duplicate-name issues are visible during development.
