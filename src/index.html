@@ -4483,7 +4483,10 @@ function _renderChannelsImpl() {
       const allCh = chByNameAll[k] || [];
       const usedIdx = chByNameUsed[k] || 0;
       let ch;
-      if (t.type === 'group') {
+      // Scan-tree resolved this duplicate to its actual mixerIndex via Logic — use it directly
+      if (t.mixerIndex != null && t.mixerIndex >= 0) {
+        ch = channels.find(c => c.index === t.mixerIndex) || null;
+      } else if (t.type === 'group') {
         // Groups (stacks) → prefer bus channels; track counter separately to avoid collision with audio tracks
         const busKey = k + '|g';
         const busIdx = chByNameUsed[busKey] || 0;

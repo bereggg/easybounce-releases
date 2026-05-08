@@ -3568,6 +3568,82 @@ case "scan-tree":
         return (allTracks, triNums)
     }
 
+    // Resolve duplicate-named tracks → mixerIndex via Logic's own AX selection sync.
+    // Mixer scan-position order doesn't always follow Arrange order (composers reorder
+    // strips); ordinal-based mapping fails for such projects. Setting AXSelectedChildren
+    // on Tracks header makes Logic update mixer's AXSelectedChildren — that's the truth.
+    // Assumes all duplicate-named tracks are currently visible in hg0's children
+    // (caller must expand stacks first if needed).
+    let resolveDuplicates: ([TrackInfo]) -> [Int: Int] = { tracks in
+        var nameGroups: [String: [Int]] = [:]
+        for t in tracks { nameGroups[t.name, default: []].append(t.num) }
+        let dupNums = nameGroups.values.filter { $0.count > 1 }.flatMap { $0 }
+        guard !dupNums.isEmpty else { return [:] }
+
+        // Find mixer layout (largest)
+        var allWinsRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(logic, "AXAllWindows" as CFString, &allWinsRef)
+        var mxWindows = (allWinsRef as? [AXUIElement]) ?? []
+        if mxWindows.isEmpty {
+            var ref: CFTypeRef?
+            AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &ref)
+            mxWindows = (ref as? [AXUIElement]) ?? []
+        }
+        var bestLayout: (layout: AXUIElement, count: Int)? = nil
+        for win in mxWindows {
+            for layout in findAll(win, role: "AXLayoutArea", title: "Mixer") {
+                let c = axKids(layout).filter { axRole($0) == "AXLayoutItem" }.count
+                if c > (bestLayout?.count ?? 0) { bestLayout = (layout, c) }
+            }
+        }
+        guard let mixerLayout = bestLayout?.layout else {
+            _lap("  resolveDuplicates: mixer not found — skipping")
+            return [:]
+        }
+        let mixerItems = axKids(mixerLayout).filter { axRole($0) == "AXLayoutItem" }
+
+        // Map trackNum → AXLayoutItem in Tracks header
+        var arrangeByNum: [Int: AXUIElement] = [:]
+        for item in axKids(hg0) {
+            let desc = (axVal(item, kAXDescriptionAttribute) as? String) ?? ""
+            guard desc.hasPrefix("Track ") else { continue }
+            if let t = parseTrackDesc(desc) { arrangeByNum[t.num] = item }
+        }
+
+        // Save original Tracks header selection
+        let origSelRef = axVal(hg0, "AXSelectedChildren")
+        let origSel = (origSelRef as? [AXUIElement]) ?? []
+
+        // Adaptive polling: after set, wait until mixer's AXSelectedChildren reflects new selection
+        func currentMixerStrip() -> AXUIElement? {
+            if let arr = axVal(mixerLayout, "AXSelectedChildren") as? [AXUIElement] { return arr.first }
+            return nil
+        }
+
+        var mapping: [Int: Int] = [:]
+        for num in dupNums {
+            guard let item = arrangeByNum[num] else { continue }
+            let beforeRef = currentMixerStrip()
+            AXUIElementSetAttributeValue(hg0, "AXSelectedChildren" as CFString, [item] as CFArray)
+            var found: AXUIElement? = nil
+            var waited = 0
+            while waited < 200 {
+                if let cur = currentMixerStrip() {
+                    if beforeRef == nil || !CFEqual(cur, beforeRef!) { found = cur; break }
+                }
+                Thread.sleep(forTimeInterval: 0.003)
+                waited += 3
+            }
+            if let s = found, let i = mixerItems.firstIndex(where: { CFEqual($0, s) }) {
+                mapping[num] = i
+            }
+        }
+        // Restore
+        AXUIElementSetAttributeValue(hg0, "AXSelectedChildren" as CFString, origSel as CFArray)
+        _lap("  resolveDuplicates: \(mapping.count)/\(dupNums.count) resolved")
+        return mapping
+    }
+
     if hasTriangles {
         // ── Adaptive 3-step scan: collapse → expand → read → collapse ──
         _lap("Step 1: Collapse all")
@@ -3636,6 +3712,10 @@ case "scan-tree":
         let after = afterTracks
         _lap("Step 2 done: \(afterTracks.count) tracks, \(triangleNums.count) triangles")
 
+        // Step 2.5: Resolve duplicate-named tracks → mixerIndex (stacks expanded → all tracks in AX)
+        _lap("Step 2.5: resolve duplicates")
+        let trackToMixerIdx = resolveDuplicates(after)
+
         // Step 3: Collapse back (single Option+click, adaptive wait)
         let expandedCount = afterTracks.count
         _lap("Step 3: Collapse back")
@@ -3656,33 +3736,36 @@ case "scan-tree":
             let isSummary = summaryNums.contains(t.num)
             let hasTri = triangleNums.contains(t.num)
 
+            var entry: [String: Any]
             if isSummary && hasTri {
                 currentGroupNum = t.num
                 currentGroupName = t.name
                 currentSubgroupNum = -1
                 currentSubgroupName = ""
-                treeResult.append(["num": t.num, "name": t.name, "type": "group",
-                                   "parent": "", "parentNum": -1, "muted": t.muted ? 1 : 0])
+                entry = ["num": t.num, "name": t.name, "type": "group",
+                         "parent": "", "parentNum": -1, "muted": t.muted ? 1 : 0]
             } else if isSummary && !hasTri {
                 currentGroupNum = -1
                 currentGroupName = ""
                 currentSubgroupNum = -1
                 currentSubgroupName = ""
-                treeResult.append(["num": t.num, "name": t.name, "type": "track",
-                                   "parent": "", "parentNum": -1, "muted": t.muted ? 1 : 0])
+                entry = ["num": t.num, "name": t.name, "type": "track",
+                         "parent": "", "parentNum": -1, "muted": t.muted ? 1 : 0]
             } else if !isSummary && hasTri {
                 currentSubgroupNum = t.num
                 currentSubgroupName = t.name
-                treeResult.append(["num": t.num, "name": t.name, "type": "group",
-                                   "parent": currentGroupName, "parentNum": currentGroupNum,
-                                   "muted": t.muted ? 1 : 0])
+                entry = ["num": t.num, "name": t.name, "type": "group",
+                         "parent": currentGroupName, "parentNum": currentGroupNum,
+                         "muted": t.muted ? 1 : 0]
             } else {
                 let parentNum = currentSubgroupNum >= 0 ? currentSubgroupNum : currentGroupNum
                 let parentName = currentSubgroupName.isEmpty ? currentGroupName : currentSubgroupName
-                treeResult.append(["num": t.num, "name": t.name, "type": "track",
-                                   "parent": parentName, "parentNum": parentNum,
-                                   "muted": t.muted ? 1 : 0])
+                entry = ["num": t.num, "name": t.name, "type": "track",
+                         "parent": parentName, "parentNum": parentNum,
+                         "muted": t.muted ? 1 : 0]
             }
+            if let mxIdx = trackToMixerIdx[t.num] { entry["mixerIndex"] = mxIdx }
+            treeResult.append(entry)
         }
         jsonOut(["tracks": treeResult])
     } else {
@@ -3692,10 +3775,14 @@ case "scan-tree":
             jsonOut(["error": "Tracks not found"]); exit(1)
         }
         let allTracks = readTrackInfos(tc0)
+        // Resolve duplicate-named tracks → mixerIndex (no stacks → everything visible)
+        let trackToMixerIdx = resolveDuplicates(allTracks)
         var treeResult: [[String: Any]] = []
         for t in allTracks {
-            treeResult.append(["num": t.num, "name": t.name, "type": "track",
-                               "parent": "", "muted": t.muted ? 1 : 0])
+            var entry: [String: Any] = ["num": t.num, "name": t.name, "type": "track",
+                                          "parent": "", "muted": t.muted ? 1 : 0]
+            if let mxIdx = trackToMixerIdx[t.num] { entry["mixerIndex"] = mxIdx }
+            treeResult.append(entry)
         }
         jsonOut(["tracks": treeResult])
     }
