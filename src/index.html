@@ -2373,6 +2373,19 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
     </div>
   </div>
 </div>
+<!-- BOUNCE PRE-CHECK MODAL — sticky (no outside-click / Escape dismiss) -->
+<div class="overlay" id="bounce-precheck-modal">
+  <div class="modal" style="width:520px;max-width:92vw;">
+    <div class="modal-hdr"><span style="margin-right:6px;">⚠</span>Pre-bounce check</div>
+    <div id="bounce-precheck-subtitle" style="font-size:var(--fs-sm);color:var(--t2);margin-bottom:12px;line-height:1.4;"></div>
+    <div id="bounce-precheck-list" style="max-height:340px;overflow-y:auto;border-top:1px solid var(--b);border-bottom:1px solid var(--b);padding:10px 0;margin-bottom:12px;display:flex;flex-direction:column;gap:10px;"></div>
+    <div class="modal-actions" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+      <button class="mbtn cancel" onclick="_bouncePrecheckChoose('cancel')">Cancel</button>
+      <button class="mbtn" id="bounce-precheck-anyway-btn" onclick="_bouncePrecheckChoose('continue')">Bounce Anyway</button>
+      <button class="mbtn ok" onclick="_bouncePrecheckChoose('rescan')">Rescan Logic</button>
+    </div>
+  </div>
+</div>
 <div class="overlay" id="schedule-modal" onclick="if(event.target===this)this.classList.remove('show')">
   <div class="modal" style="width:380px;">
     <div class="modal-hdr"><svg class="ico" style="vertical-align:-3px;margin-right:6px;"><use href="#ico-clock"/></svg>Schedule Bounce</div>
@@ -2803,6 +2816,17 @@ let sidechainChannels = (() => {
     return [];
   } catch(e) { return []; }
 })();
+// On startup, channels[] is empty (scan hasn't run yet). Carrying sidechain
+// values over from a previous session shows stale "ROCK Guita…" type chips
+// that may not exist in the current Logic project. Clear in-memory state —
+// localStorage is preserved so _validateSidechainAfterScan can restore it
+// if the channel still exists in the new scan.
+if (typeof channels !== 'undefined' && Array.isArray(channels) && channels.length === 0) {
+  sidechainChannel  = null;
+  sidechainIndex    = null;
+  sidechainEnabled  = false;
+  sidechainChannels = [];
+}
 let hiddenMixes  = new Set(JSON.parse(localStorage.getItem('sb4_hidden_mixes') || '[]'));
 let showHidden   = localStorage.getItem('sb4_show_hidden') === 'true';
 
@@ -4458,8 +4482,18 @@ function _renderChannelsImpl() {
       const k = normalizeName(t.name);
       const allCh = chByNameAll[k] || [];
       const usedIdx = chByNameUsed[k] || 0;
-      const ch = t.type === 'track' ? (allCh[usedIdx] || null) : (allCh[usedIdx] || allCh[0] || null);
-      if (t.type === 'track' && allCh.length > 0) { chByNameUsed[k] = usedIdx + 1; }
+      let ch;
+      if (t.type === 'group') {
+        // Groups (stacks) → prefer bus channels; track counter separately to avoid collision with audio tracks
+        const busKey = k + '|g';
+        const busIdx = chByNameUsed[busKey] || 0;
+        const busCh = allCh.filter(c => c.isBus);
+        ch = busCh[busIdx] || allCh[usedIdx] || allCh[0] || null;
+        if (busCh.length > 0) chByNameUsed[busKey] = busIdx + 1;
+      } else {
+        ch = allCh[usedIdx] || null;
+        if (allCh.length > 0) { chByNameUsed[k] = usedIdx + 1; }
+      }
       const color = ch ? ch.color : (getInstrumentColor(t.name) || '#666');
       const sel   = ch && selectedIdx.has(ch.index);
       const depth = getDepth(t);
@@ -4487,10 +4521,15 @@ function _renderChannelsImpl() {
         const childCount = _descTrackNames.length;
         // Count descendants currently queued — by index (regular channels) or name (stack sub-channels
         // not visible in mixer and therefore absent from channels[])
+        // Type-aware: descendants in _descTrackNames are tracks (not groups), so prefer non-bus.
+        const _resolveDescTrack = (k) => {
+          const allOf = chByNameAll[k] || [];
+          return allOf.find(c => !c.isBus) || allOf[0] || null;
+        };
         let queuedCount = 0;
         _descTrackNames.forEach(n => {
           const k = normalizeName(n);
-          const cc = chByName[k];
+          const cc = _resolveDescTrack(k);
           if ((cc && _queuedIdx.has(cc.index)) || _queuedNames.has(k)) queuedCount++;
         });
         // Count selected (highlighted by click) children when collapsed — shows X/Y badge
@@ -4498,7 +4537,7 @@ function _renderChannelsImpl() {
         if (isCollapsed) {
           _descTrackNames.forEach(n => {
             const k = normalizeName(n);
-            const cc = chByName[k];
+            const cc = _resolveDescTrack(k);
             if (cc && selectedIdx.has(cc.index)) selectedCount++;
           });
         }
@@ -8258,27 +8297,69 @@ function _renameSuggest(prefix) {
   return best || '';
 }
 
-// ── Modal input autocomplete (same dictionary as queue rename) ───────────────
+// ── Modal input autocomplete (mirrors _attachQNameEdit queue-rename logic) ──
+// Behaviour matches the queue rename input exactly:
+//   • Suggestion suffix appears highlighted (selected) after the typed prefix
+//   • Typing a char replaces the suggestion (browser default — selection is overwritten)
+//   • Backspace deletes the suggestion, then user's chars normally
+//   • Tab / ArrowRight → accept suggestion (move cursor to end)
+//   • Enter → REJECT suggestion (commit only what user typed)
+//   • Escape → clear field
 function _attachModalAC(inp) {
   if (!inp || inp._acAttached) return;
   inp._acAttached = true;
-  let _userTyped = '';
-  inp.addEventListener('input', () => {
-    _userTyped = inp.value;
-    const match = _renameSuggest(_userTyped);
-    if (match && match.toLowerCase().startsWith(_userTyped.toLowerCase()) && match.length > _userTyped.length) {
-      const full = _userTyped + match.slice(_userTyped.length);
+  let suggestPos = -1; // position where auto-completion starts; -1 if none
+
+  const applySuggestion = (userTyped) => {
+    if (!userTyped) { inp.value = ''; suggestPos = -1; return; }
+    const match = _renameSuggest(userTyped);
+    if (match && match.toLowerCase().startsWith(userTyped.toLowerCase()) && match.length > userTyped.length) {
+      const full = userTyped + match.slice(userTyped.length);
       inp.value = full;
-      requestAnimationFrame(() => inp.setSelectionRange(_userTyped.length, full.length));
+      suggestPos = userTyped.length;
+      try { inp.setSelectionRange(suggestPos, full.length); } catch {}
+    } else {
+      inp.value = userTyped;
+      suggestPos = -1;
     }
-  });
-  inp.addEventListener('keydown', (e) => {
-    if ((e.key === 'Tab' || e.key === 'ArrowRight') && inp.selectionStart < inp.value.length) {
-      e.preventDefault();
-      inp.setSelectionRange(inp.value.length, inp.value.length);
-      _userTyped = inp.value;
+  };
+
+  const trimSuggestion = () => (suggestPos >= 0 ? inp.value.slice(0, suggestPos) : inp.value);
+
+  inp.addEventListener('input', (ev) => {
+    const isDel = ev.inputType && ev.inputType.startsWith('delete');
+    if (isDel) {
+      // On delete, don't re-suggest; let user see what's left.
+      suggestPos = -1;
+      return;
     }
+    // Browser already replaced selected suggestion with the new char on typing.
+    // Re-evaluate suggestion based on current value.
+    applySuggestion(inp.value);
   });
+
+  // Capture-phase keydown so we can mutate inp.value BEFORE inline onkeydown
+  // (e.g. saveMix() / confirmMerge() inline handlers) reads it on Enter.
+  inp.addEventListener('keydown', (ke) => {
+    if (ke.key === 'Tab' || ke.key === 'ArrowRight') {
+      if (suggestPos >= 0) {
+        ke.preventDefault();
+        const end = inp.value.length;
+        inp.setSelectionRange(end, end);
+        suggestPos = -1;
+      }
+    } else if (ke.key === 'Enter') {
+      // Reject suggestion: trim before inline onkeydown=saveMix() sees the value.
+      if (suggestPos >= 0) {
+        inp.value = inp.value.slice(0, suggestPos);
+        suggestPos = -1;
+      }
+      // Don't preventDefault — inline handler runs and saves trimmed value
+    } else if (ke.key === 'Escape') {
+      inp.value = '';
+      suggestPos = -1;
+    }
+  }, true);
 }
 
 // ── Inline queue name editing with autocomplete (selection-based) ───────────
@@ -8461,6 +8542,13 @@ function renderQueue() {
       return false;
     });
     _reloadBtn.style.display = _hasNonPending ? 'inline-flex' : 'none';
+  }
+  // Hide post-bounce side buttons when queue is empty — nothing to retry/redo
+  if (queue.length === 0) {
+    const _redoBtn = document.getElementById('redo-all-btn');
+    if (_redoBtn) _redoBtn.style.display = 'none';
+    const _retryBtn = document.getElementById('retry-btn');
+    if (_retryBtn) _retryBtn.style.display = 'none';
   }
   _lastQueueLen = queue.length;
   el.innerHTML = '';
@@ -9181,6 +9269,347 @@ function getOutputPath(itemName, jobType) {
 // ═══════════════════════════════════════════════════
 // BOUNCE ENGINE
 // ═══════════════════════════════════════════════════
+// Lite rescan — minimum work to refresh the mixer channel list.
+// Skips scan-markers, scan-tree, master-plugins scan, fullscreen handling,
+// CloseLogicWindows etc. Used by the pre-bounce modal's Rescan button when
+// only channel-list mismatch needs fixing.
+//
+// Step A (fast path ~1.3s): try scan-channels directly.
+//   If mixer is open → returns channels → done.
+// Step B (lite prep ~5-7s): if A returned empty → open mixer + enable filters → retry.
+async function liteRescan() {
+  if (_scanRunning) { log('⚠ Scan already in progress', 'warn'); return false; }
+  _scanRunning = true;
+  try {
+    log('⟳ Quick rescan…', 'info');
+    // Step A — direct scan (fast, no UI change — just a quick AX query)
+    let result = await window.api.scanChannels();
+    // Step B — if empty, open mixer + retry. Use the standard scan-badge UI
+    // (same look as regular Scan Logic) so user sees a consistent "Scanning Mixer…" indicator.
+    if (!result || !result.channels || result.channels.length === 0) {
+      log('Mixer not visible — opening…', 'info');
+      // Temporarily release _scanRunning so _withRecoveryBadge can run (it guards on _scanRunning)
+      _scanRunning = false;
+      await _withRecoveryBadge('Scanning Mixer…', 'Opening mixer in Logic…', async () => {
+        try { await window.api.closePanels(); } catch(e) {}
+        try { await window.api.openMixerCover(); } catch(e) {}
+        try { await window.api.enableAllMixerFilters(); } catch(e) {}
+        await window.api.wait(300);
+        result = await window.api.scanChannels();
+        try { await window.api.coverMixer?.(); } catch(e) {}
+      });
+      _scanRunning = true;
+    }
+    if (!result || !result.channels || result.channels.length === 0) {
+      log('✗ Quick rescan failed — no channels found', 'err');
+      toast('Quick rescan failed — try full Scan Logic');
+      return false;
+    }
+    // Apply same mapping as full scan (mirrors scanLogic at ~line 3590)
+    channels = result.channels.map((ch, i) => ({
+      ...ch,
+      color: getInstrumentColor(ch.name) || COLORS[i % COLORS.length],
+      isBus: !ch.hasMonitoring && !ch.hasRecord,
+      chType: ch.hasBnc ? 'Output'
+            : (ch.hasMonitoring || ch.hasRecord) ? (ch.hasRecord && !ch.hasMonitoring ? 'Inst' : 'Audio')
+            : ch.hasMidiPlugin ? 'Inst'
+            : ch.hasInputBtn ? 'Bus'
+            : 'Other'
+    }));
+    try { localStorage.setItem(SK.channels, JSON.stringify(channels)); } catch(e) {}
+    _channelsStale = false;
+    // Sidechain may now be invalid (or restorable from localStorage if cleared earlier)
+    if (typeof _validateSidechainAfterScan === 'function') _validateSidechainAfterScan();
+    // Refresh UI lists that depend on channels
+    if (typeof renderChannels === 'function') renderChannels();
+    if (typeof renderQueue === 'function') renderQueue();
+    if (typeof updateBounceBtn === 'function') updateBounceBtn();
+    if (typeof _refreshAllCounters === 'function') _refreshAllCounters();
+    log(`✓ ${channels.length} channels (quick rescan) — ready to bounce`, 'ok');
+    toast(`✓ Ready to bounce — press BOUNCE again`);
+    return true;
+  } catch (e) {
+    log(`Quick rescan err: ${String(e)}`, 'warn');
+    return false;
+  } finally {
+    // _withRecoveryBadge handles its own scan-badge cleanup; nothing extra needed here
+    _scanRunning = false;
+  }
+}
+
+// Pre-bounce check modal — central, sticky (outside-click + Escape do nothing).
+// Returns Promise<'rescan' | 'continue' | 'cancel'>.
+let _bouncePrecheckResolver = null;
+function _showBouncePrecheckModal(issues) {
+  return new Promise(resolve => {
+    // Don't open if another modal is already showing
+    const overlay = document.getElementById('bounce-precheck-modal');
+    if (!overlay) { resolve('cancel'); return; }
+    // Clear any previous resolver to avoid leaks
+    if (_bouncePrecheckResolver) { try { _bouncePrecheckResolver('cancel'); } catch(e) {} }
+    _bouncePrecheckResolver = resolve;
+
+    const fatalCount = issues.filter(i => i.severity === 'fatal').length;
+    const warnCount  = issues.filter(i => i.severity === 'warn').length;
+    const infoCount  = issues.filter(i => i.severity === 'info').length;
+
+    // Subtitle text
+    const sub = document.getElementById('bounce-precheck-subtitle');
+    if (sub) {
+      if (fatalCount > 0) {
+        sub.style.color = 'var(--err, #ff5b5b)';
+        sub.textContent = `Cannot start bounce — ${fatalCount} issue${fatalCount>1?'s':''} need fixing.`;
+      } else if (warnCount > 0) {
+        sub.style.color = 'var(--warn)';
+        sub.textContent = `Bounce can proceed, but with limitations (${warnCount} warning${warnCount>1?'s':''}).`;
+      } else {
+        sub.style.color = 'var(--t2)';
+        sub.textContent = `Logic project changed since last scan — review before bouncing.`;
+      }
+    }
+
+    // Render issue list
+    const listEl = document.getElementById('bounce-precheck-list');
+    if (listEl) {
+      const dotColor = (s) => s === 'fatal' ? '#ff5b5b' : s === 'warn' ? 'var(--warn)' : 'var(--accent)';
+      const _esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      // Convert simple **bold** in title text to <b>
+      const _renderTitle = (t) => _esc(t).replace(/\*\*([^*]+)\*\*/g, '<b style="color:var(--t1);">$1</b>');
+      listEl.innerHTML = issues.map(i => `
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:10px;height:10px;border-radius:50%;background:${dotColor(i.severity)};margin-top:6px;"></div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:var(--fs-sm);color:var(--t1);line-height:1.4;">${_renderTitle(i.title)}</div>
+            ${i.detail ? `<div style="font-size:var(--fs-xs);color:var(--muted);line-height:1.4;margin-top:3px;">${_esc(i.detail)}</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Bounce Anyway disabled if any FATAL issue
+    const anywayBtn = document.getElementById('bounce-precheck-anyway-btn');
+    if (anywayBtn) {
+      if (fatalCount > 0) {
+        anywayBtn.disabled = true;
+        anywayBtn.style.opacity = '0.4';
+        anywayBtn.style.cursor = 'not-allowed';
+        anywayBtn.title = 'Disabled — fatal issues prevent bouncing';
+      } else {
+        anywayBtn.disabled = false;
+        anywayBtn.style.opacity = '';
+        anywayBtn.style.cursor = '';
+        anywayBtn.title = '';
+      }
+    }
+
+    overlay.classList.add('show');
+  });
+}
+function _bouncePrecheckChoose(choice) {
+  // Block "continue" if Bounce Anyway button is disabled (fatal issues present)
+  if (choice === 'continue') {
+    const btn = document.getElementById('bounce-precheck-anyway-btn');
+    if (btn && btn.disabled) return;
+  }
+  document.getElementById('bounce-precheck-modal')?.classList.remove('show');
+  const r = _bouncePrecheckResolver; _bouncePrecheckResolver = null;
+  if (r) r(choice);
+}
+
+// Pre-bounce JS-only sanity check — never touches Logic.
+// Returns array of structured issue objects:
+//   { severity: 'fatal'|'warn'|'info', category, title, detail, jobName?, setName? }
+// fatal = block bounce (Bounce Anyway disabled)
+// warn  = bounce can proceed but with limitations
+// info  = informational only (e.g. stale channel count without specific breakage)
+//
+// Walks the queue (NOT the flattened pending list) so we know set parent for context.
+// Uses resolveChannel() helper to verify name+index pairs robustly.
+async function _bouncePreCheck() {
+  const issues = [];
+  // Use channels (the live working list) for resolveChannel lookups; it's set after scan.
+  if (!channels || channels.length === 0) {
+    // No scan happened yet — let bounce flow handle it (will error normally)
+    return [];
+  }
+  const channelExists = (name) => !!name && channels.some(c => c && c.name === name);
+  // resolveChannel returns null if neither index nor name match — used for typed refs
+  const tryResolve = (idx, name) => {
+    try { return (typeof resolveChannel === 'function') ? resolveChannel(idx, name) : null; }
+    catch(e) { return null; }
+  };
+
+  // ── Section 0: ACTIVE live channel count check ──────────────────────
+  // Always query Logic directly so we don't miss recent changes the passive
+  // _channelsStale flag hasn't caught yet. Sets _channelsStale to keep state
+  // consistent with the live result for downstream consumers.
+  if (window.api?.channelNameAt) {
+    try {
+      const cc = await window.api.channelNameAt(0).catch(() => null);
+      const liveCount = cc?.total ?? null;
+      if (liveCount != null && liveCount !== channels.length) {
+        _channelsStale = true;
+      } else if (liveCount != null) {
+        _channelsStale = false;
+      }
+    } catch(e) { /* keep existing flag if query fails */ }
+  }
+
+  // ── Section 1: Global sidechain ──────────────────────────────────────
+  if (typeof sidechainEnabled !== 'undefined' && sidechainEnabled) {
+    // Multi-channel sidechain (newer)
+    if (Array.isArray(sidechainChannels) && sidechainChannels.length > 0) {
+      const missing = [];
+      const remaining = [];
+      for (const sc of sidechainChannels) {
+        if (!sc) continue;
+        const r = tryResolve(sc.index, sc.name);
+        if (r) remaining.push(r.name); else missing.push(sc.name || `#${sc.index}`);
+      }
+      if (missing.length > 0) {
+        issues.push({
+          severity: 'warn', category: 'sidechain-global',
+          title: `Sidechain channel${missing.length>1?'s':''} missing: ${missing.map(n=>`"${n}"`).join(', ')}`,
+          detail: remaining.length > 0
+            ? `Remaining valid: ${remaining.join(', ')}. Missing channels will be skipped from sidechain pass.`
+            : `Sidechain pass will be skipped for all stems.`
+        });
+      }
+    } else if (typeof sidechainChannel !== 'undefined' && sidechainChannel) {
+      // Single-channel sidechain (legacy)
+      const r = tryResolve(sidechainIndex, sidechainChannel);
+      if (!r) {
+        issues.push({
+          severity: 'warn', category: 'sidechain-global',
+          title: `Sidechain channel "${sidechainChannel}" missing`,
+          detail: `Was: track #${sidechainIndex}. Sidechain pass will be skipped for all stems.`
+        });
+      }
+    }
+  }
+
+  // ── Section 2: Global +FX channels ───────────────────────────────────
+  const globalFx = (modebarState && modebarState.fxChannels) || [];
+  for (const fxName of globalFx) {
+    if (!channelExists(fxName)) {
+      issues.push({
+        severity: 'warn', category: 'fx-global',
+        title: `+FX channel "${fxName}" missing from Logic`,
+        detail: `FX bus mute logic for this channel will be skipped.`
+      });
+    }
+  }
+
+  // ── Section 3: Walk queue (preserve set context) ──────────────────────
+  // Build [{ job, setName, parentName }] iterator
+  const _walk = [];
+  for (const q of (queue || [])) {
+    if (q.type === 'set' && Array.isArray(q.jobs)) {
+      for (const j of q.jobs) {
+        if (!j.status || j.status === 'pending') _walk.push({ job: j, setName: q.name });
+      }
+    } else if (q.type === 'stem' || q.type === 'mix') {
+      if (!q.status || q.status === 'pending') _walk.push({ job: q, setName: null });
+    }
+  }
+
+  for (const { job, setName } of _walk) {
+    const _prefix = setName ? `Set "${setName}" → ` : '';
+    const _stemLabel = `${_prefix}stem **${job.name}**`;
+
+    // 3a. Stem channel itself missing (FATAL)
+    if (job.type === 'stem') {
+      const r = tryResolve(job.channelIndex, job.logicName || job.name);
+      if (!r) {
+        issues.push({
+          severity: 'fatal', category: 'stem-missing',
+          title: setName
+            ? `Set "${setName}" → stem **${job.name}** — Logic channel removed`
+            : `Stem **${job.name}** — Logic channel removed`,
+          detail: `Was: track #${job.channelIndex} "${job.logicName || job.name}". Cannot bounce this stem.`,
+          jobName: job.name, setName
+        });
+      }
+    }
+
+    // 3b. Mix (versions/merge) — referenced channels in mutedNames
+    if (job.type === 'mix' && Array.isArray(job.mutedNames) && job.mutedNames.length > 0) {
+      const indices = Array.isArray(job.mutedIndices) ? job.mutedIndices : [];
+      const missing = [];
+      job.mutedNames.forEach((nm, i) => {
+        const r = tryResolve(indices[i], nm);
+        if (!r) missing.push(nm);
+      });
+      if (missing.length > 0) {
+        const shown = missing.slice(0, 5);
+        const extra = missing.length > shown.length ? `, +${missing.length - shown.length} more` : '';
+        issues.push({
+          severity: 'warn', category: 'mix-sources',
+          title: setName
+            ? `Set "${setName}" → mix **${job.name}** — referenced channels missing`
+            : `Mix **${job.name}** — referenced channels missing`,
+          detail: `${shown.map(n=>`"${n}"`).join(', ')}${extra}. These won't be muted; mix may differ from what you configured.`,
+          jobName: job.name, setName
+        });
+      }
+    }
+
+    // 3c. Per-stem overrides
+    const ovr = (modebarState && modebarState.perStemOverrides && modebarState.perStemOverrides[job.id]) || {};
+
+    // Per-stem custom sidechain channels: array of {name, index}
+    if (Array.isArray(ovr.scChannels)) {
+      const missing = [];
+      for (const sc of ovr.scChannels) {
+        if (!sc) continue;
+        const scName = typeof sc === 'string' ? sc : sc.name;
+        const scIdx  = typeof sc === 'string' ? null : sc.index;
+        if (!tryResolve(scIdx, scName)) missing.push(scName || `#${scIdx}`);
+      }
+      if (missing.length > 0) {
+        issues.push({
+          severity: 'warn', category: 'sc-override',
+          title: setName
+            ? `Set "${setName}" → stem **${job.name}** — custom sidechain channel${missing.length>1?'s':''} missing`
+            : `Stem **${job.name}** — custom sidechain channel${missing.length>1?'s':''} missing`,
+          detail: `Missing: ${missing.map(n=>`"${n}"`).join(', ')}. Will be excluded from this stem's sidechain pass.`,
+          jobName: job.name, setName
+        });
+      }
+    }
+
+    // Per-stem custom +FX channels: array of strings
+    if (Array.isArray(ovr.fxChannels)) {
+      const missing = [];
+      for (const fx of ovr.fxChannels) {
+        if (fx && !channelExists(fx)) missing.push(fx);
+      }
+      if (missing.length > 0) {
+        issues.push({
+          severity: 'warn', category: 'fx-override',
+          title: setName
+            ? `Set "${setName}" → stem **${job.name}** — custom +FX missing`
+            : `Stem **${job.name}** — custom +FX missing`,
+          detail: `Missing: ${missing.map(n=>`"${n}"`).join(', ')}. Won't be applied to this stem.`,
+          jobName: job.name, setName
+        });
+      }
+    }
+  }
+
+  // ── Section 4: Stale channel count (informational) ───────────────────
+  // If liveCount differs from scan but no specific issue was found above, surface it.
+  if (typeof _channelsStale !== 'undefined' && _channelsStale) {
+    issues.unshift({
+      severity: 'info', category: 'stale-count',
+      title: `Logic project changed since last scan`,
+      detail: `Channel count differs. Optional: rescan to verify all references are still valid.`
+    });
+  }
+
+  return issues;
+}
+
 function updateBounceBtn() {
   const btn = document.getElementById('bbtn');
   const pending = _pendingCount();
@@ -9363,7 +9792,7 @@ async function doBounce() {
   // minutes later → false "File missing" failure even though the file is there.
   window._bounceClockSnapshot = new Date();
   // Helper: release lock when an early-return path exits before the main bounce loop.
-  const _earlyExit = () => { bouncing = false; updateBounceBtn(); window._bounceClockSnapshot = null; if (window._miniActive) exitMiniMode().catch(() => {}); };
+  const _earlyExit = () => { bouncing = false; updateBounceBtn(); window._bounceClockSnapshot = null; window._bouncePrecheckBypass = false; if (window._miniActive) exitMiniMode().catch(() => {}); };
   if (!(await _audit())) { _auditFail(); _earlyExit(); return; }
   // If a schedule timer is pending, cancel it — manual bounce replaces it
   if (_scheduleTimer) { clearTimeout(_scheduleTimer); _scheduleTimer = null; }
@@ -9386,6 +9815,30 @@ async function doBounce() {
   const pending = queue.filter(q => q.status === 'pending');
   if (pending.length === 0) { toast('Nothing to bounce'); _earlyExit(); return; }
   if (!window.api) { toast('Needs Electron'); _earlyExit(); return; }
+
+  // ── Pre-bounce sanity check (BEFORE mini-mode) ─────────────────────────────
+  // Verify referenced channels still exist in last scan + flag stale count.
+  // Done in JS only — no AX calls. If issues found, show the central modal
+  // NOW (before mini hides UI) so user sees exactly what's wrong + per-stem
+  // / per-set context, instead of failing silently mid-bounce.
+  const _preCheckIssues = await _bouncePreCheck();
+  if (_preCheckIssues.length > 0) {
+    const choice = await _showBouncePrecheckModal(_preCheckIssues);
+    if (choice === 'cancel') { _earlyExit(); return; }
+    if (choice === 'rescan') {
+      _earlyExit();
+      // Use lite rescan — only refresh channel list, skip markers/tree/etc.
+      // Falls back to full scanLogic if the lite path fails.
+      setTimeout(async () => {
+        try {
+          const ok = await liteRescan();
+          if (!ok) scanLogic();
+        } catch(e) { console.warn('[EB] liteRescan err:', e); try { scanLogic(); } catch(_) {} }
+      }, 0);
+      return;
+    }
+    // 'continue' → user accepted issues, fall through to bounce flow
+  }
 
   // Enter mini mode immediately — before mixer opens, so EasyBounce doesn't block it
   if (!window._miniActive) await showMiniPlayer();
@@ -9573,20 +10026,8 @@ async function doBounce() {
     // em.opened === false → mixer was already open → proceed immediately
   }
   // ── Channel count sanity check ─────────────────────────────────────────────
-  // If mixer was already open above (no rescan), verify Logic's live channel count
-  // matches the last scan. Mismatch means tracks were added/removed in Logic since
-  // the scan — indices in the queue are stale and soloIndex will fail.
-  if (channels.length > 0 && window.api?.channelNameAt) {
-    const _cc = await window.api.channelNameAt(0).catch(() => null);
-    const _liveCount = _cc?.total ?? null;
-    if (_liveCount != null && _liveCount !== channels.length) {
-      toast(`⚠ Logic channels changed — rescan first`);
-      log(`✗ Bounce stopped: channel count changed since last scan (${channels.length} scanned → ${_liveCount} now) — rescan Logic and retry`, 'err');
-      if (_preExpandQueue) { queue = JSON.parse(_preExpandQueue); _preExpandQueue = null; saveQueue(); renderQueue(); }
-      _earlyExit();
-      return;
-    }
-  }
+  // (Removed secondary live channel-count toast — pre-check modal above does the
+  // active live query in _bouncePreCheck() and surfaces it as a proper modal item.)
   // ──────────────────────────────────────────────────────────────────────────
 
   // Skip overlay if user closed it 3+ times (pro mode — they don't need reminders).
@@ -10427,9 +10868,13 @@ async function bounceStem(job, folder, isFirst) {
   const _jLogicName = job.logicName || job.name;
   if (window._userCancelled) return false;
   if (window.api.blockInput) window.api.blockInput(2000).catch(() => {});
+  // Find current channel at job.channelIndex to verify what we're about to solo
+  const _curCh = channels.find(c => c.index === job.channelIndex);
+  console.warn(`▶ SOLO  job='${job.name}'  channelIndex=${job.channelIndex}  channels[${job.channelIndex}]='${_curCh?.name||'?'}'(${_curCh?.isBus?'bus':'audio'})`);
   let r = job.channelIndex != null
     ? await window.api.soloIndex(job.channelIndex)
     : await window.api.soloByName(_jLogicName);
+  console.warn(`◀ SOLO result: ok=${r?.ok} channel='${r?.channel||'?'}' error='${r?.error||''}'`);
   if (!r?.ok || r?.error) {
     log(`⚠ Solo failed for "${_jLogicName}": ${r?.error || 'no response'} — retrying`, 'warn');
     await window.api.wait(400);
@@ -10744,7 +11189,10 @@ async function bounceMix(job, folder, isFirst) {
   return ok;
 }
 
-let nameTemplate = localStorage.getItem('sb4_name_tpl') || '';
+// Naming template starts blank on every app launch — projects vary, last
+// session's template often doesn't match. localStorage entry is cleared.
+let nameTemplate = '';
+try { localStorage.removeItem('sb4_name_tpl'); } catch(e) {}
 
 async function openBounceParams() {
   if (!window.api) return;
@@ -14785,11 +15233,35 @@ function _validateFxSelectionAfterScan() {
 // If channel name no longer exists → toast warning, clear chip until user re-picks.
 let _scWarnedThisSession = false;
 function _validateSidechainAfterScan() {
-  if (typeof sidechainChannel === 'undefined' || !sidechainChannel) return;
   const allCh = _masterChannels && _masterChannels.length
     ? _masterChannels
     : (typeof channels !== 'undefined' ? channels : []);
   if (!allCh.length) return;  // scan empty / not done — skip
+  // If in-memory cleared (e.g. cleared at startup), try restore from localStorage.
+  if (!sidechainChannel) {
+    try {
+      const savedName    = localStorage.getItem('sb4_sidechain');
+      const savedEnabled = localStorage.getItem('sb4_sidechain_on') === 'true';
+      const savedIdx     = JSON.parse(localStorage.getItem('sb4_sidechain_idx') ?? 'null');
+      if (savedName && allCh.some(c => c.name === savedName)) {
+        sidechainChannel  = savedName;
+        sidechainIndex    = savedIdx;
+        sidechainEnabled  = savedEnabled;
+        // Try restore multi-channel array too
+        const savedSc = localStorage.getItem('sb4_sc_channels');
+        if (savedSc) {
+          try {
+            const arr = JSON.parse(savedSc);
+            sidechainChannels = arr.filter(x => x && allCh.some(c => c.name === x.name));
+          } catch(e) {}
+        }
+        if (typeof _setScChipLabel === 'function') _setScChipLabel(savedName);
+        if (typeof updateModebarSummary === 'function') updateModebarSummary();
+        if (typeof log === 'function') log(`Restored sidechain: ${savedName}`, 'info');
+      }
+    } catch(e) {}
+    return;
+  }
   const found = allCh.find(c => c.name === sidechainChannel);
   if (found) {
     if (sidechainIndex !== found.index) {
@@ -17892,7 +18364,10 @@ async function openBounceInLogic() {
 
       if (cnt === 3 && !sawSave) {
         sawSave = true;
-        await captureSR(); // capture right before we dismiss the save panel
+        // Don't captureSR here — bounce dialog is gone, getBounceParams would
+        // hit the save panel by mistake (its title also contains "Bounce …")
+        // and the resulting AX delay broke the escape press timing. SR was
+        // already captured during phase-2 polling (every 600ms).
         // KEY FIX: hide EasyBounce window so its alwaysOnTop floating panel
         // releases key focus — then Logic's Bounce dialog can receive the key event.
         await window.api.hideWindow();
@@ -18196,14 +18671,32 @@ if (window.api?.onHotkeyTriggered) {
     const tracks = result.tracks;
     if (type === 'stems') {
       const added = [], skipped = [];
+      // Log to terminal so duplicate-name issues are visible during development.
+      console.log('[hotkey/stems] tracks from Logic:', JSON.stringify(tracks));
       tracks.forEach(t => {
-        const ch = channels.find(c => c.index === t.index) || channels.find(c => c.name === t.name) || { name: t.name, index: t.index, color: '#888' };
-        const _isDup = (j) => j.type === 'stem' && j.status !== 'done' && (j.channelIndex === ch.index || j.logicName === ch.name || j.name === ch.name);
-        if (queue.find(q => _isDup(q) || (q.type === 'set' && q.jobs.some(_isDup)))) {
+        // Resolve by INDEX first — name fallback can misroute duplicate-named channels.
+        let ch = channels.find(c => c.index === t.index);
+        if (!ch) {
+          // Index not found — channel may have moved. Fallback to name BUT this is
+          // ambiguous if multiple channels share the name. Pick the first; user
+          // should rescan to fix.
+          const byName = channels.filter(c => c.name === t.name);
+          if (byName.length > 1) {
+            console.warn('[hotkey/stems] ambiguous name fallback for', t.name, '— picking first of', byName.length, 'matches. Indices:', byName.map(c => c.index));
+          }
+          ch = byName[0] || { name: t.name, index: t.index, color: '#888' };
+        }
+        // Dup check: ONLY by index. Two channels with the same name (different
+        // indices) are legitimate distinct stems. Matches drag-path behaviour.
+        const _isDup = (j) => j.type === 'stem' && j.status !== 'done' && j.channelIndex === ch.index;
+        const dupExisting = queue.find(q => _isDup(q) || (q.type === 'set' && q.jobs.some(_isDup)));
+        if (dupExisting) {
           skipped.push(ch.name);
+          console.log('[hotkey/stems] skipped dup by index:', ch.name, 'index=', ch.index);
         } else {
           queue.push(_mkStemItem(ch));
           added.push(ch.name);
+          console.log('[hotkey/stems] added:', ch.name, 'index=', ch.index);
         }
       });
       if (added.length || skipped.length) { saveQueue(); renderChannels(); renderQueue(); updateBounceBtn(); }
@@ -18230,11 +18723,29 @@ if (window.api?.onHotkeyTriggered) {
   }
 }
 
+// Resolve a Logic track-selection {name,index} to a mixer channel object.
+// CRITICAL: index FIRST (Swift bridge gives unique indices even for duplicate names);
+// name only as fallback when index isn't found. Name-first would always pick the
+// first duplicate, breaking selection of stemming stacks vs same-named audio tracks.
+function _resolveTrackToChannel(t) {
+  let ch = channels.find(c => c.index === t.index);
+  if (!ch && t.name) {
+    const byName = channels.filter(c => c.name === t.name);
+    if (byName.length > 1) {
+      console.warn('[hotkey] ambiguous name fallback for', t.name, '— picking first of', byName.length, 'matches. Indices:', byName.map(c => c.index));
+    }
+    ch = byName[0];
+  }
+  return ch || null;
+}
+
 function _openVersionModalWithTracks(tracks) {
   const skipped = [];
+  console.log('[hotkey/version] tracks from Logic:', JSON.stringify(tracks));
   const indices = tracks.reduce((acc, t) => {
-    const ch = channels.find(c => c.name === t.name) || channels.find(c => c.index === t.index);
+    const ch = _resolveTrackToChannel(t);
     if (!ch) { skipped.push(t.name); return acc; }
+    console.log('[hotkey/version] resolved:', t.name, '→ channel index=', ch.index);
     acc.push(ch.index);
     return acc;
   }, []);
@@ -18244,9 +18755,11 @@ function _openVersionModalWithTracks(tracks) {
 
 function _openMergeModalWithTracks(tracks) {
   const skipped = [];
+  console.log('[hotkey/merge] tracks from Logic:', JSON.stringify(tracks));
   const chList = tracks.reduce((acc, t) => {
-    const ch = channels.find(c => c.name === t.name) || channels.find(c => c.index === t.index);
+    const ch = _resolveTrackToChannel(t);
     if (!ch) { skipped.push(t.name); return acc; }
+    console.log('[hotkey/merge] resolved:', t.name, '→ channel index=', ch.index);
     acc.push({ name: ch.name, channelIndex: ch.index, color: ch.color || '' });
     return acc;
   }, []);

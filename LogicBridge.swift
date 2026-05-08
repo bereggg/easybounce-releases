@@ -919,35 +919,37 @@ case "status":
     jsonOut(info)
 
 case "getSelectedTracks":
-    // DFS through window to find AXLayoutItems with AXSelected=true
-    // These are in the Tracks/Arrange view (not Mixer) — description format: "Track N 'Name'"
-    guard let wins = axVal(logic, kAXWindowsAttribute) as? [AXUIElement] else {
+    // Read AXSelectedChildren from the Mixer's AXLayoutArea — Logic syncs Arrange
+    // selection to mixer channel-strips and exposes it directly via this attribute.
+    // This is the source of truth: no ordinal math, no name-matching, no assumptions
+    // about mixer order vs Arrange order.
+    var allWinsRef: CFTypeRef?
+    AXUIElementCopyAttributeValue(logic, "AXAllWindows" as CFString, &allWinsRef)
+    var windows = (allWinsRef as? [AXUIElement]) ?? []
+    if windows.isEmpty {
+        var ref: CFTypeRef?
+        AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &ref)
+        windows = (ref as? [AXUIElement]) ?? []
+    }
+    // Find the largest Mixer layout (standalone Mixer wins over embedded Tracks Mixer)
+    var bestLayout: (layout: AXUIElement, count: Int)? = nil
+    for win in windows {
+        for layout in findAll(win, role: "AXLayoutArea", title: "Mixer") {
+            let c = axKids(layout).filter { axRole($0) == "AXLayoutItem" }.count
+            if c > (bestLayout?.count ?? 0) { bestLayout = (layout, c) }
+        }
+    }
+    guard let layout = bestLayout?.layout else {
         jsonOut(["ok": true, "tracks": []]); break
     }
-    var selectedNames: [String] = []
-    func findSelectedItems(_ el: AXUIElement, _ depth: Int) {
-        if depth > 8 { return }
-        if axRole(el) == "AXLayoutItem" {
-            var selRef: CFTypeRef?
-            AXUIElementCopyAttributeValue(el, kAXSelectedAttribute as CFString, &selRef)
-            if (selRef as? Bool) == true {
-                let desc = (axVal(el, kAXDescriptionAttribute) as? String) ?? ""
-                if let t = parseTrackDesc(desc) { selectedNames.append(t.name) }
-            }
-            return // don't recurse deeper into layout items
-        }
-        for kid in axKids(el) { findSelectedItems(kid, depth + 1) }
-    }
-    for win in wins { findSelectedItems(win, 0) }
-    // Match names to Mixer channels to get correct index
-    let allCh = scanChannels(logic)
+    let items = axKids(layout).filter { axRole($0) == "AXLayoutItem" }
+    let selectedRef = axVal(layout, "AXSelectedChildren")
+    let selectedItems = (selectedRef as? [AXUIElement]) ?? []
     var result: [[String: Any]] = []
-    for name in selectedNames {
-        if let ch = allCh.first(where: { $0.name == name }) {
-            result.append(["name": ch.name, "index": ch.index])
-        } else {
-            result.append(["name": name, "index": -1])
-        }
+    for sel in selectedItems {
+        guard let idx = items.firstIndex(where: { CFEqual($0, sel) }) else { continue }
+        let name = (axVal(sel, kAXDescriptionAttribute) as? String) ?? ""
+        result.append(["name": name, "index": idx])
     }
     jsonOut(["ok": true, "tracks": result])
 

@@ -99,10 +99,63 @@ function _getLogicVersion() {
   return _logicVersionCache;
 }
 
+// Decide whether to attach the session log file based on session signals.
+// Returns a short reason code (used as filename suffix and stored in DB) or null.
+function _shouldUploadLog() {
+  const bounceAttempts    = _analytics.counts.bounce || 0;
+  const bounceCompletions = _analytics.bounces.count;
+  // Pattern 1: user attempted bounces but none completed (the "spinlightstudio" case)
+  if (bounceAttempts >= 3 && bounceCompletions === 0) return 'bounces-failed';
+  // Pattern 2: any error event recorded
+  if (Object.keys(_analytics.errors).length > 0) return 'errors';
+  // Pattern 3: heavy cancel usage suggests user struggling
+  if ((_analytics.counts.cancel || 0) >= 5) return 'many-cancels';
+  return null;
+}
+
+// Upload the current session log to Supabase Storage (bucket: crash-logs).
+// Returns the object path on success, or null. Bounded to 5s; never throws.
+async function _uploadCurrentLog(reason, machineId) {
+  try {
+    if (!_logFilePath || !fs.existsSync(_logFilePath)) return null;
+    const raw = fs.readFileSync(_logFilePath);
+    if (raw.length === 0) return null;
+    const zlib = require('zlib');
+    const gz = zlib.gzipSync(raw);
+    const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const objectPath = `${machineId}/${ts}_${reason}.log.gz`;
+    return await new Promise(resolve => {
+      const req = require('https').request({
+        hostname: SUPABASE_URL,
+        path:     `/storage/v1/object/crash-logs/${objectPath}`,
+        method:   'POST',
+        headers: {
+          'Content-Type':   'application/gzip',
+          'apikey':         SUPABASE_KEY,
+          'Authorization':  `Bearer ${SUPABASE_KEY}`,
+          'Content-Length': gz.length,
+        },
+      }, res => {
+        res.resume();
+        resolve((res.statusCode === 200 || res.statusCode === 201) ? objectPath : null);
+      });
+      req.on('error', () => resolve(null));
+      req.setTimeout(5000, () => { req.destroy(); resolve(null); });
+      req.write(gz);
+      req.end();
+    });
+  } catch { return null; }
+}
+
 async function _postAnalytics() {
   const crypto   = require('crypto');
   const machineId = getMachineId();
   _switchMode(_analytics.currentMode); // flush current mode time
+
+  // Conditionally attach the session log (gzipped) for problem sessions.
+  const uploadReason = _shouldUploadLog();
+  const logUrl = uploadReason ? await _uploadCurrentLog(uploadReason, machineId) : null;
+
   const payload  = {
     machine_id:    machineId,
     app_version:   app.getVersion(),
@@ -116,6 +169,8 @@ async function _postAnalytics() {
     mode_time:     _analytics.modeTime,
     channels_avg:  _analytics.channels.count ? Math.round(_analytics.channels.sum / _analytics.channels.count) : null,
     render_time_total_sec: _analytics.renderTimeSec || null,
+    log_url:       logUrl,
+    upload_reason: uploadReason,
   };
   const body = JSON.stringify(payload);
   return new Promise(resolve => {
@@ -256,14 +311,16 @@ function createWindow() {
     const _origSetAOT = mainWindow.setAlwaysOnTop.bind(mainWindow);
     mainWindow.setAlwaysOnTop = (v, level) => { dbg(`setAlwaysOnTop(${v}, ${level})`); return _origSetAOT(v, level); };
   }
-  // ── PRODUCTION: silence renderer console (devTools already blocked via webPreferences) ──
-  if (!isDev) {
-    mainWindow.webContents.on('did-finish-load', () => {
-      mainWindow.webContents.executeJavaScript(
-        'console.log = console.warn = console.error = console.info = console.debug = () => {};'
-      );
-    });
-  }
+  // ── Renderer console forward → main process stdout (terminal) ──
+  // Devtools is blocked in production, so renderer console.log/warn/etc would
+  // be invisible. Forward all renderer console messages to the main process
+  // stdout so they appear in the terminal where the app was launched.
+  // (Previously silenced entirely — see git blame; replaced with forwarding
+  // for diagnostic visibility in production builds.)
+  mainWindow.webContents.on('console-message', (_event, level, message, line, source) => {
+    const tag = level === 0 ? 'log' : level === 1 ? 'warn' : level === 2 ? 'error' : 'info';
+    try { process.stdout.write(`[renderer:${tag}] ${message}\n`); } catch {}
+  });
   // ───────────────────────────────────────────────────────────────────────────
 
   mainWindow.once('ready-to-show', () => {
@@ -1031,6 +1088,29 @@ try {
     .sort((a, b) => a.time - b.time);
   if (_allLogs.length > 20)
     _allLogs.slice(0, 10).forEach(f => { try { fs.unlinkSync(path.join(_logDir, f.name)); } catch {} });
+} catch {}
+// Stamp session header — machine_id + license info so uploaded logs can be matched
+// to a specific customer (or analytics_sessions row by machine_id).
+try {
+  const _hdrLines = [
+    `=== EasyBounce session ${_sessionTs} ===`,
+    `machine_id:  ${getMachineId()}`,
+    `app_version: ${app.getVersion()}`,
+    `os_version:  ${process.getSystemVersion()}`,
+    `mac_arch:    ${process.arch}`,
+  ];
+  try {
+    const licFile = path.join(app.getPath('userData'), 'license.json');
+    if (fs.existsSync(licFile)) {
+      const lic = JSON.parse(fs.readFileSync(licFile, 'utf8'));
+      const data = lic.data || lic; // signed license has .data wrapper
+      if (data.email) _hdrLines.push(`license_email: ${data.email}`);
+      if (data.name)  _hdrLines.push(`license_name:  ${data.name}`);
+      if (data.kind)  _hdrLines.push(`license_kind:  ${data.kind}`);
+    }
+  } catch {}
+  _hdrLines.push('='.repeat(48));
+  fs.appendFileSync(_logFilePath, _hdrLines.join('\n') + '\n');
 } catch {}
 ipcMain.handle('write-log', (_, msg, level) => {
   try {
