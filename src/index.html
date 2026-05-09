@@ -1689,7 +1689,6 @@ body.compact-mode #markers-popup-list{max-height:calc(100vh - 130px)!important;}
         </button>
         <div class="q-mini-btns">
           <button class="q-mini-btn" id="save-job-set-btn" onclick="saveJobSet()" title="Save current queue as a reusable set"><svg class="ico ico-sm" style="margin-right:4px;vertical-align:-2px;"><use href="#ico-save"/></svg>Save set</button>
-          <button class="q-mini-btn" id="reload-queue-btn" onclick="reloadQueue()" title="Reset all items back to pending" style="display:inline-flex;align-items:center;gap:5px;"><svg class="ico ico-sm" aria-hidden="true"><use href="#ico-refresh"/></svg>Reset all</button>
           <button class="q-mini-btn em-hide" id="clear-done-btn" onclick="clearDone()" title="Remove completed items from queue">Clear done</button>
           <button class="q-mini-btn" onclick="clearQueue()" title="Clear entire queue">Clear all</button>
         </div>
@@ -4518,32 +4517,39 @@ function _renderChannelsImpl() {
         const hasChildren = trackTree.some(c => c.parent === t.name);
         const isCollapsed = collapsedGroups.has(t.num);
         const indent = 14 + depth * 18;
-        // Count ALL descendant tracks (not subgroups)
-        const _descNames = getAllDescendantNames(t.name);
-        const _descTrackNames = _descNames.filter(n => {
-          const item = trackTree.find(x => x.name === n);
-          return item && item.type === 'track';
-        });
-        const childCount = _descTrackNames.length;
-        // Count descendants currently queued — by index (regular channels) or name (stack sub-channels
-        // not visible in mixer and therefore absent from channels[])
-        // Type-aware: descendants in _descTrackNames are tracks (not groups), so prefer non-bus.
-        const _resolveDescTrack = (k) => {
-          const allOf = chByNameAll[k] || [];
-          return allOf.find(c => !c.isBus) || allOf[0] || null;
+        // Collect ALL descendants (tracks AND sub-groups) regardless of collapse state.
+        // Each descendant counts as 1 individual item for the badge — we want to reflect
+        // exactly what the user has individually queued/selected, not "coverage".
+        const _descNodes = [];
+        (function _collectAll(pName, pNum) {
+          getDirectChildren(pName, pNum).forEach(k => {
+            _descNodes.push(k);
+            if (k.type === 'group') _collectAll(k.name, k.num);
+          });
+        })(t.name, t.num);
+        const childCount = _descNodes.length;
+        // Resolve each tree node to its mixer channel — prefer scan-tree's baked mixerIndex
+        // (duplicate-safe), fall back to name+type lookup for unique names.
+        const _resolveNodeCh = (node) => {
+          if (node.mixerIndex != null && node.mixerIndex >= 0) {
+            return channels.find(c => c.index === node.mixerIndex) || null;
+          }
+          const allOf = chByNameAll[normalizeName(node.name)] || [];
+          const isGroupNode = node.type === 'group';
+          const filtered = allOf.filter(c => !!c.isBus === isGroupNode);
+          return (filtered.length > 0 ? filtered[0] : allOf[0]) || null;
         };
         let queuedCount = 0;
-        _descTrackNames.forEach(n => {
-          const k = normalizeName(n);
-          const cc = _resolveDescTrack(k);
+        _descNodes.forEach(node => {
+          const cc = _resolveNodeCh(node);
+          const k = normalizeName(node.name);
           if ((cc && _queuedIdx.has(cc.index)) || _queuedNames.has(k)) queuedCount++;
         });
         // Count selected (highlighted by click) children when collapsed — shows X/Y badge
         let selectedCount = 0;
         if (isCollapsed) {
-          _descTrackNames.forEach(n => {
-            const k = normalizeName(n);
-            const cc = _resolveDescTrack(k);
+          _descNodes.forEach(node => {
+            const cc = _resolveNodeCh(node);
             if (cc && selectedIdx.has(cc.index)) selectedCount++;
           });
         }
@@ -6718,10 +6724,28 @@ function addPresetToQueue(preset) {
 // ═══════════════════════════════════════════════════
 // QUEUE
 // ═══════════════════════════════════════════════════
+// Find a unique queue display name by appending 02, 03, ... when the base name
+// already exists in the queue. Lets two channels with the same name (e.g. two
+// "Guitar" stacks) bounce to distinct files. User can still rename manually.
+function _uniqueQueueName(baseName) {
+  const existing = new Set();
+  const collect = (j) => { if (j && j.type === 'stem' && j.name) existing.add(j.name); };
+  for (const q of (queue || [])) {
+    if (q.type === 'stem') collect(q);
+    else if (q.type === 'set' && Array.isArray(q.jobs)) q.jobs.forEach(collect);
+  }
+  if (!existing.has(baseName)) return baseName;
+  let n = 2;
+  while (existing.has(baseName + String(n).padStart(2, '0'))) n++;
+  return baseName + String(n).padStart(2, '0');
+}
+
 // Create a new pending queue item with all currently active markers excluded by default
 function _mkStemItem(ch) {
   const _autoName = _autoRenameApply(ch.name);
-  const item = { id:'q_'+Date.now()+Math.random(), type:'stem', name:_autoName || ch.name, logicName:ch.name, channelIndex:ch.index, color:ch.color, status:'pending' };
+  const baseName = _autoName || ch.name;
+  const uniqueName = _uniqueQueueName(baseName);
+  const item = { id:'q_'+Date.now()+Math.random(), type:'stem', name:uniqueName, logicName:ch.name, channelIndex:ch.index, color:ch.color, status:'pending' };
   // No pre-exclusions: global _activeMarkers controls which markers bounce for all stems
   // User can override per-stem by clicking marker chips (adds to markerExclusions or markerAdditions)
   return item;
@@ -18683,8 +18707,11 @@ if (window.api?.onHotkeyTriggered) {
       // Match by mixerIndex first (duplicate-safe, baked at scan-tree)
       let i = trackTree.findIndex(n => n.mixerIndex != null && n.mixerIndex === t.index);
       if (i >= 0) return i;
-      // Fallback by name (unique-named tracks have no mixerIndex baked)
-      i = trackTree.findIndex(n => n.name === t.name);
+      // Resolve actual channel name via channels[] — Logic returns weird AX desc
+      // (e.g. "228 59 4") for some tracks, so t.name from getSelectedTracks isn't reliable.
+      const realCh = channels.find(c => c.index === t.index);
+      const realName = realCh ? realCh.name : t.name;
+      i = trackTree.findIndex(n => n.name === realName);
       return i >= 0 ? i : 1e9;
     };
     const tracks = [...result.tracks].sort((a, b) => _treeOrderKey(a) - _treeOrderKey(b));
