@@ -3369,9 +3369,10 @@ case "scan-tree":
         _ = dfs(win, 0)
     }
 
-    // Option+click a disclosure triangle → affects ALL stacks
-    // Scroll-to-center only if needed + python CGEvent click
-    func optClickTriangle(_ tri: AXUIElement) {
+    // Option+click a disclosure triangle → affects ALL stacks (toggles all recursively).
+    // Plain click (withOption=false) → toggles ONLY this stack, leaves nested stacks alone.
+    // Scroll-to-center only if needed + native CGEvent click.
+    func optClickTriangle(_ tri: AXUIElement, withOption: Bool = true) {
         if let sa = contentScrollArea ?? arrangeScrollArea, let bar = arrangeScrollBar {
             // Read scroll area bounds
             var spRef: CFTypeRef?; var ssRef: CFTypeRef?
@@ -3460,13 +3461,14 @@ case "scan-tree":
         Thread.sleep(forTimeInterval: 0.12)
 
         let clickPt = CGPoint(x: cx, y: cy)
+        let clickFlags: CGEventFlags = withOption ? .maskAlternate : []
         if let eDown = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: clickPt, mouseButton: .left) {
-            eDown.flags = .maskAlternate
+            eDown.flags = clickFlags
             eDown.post(tap: .cghidEventTap)
         }
         Thread.sleep(forTimeInterval: 0.05)
         if let eUp = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: clickPt, mouseButton: .left) {
-            eUp.flags = .maskAlternate
+            eUp.flags = clickFlags
             eUp.post(tap: .cghidEventTap)
         }
 
@@ -3682,6 +3684,68 @@ case "scan-tree":
         let (beforeTracks, _) = collectAllTracks()
         let summaryNums = Set(beforeTracks.map { $0.num })
 
+        // Step 1.5: Plain-click each top-level group's triangle to expand it WITHOUT
+        // expanding nested sub-stacks. This reveals each top-level's direct children
+        // (e.g. Bass at MUSIC's level, sibling of MELODY sub-stack). Without this we
+        // can't tell loose direct-children from sub-stack-children when iterating the
+        // flat fully-expanded list. Top-level only: typically 5–10 stacks per project.
+        _lap("Step 1.5: per-top-level expand")
+        var topDirectChildren = Set<Int>()
+        do {
+            // Find top-level group items (in summaryNums + has triangle)
+            // Re-find each iteration so we have fresh refs after AX layout shifts.
+            func findTopLevelTriangle(num: Int) -> AXUIElement? {
+                for item in axKids(hg0) {
+                    let desc = (axVal(item, kAXDescriptionAttribute) as? String) ?? ""
+                    guard desc.hasPrefix("Track ") else { continue }
+                    guard let t = parseTrackDesc(desc), t.num == num else { continue }
+                    for k in axKids(item) where axRole(k) == "AXDisclosureTriangle" { return k }
+                    return nil
+                }
+                return nil
+            }
+            // Snapshot top-level group nums (those in summary AND have triangle)
+            let topGroupNums = beforeTracks.filter { $0.hasTriangle }.map { $0.num }
+            _lap("  top-level groups: \(topGroupNums.count)")
+            for num in topGroupNums {
+                guard let tri = findTopLevelTriangle(num: num) else { continue }
+                if axIntValue(tri) == 1 { continue }
+                let before = beforeTracks.count
+                let beforeVisible = axKids(hg0).filter { (axVal($0, kAXDescriptionAttribute) as? String ?? "").hasPrefix("Track ") }.count
+                optClickTriangle(tri, withOption: false)
+                // Wait for visible count to grow (or settle if didn't change)
+                var waited = 0
+                while waited < 600 {
+                    let c = axKids(hg0).filter { (axVal($0, kAXDescriptionAttribute) as? String ?? "").hasPrefix("Track ") }.count
+                    if c > beforeVisible { break }
+                    Thread.sleep(forTimeInterval: 0.04); waited += 40
+                }
+                _ = before
+            }
+            // Capture: every visible track WITHOUT triangle that is NOT in summaryNums
+            // is a direct child of some top-level group (mapped via iteration order in Step 2).
+            // We just need the SET; classification by parent happens during tree-build.
+            for item in axKids(hg0) {
+                let desc = (axVal(item, kAXDescriptionAttribute) as? String) ?? ""
+                guard desc.hasPrefix("Track "), let t = parseTrackDesc(desc) else { continue }
+                let hasTri = axKids(item).contains { axRole($0) == "AXDisclosureTriangle" }
+                if !hasTri && !summaryNums.contains(t.num) {
+                    topDirectChildren.insert(t.num)
+                }
+            }
+            _lap("  topDirectChildren captured: \(topDirectChildren.count)")
+
+            // Step 1.5b: collapse-all to reset to clean fully-collapsed state.
+            // Without this, Step 2 Option+click on a mixed-state tree toggles individually
+            // (some open / some close) instead of cleanly expanding everything → tree-build
+            // sees an incomplete `after` list and assigns wrong parents.
+            _lap("Step 1.5b: reset to collapsed")
+            if let triExpanded = findTriangle(hg0, expanded: true) {
+                optClickTriangle(triExpanded)
+                let _ = waitStable(reference: beforeTracks.count + 1, expectMore: false)
+            }
+        }
+
         // Step 2: Expand all (single Option+click)
         // After expand, verify count actually increased — retry once if not
         _lap("Step 2: Expand all")
@@ -3758,8 +3822,20 @@ case "scan-tree":
                          "parent": currentGroupName, "parentNum": currentGroupNum,
                          "muted": t.muted ? 1 : 0]
             } else {
-                let parentNum = currentSubgroupNum >= 0 ? currentSubgroupNum : currentGroupNum
-                let parentName = currentSubgroupName.isEmpty ? currentGroupName : currentSubgroupName
+                // Regular track inside a group. If it was visible at Step 1.5
+                // (top-level expanded, sub-stacks closed) → it's a direct child of
+                // currentGroup, NOT of currentSubgroup. Otherwise it's inside the
+                // current sub-stack.
+                let isDirectChild = topDirectChildren.contains(t.num)
+                let parentNum: Int
+                let parentName: String
+                if isDirectChild || currentSubgroupNum < 0 {
+                    parentNum = currentGroupNum
+                    parentName = currentGroupName
+                } else {
+                    parentNum = currentSubgroupNum
+                    parentName = currentSubgroupName
+                }
                 entry = ["num": t.num, "name": t.name, "type": "track",
                          "parent": parentName, "parentNum": parentNum,
                          "muted": t.muted ? 1 : 0]
