@@ -268,7 +268,7 @@ async function sendEmailNotification(bounceData) {
 // ── Feedback form (Resend) ────────────────────────────────────────────────────
 const FEEDBACK_TO = 'easybounce.app@gmail.com';
 
-async function sendFeedback({ type, email, message, attachment }) {
+async function sendFeedback({ type, email, message, attachment, attachments }) {
   const subject = `[EasyBounce] ${type}${email ? ' from ' + email : ''}`;
   const safeMsg = (message || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
 
@@ -371,11 +371,15 @@ async function sendFeedback({ type, email, message, attachment }) {
     text: `Type: ${type}\nFrom: ${email || 'anonymous'}\n\n${message}`
   };
   if (email && email.includes('@')) body.reply_to = email;
-  if (attachment) {
-    body.attachments = [{
-      content: attachment.base64,
-      filename: attachment.name
-    }];
+  // Accept attachments[] (full list) — fall back to legacy single `attachment` field.
+  const files = (Array.isArray(attachments) && attachments.length > 0)
+    ? attachments
+    : (attachment ? [attachment] : []);
+  if (files.length > 0) {
+    body.attachments = files.map(f => ({
+      content: f.base64,
+      filename: f.name
+    }));
   }
 
   try {

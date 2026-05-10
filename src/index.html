@@ -18956,7 +18956,8 @@ window.addEventListener('load', function(){
 })();
 
 // ── Feedback popup ─────────────────────────────────────────────────────────
-let _fbFiles = [null, null, null];
+// Unlimited attachments (single multi-select input, append to list)
+let _fbFiles = [];
 let _fbRating = 0;
 const _fbStarDescs = ['','😞 Poor','😐 Fair','🙂 Good','😊 Great','🤩 Excellent'];
 
@@ -18994,54 +18995,45 @@ function _fbOutsideClick(e) {
   const b = document.getElementById('feedback-btn');
   if (!p.contains(e.target) && !b.contains(e.target)) closeFeedbackPopup();
 }
-function fbFileSelected(input, slotIdx) {
-  const file = input.files[0] || null;
-  if (file && file.size > 30 * 1024 * 1024) {
-    toast('File too large — max 30MB');
-    input.value = '';
-    return;
-  }
-  _fbFiles[slotIdx] = file;
-  // update label in slot button
-  const row = document.getElementById('fb-attach-row-' + slotIdx);
-  if (row) {
-    const label = row.querySelector('.fb-attach-slot-name');
-    if (label) label.textContent = file ? file.name : ('Attach file ' + (slotIdx + 1) + '…');
-  }
-  // show remove button for slot 0 when it has a file
-  if (slotIdx === 0 && file) {
-    const removeBtn = document.getElementById('fb-attach-remove-0');
-    if (removeBtn) removeBtn.style.display = '';
-  }
-  // reveal next slot row
-  if (file && slotIdx < 2) {
-    const nextRow = document.getElementById('fb-attach-row-' + (slotIdx + 1));
-    if (nextRow) nextRow.style.display = '';
-  }
+function fbFilesAdded(input) {
+  for (const file of input.files) _fbFiles.push(file);
+  input.value = ''; // reset so re-selecting the same file works
+  _fbRenderFiles();
 }
-function fbRemoveFile(slotIdx) {
-  _fbFiles[slotIdx] = null;
-  const input = document.getElementById('fb-file-input-' + slotIdx);
-  if (input) input.value = '';
-  const row = document.getElementById('fb-attach-row-' + slotIdx);
-  if (row) {
-    const label = row.querySelector('.fb-attach-slot-name');
-    if (label) label.textContent = 'Attach file ' + (slotIdx + 1) + '…';
-    if (slotIdx > 0) row.style.display = 'none';
-  }
-  // also hide slot 0 remove button if slot 0 is cleared
-  if (slotIdx === 0) {
-    const removeBtn = document.getElementById('fb-attach-remove-0');
-    if (removeBtn) removeBtn.style.display = 'none';
-  }
-  // cascade: hide all slots after the last filled one
-  // find last filled index
-  let lastFilled = -1;
-  for (let i = 0; i < 3; i++) { if (_fbFiles[i]) lastFilled = i; }
-  for (let i = 1; i < 3; i++) {
-    const r = document.getElementById('fb-attach-row-' + i);
-    if (!r) continue;
-    r.style.display = (i <= lastFilled + 1) ? '' : 'none';
+function fbRemoveFile(idx) {
+  _fbFiles.splice(idx, 1);
+  _fbRenderFiles();
+}
+function _fbRenderFiles() {
+  const list = document.getElementById('fb-attach-list');
+  if (!list) return;
+  list.innerHTML = '';
+  _fbFiles.forEach((f, i) => {
+    const row = document.createElement('div');
+    row.className = 'fb-attach-row';
+    const kb = f.size / 1024;
+    const sizeStr = kb < 1024 ? `${kb.toFixed(0)} KB` : `${(kb/1024).toFixed(1)} MB`;
+    row.innerHTML = `
+      <div class="fb-attach-slot" style="cursor:default" title="${f.name}">
+        <svg class="ico ico-sm"><use href="#ico-paperclip"/></svg>
+        <span class="fb-attach-slot-name">${f.name}</span>
+        <span style="color:var(--muted);font-size:var(--fs-xs);flex-shrink:0;">${sizeStr}</span>
+      </div>
+      <button class="fb-attach-remove eb-close" title="Remove" data-idx="${i}"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>`;
+    row.querySelector('.fb-attach-remove').onclick = () => fbRemoveFile(i);
+    list.appendChild(row);
+  });
+  // Running total — warn in red when over 25MB
+  if (_fbFiles.length > 0) {
+    const totalBytes = _fbFiles.reduce((s, f) => s + (f?.size || 0), 0);
+    const totalMB = totalBytes / 1024 / 1024;
+    const over = totalBytes > 25 * 1024 * 1024;
+    const summary = document.createElement('div');
+    summary.style.cssText = `font-size:var(--fs-xs);color:${over ? 'var(--warn)' : 'var(--muted)'};padding:2px 4px;`;
+    summary.textContent = over
+      ? `Total ${totalMB.toFixed(1)}MB — exceeds 25MB. Please split into separate messages.`
+      : `Total ${totalMB.toFixed(1)}MB / 25MB`;
+    list.appendChild(summary);
   }
 }
 async function submitFeedback() {
@@ -19051,6 +19043,17 @@ async function submitFeedback() {
   if (type === 'Rating' && !_fbRating) { document.getElementById('fb-star-desc').textContent = '← please select a rating'; return; }
   if (!message && type !== 'Rating') { document.getElementById('fb-msg').focus(); return; }
   const ratingStr = type === 'Rating' ? ` [${_fbRating}/5 — ${_fbStarDescs[_fbRating]}]` : '';
+
+  // Pre-flight: total raw attachment size. Resend hard cap is 40MB AFTER base64
+  // (~30MB raw). We cap at 25MB raw to leave headroom for Supabase function body
+  // limits and base64 overhead. Anything bigger → ask user to split.
+  const FB_MAX_BYTES = 25 * 1024 * 1024;
+  const totalBytes = _fbFiles.reduce((s, f) => s + (f?.size || 0), 0);
+  if (totalBytes > FB_MAX_BYTES) {
+    const totalMB = (totalBytes / 1024 / 1024).toFixed(1);
+    toast(`Attachments total ${totalMB}MB — limit is 25MB. Please send fewer files at a time in separate messages.`);
+    return;
+  }
 
   const btn = document.getElementById('fb-send-btn');
   btn.disabled = true;
@@ -19085,19 +19088,11 @@ async function submitFeedback() {
       document.getElementById('fb-type').value = 'Bug Report';
       document.getElementById('fb-msg').value = '';
       document.getElementById('fb-email').value = '';
-      // reset all 3 attachment slots
-      _fbFiles = [null, null, null];
-      for (let i = 0; i < 3; i++) {
-        const inp = document.getElementById('fb-file-input-' + i);
-        if (inp) inp.value = '';
-        const row = document.getElementById('fb-attach-row-' + i);
-        if (!row) continue;
-        const label = row.querySelector('.fb-attach-slot-name');
-        if (label) label.textContent = 'Attach file ' + (i + 1) + '…';
-        if (i > 0) row.style.display = 'none';
-      }
-      const removeBtn0 = document.getElementById('fb-attach-remove-0');
-      if (removeBtn0) removeBtn0.style.display = 'none';
+      // reset attachments
+      _fbFiles = [];
+      _fbRenderFiles();
+      const inp = document.getElementById('fb-file-input');
+      if (inp) inp.value = '';
       document.getElementById('fb-stars').classList.remove('show');
       _fbRating = 0; fbUpdateStars(0);
       btn.disabled = false; btn.textContent = 'Send';
@@ -19354,29 +19349,13 @@ async function submitFeedback() {
       <textarea id="fb-msg" class="fb-textarea" placeholder="Describe the issue or idea…"></textarea>
     </div>
     <div>
-      <!-- Up to 3 attachments: photo, video, or any file -->
+      <!-- Unlimited attachments via multi-select file input. Files render as removable chips. -->
       <div id="fb-attachments" style="display:flex;flex-direction:column;gap:6px;">
-        <div class="fb-attach-row" id="fb-attach-row-0">
-          <button class="fb-attach-slot" onclick="document.getElementById('fb-file-input-0').click()" title="Attach photo, video or file (max 30MB)">
-            <svg class="ico ico-sm"><use href="#ico-paperclip"/></svg><span class="fb-attach-slot-name">Attach file 1…</span>
-          </button>
-          <button class="fb-attach-remove eb-close" id="fb-attach-remove-0" onclick="fbRemoveFile(0)" title="Remove" style="display:none"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
-          <input class="fb-file-input" id="fb-file-input-0" type="file" accept="image/*,video/*,.log,.txt,.zip,.pdf,.wav,.mp3" style="display:none" onchange="fbFileSelected(this,0)">
-        </div>
-        <div class="fb-attach-row" id="fb-attach-row-1" style="display:none;">
-          <button class="fb-attach-slot" onclick="document.getElementById('fb-file-input-1').click()" title="Attach photo, video or file (max 30MB)">
-            <svg class="ico ico-sm"><use href="#ico-paperclip"/></svg><span class="fb-attach-slot-name">Attach file 2…</span>
-          </button>
-          <button class="fb-attach-remove eb-close" onclick="fbRemoveFile(1)" title="Remove"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
-          <input class="fb-file-input" id="fb-file-input-1" type="file" accept="image/*,video/*,.log,.txt,.zip,.pdf,.wav,.mp3" style="display:none" onchange="fbFileSelected(this,1)">
-        </div>
-        <div class="fb-attach-row" id="fb-attach-row-2" style="display:none;">
-          <button class="fb-attach-slot" onclick="document.getElementById('fb-file-input-2').click()" title="Attach photo, video or file (max 30MB)">
-            <svg class="ico ico-sm"><use href="#ico-paperclip"/></svg><span class="fb-attach-slot-name">Attach file 3…</span>
-          </button>
-          <button class="fb-attach-remove eb-close" onclick="fbRemoveFile(2)" title="Remove"><svg class="ico ico-sm"><use href="#ico-close"/></svg></button>
-          <input class="fb-file-input" id="fb-file-input-2" type="file" accept="image/*,video/*,.log,.txt,.zip,.pdf,.wav,.mp3" style="display:none" onchange="fbFileSelected(this,2)">
-        </div>
+        <button class="fb-attach-slot" onclick="document.getElementById('fb-file-input').click()" title="Attach photos, videos or any files">
+          <svg class="ico ico-sm"><use href="#ico-paperclip"/></svg><span class="fb-attach-slot-name">Attach files…</span>
+        </button>
+        <input id="fb-file-input" type="file" multiple style="display:none" onchange="fbFilesAdded(this)">
+        <div id="fb-attach-list" style="display:flex;flex-direction:column;gap:4px;"></div>
       </div>
     </div>
     <button id="fb-send-btn" onclick="submitFeedback()">Send</button>
