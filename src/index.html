@@ -193,6 +193,11 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);font-size
 .qset-toggle{color:var(--muted);width:16px;flex-shrink:0;transition:transform var(--t);display:inline-flex;align-items:center;transform:rotate(-90deg);}
 .qset-toggle.open{transform:rotate(0deg);}
 .qset-body{border-left:2px solid var(--b2);margin:0 0 2px 22px;}
+.qstale-ambiguous{box-shadow:inset 3px 0 0 var(--warn);}
+.qstale-missing{box-shadow:inset 3px 0 0 #ff5b5b;}
+.qstale-icon{display:inline-block;margin-right:4px;font-size:var(--fs-sm);}
+.qstale-ambiguous .qstale-icon{color:var(--warn);}
+.qstale-missing .qstale-icon{color:#ff5b5b;}
 .qsub{display:flex;flex-wrap:wrap;gap:3px;}
 .qmuted{font-size:var(--fs-xxs);padding:1px 6px;border-radius:var(--r);background:var(--w-a03);color:var(--muted);border:1px solid var(--b);text-decoration:line-through;text-decoration-color:var(--muted);}
 .qmuted-h{display:none;}
@@ -1179,8 +1184,8 @@ body.easy #panel-pr{transition:all var(--t-slow);}
 #skin-panel{display:none;position:fixed;top:58px;right:12px;z-index:200;background:var(--card);border:1px solid var(--glass-border);border-radius:var(--r2);padding:18px;width:312px;box-shadow:0 24px 64px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.06);}
 body.easy #skin-panel{z-index:9000;}
 .skin-hdr{font-size:var(--fs-xs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:14px;}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--card2);border:1px solid var(--b2);color:var(--text);font-family:var(--font-mono);font-size:var(--fs-sm);padding:9px 20px;border-radius:var(--r3);box-shadow:var(--sh-float);opacity:0;transition:all var(--t-slow) var(--ease-out);pointer-events:none;z-index:var(--z-toast);white-space:nowrap;}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) translateY(16px);background:var(--card2);border:1px solid var(--b2);color:var(--text);font-family:var(--font-mono);font-size:var(--fs-md);padding:16px 28px;border-radius:var(--r3);box-shadow:var(--sh-float);opacity:0;transition:all var(--t-slow) var(--ease-out);pointer-events:none;z-index:var(--z-toast);white-space:nowrap;line-height:1.4;}
+.toast.show{opacity:1;transform:translate(-50%,-50%) translateY(0);}
 /* ── Cancel overlay ─────────────────────────────────── */
 #cancel-overlay{display:none;position:fixed;inset:0;z-index:10001;align-items:center;justify-content:center;background:rgba(14,14,22,0.92);backdrop-filter:blur(40px) saturate(150%);-webkit-backdrop-filter:blur(40px) saturate(150%);border:1px solid var(--warn-a30);box-shadow:0 16px 48px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);transition:opacity var(--t-slow) ease;will-change:opacity;pointer-events:none;}
 /* Mutex: if both scan-warning and cancel-overlay try to appear, cancel wins (it's the user-initiated action) and scan-warning is hidden */
@@ -3447,8 +3452,7 @@ async function scanLogic(isAutoRetry = false) {
   // ── Step 0a: Move to Logic's space ─────────────────────────────────────
   if (window._scanCancelled) return;
   try { await window.api.moveToLogicSpace(); } catch(e) { log(`moveToLogicSpace err: ${e}`, 'warn'); }
-  try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) { console.warn('[EB]', e); }
-  await window.api.wait(300);
+  await activateLogicForAX();
 
   await window.api.setAlwaysOnTop(true, 'pop-up-menu');
 
@@ -3597,6 +3601,7 @@ async function scanLogic(isAutoRetry = false) {
           : 'Other'
   }));
   localStorage.setItem(SK.channels, JSON.stringify(channels));
+  try { _remapQueueAfterRescan(); } catch(e) { console.warn('[EB] remap err:', e); }
 
   _channelTypeMap = {};
   const _typeGroups = {};
@@ -4736,10 +4741,14 @@ function _renderChannelsImpl() {
       }
     });
     // ── Orphaned channels: in mixer (channels[]) but not in track tree ──
-    // e.g. Bus, Aux, Click, Preview — show below tree with a separator
+    // e.g. Bus, Aux, Click, Preview — show below tree with a separator.
+    // Match by name OR mixerIndex (renamed channels keep their index, so they
+    // still belong to tree even though name no longer matches).
     const _treeNameSet = new Set(trackTree.map(t => normalizeName(t.name)));
+    const _treeIdxSet = new Set(trackTree.filter(t => t.mixerIndex != null).map(t => t.mixerIndex));
     const _orphaned = channels.filter(ch => {
       if (_treeNameSet.has(normalizeName(ch.name))) return false;
+      if (_treeIdxSet.has(ch.index)) return false;
       if (channelFilter === 'hidden') return _isHidden(ch);
       if (_isHidden(ch)) return false;
       if (query && !ch.name.toLowerCase().includes(query)) return false;
@@ -5063,6 +5072,105 @@ function resolveChannel(savedIdx, savedName) {
   const nowName = ch ? ch.name : '(missing)';
   log(`⚠ Not found: "${savedName || '?'}" (index ${savedIdx}, now "${nowName}")`, 'warn');
   return null;
+}
+
+// ── Stale-channel detection: live count vs last-scanned channels[] ──────
+async function _channelsAreStale() {
+  if (!window.api?.channelNameAt) return false;
+  try {
+    const cc = await window.api.channelNameAt(0).catch(() => null);
+    const liveCount = cc?.total ?? null;
+    if (liveCount != null && liveCount > 0 && liveCount !== channels.length) return true;
+  } catch(e) {}
+  return false;
+}
+
+// Block add-to-queue when channels changed since last scan.
+// Returns true if blocked (caller should abort the add operation).
+async function _blockIfStale() {
+  if (await _channelsAreStale()) {
+    if (typeof toast === 'function') toast('⚠ Channels changed in Logic — scan first, then add to queue');
+    log('⚠ Add blocked: channels changed since last scan — rescan Logic and try again', 'warn');
+    _channelsStale = true;
+    return true;
+  }
+  return false;
+}
+
+// ── Post-rescan queue remap: relink job.channelIndex using (logicName + color) ──
+// Called after liteRescan() and scanLogic() finish updating channels[].
+function _remapQueueAfterRescan() {
+  if (!Array.isArray(queue) || queue.length === 0) return { remapped: 0, ambiguous: [], missing: [] };
+  const stats = { remapped: 0, ambiguous: [], missing: [] };
+
+  const _processJob = (job) => {
+    if (!job || (job.type !== 'stem' && job.type !== 'mix')) return;
+    if (job.status === 'done') return;
+    const savedIdx   = job.channelIndex;
+    const savedName  = job.logicName || job.name;
+    const savedColor = job.color;
+
+    // 1. Index still valid + name matches → no change
+    const ch = channels.find(c => c.index === savedIdx);
+    if (ch && (!savedName || ch.name === savedName)) {
+      delete job._staleReason;
+      delete job._staleCandidates;
+      return;
+    }
+
+    // 2. Search by name
+    if (savedName) {
+      const candidates = channels.filter(c => c.name === savedName);
+      if (candidates.length === 1) {
+        const m = candidates[0];
+        log(`↪ "${savedName}" moved: index ${savedIdx}→${m.index}`, 'info');
+        job.channelIndex = m.index;
+        job.color = m.color;
+        job.logicName = m.name;
+        delete job._staleReason;
+        delete job._staleCandidates;
+        stats.remapped++;
+        return;
+      }
+      if (candidates.length > 1) {
+        const byColor = savedColor ? candidates.find(c => c.color === savedColor) : null;
+        if (byColor) {
+          log(`↪ "${savedName}" remapped by color: index ${savedIdx}→${byColor.index}`, 'info');
+          job.channelIndex = byColor.index;
+          job.color = byColor.color;
+          job.logicName = byColor.name;
+          delete job._staleReason;
+          delete job._staleCandidates;
+          stats.remapped++;
+          return;
+        }
+        job._staleReason = 'ambiguous';
+        job._staleCandidates = candidates.map(c => ({ index: c.index, name: c.name, color: c.color }));
+        stats.ambiguous.push(savedName);
+        return;
+      }
+    }
+
+    // 3. Not found
+    job._staleReason = 'missing';
+    delete job._staleCandidates;
+    stats.missing.push(savedName || `#${savedIdx}`);
+  };
+
+  for (const item of queue) {
+    if (item && item.type === 'set' && Array.isArray(item.jobs)) {
+      item.jobs.forEach(_processJob);
+    } else {
+      _processJob(item);
+    }
+  }
+
+  if (stats.remapped > 0)        log(`✓ Queue remap: ${stats.remapped} channel(s) relinked`, 'ok');
+  if (stats.ambiguous.length)    log(`⚠ Ambiguous after rescan: ${stats.ambiguous.join(', ')}`, 'warn');
+  if (stats.missing.length)      log(`✗ Missing after rescan: ${stats.missing.join(', ')}`, 'err');
+  try { if (typeof saveQueue === 'function') saveQueue(); } catch(e) {}
+  try { if (typeof renderQueue === 'function') renderQueue(); } catch(e) {}
+  return stats;
 }
 
 // Validate array of index+name pairs, returns { validIndices, validNames, skippedNames }
@@ -6757,6 +6865,7 @@ async function addSelAsStems() {
   if (_mixerClosed) { await _ensureMixerVisible(); }
   hideQueueHint();
   if (selectedIdx.size === 0) { toast('Select channels first'); return; }
+  if (await _blockIfStale()) return;
   let added = 0, dupes = 0;
   for (const idx of selectedIdx) {
     const ch = channels.find(c => c.index === idx);
@@ -7135,11 +7244,12 @@ function closeMergeModal() {
   window._mergeShiftAnchor = null;
 }
 
-function confirmMerge() {
+async function confirmMerge() {
   const name = (document.getElementById('merge-name-inp')?.value || '').trim();
   if (!name) { document.getElementById('merge-name-inp')?.focus(); toast('Enter a merge name'); return; }
   _renameRecord(name);
   if (_mergeModalChannels.length < 2) { toast('Select at least 2 channels'); return; }
+  if (await _blockIfStale()) return;
   // Duplicate check — same channel set already pending
   const newKey = _mergeModalChannels.map(c => c.channelIndex).sort((a,b) => a-b).join(',');
   const dupMerge = queue.find(q => q.type === 'group' && q.status === 'pending' &&
@@ -8056,10 +8166,11 @@ function saveMixAsPreset() {
   renderPresets();
 }
 
-function saveMix() {
+async function saveMix() {
   const name = document.getElementById('mix-name-inp').value.trim();
   if (!name) { toast('Enter mix name'); return; }
   _renameRecord(name);
+  if (await _blockIfStale()) return;
   const mutedIndices = [...mixMutedSet];
   const mutedNames = mutedIndices.map(i => channels.find(c => c.index === i)?.name || String(i));
 
@@ -8698,11 +8809,15 @@ function renderQueue() {
                   ? `<button class="qedit" onclick="event.stopPropagation();openEditGroupModal('${job.id}')" title="Edit merge"><svg class="ico ico-sm"><use href="#ico-edit"/></svg></button>`
                   : '')
             : '';
+          if (job._staleReason) row.classList.add('qstale-' + job._staleReason);
+          const _jobStaleIcon = job._staleReason
+            ? `<span class="qstale-icon" title="${job._staleReason === 'missing' ? 'Channel not found after rescan' : 'Multiple channels match — please re-add'}">⚠</span>`
+            : '';
           row.innerHTML = `
             <div class="qnum">${String(ji+1).padStart(2,'0')}</div>
             <div class="qbody">
               <div class="qrow1">
-                <span class="qname" style="font-size:12px;">${job.name}</span>
+                ${_jobStaleIcon}<span class="qname" style="font-size:12px;">${job.name}</span>
                 <span class="qtag ${job.type}">${job.type === 'group' ? 'merge' : job.type}</span>
               </div>
               ${muted ? `<div class="qsub">${muted}</div>` : ''}
@@ -8862,7 +8977,10 @@ function renderQueue() {
     // ── Regular stem/mix item ─────────────────────────────────────────────────
     regIdx++;
     const div = document.createElement('div');
-    div.className = 'qitem ' + (item.status || 'pending');
+    div.className = 'qitem ' + (item.status || 'pending') + (item._staleReason ? ' qstale-' + item._staleReason : '');
+    const _staleIcon = item._staleReason
+      ? `<span class="qstale-icon" title="${item._staleReason === 'missing' ? 'Channel not found after rescan' : 'Multiple channels match — please re-add'}">⚠</span>`
+      : '';
     const isMix = item.type === 'mix';
     let pills = '';
     if (isMix && item.mutedNames?.length > 0) {
@@ -8886,7 +9004,7 @@ function renderQueue() {
       <div class="qnum">${String(regIdx).padStart(2,'0')}</div>
       <div class="qbody">
         <div class="qrow1">
-          <span class="qname">${item.name}</span>
+          ${_staleIcon}<span class="qname">${item.name}</span>
           <span class="qtag ${item.type}">${item.type === 'group' ? 'merge' : item.type}</span>
         </div>
         ${pills ? `<div class="qsub">${pills}</div>` : ''}
@@ -9357,6 +9475,9 @@ async function liteRescan() {
       toast('Quick rescan failed — try full Scan Logic');
       return false;
     }
+    // Snapshot old channels (by index) BEFORE reassigning, to detect what changed.
+    const _oldChannelsSnapshot = channels.map(c => ({ index: c.index, name: c.name }));
+
     // Apply same mapping as full scan (mirrors scanLogic at ~line 3590)
     channels = result.channels.map((ch, i) => ({
       ...ch,
@@ -9370,6 +9491,39 @@ async function liteRescan() {
     }));
     try { localStorage.setItem(SK.channels, JSON.stringify(channels)); } catch(e) {}
     _channelsStale = false;
+    let _remapStats = { remapped: 0, ambiguous: [], missing: [] };
+    try { _remapStats = _remapQueueAfterRescan() || _remapStats; } catch(e) { console.warn('[EB] remap err:', e); }
+
+    // Determine if trackTree also needs to be re-scanned. Tree is stale when:
+    //  • channel count changed (added/removed), OR
+    //  • any channel name changed at the same index (rename).
+    // For pure reorder / color / mute changes — tree stays correct.
+    const _countChanged = channels.length !== _oldChannelsSnapshot.length;
+    let _nameChanged = false;
+    if (!_countChanged) {
+      const _oldByIdx = new Map(_oldChannelsSnapshot.map(c => [c.index, c.name]));
+      for (const c of channels) {
+        const _prev = _oldByIdx.get(c.index);
+        if (_prev != null && _prev !== c.name) { _nameChanged = true; break; }
+      }
+    }
+    if ((_countChanged || _nameChanged) && window.api?.scanTree) {
+      // Synchronous tree refresh with scan badge so user sees the activity.
+      // Release _scanRunning so _withRecoveryBadge can run (it guards on it).
+      _scanRunning = false;
+      const _subTitle = _countChanged ? 'Channels added or removed in Logic' : 'Tracks were renamed';
+      await _withRecoveryBadge('Refreshing track tree…', _subTitle, async () => {
+        try {
+          const tr = await window.api.scanTree();
+          if (tr && Array.isArray(tr.tracks) && tr.tracks.length > 0) {
+            trackTree = tr.tracks;
+            try { localStorage.setItem('sb4_track_tree', JSON.stringify(trackTree)); } catch(e) {}
+            log(`✓ Track tree refreshed (${tr.tracks.filter(t => t.type === 'track').length} tracks)`, 'ok');
+          }
+        } catch(e) { console.warn('[EB] scanTree err:', e); log('⚠ Tree refresh failed — try full Scan Logic', 'warn'); }
+      });
+      _scanRunning = true;
+    }
     // Sidechain may now be invalid (or restorable from localStorage if cleared earlier)
     if (typeof _validateSidechainAfterScan === 'function') _validateSidechainAfterScan();
     // Refresh UI lists that depend on channels
@@ -9378,7 +9532,12 @@ async function liteRescan() {
     if (typeof updateBounceBtn === 'function') updateBounceBtn();
     if (typeof _refreshAllCounters === 'function') _refreshAllCounters();
     log(`✓ ${channels.length} channels (quick rescan) — ready to bounce`, 'ok');
-    toast(`✓ Ready to bounce — press BOUNCE again`);
+    // Only show "Ready to bounce" toast if no queue items are still stale.
+    // Otherwise the precheck modal will re-open with the specific issues.
+    const _hasStaleItems = _remapStats.ambiguous.length > 0 || _remapStats.missing.length > 0;
+    if (!_hasStaleItems) {
+      toast(`✓ Ready to bounce — press BOUNCE again`);
+    }
     return true;
   } catch (e) {
     log(`Quick rescan err: ${String(e)}`, 'warn');
@@ -9431,8 +9590,8 @@ function _showBouncePrecheckModal(issues) {
         <div style="display:flex;gap:10px;align-items:flex-start;">
           <div style="flex-shrink:0;width:10px;height:10px;border-radius:50%;background:${dotColor(i.severity)};margin-top:6px;"></div>
           <div style="flex:1;min-width:0;">
-            <div style="font-size:var(--fs-sm);color:var(--t1);line-height:1.4;">${_renderTitle(i.title)}</div>
-            ${i.detail ? `<div style="font-size:var(--fs-xs);color:var(--muted);line-height:1.4;margin-top:3px;">${_esc(i.detail)}</div>` : ''}
+            <div style="font-size:var(--fs-base);color:var(--t1);line-height:1.4;">${_renderTitle(i.title)}</div>
+            ${i.detail ? `<div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.4;margin-top:3px;">${_esc(i.detail)}</div>` : ''}
           </div>
         </div>
       `).join('');
@@ -9495,18 +9654,18 @@ async function _bouncePreCheck() {
   // Always query Logic directly so we don't miss recent changes the passive
   // _channelsStale flag hasn't caught yet. Sets _channelsStale to keep state
   // consistent with the live result for downstream consumers.
+  let _liveChannelCount = null;
   if (window.api?.channelNameAt) {
     try {
       const cc = await window.api.channelNameAt(0).catch(() => null);
-      const liveCount = cc?.total ?? null;
-      if (liveCount != null && liveCount !== channels.length) {
+      _liveChannelCount = cc?.total ?? null;
+      if (_liveChannelCount != null && _liveChannelCount > 0 && _liveChannelCount !== channels.length) {
         _channelsStale = true;
-      } else if (liveCount != null) {
+      } else if (_liveChannelCount != null && _liveChannelCount > 0) {
         _channelsStale = false;
       }
     } catch(e) { /* keep existing flag if query fails */ }
   }
-
   // ── Section 1: Global sidechain ──────────────────────────────────────
   if (typeof sidechainEnabled !== 'undefined' && sidechainEnabled) {
     // Multi-channel sidechain (newer)
@@ -9649,13 +9808,46 @@ async function _bouncePreCheck() {
     }
   }
 
-  // ── Section 4: Stale channel count (informational) ───────────────────
-  // If liveCount differs from scan but no specific issue was found above, surface it.
+  // ── Section 3.5: Per-job stale items (from post-rescan remap) ────────
+  const _ambiguousJobs = [], _missingJobs = [];
+  const _checkStaleJob = (j) => {
+    if (!j) return;
+    if (j.status === 'done') return;
+    if (j._staleReason === 'ambiguous') _ambiguousJobs.push(j);
+    if (j._staleReason === 'missing')   _missingJobs.push(j);
+  };
+  for (const q of queue) {
+    if (q && q.type === 'set' && Array.isArray(q.jobs)) q.jobs.forEach(_checkStaleJob);
+    else _checkStaleJob(q);
+  }
+  for (const j of _ambiguousJobs) {
+    const _origName = j.logicName || j.name;
+    const _candCount = Array.isArray(j._staleCandidates) ? j._staleCandidates.length : 0;
+    issues.push({
+      severity: 'warn', category: 'job-ambiguous',
+      title: `Channel "${_origName}" — ${_candCount || 'multiple'} matches found after rescan`,
+      detail: `Several channels share this name and the original color did not match. Remove this item from queue, rescan, then add the correct channel again.`
+    });
+  }
+  for (const j of _missingJobs) {
+    const _origName = j.logicName || j.name;
+    const _origColor = j.color ? ` (was color ${j.color})` : '';
+    issues.push({
+      severity: 'fatal', category: 'job-missing',
+      title: `Channel "${_origName}" — not found after rescan${_origColor}`,
+      detail: `The channel may have been renamed, deleted, or recolored. Remove this item from queue and add the correct channel again.`
+    });
+  }
+
+  // ── Section 4: Stale channel count ───────────────────────────────────
   if (typeof _channelsStale !== 'undefined' && _channelsStale) {
+    const _countDetail = _liveChannelCount != null
+      ? `Logic has ${_liveChannelCount} channels, last scan saw ${channels.length}. Finish all changes in Logic, then rescan before bouncing.`
+      : `Channel count differs. Finish all changes in Logic, then rescan before bouncing.`;
     issues.unshift({
-      severity: 'info', category: 'stale-count',
-      title: `Logic project changed since last scan`,
-      detail: `Channel count differs. Optional: rescan to verify all references are still valid.`
+      severity: 'warn', category: 'stale-count',
+      title: `Channel count changed since last scan`,
+      detail: _countDetail
     });
   }
 
@@ -9884,7 +10076,14 @@ async function doBounce() {
       setTimeout(async () => {
         try {
           const ok = await liteRescan();
-          if (!ok) scanLogic();
+          if (!ok) { scanLogic(); return; }
+          // After rescan, re-run precheck — if remap left missing/ambiguous items,
+          // show the modal again with the specific details instead of a generic toast.
+          const _issuesAfter = await _bouncePreCheck();
+          const _staleAfter = _issuesAfter.filter(i => i.category === 'job-missing' || i.category === 'job-ambiguous');
+          if (_staleAfter.length > 0) {
+            await _showBouncePrecheckModal(_issuesAfter);
+          }
         } catch(e) { console.warn('[EB] liteRescan err:', e); try { scanLogic(); } catch(_) {} }
       }, 0);
       return;
@@ -10923,7 +11122,7 @@ async function bounceStem(job, folder, isFirst) {
   // Find current channel at job.channelIndex to verify what we're about to solo
   const _curCh = channels.find(c => c.index === job.channelIndex);
   console.warn(`▶ SOLO  job='${job.name}'  channelIndex=${job.channelIndex}  channels[${job.channelIndex}]='${_curCh?.name||'?'}'(${_curCh?.isBus?'bus':'audio'})`);
-  let r = job.channelIndex != null
+  let r = Number.isInteger(job.channelIndex)
     ? await window.api.soloIndex(job.channelIndex)
     : await window.api.soloByName(_jLogicName);
   console.warn(`◀ SOLO result: ok=${r?.ok} channel='${r?.channel||'?'}' error='${r?.error||''}'`);
@@ -12268,11 +12467,10 @@ async function triggerBounce(name, folder, isFirst) {
   // Create STEMS folder via Node.js
   if (window.api.mkdir) await window.api.mkdir(stemsFolder);
 
-  // Cmd+B — ensure Logic is front before triggering bounce dialog
+  // Cmd+B — unminimize + activate Logic before triggering bounce dialog
   if (window._userCancelled) return false;
   log('▶ ' + name, 'info');
-  try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) { console.warn('[EB]', e); }
-  await window.api.wait(300);
+  await activateLogicForAX();
   if (window._userCancelled) return false;
   const br = await window.api.bounce();
   if (!br.ok) { log('Bounce error', 'err'); return false; }
@@ -12324,6 +12522,9 @@ async function triggerBounce(name, folder, isFirst) {
   // First job only: navigate to STEMS folder
   if (window._userCancelled) return false;
   window._bouncePhase = 'navigate';
+  // Block user mouse/keyboard during folder navigation — clipboard paste + click
+  // sequence is fragile if user touches Logic mid-way.
+  if (window.api.blockInput) window.api.blockInput(8000).catch(() => {});
   // Uses clipboard+paste — reliable for paths with spaces or special chars
   if (isFirst) {
     // Pre-flight: dismiss any stale "Go to folder" sheet from a previous failed attempt
@@ -12367,6 +12568,9 @@ async function triggerBounce(name, folder, isFirst) {
   // Activate Logic before setting filename — user may have clicked EasyBounce in between
   if (window._userCancelled) return false;
   window._bouncePhase = 'naming';
+  // Block user mouse/keyboard during filename input — typing into wrong field
+  // breaks the bounce. Block covers AppleScript filename set + Bounce click.
+  if (window.api.blockInput) window.api.blockInput(5000).catch(() => {});
   try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) { console.warn('[EB]', e); }
   await window.api.wait(300);
 
@@ -12459,6 +12663,9 @@ async function triggerBounce(name, folder, isFirst) {
     }
   }
   log('Bounce: ' + (r.output || r.error || '?'), 'info');
+  // Naming + Bounce click done — release any held input block ASAP so user
+  // can interact with their Mac while render runs.
+  if (window.api.releaseInputBlock) window.api.releaseInputBlock().catch(() => {});
   // If all 3 attempts failed to find the Bounce button — abort immediately.
   // DO NOT fall through to poll loop: with no bounce dialog open, poll returns "done" instantly
   // (false positive), which leads to "file not found" retry cascade.
@@ -12474,6 +12681,7 @@ async function triggerBounce(name, folder, isFirst) {
   // before we observe a "done" — in that case we trust legacy AppleScript after
   // a few consecutive confirmations + file-exists check.
   let _consecutiveDoneWithoutTracker = 0;
+  let _shortBounceElapsed = null, _shortBounceEvent = null;
 
   // Poll until done — #44: 10-minute hard timeout with user warning at 5 minutes
   await window.api.wait(1000);
@@ -12612,8 +12820,8 @@ async function triggerBounce(name, folder, isFirst) {
       if (tr && (tr.event === 'no-dialog' || tr.event === 'timeout' || tr.event === 'error' || tr.event === 'killed')) {
         _consecutiveDoneWithoutTracker++;
         if (_consecutiveDoneWithoutTracker >= 3) {
-          const _elapsed = _stemStartTime ? Math.round((Date.now() - _stemStartTime) / 1000) : Math.round((waited+1000)/1000);
-          log(`✓ ${name} (${_elapsed}s) — short bounce (tracker: ${tr.event})`, 'ok');
+          _shortBounceElapsed = _stemStartTime ? Math.round((Date.now() - _stemStartTime) / 1000) : Math.round((waited+1000)/1000);
+          _shortBounceEvent = tr.event;
           break;
         }
       }
@@ -12820,9 +13028,13 @@ async function triggerBounce(name, folder, isFirst) {
         if (!fileFound && _fc < 3) await window.api.wait(500);
       }
       if (!fileFound) {
-        log(`✗ File not created: "${safeName}" in ${stemsFolder} — will retry`, 'err');
+        const _hint = _shortBounceElapsed != null ? ' — bounce dialog may not have opened (is Logic in focus?)' : '';
+        log(`✗ File not created: "${safeName}" in ${stemsFolder} — will retry${_hint}`, 'err');
         toast(`⚠ No file for "${name}" — retrying`);
         return false;
+      }
+      if (_shortBounceElapsed != null) {
+        log(`✓ ${name} (${_shortBounceElapsed}s) — short bounce (tracker: ${_shortBounceEvent})`, 'ok');
       }
     } catch(e) { console.warn('[EB]', e); }
   }
@@ -18714,6 +18926,7 @@ async function activateLicense() {
 if (window.api?.onHotkeyTriggered) {
   window.api.onHotkeyTriggered(async (type) => {
     console.log('[hotkey] triggered:', type);
+    if (await _blockIfStale()) return;
     const result = await window.api.getSelectedTracks();
     console.log('[hotkey] getSelectedTracks result:', JSON.stringify(result));
     if (!result?.ok || !result.tracks?.length) {

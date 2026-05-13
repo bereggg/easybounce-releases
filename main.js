@@ -607,8 +607,11 @@ async function bridge(...args) {
   if (!fs.existsSync(BRIDGE)) {
     return { error: 'LogicBridge not found — run: swiftc LogicBridge.swift -o LogicBridge -framework ApplicationServices -framework AppKit' };
   }
-  // Optional numeric last arg overrides timeout (e.g. bridge('scan-tree', 120000))
-  const timeout = typeof args[args.length - 1] === 'number' ? args.pop() : 30000;
+  // Optional numeric last arg overrides timeout (e.g. bridge('scan-tree', 120000)).
+  // Threshold ≥ 5000ms — otherwise small numeric command args (channel indices,
+  // typically < 1000) would be misinterpreted as timeouts and stripped from args.
+  const _last = args[args.length - 1];
+  const timeout = (typeof _last === 'number' && _last >= 5000) ? args.pop() : 30000;
   const cmd = args[0];
   const t0 = Date.now();
   console.log(`[SCAN] ${_bt()} → bridge ${args.join(' ')}`);
@@ -890,10 +893,13 @@ ipcMain.handle('set-format', async (_, fmt, bit, sr) => {
   }
 });
 ipcMain.handle('metronome-toggle', () => bridge('metronomeToggle'));
-ipcMain.handle('solo-index',    (_, i) => bridge('soloIndex', i));
-ipcMain.handle('unsolo-index',  (_, i) => bridge('unsoloIndex', i));
-ipcMain.handle('mute-index',    (_, i) => bridge('muteIndex', i));
-ipcMain.handle('unmute-index',  (_, i) => bridge('unmuteIndex', i));
+// Numeric args MUST be passed as strings — otherwise bridge() interprets the
+// trailing number as a timeout override and strips it from args (see line 611),
+// causing Swift to fail with "index required".
+ipcMain.handle('solo-index',    (_, i) => bridge('soloIndex',   String(i)));
+ipcMain.handle('unsolo-index',  (_, i) => bridge('unsoloIndex', String(i)));
+ipcMain.handle('mute-index',    (_, i) => bridge('muteIndex',   String(i)));
+ipcMain.handle('unmute-index',  (_, i) => bridge('unmuteIndex', String(i)));
 ipcMain.handle('unsolo-all',           () => bridge('unsoloAll'));
 ipcMain.handle('unmute-all',           () => bridge('unmuteAll'));
 ipcMain.handle('mute-many-by-index',   (_, ids) => bridge('muteManyByIndex', ids));
@@ -988,12 +994,28 @@ ipcMain.handle('escape-logic', () => {
   });
 });
 
+// Track active BlockInput processes so they can be released early.
+const _blockInputProcs = new Set();
 ipcMain.handle('block-input', (_, ms = 2000) => {
   const { execFile } = require('child_process');
   const duration = Math.max(500, Math.min(10000, parseInt(ms, 10) || 2000));
   return new Promise(resolve => {
-    execFile(BLOCK_INPUT, [String(duration)], { timeout: duration + 1000 }, (err) => resolve({ ok: !err }));
+    const proc = execFile(BLOCK_INPUT, [String(duration)], { timeout: duration + 1000 }, (err) => {
+      _blockInputProcs.delete(proc);
+      resolve({ ok: !err });
+    });
+    _blockInputProcs.add(proc);
   });
+});
+// Kill any active BlockInput processes — releases mouse/keyboard immediately.
+// Called when a fragile phase (e.g., bounce dialog confirmed) is done early.
+ipcMain.handle('release-input-block', () => {
+  let killed = 0;
+  for (const p of _blockInputProcs) {
+    try { p.kill('SIGTERM'); killed++; } catch(e) {}
+  }
+  _blockInputProcs.clear();
+  return { ok: true, killed };
 });
 ipcMain.handle('hide-window', () => {
   if (mainWindow && !_inScanBadge && !_inMiniMode) { mainWindow.setAlwaysOnTop(false); mainWindow.hide(); }
@@ -1273,7 +1295,14 @@ ipcMain.handle('move-to-logic-space', async (_, opts = {}) => {
           lx >= d.bounds.x && lx < d.bounds.x + d.bounds.width &&
           ly >= d.bounds.y && ly < d.bounds.y + d.bounds.height
         );
-        if (onExternal) return _logEnd({ ok: true, skipped: 'logic-on-external-display' });
+        if (onExternal) {
+          // Restore user's always-on-top preference even on this early-return path —
+          // otherwise mini-mode's AOT reset persists after bounce ends.
+          if (_userPinned && mainWindow && !_inBounce && !_inScanBadge && !_inMiniMode) {
+            try { mainWindow.setAlwaysOnTop(true, 'pop-up-menu'); } catch(e) {}
+          }
+          return _logEnd({ ok: true, skipped: 'logic-on-external-display' });
+        }
       }
     }
   } catch(e) { /* ignore — proceed normally */ }
