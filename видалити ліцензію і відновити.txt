@@ -1,0 +1,23 @@
+
+а повернути як?
+
+Два варіанти:
+
+1. Якщо знаєш свій ключ — просто введи його знов в EasyBounce при запуску.
+
+2. Бекап перед видаленням (краще зробити ЗАРАЗ перед тестом):
+
+cp "$HOME/Library/Application Support/EasyBounce/license.json" /tmp/eb-license-backup.json
+Після тесту відновити:
+
+cp /tmp/eb-license-backup.json "$HOME/Library/Application Support/EasyBounce/license.json"
+
+
+
+Видали два файли в ~/Library/Application Support/EasyBounce/:
+
+rm "$HOME/Library/Application Support/EasyBounce/license.json"
+rm "$HOME/Library/Application Support/EasyBounce/trial.json" 2>/dev/null
+Перезапусти EasyBounce — побачиш онбординг як новий юзер (license overlay або тріал).
+
+
