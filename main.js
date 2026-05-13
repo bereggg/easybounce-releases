@@ -607,6 +607,8 @@ async function bridge(...args) {
   if (!fs.existsSync(BRIDGE)) {
     return { error: 'LogicBridge not found — run: swiftc LogicBridge.swift -o LogicBridge -framework ApplicationServices -framework AppKit' };
   }
+  // Optional numeric last arg overrides timeout (e.g. bridge('scan-tree', 120000))
+  const timeout = typeof args[args.length - 1] === 'number' ? args.pop() : 30000;
   const cmd = args[0];
   const t0 = Date.now();
   console.log(`[SCAN] ${_bt()} → bridge ${args.join(' ')}`);
@@ -614,7 +616,7 @@ async function bridge(...args) {
     const { execFile } = require('child_process');
     // detached: true → child becomes new process group leader, so we can kill
     // the whole group (incl. osascript children) via process.kill(-pid)
-    const proc = execFile(BRIDGE, args, { timeout: 30000, detached: true }, (err, stdout) => {
+    const proc = execFile(BRIDGE, args, { timeout, detached: true }, (err, stdout) => {
       if (_currentBridgeProc === proc) _currentBridgeProc = null;
       _mpInflight.delete(proc);
       let result;
@@ -771,7 +773,7 @@ ipcMain.handle('scan-tree', async () => {
   _scanTreeActive = true;
   // Scan badge is click-through (setIgnoreMouseEvents=true), so we do NOT need
   // to lower alwaysOnTop — HID clicks from LogicBridge pass straight to Logic.
-  try { return await bridge('scan-tree'); }
+  try { return await bridge('scan-tree', 120000); }
   finally { _scanTreeActive = false; }
 });
 ipcMain.handle('maximize-logic',         () => bridge('maximizeLogic'));

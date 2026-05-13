@@ -3403,28 +3403,24 @@ case "scan-tree":
                 let stillInvisible = pt2.y <= saP.y + 10 || pt2.y >= saP.y + saS.height - 20
 
                 if stillInvisible {
-                    // Fallback: calibration scroll-to-center
+                    // Fallback: calibrate from current position — no scroll-to-top jerk.
+                    // Use current scroll value as anchor and step ±0.1 to measure px/unit ratio.
                     let targetY = saP.y + saS.height / 2
-                    AXUIElementSetAttributeValue(bar, kAXValueAttribute as CFString, 0.0 as CFTypeRef)
-                    Thread.sleep(forTimeInterval: 0.18)
-                    var p0Ref: CFTypeRef?
-                    AXUIElementCopyAttributeValue(tri, kAXPositionAttribute as CFString, &p0Ref)
-                    var y0: CGFloat = 0
-                    if let pv = p0Ref { var pt = CGPoint.zero; AXValueGetValue(pv as! AXValue, .cgPoint, &pt); y0 = pt.y }
-
-                    AXUIElementSetAttributeValue(bar, kAXValueAttribute as CFString, 0.1 as CFTypeRef)
+                    var curScrollVal: Double = 0
+                    if let v = axVal(bar, kAXValueAttribute) as? Double { curScrollVal = v }
+                    else if let v = axVal(bar, kAXValueAttribute) as? NSNumber { curScrollVal = v.doubleValue }
+                    let y0_cur = pt2.y  // triangle Y at curScrollVal (after AXScrollToVisible)
+                    let delta: Double = curScrollVal <= 0.85 ? 0.1 : -0.1
+                    AXUIElementSetAttributeValue(bar, kAXValueAttribute as CFString, (curScrollVal + delta) as CFTypeRef)
                     Thread.sleep(forTimeInterval: 0.18)
                     var p1Ref: CFTypeRef?
                     AXUIElementCopyAttributeValue(tri, kAXPositionAttribute as CFString, &p1Ref)
                     var y1: CGFloat = 0
                     if let pv = p1Ref { var pt = CGPoint.zero; AXValueGetValue(pv as! AXValue, .cgPoint, &pt); y1 = pt.y }
-
-                    let pxPer01 = y0 - y1
-                    if pxPer01 > 0 {
-                        let needed = max(0.0, min(1.0, (y0 - targetY) / (pxPer01 * 10)))
+                    let pxPerDelta = y0_cur - y1
+                    if abs(pxPerDelta) > 5 {
+                        let needed = max(0.0, min(1.0, curScrollVal + Double(y0_cur - targetY) / Double(pxPerDelta) * delta))
                         AXUIElementSetAttributeValue(bar, kAXValueAttribute as CFString, needed as CFTypeRef)
-                    } else {
-                        AXUIElementSetAttributeValue(bar, kAXValueAttribute as CFString, 0.0 as CFTypeRef)
                     }
                     Thread.sleep(forTimeInterval: 0.20)
                 }
@@ -3552,6 +3548,60 @@ case "scan-tree":
     }
     _lap("setup done (window + scroll bar + header)")
 
+    // ── Track height: compute center point for Option+scroll (shrink/restore) ──
+    var trackAreaCenter = CGPoint(x: 300, y: 400)
+    if let sa = contentScrollArea ?? arrangeScrollArea {
+        var tpRef: CFTypeRef?; var tsRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(sa, kAXPositionAttribute as CFString, &tpRef)
+        AXUIElementCopyAttributeValue(sa, kAXSizeAttribute as CFString, &tsRef)
+        var taP = CGPoint.zero; var taS = CGSize.zero
+        if let pv = tpRef { AXValueGetValue(pv as! AXValue, .cgPoint, &taP) }
+        if let sv = tsRef { AXValueGetValue(sv as! AXValue, .cgSize, &taS) }
+        trackAreaCenter = CGPoint(x: taP.x + taS.width / 2, y: taP.y + taS.height / 2)
+    }
+
+    func postOptionScroll(ticks: Int32) {
+        if let ev = CGEvent(scrollWheelEvent2Source: CGEventSource(stateID: .hidSystemState),
+                            units: .line, wheelCount: 1, wheel1: ticks, wheel2: 0, wheel3: 0) {
+            ev.location = trackAreaCenter
+            ev.flags = .maskAlternate
+            ev.post(tap: .cghidEventTap)
+        }
+    }
+
+    func maxTrackHeight() -> CGFloat {
+        axKids(hg0).filter { (axVal($0, kAXDescriptionAttribute) as? String ?? "").hasPrefix("Track ") }
+            .map { axSize($0).height }.max() ?? 0
+    }
+
+    func shrinkTracks() -> CGFloat {
+        let original = maxTrackHeight()
+        guard original > 0 else { return 0 }
+        var prev = original; var stableCount = 0
+        for _ in 0..<200 {
+            postOptionScroll(ticks: 50)
+            usleep(3_000)
+            let cur = maxTrackHeight()
+            if cur == prev { stableCount += 1; if stableCount >= 4 { break } }
+            else { stableCount = 0; prev = cur }
+        }
+        return original
+    }
+
+    func restoreTracks(originalHeight: CGFloat) {
+        guard originalHeight > 0 else { return }
+        var cur = maxTrackHeight(); var stableCount = 0
+        for _ in 0..<600 {
+            if cur >= originalHeight - 5 { break }
+            postOptionScroll(ticks: -5)
+            usleep(5_000)
+            let next = maxTrackHeight()
+            if next == cur { stableCount += 1; if stableCount >= 5 { break } }
+            else { stableCount = 0 }
+            cur = next
+        }
+    }
+
     // Find first triangle — axKids returns all, no scroll needed
     let firstExpandedTri = findTriangle(hg0, expanded: true)
     let firstCollapsedTri = firstExpandedTri != nil ? nil : findTriangle(hg0, expanded: false)
@@ -3647,6 +3697,10 @@ case "scan-tree":
     }
 
     if hasTriangles {
+        // ── Shrink tracks to minimum — reduces scroll during scan ──
+        let originalTrackHeight = shrinkTracks()
+        _lap("tracks shrunk (original=\(Int(originalTrackHeight))px)")
+
         // ── Adaptive 3-step scan: collapse → expand → read → collapse ──
         _lap("Step 1: Collapse all")
 
@@ -3788,6 +3842,10 @@ case "scan-tree":
             let _ = waitStable(reference: expandedCount, expectMore: false)
         }
         _lap("Step 3 done")
+
+        // Restore track height to what it was before scan
+        restoreTracks(originalHeight: originalTrackHeight)
+        _lap("tracks restored")
 
         // Build tree — use summaryNums + triangleNums to classify each item.
         // parentNum tracks by index (not name) to handle duplicate track names correctly
