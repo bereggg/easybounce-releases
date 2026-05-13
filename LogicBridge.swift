@@ -148,11 +148,22 @@ func isDisclosureTriangle(_ el: AXUIElement) -> Bool {
     return false
 }
 
+// Search up to `depth` levels deep for a disclosure triangle.
+// Some Summing Stack configurations in Logic nest the triangle one level below
+// the direct AX children of the track row — shallow axKids() check misses them.
+func hasDisclosureTriDeep(_ item: AXUIElement, depth: Int = 3) -> Bool {
+    for kid in axKids(item) {
+        if isDisclosureTriangle(kid) { return true }
+        if depth > 1 && hasDisclosureTriDeep(kid, depth: depth - 1) { return true }
+    }
+    return false
+}
+
 func readTrackInfos(_ header: AXUIElement) -> [TrackInfo] {
     axKids(header).compactMap { item -> TrackInfo? in
         let desc = (axVal(item, kAXDescriptionAttribute) as? String) ?? ""
         guard let t = parseTrackDesc(desc) else { return nil }
-        let hasTri = axKids(item).contains { isDisclosureTriangle($0) }
+        let hasTri = hasDisclosureTriDeep(item)
         return TrackInfo(num: t.num, name: t.name, muted: t.muted, hasTriangle: hasTri)
     }
 }
@@ -3738,6 +3749,7 @@ case "scan-tree":
         let (beforeTracks, _) = collectAllTracks()
         let summaryNums = Set(beforeTracks.map { $0.num })
 
+
         // Step 1.5: Plain-click each top-level group's triangle to expand it WITHOUT
         // expanding nested sub-stacks. This reveals each top-level's direct children
         // (e.g. Bass at MUSIC's level, sibling of MELODY sub-stack). Without this we
@@ -3745,6 +3757,7 @@ case "scan-tree":
         // flat fully-expanded list. Top-level only: typically 5–10 stacks per project.
         _lap("Step 1.5: per-top-level expand")
         var topDirectChildren = Set<Int>()
+        var topDirectSubgroups = Set<Int>()
         do {
             // Find top-level group items (in summaryNums + has triangle)
             // Re-find each iteration so we have fresh refs after AX layout shifts.
@@ -3782,12 +3795,12 @@ case "scan-tree":
             for item in axKids(hg0) {
                 let desc = (axVal(item, kAXDescriptionAttribute) as? String) ?? ""
                 guard desc.hasPrefix("Track "), let t = parseTrackDesc(desc) else { continue }
+                guard !summaryNums.contains(t.num) else { continue }
                 let hasTri = axKids(item).contains { axRole($0) == "AXDisclosureTriangle" }
-                if !hasTri && !summaryNums.contains(t.num) {
-                    topDirectChildren.insert(t.num)
-                }
+                if hasTri { topDirectSubgroups.insert(t.num) }
+                else { topDirectChildren.insert(t.num) }
             }
-            _lap("  topDirectChildren captured: \(topDirectChildren.count)")
+            _lap("  topDirectChildren: \(topDirectChildren.count), topDirectSubgroups: \(topDirectSubgroups.count)")
 
             // Step 1.5b: collapse-all to reset to clean fully-collapsed state.
             // Without this, Step 2 Option+click on a mixed-state tree toggles individually
@@ -3826,9 +3839,24 @@ case "scan-tree":
         }
 
         // Read fully expanded state + triangle info
-        let (afterTracks, triangleNums) = collectAllTracks()
+        let (afterTracks, triangleNumsRaw) = collectAllTracks()
         let after = afterTracks
-        _lap("Step 2 done: \(afterTracks.count) tracks, \(triangleNums.count) triangles")
+        _lap("Step 2 done: \(afterTracks.count) tracks, \(triangleNumsRaw.count) triangles")
+
+        // Structural subgroup detection: a topDirectChild immediately followed (in the
+        // expanded list) by a track that is NEITHER a summaryNum NOR a topDirectChild
+        // must be a subgroup — even if its AX triangle was not detected.
+        // This handles Summing Stacks whose triangle button Logic nests in a way that
+        // neither direct-child nor deep-search finds it.
+        let step2OnlyNums = Set(after.map { $0.num }).subtracting(summaryNums).subtracting(topDirectChildren)
+        var triangleNums = triangleNumsRaw
+        for (idx, t) in after.enumerated() {
+            guard topDirectChildren.contains(t.num) && !triangleNums.contains(t.num) else { continue }
+            if idx + 1 < after.count && step2OnlyNums.contains(after[idx + 1].num) {
+                triangleNums.insert(t.num)
+                _lap("  structural subgroup: \(t.name) (#\(t.num))")
+            }
+        }
 
         // Step 2.5: Resolve duplicate-named tracks → mixerIndex (stacks expanded → all tracks in AX)
         _lap("Step 2.5: resolve duplicates")
@@ -3852,8 +3880,10 @@ case "scan-tree":
         var treeResult: [[String: Any]] = []
         var currentGroupNum = -1
         var currentGroupName = ""
-        var currentSubgroupNum = -1
+        var currentSubgroupNum = -1   // level-2 subgroup (direct child of top-level group)
         var currentSubgroupName = ""
+        var currentLevel3Num = -1     // level-3 subgroup (child of level-2 subgroup)
+        var currentLevel3Name = ""
         for t in after {
             let isSummary = summaryNums.contains(t.num)
             let hasTri = triangleNums.contains(t.num)
@@ -3862,34 +3892,44 @@ case "scan-tree":
             if isSummary && hasTri {
                 currentGroupNum = t.num
                 currentGroupName = t.name
-                currentSubgroupNum = -1
-                currentSubgroupName = ""
+                currentSubgroupNum = -1; currentSubgroupName = ""
+                currentLevel3Num = -1;   currentLevel3Name = ""
                 entry = ["num": t.num, "name": t.name, "type": "group",
                          "parent": "", "parentNum": -1, "muted": t.muted ? 1 : 0]
             } else if isSummary && !hasTri {
-                currentGroupNum = -1
-                currentGroupName = ""
-                currentSubgroupNum = -1
-                currentSubgroupName = ""
+                currentGroupNum = -1;    currentGroupName = ""
+                currentSubgroupNum = -1; currentSubgroupName = ""
+                currentLevel3Num = -1;   currentLevel3Name = ""
                 entry = ["num": t.num, "name": t.name, "type": "track",
                          "parent": "", "parentNum": -1, "muted": t.muted ? 1 : 0]
             } else if !isSummary && hasTri {
-                currentSubgroupNum = t.num
-                currentSubgroupName = t.name
-                entry = ["num": t.num, "name": t.name, "type": "group",
-                         "parent": currentGroupName, "parentNum": currentGroupNum,
-                         "muted": t.muted ? 1 : 0]
+                // Distinguish level-2 (seen during Step 1.5 as direct child of top-level group)
+                // from level-3 (appeared only in full expansion — child of currentSubgroup).
+                let isLevel2 = topDirectSubgroups.contains(t.num) || currentSubgroupNum < 0
+                if isLevel2 {
+                    currentSubgroupNum = t.num; currentSubgroupName = t.name
+                    currentLevel3Num = -1;       currentLevel3Name = ""
+                    entry = ["num": t.num, "name": t.name, "type": "group",
+                             "parent": currentGroupName, "parentNum": currentGroupNum,
+                             "muted": t.muted ? 1 : 0]
+                } else {
+                    currentLevel3Num = t.num; currentLevel3Name = t.name
+                    entry = ["num": t.num, "name": t.name, "type": "group",
+                             "parent": currentSubgroupName, "parentNum": currentSubgroupNum,
+                             "muted": t.muted ? 1 : 0]
+                }
             } else {
-                // Regular track inside a group. If it was visible at Step 1.5
-                // (top-level expanded, sub-stacks closed) → it's a direct child of
-                // currentGroup, NOT of currentSubgroup. Otherwise it's inside the
-                // current sub-stack.
+                // Regular track. Resolve parent: direct child of top-level group,
+                // or inside level-3 subgroup, or inside level-2 subgroup.
                 let isDirectChild = topDirectChildren.contains(t.num)
                 let parentNum: Int
                 let parentName: String
                 if isDirectChild || currentSubgroupNum < 0 {
                     parentNum = currentGroupNum
                     parentName = currentGroupName
+                } else if currentLevel3Num >= 0 {
+                    parentNum = currentLevel3Num
+                    parentName = currentLevel3Name
                 } else {
                     parentNum = currentSubgroupNum
                     parentName = currentSubgroupName

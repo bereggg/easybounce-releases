@@ -1122,6 +1122,11 @@ body.easy #panel-pr{transition:all var(--t-slow);}
 .mfield input[type=text]:focus{outline:none;border-color:rgba(108,99,255,.6);}
 #mix-name-inp,#esp-name-inp,#merge-name-inp,#eg-name-inp,#eset-name-inp{border:1px solid var(--b2);background:var(--card);}
 #mix-name-inp:focus,#esp-name-inp:focus,#merge-name-inp:focus,#eg-name-inp:focus,#eset-name-inp:focus{border-color:var(--accent-a60);}
+#mix-name-inp::selection,#merge-name-inp::selection{background:transparent;color:rgba(160,160,160,.65);}
+.clear-sel-btn{display:none;align-items:center;justify-content:center;width:22px;height:22px;border-radius:4px;border:1px solid var(--b2);background:var(--card);color:var(--muted);cursor:pointer;padding:0;flex-shrink:0;transition:background var(--t-fast),color var(--t-fast);}
+.clear-sel-btn:hover{background:rgba(255,80,80,.12);border-color:rgba(255,80,80,.35);color:#ff6b6b;}
+.clear-sel-btn svg{width:10px;height:10px;}
+.mrg-tri,.mix-tri{padding:8px 12px 8px 4px;margin:-8px -8px -8px -4px;cursor:pointer;}
 .tcb-list{overflow-y:auto;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:4px 0;max-height:240px;flex-shrink:1;}
 .tcb-list::-webkit-scrollbar{width:3px;}
 .tcb-list::-webkit-scrollbar-thumb{background:var(--b2);}
@@ -4540,7 +4545,7 @@ function _renderChannelsImpl() {
         _descNodes.forEach(node => {
           const cc = _resolveNodeCh(node);
           const k = normalizeName(node.name);
-          if ((cc && _queuedIdx.has(cc.index)) || _queuedNames.has(k)) queuedCount++;
+          if ((cc && _queuedIdx.has(cc.index)) || (!cc && _queuedNames.has(k))) queuedCount++;
         });
         // Count selected (highlighted by click) children when collapsed — shows X/Y badge
         let selectedCount = 0;
@@ -5391,7 +5396,7 @@ function _renderEspChannels() {
     const chByName = {};
     allCh.forEach(c => { const k = c.name.toLowerCase(); if (!chByName[k]) chByName[k] = []; chByName[k].push(c); });
     const _uc = {}; const chMap = {};
-    [...trackTree].sort((a,b) => (a.num||0)-(b.num||0)).forEach(t => { const k=t.name.toLowerCase(); const i=_uc[k]||0; if(chByName[k]?.[i]){chMap[t.num]=chByName[k][i];_uc[k]=i+1;} });
+    [...trackTree].sort((a,b) => (a.num||0)-(b.num||0)).forEach(t => { const k=t.name.toLowerCase(); const arr=chByName[k]||[]; let ch; if(t.mixerIndex!=null&&t.mixerIndex>=0){ch=arr.find(c=>c.index===t.mixerIndex)||null;}else if(t.type==='group'){const bk=k+'|g',bi=_uc[bk]||0;const busCh=arr.filter(c=>c.isBus);ch=busCh[bi]||arr[_uc[k]||0]||null;if(busCh.length>0)_uc[bk]=bi+1;}else{const i=_uc[k]||0;ch=arr[i]||null;if(arr.length>0)_uc[k]=i+1;} if(ch)chMap[t.num]=ch; });
 
     function getDirectChildren(parentName) { return trackTree.filter(k => k.parent === parentName); }
     function getAllDescendants(parentName, _seen) {
@@ -5562,7 +5567,7 @@ function _renderEspChannels() {
   }
   _espUpdateAddBtn();
   const espClearBtn = document.getElementById('esp-clear-sel-btn');
-  if (espClearBtn) espClearBtn.style.display = _espSelectedChs.size > 0 ? '' : 'none';
+  if (espClearBtn) espClearBtn.style.display = _espSelectedChs.size > 0 ? 'flex' : 'none';
   const espTreeBtn = document.getElementById('esp-tree-toggle-btn');
   if (espTreeBtn) {
     const hasGroups = trackTree.some(t => t.type === 'group' && trackTree.some(c => c.parent === t.name));
@@ -6146,7 +6151,7 @@ function _esetRenderChannels() {
     const chByName = {};
     allCh.forEach(c => { const k=c.name.toLowerCase(); if(!chByName[k])chByName[k]=[]; chByName[k].push(c); });
     const _uc = {}; const chMap = {};
-    [...trackTree].sort((a,b)=>(a.num||0)-(b.num||0)).forEach(t => { const k=t.name.toLowerCase(); const i=_uc[k]||0; if(chByName[k]?.[i]){chMap[t.num]=chByName[k][i];_uc[k]=i+1;} });
+    [...trackTree].sort((a,b)=>(a.num||0)-(b.num||0)).forEach(t => { const k=t.name.toLowerCase(); const arr=chByName[k]||[]; let ch; if(t.mixerIndex!=null&&t.mixerIndex>=0){ch=arr.find(c=>c.index===t.mixerIndex)||null;}else if(t.type==='group'){const bk=k+'|g',bi=_uc[bk]||0;const busCh=arr.filter(c=>c.isBus);ch=busCh[bi]||arr[_uc[k]||0]||null;if(busCh.length>0)_uc[bk]=bi+1;}else{const i=_uc[k]||0;ch=arr[i]||null;if(arr.length>0)_uc[k]=i+1;} if(ch)chMap[t.num]=ch; });
 
     function getDirectChildren(parentName) { return trackTree.filter(k => k.parent === parentName); }
     function getAllDescendants(parentName, _seen) {
@@ -6282,7 +6287,7 @@ function _esetRenderChannels() {
     toShow.forEach(ch => cont.appendChild(makeTrackRow(ch, 8)));
   }
   const esetClearBtn = document.getElementById('eset-clear-sel-btn');
-  if (esetClearBtn) esetClearBtn.style.display = _esetSelectedChs.size > 0 ? '' : 'none';
+  if (esetClearBtn) esetClearBtn.style.display = _esetSelectedChs.size > 0 ? 'flex' : 'none';
   const esetTreeBtn = document.getElementById('eset-tree-toggle-btn');
   if (esetTreeBtn) {
     const hasGroups = trackTree.some(t => t.type === 'group' && trackTree.some(c => c.parent === t.name));
@@ -6827,7 +6832,7 @@ function _openMergeModalWithChannels(chList) {
   if (window._mergeSelSet) window._mergeSelSet.clear(); window._mergeShiftAnchor = null;
   _mergeModalChannels = chList;
   const inp = document.getElementById('merge-name-inp');
-  if (inp) inp.value = '';
+  if (inp) { inp.value = ''; _attachModalAC(inp); }
   const saveBtn = document.getElementById('merge-save-preset-btn');
   if (saveBtn) saveBtn.style.display = 'none';
   renderMergePresets();
@@ -6959,7 +6964,7 @@ function _renderMergeChannelList() {
     const chByName = {};
     allCh.forEach(c => { const k=c.name.toLowerCase(); if(!chByName[k])chByName[k]=[]; chByName[k].push(c); });
     const _uc = {}; const chMap = {};
-    [...trackTree].sort((a,b)=>(a.num||0)-(b.num||0)).forEach(t => { const k=t.name.toLowerCase(); const i=_uc[k]||0; if(chByName[k]?.[i]){chMap[t.num]=chByName[k][i];_uc[k]=i+1;} });
+    [...trackTree].sort((a,b)=>(a.num||0)-(b.num||0)).forEach(t => { const k=t.name.toLowerCase(); const arr=chByName[k]||[]; let ch; if(t.mixerIndex!=null&&t.mixerIndex>=0){ch=arr.find(c=>c.index===t.mixerIndex)||null;}else if(t.type==='group'){const bk=k+'|g',bi=_uc[bk]||0;const busCh=arr.filter(c=>c.isBus);ch=busCh[bi]||arr[_uc[k]||0]||null;if(busCh.length>0)_uc[bk]=bi+1;}else{const i=_uc[k]||0;ch=arr[i]||null;if(arr.length>0)_uc[k]=i+1;} if(ch)chMap[t.num]=ch; });
     function getDirectChildren(p) { return trackTree.filter(k => k.parent === p); }
     function getAllDescendants(p, _seen) { if(!_seen)_seen=new Set(); if(_seen.has(p))return []; _seen.add(p); const r=[]; getDirectChildren(p).forEach(k=>{r.push(k);if(k.type==='group')r.push(...getAllDescendants(k.name,_seen));}); return r; }
     function hasVisibleDesc(g) { return getAllDescendants(g).some(k=>{const ch=chMap[k.num];return ch&&chVisible(ch);}); }
@@ -7060,14 +7065,18 @@ function _renderMergeChannelList() {
       nm.textContent = t.name;
       row.appendChild(nm);
       const kc = getAllDescendants(t.name).filter(k=>k.type==='track').length;
-      if (!expanded && kc > 0) {
-        const checkedKids = getAllDescendants(t.name).filter(k => k.type === 'track' && (c => c && inMerge.has(c.index))(chMap[k.num])).length;
-        if (checkedKids > 0) {
-          const badge = document.createElement('span');
-          badge.className = 'tree-q-badge';
-          badge.title = `${checkedKids} of ${kc} selected`;
-          badge.textContent = `${checkedKids}/${kc}`;
-          row.appendChild(badge);
+      {
+        const allDescWithCh = getAllDescendants(t.name).filter(k => !!chMap[k.num]);
+        const kcBadge = allDescWithCh.length;
+        if (kcBadge > 0) {
+          const checkedKids = allDescWithCh.filter(k => { const c=chMap[k.num]; return c && inMerge.has(c.index); }).length;
+          if (checkedKids > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'tree-q-badge';
+            badge.title = `${checkedKids} of ${kcBadge} selected`;
+            badge.textContent = `${checkedKids}/${kcBadge}`;
+            row.appendChild(badge);
+          }
         }
       }
       if (kc > 0) { const c=document.createElement('span'); c.style.cssText='font-size:var(--fs-xxs);color:var(--muted);flex-shrink:0;'; c.textContent=kc; row.appendChild(c); }
@@ -7095,7 +7104,7 @@ function _renderMergeChannelList() {
   }
   const mergeSel = window._mergeSelSet;
   const mergeClearBtn = document.getElementById('merge-clear-sel-btn');
-  if (mergeClearBtn) mergeClearBtn.style.display = (mergeSel && mergeSel.size > 0) ? '' : 'none';
+  if (mergeClearBtn) mergeClearBtn.style.display = (mergeSel && mergeSel.size > 0) ? 'flex' : 'none';
   const mergeTreeBtn = document.getElementById('merge-tree-toggle-btn');
   if (mergeTreeBtn) {
     const hasGroups = trackTree.some(t => t.type === 'group' && trackTree.some(c => c.parent === t.name));
@@ -7331,7 +7340,7 @@ function mixSelectAll() {
     const chByName = {};
     allCh.forEach(c => { const k = c.name.toLowerCase(); if (!chByName[k]) chByName[k] = []; chByName[k].push(c); });
     const _uc = {}; const chMap = {};
-    [...trackTree].sort((a,b) => a.num - b.num).forEach(t => { const k = t.name.toLowerCase(); const i = _uc[k]||0; if (chByName[k]?.[i]) { chMap[t.num] = chByName[k][i]; _uc[k] = i+1; } });
+    [...trackTree].sort((a,b) => a.num - b.num).forEach(t => { const k=t.name.toLowerCase(); const arr=chByName[k]||[]; let ch; if(t.mixerIndex!=null&&t.mixerIndex>=0){ch=arr.find(c=>c.index===t.mixerIndex)||null;}else if(t.type==='group'){const bk=k+'|g',bi=_uc[bk]||0;const busCh=arr.filter(c=>c.isBus);ch=busCh[bi]||arr[_uc[k]||0]||null;if(busCh.length>0)_uc[bk]=bi+1;}else{const i=_uc[k]||0;ch=arr[i]||null;if(arr.length>0)_uc[k]=i+1;} if(ch)chMap[t.num]=ch; });
     function _isMixAncestorCollapsed(parentName) {
       if (!parentName) return false;
       if (!_mixModalExpanded.has(parentName)) return true; // collapsed = not in expanded set
@@ -7527,7 +7536,7 @@ function renderMixList(initIndices) {
     const chByName = {};
     allCh.forEach(c => { const k = c.name.toLowerCase(); if (!chByName[k]) chByName[k] = []; chByName[k].push(c); });
     const _uc2 = {}; const chMap = {};
-    [...trackTree].sort((a,b) => a.num - b.num).forEach(t => { const k = t.name.toLowerCase(); const i = _uc2[k]||0; if (chByName[k]?.[i]) { chMap[t.num] = chByName[k][i]; _uc2[k] = i+1; } });
+    [...trackTree].sort((a,b) => a.num - b.num).forEach(t => { const k=t.name.toLowerCase(); const arr=chByName[k]||[]; let ch; if(t.mixerIndex!=null&&t.mixerIndex>=0){ch=arr.find(c=>c.index===t.mixerIndex)||null;}else if(t.type==='group'){const bk=k+'|g',bi=_uc2[bk]||0;const busCh=arr.filter(c=>c.isBus);ch=busCh[bi]||arr[_uc2[k]||0]||null;if(busCh.length>0)_uc2[bk]=bi+1;}else{const i=_uc2[k]||0;ch=arr[i]||null;if(arr.length>0)_uc2[k]=i+1;} if(ch)chMap[t.num]=ch; });
 
     // Build parent→children map for ALL types
     function getDirectChildren(parentName) {
@@ -7679,6 +7688,21 @@ function renderMixList(initIndices) {
       nm.style.cssText = `font-size:12px;font-weight:700;color:var(--text);flex:1;letter-spacing:.01em;`;
       row.appendChild(nm);
 
+      // Badge: muted descendants count (any depth, always visible)
+      {
+        const allDescWithCh = getAllDescendants(t.name).filter(k => !!chMap[k.num]);
+        const kcBadge = allDescWithCh.length;
+        if (kcBadge > 0) {
+          const mutedKids = allDescWithCh.filter(k => { const c=chMap[k.num]; return c && mixMutedSet.has(c.index); }).length;
+          if (mutedKids > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'tree-q-badge';
+            badge.title = `${mutedKids} of ${kcBadge} muted`;
+            badge.textContent = `${mutedKids}/${kcBadge}`;
+            row.appendChild(badge);
+          }
+        }
+      }
       // Show child track count instead of channel index
       const _childTrackCount = getAllDescendants(t.name).filter(k => k.type === 'track').length;
       if (_childTrackCount > 0) {
@@ -7842,7 +7866,7 @@ function renderMixList(initIndices) {
   updateMixToggleBtn();
   updateMixTreeToggleBtn();
   const mixClearBtn = document.getElementById('mix-clear-sel-btn');
-  if (mixClearBtn) mixClearBtn.style.display = _mixSelSet.size > 0 ? '' : 'none';
+  if (mixClearBtn) mixClearBtn.style.display = _mixSelSet.size > 0 ? 'flex' : 'none';
 }
 
 function _mixClearSel() { _mixSelSet.clear(); _mixSelLast = null; renderMixList(); }
@@ -11993,8 +12017,8 @@ function applyNameTemplate(stemName) {
   const tpl = (typeof _serializeTemplate === 'function')
     ? _serializeTemplate(el)
     : (el?.value || el?.textContent || '');
-  const trimmed = tpl.trim();
-  if (!trimmed) return stemName;
+  const trimmed = tpl.trimStart();
+  if (!trimmed.trim()) return stemName;
   // Has wildcards → resolve and append any pass-variant suffix (e.g. "_Wet", "_Dry")
   // that the bounce engine added to stemName beyond the original queue name.
   // Without this, $stem resolves to the clean original ("Drums") but the variant
