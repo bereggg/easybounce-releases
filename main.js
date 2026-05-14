@@ -694,6 +694,7 @@ function invalidateBridgeCache(cmd) {
 
 // ── IPC handlers ──────────────────────────────────────────────────────────────
 ipcMain.handle('switch-to-english', () => bridge('switchToEnglish'));
+ipcMain.handle('get-monitor-state', () => bridge('getMonitorState'));
 ipcMain.handle('scan-channels', () => { invalidateBridgeCache('scan'); return bridge('scan'); }); // scan always fresh
 // #11: kill the running bridge process AND any in-flight run-shell (CloseLogicWindows etc)
 // AND their osascript children (process group). Stops AX actions within ~200ms.
@@ -1231,7 +1232,7 @@ ipcMain.handle('apply-bounce-preset', async (_, params) => {
 });
 ipcMain.handle('get-bounce-params', () => bridge('getBounceParams'));
 ipcMain.handle('scan-markers', () => bridge('scan-markers'));
-ipcMain.handle('set-locators-by-marker', async (_, name, keepML) => bridge('set-locators-by-marker', name, ...(keepML ? ['keep-ml'] : [])));
+ipcMain.handle('set-locators-by-marker', async (_, name, keepML, extMode) => bridge('set-locators-by-marker', name, ...(keepML ? ['keep-ml'] : []), ...(extMode ? ['no-final-focus'] : [])));
 ipcMain.handle('position-marker-list', async () => {
   try {
     await execAsync(`osascript -e '
@@ -1585,20 +1586,32 @@ ipcMain.handle('overlay-countdown', (_, sec) => {
 
 // ── Scan Badge Mode — shrink window to scan warning badge only ────────────────
 let _preScan = null;
-ipcMain.handle('enter-scan-badge', async () => {
+let _scanExtMode = false;
+let _scanMonitor = null;
+ipcMain.handle('enter-scan-badge', async (_e, monitorState) => {
   if (!mainWindow) return { ok: false };
   _inScanBadge = true;
+  _scanExtMode = !!(monitorState?.hasExternal && monitorState?.logicOnExternal);
+  _scanMonitor = _scanExtMode ? monitorState : null;
   _preScan = mainWindow.getBounds();
   const { screen } = require('electron');
 
   const bw = 520; const bh = 85;
-  // Center badge horizontally on the DISPLAY (not the app window), pin to top.
-  const appDisplay = screen.getDisplayNearestPoint({
-    x: _preScan.x + Math.floor(_preScan.width / 2),
-    y: _preScan.y + Math.floor(_preScan.height / 2)
-  });
-  const { x: dx, y: dy, width: dw } = appDisplay.workArea;
-  const bx = dx + Math.floor(dw / 2 - bw / 2);
+  let bx, dy;
+  if (monitorState?.hasExternal && monitorState?.logicOnExternal) {
+    const dw = monitorState.monitorWidth;
+    bx = Math.round(monitorState.monitorX + dw / 2 - bw / 2);
+    dy = Math.round(monitorState.monitorY);
+  } else {
+    // Center badge horizontally on the DISPLAY (not the app window), pin to top.
+    const appDisplay = screen.getDisplayNearestPoint({
+      x: _preScan.x + Math.floor(_preScan.width / 2),
+      y: _preScan.y + Math.floor(_preScan.height / 2)
+    });
+    const { x: dx, y: _dy, width: dw } = appDisplay.workArea;
+    bx = dx + Math.floor(dw / 2 - bw / 2);
+    dy = _dy;
+  }
   mainWindow.setMinimumSize(200, 60);
   mainWindow.setResizable(false);
   mainWindow.setBounds({ x: bx, y: dy, width: bw, height: bh }, false);
@@ -1630,9 +1643,19 @@ ipcMain.handle('exit-scan-badge', () => {
   mainWindow.setMinimumSize(_inCompact ? 500 : 1130, _inCompact ? 500 : 640);
   mainWindow.setResizable(true);
   if (_preScan) {
-    mainWindow.setBounds(_preScan, false);
-    _preScan = null;
+    if (_scanExtMode && _scanMonitor) {
+      // Restore size from pre-scan, position on external monitor
+      const { width, height } = _preScan;
+      const x = Math.round(_scanMonitor.monitorX + (_scanMonitor.monitorWidth - width) / 2);
+      const y = Math.round(_scanMonitor.monitorY + 40);
+      mainWindow.setBounds({ x, y, width, height }, false);
+    } else {
+      mainWindow.setBounds(_preScan, false);
+    }
   }
+  _preScan = null;
+  _scanExtMode = false;
+  _scanMonitor = null;
   // show() BEFORE setVisibleOnAllWorkspaces(false) — same fix as moveToLogicSpace.
   // Without this the window disappears briefly from the user's current Space
   // as macOS moves it back to its home Space, causing the appear→vanish→appear flicker.

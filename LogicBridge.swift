@@ -1702,6 +1702,43 @@ case "switchToEnglish":
     }
     jsonOut(["ok": switched])
 
+case "getMonitorState":
+    let hasExternal = NSScreen.screens.count > 1
+    var logicOnExternal = false
+    var monitorX: CGFloat = 0
+    var monitorY: CGFloat = 0
+    var monitorWidth: CGFloat = 0
+    var monitorHeight: CGFloat = 0
+    if hasExternal {
+        var windowsRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(logic, kAXWindowsAttribute as CFString, &windowsRef)
+        if let windows = windowsRef as? [AXUIElement], let win = windows.first {
+            var posRef: CFTypeRef?
+            AXUIElementCopyAttributeValue(win, kAXPositionAttribute as CFString, &posRef)
+            var pos = CGPoint.zero
+            if let av = posRef, AXValueGetValue(av as! AXValue, .cgPoint, &pos) {
+                if let screen = NSScreen.screens.first(where: { pos.x >= $0.frame.minX && pos.x < $0.frame.maxX }),
+                   let displayID = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID {
+                    logicOnExternal = CGDisplayIsBuiltin(displayID) == 0
+                    if logicOnExternal {
+                        monitorX = screen.frame.minX
+                        monitorY = screen.frame.minY
+                        monitorWidth = screen.frame.width
+                        monitorHeight = screen.frame.height
+                    }
+                }
+            }
+        }
+    }
+    jsonOut([
+        "hasExternal": hasExternal,
+        "logicOnExternal": logicOnExternal,
+        "monitorX": monitorX,
+        "monitorY": monitorY,
+        "monitorWidth": monitorWidth,
+        "monitorHeight": monitorHeight
+    ])
+
 // Cross-Space fullscreen exit attempt via AXAllWindows + AXFullScreen setter.
 // macOS hides AX tree of fullscreen apps on other Spaces, so this returns
 // exited=false in that case — user-initiated Space switch is then required.
@@ -5068,6 +5105,7 @@ case "set-locators-by-marker":
         }
     }
 
+    let noFinalFocus2 = args.contains("no-final-focus")
     var hadGlobalTracks = false
     if let tw = slbmTracksWin(logic) {
         // Check if Marker popup already visible (GT already open with Marker track)
@@ -5099,6 +5137,7 @@ case "set-locators-by-marker":
     if let mlWin2raise = findMarkerListWin2(logic) {
         AXUIElementPerformAction(mlWin2raise, kAXRaiseAction as CFString)
     }
+    let prevApp = noFinalFocus2 ? NSWorkspace.shared.frontmostApplication : nil
     NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.logic10").first?
         .activate(options: .activateIgnoringOtherApps)
     Thread.sleep(forTimeInterval: 0.25)
@@ -5124,7 +5163,10 @@ case "set-locators-by-marker":
             AXUIElementSetAttributeValue(table2fresh, "AXSelectedRows" as CFString, [row] as CFArray)
             Thread.sleep(forTimeInterval: 0.1)
             AXUIElementPerformAction(row, "AXPress" as CFString)
-            Thread.sleep(forTimeInterval: 0.4)
+            Thread.sleep(forTimeInterval: 0.1)
+            // Ext mode: return focus immediately after AXPress
+            if let prev = prevApp { prev.activate(options: NSApplication.ActivationOptions.activateIgnoringOtherApps) }
+            Thread.sleep(forTimeInterval: 0.3)
         }
     }
 
@@ -5193,6 +5235,9 @@ case "set-locators-by-marker":
 
     // Raise main Logic Arrange window and restore OS-level focus so Bounce works
     // Also do a real HID click on the Tracks window toolbar to steal focus from Marker List
+    // Skip focus restore in ext-mode (Logic on external monitor — user keeps focus on MacBook)
+    let noFinalFocus = noFinalFocus2
+    guard !noFinalFocus else { jsonOut(["ok": setLocatorsOk, "marker": markerTarget]); break }
     NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.logic10").first?
         .activate(options: .activateIgnoringOtherApps)
     Thread.sleep(forTimeInterval: 0.1)

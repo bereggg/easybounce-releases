@@ -3420,6 +3420,10 @@ function _auditFail() {
 
 async function scanLogic(isAutoRetry = false) {
   if (!isAutoRetry && !(await _audit())) { _auditFail(); return; }
+  if (!isAutoRetry && window.api) {
+    try { window._monitorState = await window.api.getMonitorState(); } catch(e) { window._monitorState = { hasExternal: false, logicOnExternal: false }; }
+    console.warn('[extMode] monitorState=', JSON.stringify(window._monitorState));
+  }
   // Guard: prevent two concurrent scans (e.g. user clicks Scan again while one is running)
   if (_scanRunning && !isAutoRetry) {
     log('⚠ Scan already in progress — ignoring duplicate request', 'warn');
@@ -3443,31 +3447,37 @@ async function scanLogic(isAutoRetry = false) {
   // ── Switch keyboard to English (Logic AX needs English layout) ──
   try { await window.api.switchToEnglish(); } catch(e) { console.warn('[EB]', e); }
 
+  const _extMode = window._monitorState?.hasExternal === true && window._monitorState?.logicOnExternal === true;
+
   // ── Enter scan badge IMMEDIATELY (shrink window to badge first) ──
   if (window.api && window.api.enterScanBadge) {
     document.body.classList.add('scan-badge');
-    try { await window.api.enterScanBadge(); _scanBadgeActive = true; } catch(e) { console.warn('[EB]', e); }
+    try { await window.api.enterScanBadge(_extMode ? window._monitorState : null); _scanBadgeActive = true; } catch(e) { console.warn('[EB]', e); }
   }
 
   // ── Step 0a: Move to Logic's space ─────────────────────────────────────
   if (window._scanCancelled) return;
-  try { await window.api.moveToLogicSpace(); } catch(e) { log(`moveToLogicSpace err: ${e}`, 'warn'); }
-  await activateLogicForAX();
+  if (!_extMode) {
+    try { await window.api.moveToLogicSpace(); } catch(e) { log(`moveToLogicSpace err: ${e}`, 'warn'); }
+    await activateLogicForAX();
+  }
 
   await window.api.setAlwaysOnTop(true, 'pop-up-menu');
 
   // ── Step 0b: Exit fullscreen + maximize Logic ─────────────────────────────────
   if (window._scanCancelled) return;
-  try {
-    // Float over all Spaces BEFORE fullscreen-exit so EasyBounce window survives
-    // the destruction of Logic's fullscreen Space and follows us to Logic's new one.
-    try { await window.api.floatOverAllSpaces(); } catch(e) {}
-    const mxResult = await window.api.maximizeLogic();
-    await window.api.wait(mxResult?.exitedFullscreen ? 500 : 150);
-    // Anchor to wherever macOS auto-transitioned us (Logic's now-windowed Space).
-    // No extra activate — we're already with Logic, just re-anchor the window.
-    try { await window.api.anchorToCurrentSpace(); } catch(e) {}
-  } catch(e) { console.warn(`maximizeLogic err: ${e}`); }
+  if (!_extMode) {
+    try {
+      // Float over all Spaces BEFORE fullscreen-exit so EasyBounce window survives
+      // the destruction of Logic's fullscreen Space and follows us to Logic's new one.
+      try { await window.api.floatOverAllSpaces(); } catch(e) {}
+      const mxResult = await window.api.maximizeLogic();
+      await window.api.wait(mxResult?.exitedFullscreen ? 500 : 150);
+      // Anchor to wherever macOS auto-transitioned us (Logic's now-windowed Space).
+      // No extra activate — we're already with Logic, just re-anchor the window.
+      try { await window.api.anchorToCurrentSpace(); } catch(e) {}
+    } catch(e) { console.warn(`maximizeLogic err: ${e}`); }
+  }
 
   // ── Close plugin + editor windows — moved AFTER maximizeLogic so Space transition
   // is complete and AXAllWindows call in CloseLogicWindows doesn't block ──────────
@@ -3528,8 +3538,10 @@ async function scanLogic(isAutoRetry = false) {
       document.body.classList.remove('scan-badge');
       if (window.api.exitScanBadge) { try { await window.api.exitScanBadge(); _scanBadgeActive = false; } catch(e) { console.warn('[EB]', e); } }
       await window.api.setAlwaysOnTop(isPinned || false).catch(()=>{});
-      try { await window.api.moveToLogicSpace(); } catch(e) { console.warn('[EB]', e); }
-      try { await window.api.focusApp(); } catch(e) { console.warn('[EB]', e); }
+      if (!_extMode) {
+        try { await window.api.moveToLogicSpace(); } catch(e) { console.warn('[EB]', e); }
+        try { await window.api.focusApp(); } catch(e) { console.warn('[EB]', e); }
+      }
       if (scanWarn) {
         scanWarn.style.transition = 'opacity .4s ease'; scanWarn.style.opacity = '0';
         setTimeout(() => { scanWarn.classList.remove('show'); scanWarn.style.transition = ''; scanWarn.style.opacity = ''; }, 450);
@@ -3814,7 +3826,7 @@ async function scanLogic(isAutoRetry = false) {
   // KEY FIX: do moveToLogicSpace BEFORE exiting the badge, so the flicker
   // (setVisibleOnAllWorkspaces dance) happens while we're still small, hidden by
   // the badge state. Filter scan never calls this — that's why it has no flicker.
-  if (!_compactOn && window.api && window.api.moveToLogicSpace) { try { await window.api.moveToLogicSpace(); } catch(e) { console.warn('[EB]', e); } }
+  if (!_extMode && !_compactOn && window.api && window.api.moveToLogicSpace) { try { await window.api.moveToLogicSpace(); } catch(e) { console.warn('[EB]', e); } }
   // Now restore window — single smooth transition from badge → full window
   document.body.classList.remove('scan-badge');
   if (window.api && window.api.exitScanBadge) { try { await window.api.exitScanBadge(); _scanBadgeActive = false; } catch(e) { console.warn('[EB]', e); } }
@@ -10449,14 +10461,16 @@ async function doBounce() {
 
   // Remember where the user was — after each bounce trigger, return them there
   window._bounceReturnApp = null;
+  window._prevBounceApp = null;
   try {
     const fr = await window.api.runScript(
-      `tell application "System Events" to get name of first process whose frontmost is true`
+      `tell application "System Events" to get bundle identifier of first application process whose frontmost is true`
     );
-    const fn = fr.ok ? fr.output.trim() : '';
-    if (fn && fn !== 'Logic Pro' && fn !== 'Electron') {
+    const fn = (fr.ok ? fr.output : fr?.output)?.trim() || '';
+    if (fn && fn !== 'com.apple.logic10' && fn !== 'com.github.electron' && fn !== 'com.electron') {
+      window._prevBounceApp = fn;
       window._bounceReturnApp = fn;
-      log(`↩ Return target: ${fn}`, 'info');
+      console.warn(`[extMode] doBounce capture prevApp="${fn}"`);
     }
   } catch(e) { console.warn('[EB]', e); }
 
@@ -10489,7 +10503,7 @@ async function doBounce() {
       log(`📍 Setting range: ${_mPass.name}`, 'info');
       const _isLastPass = _markerPasses.indexOf(_mPass) === _markerPasses.length - 1;
       // Ensure Logic and EasyBounce are on the same Space before HID click
-      if (window.api.moveToLogicSpace) await window.api.moveToLogicSpace().catch(() => {});
+      if (window.api.moveToLogicSpace && !(window._monitorState?.hasExternal && window._monitorState?.logicOnExternal)) await window.api.moveToLogicSpace().catch(() => {});
       await window.api.setAlwaysOnTop(false).catch(() => {}); // must be off so HID click reaches Logic's ML window
       // If previous stem failed, close ML so it reopens fresh on current Space
       if (_mlNeedsReopen) {
@@ -10497,7 +10511,8 @@ async function doBounce() {
         await window.api.wait(200);
         _mlNeedsReopen = false;
       }
-      await window.api.setLocatorsByMarker(String(_mPass.index ?? _mPass.name), !_isLastPass);
+      const _extModeML = window._monitorState?.hasExternal === true && window._monitorState?.logicOnExternal === true;
+      await window.api.setLocatorsByMarker(String(_mPass.index ?? _mPass.name), !_isLastPass, _extModeML);
       if (!_mlPositioned) {
         await window.api.wait(150);
         try { await window.api.positionMarkerList(); } catch(e) {}
@@ -10529,7 +10544,7 @@ async function doBounce() {
     if (window.api.mkdir) await window.api.mkdir(jobFolder);
     // Recover Space: if Logic was accidentally swiped to another Desktop/Space,
     // move EasyBounce alongside Logic before any AX interaction
-    if (window.api.moveToLogicSpace) await window.api.moveToLogicSpace().catch(() => {});
+    if (window.api.moveToLogicSpace && !(window._monitorState?.hasExternal && window._monitorState?.logicOnExternal)) await window.api.moveToLogicSpace().catch(() => {});
     try {
       // Phase 6 engine (_runJobPasses) handles all pass splitting (both, wet+dry, sc-both).
       // Master plugin state is applied per-pass inside _applyPassPre (lazy snapshot capture there).
@@ -10575,7 +10590,8 @@ async function doBounce() {
           await window.api.setAlwaysOnTop(false).catch(() => {});
           try { await window.api.closeMarkerList(); } catch(e) {}
           await window.api.wait(200);
-          await window.api.setLocatorsByMarker(String(_mPass.index ?? _mPass.name), !_isLastPass);
+          const _extModeMLr = window._monitorState?.hasExternal === true && window._monitorState?.logicOnExternal === true;
+          await window.api.setLocatorsByMarker(String(_mPass.index ?? _mPass.name), !_isLastPass, _extModeMLr);
           await window.api.wait(500);
           await activateLogicForAX();
         } catch(e) { log('Re-set locators error: ' + (e.message||e), 'warn'); }
@@ -10743,8 +10759,10 @@ async function doBounce() {
       // Keep alwaysOnTop during cancel so overlay stays visible
       if (!window._userCancelled) await window.api.setAlwaysOnTop(false).catch(() => {});
       // Move to Logic's Space BEFORE activate so AX clicks land on Logic, not the desktop
-      try { await window.api.moveToLogicSpace(); } catch(e) { console.warn('[EB]', e); }
-      try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) { console.warn('[EB]', e); }
+      if (!(window._monitorState?.hasExternal && window._monitorState?.logicOnExternal)) {
+        try { await window.api.moveToLogicSpace(); } catch(e) { console.warn('[EB]', e); }
+        try { await window.api.runScript('tell application id "com.apple.logic10" to activate'); } catch(e) { console.warn('[EB]', e); }
+      }
       await window.api.wait(400).catch(() => {});
 
       // ── STEP 5: Restore mute/solo states ──
@@ -10841,7 +10859,8 @@ async function doBounce() {
 
   // Exit bounce mode: re-enable window anchoring, then snap back to Logic's space once.
   if (window.api?.setBounceMode) await window.api.setBounceMode(false).catch(()=>{});
-  if (!window._userCancelled && window.api?.moveToLogicSpace) await window.api.moveToLogicSpace({ noFocus: true }).catch(()=>{});
+  const _extModePost = window._monitorState?.hasExternal === true && window._monitorState?.logicOnExternal === true;
+  if (!window._userCancelled && window.api?.moveToLogicSpace && !_extModePost) await window.api.moveToLogicSpace({ noFocus: true }).catch(()=>{});
   bouncing = false; updateBounceBtn();
   // Release the clock snapshot so subsequent UI redraws (preview field) show live values.
   window._bounceClockSnapshot = null;
@@ -11104,6 +11123,7 @@ async function _cleanStaleJobState() {
 }
 
 async function bounceStem(job, folder, isFirst) {
+  const _extMode = window._monitorState?.hasExternal === true && window._monitorState?.logicOnExternal === true;
   window._cancelMutedNames = [];
   window._cancelSoloedName = null;  window._cancelSoloedIndex = null;
   window._cancelGroupNames = [];    window._cancelGroupIndices = [];
@@ -11111,14 +11131,14 @@ async function bounceStem(job, folder, isFirst) {
 
   if (window._userCancelled) return false;
   window._bouncePhase = 'solo';
-  await activateLogicForAX();
+  if (!_extMode) await activateLogicForAX();
   if (!window._userCancelled) await _cleanStaleJobState();
 
   // 1. Solo main stem — use index when available to handle duplicate names
   // _jLogicName: original Logic channel name (never the queue display name with pass suffix)
   const _jLogicName = job.logicName || job.name;
   if (window._userCancelled) return false;
-  if (window.api.blockInput) window.api.blockInput(2000).catch(() => {});
+  if (!_extMode && window.api.blockInput) window.api.blockInput(2000).catch(() => {});
   // Find current channel at job.channelIndex to verify what we're about to solo
   const _curCh = channels.find(c => c.index === job.channelIndex);
   console.warn(`▶ SOLO  job='${job.name}'  channelIndex=${job.channelIndex}  channels[${job.channelIndex}]='${_curCh?.name||'?'}'(${_curCh?.isBus?'bus':'audio'})`);
@@ -11198,11 +11218,10 @@ async function bounceStem(job, folder, isFirst) {
   // 4. Unsolo (only on normal completion — cancel handled in doBounce finally)
   if (!window._userCancelled) {
     // Grace period: give Logic time to finish writing the file, warn user before Logic becomes active
-    if (window.api.blockInput) window.api.blockInput(2000).catch(() => {});
+    if (!_extMode && window.api.blockInput) window.api.blockInput(2000).catch(() => {});
     toast('↩ Returning to Logic…');
     await window.api.wait(1500);
-    await window.api.moveToLogicSpace().catch(() => {});
-    await activateLogicForAX();
+    if (!_extMode) { await window.api.moveToLogicSpace().catch(() => {}); await activateLogicForAX(); }
     // Unsolo sidechain FIRST — mirror the solo condition (don't depend on global sidechainEnabled)
     if (_activeSc.length > 0) {
       for (const sc of _activeSc) {
@@ -11240,6 +11259,7 @@ async function bounceStem(job, folder, isFirst) {
 }
 
 async function bounceGroup(job, folder, isFirst) {
+  const _extMode = window._monitorState?.hasExternal === true && window._monitorState?.logicOnExternal === true;
   window._cancelMutedNames = [];
   window._cancelSoloedName = null;   window._cancelSoloedIndex = null;
   window._cancelGroupNames = [];     window._cancelGroupIndices = [];
@@ -11247,12 +11267,12 @@ async function bounceGroup(job, folder, isFirst) {
 
   if (window._userCancelled) return false;
   window._bouncePhase = 'solo';
-  await activateLogicForAX();
+  if (!_extMode) await activateLogicForAX();
   if (!window._userCancelled) await _cleanStaleJobState();
 
   // Solo all channels in the group — use index to handle duplicate names
   const chans = job.channels || [];
-  if (window.api.blockInput) window.api.blockInput(2000).catch(() => {});
+  if (!_extMode && window.api.blockInput) window.api.blockInput(2000).catch(() => {});
   for (const ch of chans) {
     if (window._userCancelled) return false;
     let r = ch.channelIndex != null
@@ -11319,11 +11339,10 @@ async function bounceGroup(job, folder, isFirst) {
 
   // Unsolo all (only on normal completion)
   if (!window._userCancelled) {
-    if (window.api.blockInput) window.api.blockInput(2000).catch(() => {});
+    if (!_extMode && window.api.blockInput) window.api.blockInput(2000).catch(() => {});
     toast('↩ Returning to Logic…');
     await window.api.wait(1500);
-    await window.api.moveToLogicSpace().catch(() => {});
-    await activateLogicForAX();
+    if (!_extMode) { await window.api.moveToLogicSpace().catch(() => {}); await activateLogicForAX(); }
     if (sidechainEnabled && _activeSc.length > 0) {
       for (const sc of _activeSc) {
         let _gsr = sc.index != null ? await window.api.unsoloIndex(sc.index) : await window.api.unsoloByName(sc.name);
@@ -11353,6 +11372,7 @@ async function bounceGroup(job, folder, isFirst) {
 }
 
 async function bounceMix(job, folder, isFirst) {
+  const _extMode = window._monitorState?.hasExternal === true && window._monitorState?.logicOnExternal === true;
   window._cancelMutedNames = [];   window._cancelMutedIndices = [];
   window._cancelSoloedName = null; window._cancelSoloedIndex = null;
   window._cancelGroupNames = [];   window._cancelGroupIndices = [];
@@ -11360,7 +11380,7 @@ async function bounceMix(job, folder, isFirst) {
 
   if (window._userCancelled) return false;
   window._bouncePhase = 'mute';
-  await activateLogicForAX();
+  if (!_extMode) await activateLogicForAX();
 
   // 1. Read current mute state — skip channels already muted by user
   if (window._userCancelled) return false;
@@ -11378,7 +11398,7 @@ async function bounceMix(job, folder, isFirst) {
 
   // 2. Mute by index — correct even with duplicate track names
   if (window._userCancelled) return false;
-  if (window.api.blockInput) window.api.blockInput(2000).catch(() => {});
+  if (!_extMode && window.api.blockInput) window.api.blockInput(2000).catch(() => {});
   if (indicesToMute.length > 0) {
     const muteResult = await window.api.muteManyByIndex(indicesToMute.join('|'));
     window._cancelMutedIndices = indicesToMute;
@@ -11418,11 +11438,10 @@ async function bounceMix(job, folder, isFirst) {
 
   // 4. Unmute only what WE muted
   if (!window._userCancelled) {
-    if (window.api.blockInput) window.api.blockInput(2000).catch(() => {});
+    if (!_extMode && window.api.blockInput) window.api.blockInput(2000).catch(() => {});
     toast('↩ Returning to Logic…');
     await window.api.wait(1500);
-    await window.api.moveToLogicSpace().catch(() => {});
-    await activateLogicForAX();
+    if (!_extMode) { await window.api.moveToLogicSpace().catch(() => {}); await activateLogicForAX(); }
     if (indicesToMute.length > 0) {
       const unmuteRes = await window.api.unmuteManyByIndex(indicesToMute.join('|'));
       // Retry only indices that weren't processed (out of range or bridge crash)
@@ -12470,7 +12489,8 @@ async function triggerBounce(name, folder, isFirst) {
   // Cmd+B — unminimize + activate Logic before triggering bounce dialog
   if (window._userCancelled) return false;
   log('▶ ' + name, 'info');
-  await activateLogicForAX();
+  const _extModeTrigger = window._monitorState?.hasExternal && window._monitorState?.logicOnExternal;
+  if (!_extModeTrigger) await activateLogicForAX();
   if (window._userCancelled) return false;
   const br = await window.api.bounce();
   if (!br.ok) { log('Bounce error', 'err'); return false; }
@@ -12666,6 +12686,11 @@ async function triggerBounce(name, folder, isFirst) {
   // Naming + Bounce click done — release any held input block ASAP so user
   // can interact with their Mac while render runs.
   if (window.api.releaseInputBlock) window.api.releaseInputBlock().catch(() => {});
+  if (window._prevBounceApp) {
+    console.warn(`[extMode] restore focus → "${window._prevBounceApp}"`);
+    window.api.runScript(`tell application id "${window._prevBounceApp}" to activate`).catch((e) => console.warn('[extMode] restore failed:', e));
+    window._prevBounceApp = null;
+  }
   // If all 3 attempts failed to find the Bounce button — abort immediately.
   // DO NOT fall through to poll loop: with no bounce dialog open, poll returns "done" instantly
   // (false positive), which leads to "file not found" retry cascade.
