@@ -10544,6 +10544,7 @@ async function doBounce() {
     if (window.api.mkdir) await window.api.mkdir(jobFolder);
     // Recover Space: if Logic was accidentally swiped to another Desktop/Space,
     // move EasyBounce alongside Logic before any AX interaction
+    console.warn(`[extMode-diag] pre-stem moveToLogicSpace gate: hasExternal=${window._monitorState?.hasExternal} logicOnExternal=${window._monitorState?.logicOnExternal} fullState=${JSON.stringify(window._monitorState)}`);
     if (window.api.moveToLogicSpace && !(window._monitorState?.hasExternal && window._monitorState?.logicOnExternal)) await window.api.moveToLogicSpace().catch(() => {});
     try {
       // Phase 6 engine (_runJobPasses) handles all pass splitting (both, wet+dry, sc-both).
@@ -10848,7 +10849,7 @@ async function doBounce() {
         }
         try { await window.api.focusApp(); } catch(e) { console.warn('[EB]', e); }
         await window.api.wait(200).catch(() => {});
-        await window.api.setAlwaysOnTop(false).catch(() => {});
+        await window.api.setAlwaysOnTop(isPinned || false).catch(() => {});
         // ALWAYS fade out the cancel overlay — even if any of the steps above failed.
         const co = document.getElementById('cancel-overlay');
         if (co) { co.classList.add('fade-out'); setTimeout(() => { co.classList.remove('show','fade-out'); co.style.willChange = 'auto'; }, 400); }
@@ -10860,6 +10861,7 @@ async function doBounce() {
   // Exit bounce mode: re-enable window anchoring, then snap back to Logic's space once.
   if (window.api?.setBounceMode) await window.api.setBounceMode(false).catch(()=>{});
   const _extModePost = window._monitorState?.hasExternal === true && window._monitorState?.logicOnExternal === true;
+  console.warn(`[extMode-diag] post-bounce moveToLogicSpace gate: _extModePost=${_extModePost} hasExternal=${window._monitorState?.hasExternal} logicOnExternal=${window._monitorState?.logicOnExternal} fullState=${JSON.stringify(window._monitorState)}`);
   if (!window._userCancelled && window.api?.moveToLogicSpace && !_extModePost) await window.api.moveToLogicSpace({ noFocus: true }).catch(()=>{});
   bouncing = false; updateBounceBtn();
   // Release the clock snapshot so subsequent UI redraws (preview field) show live values.
@@ -10876,7 +10878,7 @@ async function doBounce() {
   // exitMiniMode and setAlwaysOnTop(false) already handled inside finally block
   // (for both cancel and normal completion paths) — don't duplicate here
   if (!window._userCancelled && window._miniActive) await exitMiniMode();
-  if (!window._userCancelled && window.api) await window.api.setAlwaysOnTop(false);
+  if (!window._userCancelled && window.api) await window.api.setAlwaysOnTop(isPinned || false);
   // Show retry button if any jobs failed or were cancelled
   const hasFailedJobs = queue.some(q => q.status === 'error' || q.status === 'cancelled');
   if (hasFailedJobs) document.getElementById('retry-btn').style.display = 'flex';
@@ -12492,6 +12494,21 @@ async function triggerBounce(name, folder, isFirst) {
   const _extModeTrigger = window._monitorState?.hasExternal && window._monitorState?.logicOnExternal;
   if (!_extModeTrigger) await activateLogicForAX();
   if (window._userCancelled) return false;
+  // extMode: capture frontmost RIGHT BEFORE bridge bounce so we know where to
+  // restore focus after Logic gets activated by the AppleScript inside bounce.
+  // Re-capture per-stem (not once per session) so user can switch apps mid-bounce.
+  if (_extModeTrigger) {
+    try {
+      const fr = await window.api.runScript(
+        `tell application "System Events" to get bundle identifier of first application process whose frontmost is true`
+      );
+      const fn = (fr.ok ? fr.output : fr?.output)?.trim() || '';
+      if (fn && fn !== 'com.apple.logic10') {
+        window._bounceReturnApp = fn;
+        console.warn(`[extMode] pre-bounce capture frontmost="${fn}"`);
+      }
+    } catch(e) { console.warn('[EB]', e); }
+  }
   const br = await window.api.bounce();
   if (!br.ok) { log('Bounce error', 'err'); return false; }
   await _waitForBounceDialog(3000); // poll for OK button instead of fixed wait
@@ -12686,11 +12703,14 @@ async function triggerBounce(name, folder, isFirst) {
   // Naming + Bounce click done — release any held input block ASAP so user
   // can interact with their Mac while render runs.
   if (window.api.releaseInputBlock) window.api.releaseInputBlock().catch(() => {});
-  if (window._prevBounceApp) {
-    console.warn(`[extMode] restore focus → "${window._prevBounceApp}"`);
-    window.api.runScript(`tell application id "${window._prevBounceApp}" to activate`).catch((e) => console.warn('[extMode] restore failed:', e));
-    window._prevBounceApp = null;
+  if (window._bounceReturnApp) {
+    const _extModeRestore = window._monitorState?.hasExternal === true && window._monitorState?.logicOnExternal === true;
+    if (_extModeRestore) {
+      console.warn(`[extMode] restore focus → "${window._bounceReturnApp}" (stem)`);
+      window.api.runScript(`tell application id "${window._bounceReturnApp}" to activate`).catch((e) => console.warn('[extMode] restore failed:', e));
+    }
   }
+  window._prevBounceApp = null;
   // If all 3 attempts failed to find the Bounce button — abort immediately.
   // DO NOT fall through to poll loop: with no bounce dialog open, poll returns "done" instantly
   // (false positive), which leads to "file not found" retry cascade.
